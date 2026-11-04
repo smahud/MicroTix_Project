@@ -1,0 +1,1850 @@
+{
+  "revision": "2.2",
+  "owner": "Runtime technical defaults; commercial values PRODUCT.md; display values branding.json",
+  "rules": [
+    "Unknown keys and duplicate JSON keys rejected.",
+    "Decimal values are strings; no float money.",
+    "Defaults do not establish measured capacity or grant target access.",
+    "Effective config is snapshotted per job/run/document; validation cannot weaken invariants.",
+    "Only add future-feature settings to runtime when that feature is implemented.",
+    "Only canonical keys are runtime inputs; old draft names are not supported aliases. A migration importer is built only for actual legacy data with explicit tested mappings."
+  ],
+  "formulas": {
+    "radius.stale_session_factor": "stale iff age > 3 * radius.interim_s + radius.stale_grace_s",
+    "quota.draft_cap": "min(quota.draft_max,max(quota.draft_min,ceil(quota.draft_ratio*limit_services)))",
+    "backup.headroom_bytes": "max(5368709120,2*largest_artifact_bytes*concurrent_transfers)"
+  },
+  "parameters": [
+    {
+      "key": "csv.max_bytes",
+      "type": "integer",
+      "unit": "bytes",
+      "default": 10485760,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "range",
+        "minimum": 1,
+        "maximum": 20971520
+      },
+      "change_rule": "Increase above baseline requires authorized load evidence before effect; hard ceiling cannot be exceeded.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "csv.max_rows",
+      "type": "integer",
+      "unit": "records",
+      "default": 10000,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "range",
+        "minimum": 1,
+        "maximum": 20000
+      },
+      "change_rule": "Increase above baseline requires authorized load evidence before effect; hard ceiling cannot be exceeded.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "csv.temp_file_ttl_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 86400,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          86400
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "enroll.token_ttl_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 900,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "range",
+        "minimum": 60,
+        "maximum": 3600
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "vpn.pool_cidr",
+      "type": "cidr",
+      "unit": "CIDR",
+      "default": "100.127.0.0/16",
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          "100.127.0.0/16"
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "vpn.keepalive_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 25,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          25
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "vpn.mtu",
+      "type": "integer",
+      "unit": "bytes",
+      "default": 1420,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          1420
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "router.connect_timeout_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 5,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          5
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "router.read_timeout_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 15,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          15
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "router.job_deadline_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 60,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          60
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "job.max_attempts",
+      "type": "integer",
+      "unit": "attempts",
+      "default": 5,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "range",
+        "minimum": 1,
+        "maximum": 5
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "job.backoff_cap_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 300,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          300
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "job.outbox_poll_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 2,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          2
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "job.circuit_failures",
+      "type": "integer",
+      "unit": "failures",
+      "default": 5,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          5
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "job.half_open_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 60,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          60
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "job.lease_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 30,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          30
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "job.heartbeat_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 10,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          10
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "poll.health_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 60,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          60
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "poll.inventory_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 900,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          900
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "poll.detail_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 15,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          15
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "drift.scan_interval_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 21600,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          21600
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "discovery.concurrent_per_router",
+      "type": "integer",
+      "unit": "operations",
+      "default": 1,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          1
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "quota.reservation_ttl_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 3600,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          3600
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "quota.draft_ratio",
+      "type": "decimal_string",
+      "unit": "ratio",
+      "default": "0.25",
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          "0.25"
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "quota.draft_min",
+      "type": "integer",
+      "unit": "identities",
+      "default": 10,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          10
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "quota.draft_max",
+      "type": "integer",
+      "unit": "identities",
+      "default": 500,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          500
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "saas.grace_days",
+      "type": "integer",
+      "unit": "calendar_days",
+      "default": 7,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          7
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "product_policy"
+    },
+    {
+      "key": "saas.restricted_until_days",
+      "type": "integer",
+      "unit": "calendar_days",
+      "default": 30,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          30
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "product_policy"
+    },
+    {
+      "key": "saas.vpn_retention_days",
+      "type": "integer",
+      "unit": "calendar_days",
+      "default": 60,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          60
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "product_policy"
+    },
+    {
+      "key": "saas.data_retention_days",
+      "type": "integer",
+      "unit": "calendar_days",
+      "default": 180,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          180
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "product_policy"
+    },
+    {
+      "key": "saas.invoice_expiry_days",
+      "type": "integer",
+      "unit": "calendar_days",
+      "default": 7,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          7
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "product_policy"
+    },
+    {
+      "key": "router.replace_overlap_days",
+      "type": "integer",
+      "unit": "calendar_days",
+      "default": 30,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          30
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "isolation.grace_days",
+      "type": "integer",
+      "unit": "calendar_days",
+      "default": 3,
+      "nullable": false,
+      "scope": "tenant",
+      "bounds": {
+        "mode": "range",
+        "minimum": 0,
+        "maximum": 30
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "product_policy"
+    },
+    {
+      "key": "isolation.enabled",
+      "type": "boolean",
+      "unit": "boolean",
+      "default": false,
+      "nullable": false,
+      "scope": "tenant",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          false
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "product_policy"
+    },
+    {
+      "key": "isolation.simulation_ttl_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 86400,
+      "nullable": false,
+      "scope": "tenant",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          86400
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "product_policy"
+    },
+    {
+      "key": "invoice.lead_prepaid_days",
+      "type": "integer",
+      "unit": "calendar_days",
+      "default": 7,
+      "nullable": false,
+      "scope": "tenant",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          7
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "invoice.postpaid_due_days",
+      "type": "integer",
+      "unit": "calendar_days",
+      "default": 7,
+      "nullable": false,
+      "scope": "tenant",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          7
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "backup.routine_max",
+      "type": "integer",
+      "unit": "generations",
+      "default": 100,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          100
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "product_policy"
+    },
+    {
+      "key": "backup.manual_max",
+      "type": "integer",
+      "unit": "generations",
+      "default": 10,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          10
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "product_policy"
+    },
+    {
+      "key": "backup.prechange_max",
+      "type": "integer",
+      "unit": "generations",
+      "default": 10,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          10
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "product_policy"
+    },
+    {
+      "key": "backup.max_artifact_bytes",
+      "type": "integer",
+      "unit": "bytes",
+      "default": 67108864,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          67108864
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "backup.warn_ratio",
+      "type": "decimal_string",
+      "unit": "ratio",
+      "default": "0.80",
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          "0.80"
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "backup.stop_ratio",
+      "type": "decimal_string",
+      "unit": "ratio",
+      "default": "0.90",
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          "0.90"
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "backup.job_deadline_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 1800,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          1800
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "download.url_ttl_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 300,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          300
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "idempotency.retention_days",
+      "type": "integer",
+      "unit": "calendar_days",
+      "default": 7,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          7
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "log.app_days",
+      "type": "integer",
+      "unit": "calendar_days",
+      "default": 30,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          30
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "log.access_days",
+      "type": "integer",
+      "unit": "calendar_days",
+      "default": 90,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          90
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "log.security_days",
+      "type": "integer",
+      "unit": "calendar_days",
+      "default": 400,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          400
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "metrics.raw_days",
+      "type": "integer",
+      "unit": "calendar_days",
+      "default": 15,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          15
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "metrics.aggregate_5m_days",
+      "type": "integer",
+      "unit": "calendar_days",
+      "default": 90,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          90
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "metrics.aggregate_1h_days",
+      "type": "integer",
+      "unit": "calendar_days",
+      "default": 400,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          400
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "auth.failed_max",
+      "type": "integer",
+      "unit": "failures",
+      "default": 5,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          5
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "auth.window_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 900,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          900
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "auth.password_min_chars",
+      "type": "integer",
+      "unit": "characters",
+      "default": 12,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          12
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "session.tenant_idle_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 28800,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          28800
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "session.tenant_absolute_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 86400,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          86400
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "session.platform_idle_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 1800,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          1800
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "session.platform_absolute_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 43200,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          43200
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "reauth.valid_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 600,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          600
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "credentials.reveal_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 30,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          30
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "service.password_chars",
+      "type": "integer",
+      "unit": "characters",
+      "default": 16,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          16
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "backup.password_chars",
+      "type": "integer",
+      "unit": "characters",
+      "default": 32,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          32
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "radius.secret_chars",
+      "type": "integer",
+      "unit": "characters",
+      "default": 32,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          32
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "radius.interim_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 300,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          300
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "radius.stale_grace_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 60,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          60
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "radius.simultaneous_default",
+      "type": "integer",
+      "unit": "sessions",
+      "default": 1,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          1
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "radius.acct_days",
+      "type": "integer",
+      "unit": "calendar_days",
+      "default": 90,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          90
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "radius.usage_days",
+      "type": "integer",
+      "unit": "calendar_days",
+      "default": 400,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          400
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "radius.radpostauth_days",
+      "type": "integer",
+      "unit": "calendar_days",
+      "default": 30,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          30
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "radius.auth_timeout_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 3,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          3
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "radius.canary_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 1800,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          1800
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "radius.full_observation_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 86400,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          86400
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "radius.dynamic_authorization_port",
+      "type": "integer",
+      "unit": "UDP_port",
+      "default": 3799,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          3799
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "migration.harvest_ttl_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 86400,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "range",
+        "minimum": 1,
+        "maximum": 86400
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "migration.rate_per_min",
+      "type": "integer",
+      "unit": "objects_per_minute",
+      "default": 60,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          60
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "migration.batch_size",
+      "type": "integer",
+      "unit": "accounts",
+      "default": 100,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          100
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "acs.inform_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 900,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          900
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "acs.task_ttl_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 86400,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          86400
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "mon.wan_fail_down",
+      "type": "integer",
+      "unit": "cycles",
+      "default": 3,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          3
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "mon.success_up",
+      "type": "integer",
+      "unit": "cycles",
+      "default": 5,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          5
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "mon.poll_fail_threshold",
+      "type": "integer",
+      "unit": "cycles",
+      "default": 3,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          3
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "billing.first_period_policy",
+      "type": "string",
+      "unit": "enum",
+      "default": "full",
+      "nullable": false,
+      "scope": "tenant",
+      "bounds": {
+        "mode": "enum",
+        "allowed": [
+          "full",
+          "prorata_daily",
+          "free_until_next_period"
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "product_policy"
+    },
+    {
+      "key": "billing.reminder_offsets_days",
+      "type": "array",
+      "unit": "calendar_days",
+      "default": [
+        -3,
+        0,
+        3
+      ],
+      "nullable": false,
+      "scope": "tenant",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          [
+            -3,
+            0,
+            3
+          ]
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "product_policy"
+    },
+    {
+      "key": "collector.settlement_alert_days",
+      "type": "integer",
+      "unit": "calendar_days",
+      "default": 3,
+      "nullable": false,
+      "scope": "tenant",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          3
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "asset.capitalization_idr",
+      "type": "decimal_string",
+      "unit": "IDR",
+      "default": "2500000.00",
+      "nullable": false,
+      "scope": "book",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          "2500000.00"
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "asset.useful_life_years",
+      "type": "integer",
+      "unit": "calendar_years",
+      "default": 4,
+      "nullable": false,
+      "scope": "book",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          4
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "asset.residual_idr",
+      "type": "decimal_string",
+      "unit": "IDR",
+      "default": "0.00",
+      "nullable": false,
+      "scope": "book",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          "0.00"
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "ledger.retention_years",
+      "type": "integer",
+      "unit": "calendar_years",
+      "default": 10,
+      "nullable": false,
+      "scope": "book",
+      "bounds": {
+        "mode": "range",
+        "minimum": 10
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "retention_minimum"
+    },
+    {
+      "key": "i18n.default",
+      "type": "string",
+      "unit": "locale",
+      "default": "id",
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          "id"
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "product_policy"
+    },
+    {
+      "key": "i18n.enabled",
+      "type": "array",
+      "unit": "locales",
+      "default": [
+        "id",
+        "en"
+      ],
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          [
+            "id",
+            "en"
+          ]
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "product_policy"
+    },
+    {
+      "key": "api.pagination_default",
+      "type": "integer",
+      "unit": "records",
+      "default": 50,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          50
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "api.pagination_max",
+      "type": "integer",
+      "unit": "records",
+      "default": 200,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          200
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "csv.commit_chunk_rows",
+      "type": "integer",
+      "unit": "records",
+      "default": 100,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          100
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "api.bulk_max_services",
+      "type": "integer",
+      "unit": "services",
+      "default": 1000,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          1000
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "clock.max_skew_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 5,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          5
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "readiness.poll_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 5,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          5
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "readiness.deadline_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 120,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          120
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "job.status_poll_initial_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 2,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          2
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "job.status_poll_later_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 5,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          5
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "radius.edge_snapshot_ttl_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 900,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          900
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "upload.payment_proof_max_bytes",
+      "type": "integer",
+      "unit": "bytes",
+      "default": 5242880,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          5242880
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "isolation.scheduler_time",
+      "type": "string",
+      "unit": "tenant_local_time",
+      "default": "01:00",
+      "nullable": false,
+      "scope": "tenant",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          "01:00"
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "product_policy"
+    },
+    {
+      "key": "privacy.incident.processor_escalation_max_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 86400,
+      "nullable": false,
+      "scope": "platform",
+      "bounds": {
+        "mode": "range",
+        "minimum": 1,
+        "maximum": 86400
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "privacy.incident.initial_draft_max_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 86400,
+      "nullable": false,
+      "scope": "platform",
+      "bounds": {
+        "mode": "range",
+        "minimum": 1,
+        "maximum": 86400
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "privacy.incident.delivery_ready_max_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 172800,
+      "nullable": false,
+      "scope": "platform",
+      "bounds": {
+        "mode": "range",
+        "minimum": 1,
+        "maximum": 172800
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "privacy.incident.notification_deadline_s",
+      "type": "integer",
+      "unit": "seconds",
+      "default": 259200,
+      "nullable": false,
+      "scope": "platform",
+      "bounds": {
+        "mode": "range",
+        "minimum": 1,
+        "maximum": 259200
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "release.pilot.max_tenants",
+      "type": "integer",
+      "unit": "tenants",
+      "default": 1,
+      "nullable": false,
+      "scope": "pilot",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          1
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "release.pilot.max_routers",
+      "type": "integer",
+      "unit": "routers",
+      "default": 1,
+      "nullable": false,
+      "scope": "pilot",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          1
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "release.pilot.max_services",
+      "type": "integer",
+      "unit": "services",
+      "default": 50,
+      "nullable": false,
+      "scope": "pilot",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          50
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "release.pilot.min_observation_days",
+      "type": "integer",
+      "unit": "real_calendar_days",
+      "default": 7,
+      "nullable": false,
+      "scope": "pilot",
+      "bounds": {
+        "mode": "approved_default_only",
+        "allowed": [
+          7
+        ]
+      },
+      "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "router.rest_enabled",
+      "type": "boolean",
+      "unit": "boolean",
+      "default": false,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "release_gated_boolean",
+        "allowed": [
+          false,
+          true
+        ]
+      },
+      "change_rule": "True requires applicable capability, release gates and explicit authorized activation; false default is not a test sandbox prohibition.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "notification.enabled",
+      "type": "boolean",
+      "unit": "boolean",
+      "default": false,
+      "nullable": false,
+      "scope": "tenant",
+      "bounds": {
+        "mode": "release_gated_boolean",
+        "allowed": [
+          false,
+          true
+        ]
+      },
+      "change_rule": "True requires applicable capability, release gates and explicit authorized activation; false default is not a test sandbox prohibition.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "radius.edge_enabled",
+      "type": "boolean",
+      "unit": "boolean",
+      "default": false,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "release_gated_boolean",
+        "allowed": [
+          false,
+          true
+        ]
+      },
+      "change_rule": "True requires applicable capability, release gates and explicit authorized activation; false default is not a test sandbox prohibition.",
+      "basis": "engineering_default"
+    }
+  ]
+}

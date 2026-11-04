@@ -6,11 +6,23 @@
   "environment_overrides": {
     "project_name": "PROJECT_NAME",
     "application_name": "APP_NAME",
-    "display_name": "BRAND_NAME"
+    "display_name": "BRAND_NAME",
+    "public_domain": "BRAND_DOMAIN",
+    "public_logo": "BRAND_LOGO",
+    "public_contact": "BRAND_CONTACT"
   },
   "rules": [
     "Display branding is configurable; stable IDs, API paths, database names, tenant identities and persisted data must not be derived from mutable display names.",
     "Render product labels through the shared branding configuration; no hardcoded product labels in future application code.",
-    "A display-name change must not require migrations or invalidate sessions, credentials or integrations."
-  ]
+    "A display-name change must not require migrations or invalidate sessions, credentials or integrations.",
+    "project_id is stable after installation; it is not a display-name variable.",
+    "Resolve nonempty environment override before file default. Empty string is invalid.",
+    "Expose only the resolved public display configuration to the frontend through the backend; process.env is not a Vite runtime config.",
+    "If PROJECT_NAME is the only name override, application_name and display_name inherit it unless independently overridden.",
+    "Missing public domain/logo/contact blocks public publication, not local application build; local uses explicit development placeholders."
+  ],
+  "revision": "2.2",
+  "public_domain": null,
+  "public_logo": null,
+  "public_contact": null
 }

@@ -1,0 +1,2537 @@
+{
+  "revision": "2.2",
+  "rules": [
+    "One backlog; keep all 85 TK IDs.",
+    "Select earliest release with runnable work: R1, R2, R3, R4. Shared SCOPED_R1_R4 tasks run for relevant implemented features only.",
+    "contract means concrete interface/schema; build means code plus local tests; verified means relevant observed environment evidence.",
+    "A verified dependency gates the dependent verification/release, not coding its interface or tests.",
+    "No external inventory, hardware model or professional approval is fabricated. Missing remote access blocks dependent verification only.",
+    "For runtime acceptance use ACCEPTANCE.md and the domain docs; a short task done_when is not the complete requirement.",
+    "Network/finance invariants and current permissions apply to every task."
+  ],
+  "topological_order": [
+    "TK-001",
+    "TK-002",
+    "TK-1001",
+    "TK-003",
+    "TK-004",
+    "TK-107",
+    "TK-1002",
+    "TK-101",
+    "TK-102",
+    "TK-108",
+    "TK-103",
+    "TK-105",
+    "TK-106",
+    "TK-104",
+    "TK-109",
+    "TK-301",
+    "TK-304",
+    "TK-306",
+    "TK-201",
+    "TK-302",
+    "TK-303",
+    "TK-307",
+    "TK-401",
+    "TK-408",
+    "TK-505",
+    "TK-510",
+    "TK-801",
+    "TK-202",
+    "TK-204",
+    "TK-205",
+    "TK-305",
+    "TK-402",
+    "TK-409",
+    "TK-502",
+    "TK-504",
+    "TK-802",
+    "TK-901",
+    "TK-203",
+    "TK-406",
+    "TK-410",
+    "TK-411",
+    "TK-503",
+    "TK-506",
+    "TK-403",
+    "TK-405",
+    "TK-507",
+    "TK-511",
+    "TK-1003",
+    "TK-1004",
+    "TK-404",
+    "TK-407",
+    "TK-412",
+    "TK-501",
+    "TK-601",
+    "TK-811",
+    "TK-902",
+    "TK-1005",
+    "TK-509",
+    "TK-602",
+    "TK-607",
+    "TK-608",
+    "TK-609",
+    "TK-701",
+    "TK-803",
+    "TK-903",
+    "TK-1006",
+    "TK-605",
+    "TK-702",
+    "TK-904",
+    "TK-603",
+    "TK-703",
+    "TK-905",
+    "TK-508",
+    "TK-604",
+    "TK-704",
+    "TK-804",
+    "TK-807",
+    "TK-606",
+    "TK-705",
+    "TK-806",
+    "TK-808",
+    "TK-809",
+    "TK-810",
+    "TK-906",
+    "TK-805"
+  ],
+  "tasks": [
+    {
+      "id": "TK-001",
+      "release": "R1",
+      "goal": "Baca README, MASTER_PROMPT dan dokumen domain relevan; jalankan check_docs.py; gap analysis repository tanpa menyalin atau memindahkan docs; buat checkpoint docs/progress.md bila belum ada.",
+      "depends_on": [],
+      "requirements": [],
+      "done_when": [
+        "Source docs current pass static validation; existing user changes preserved.",
+        "Earliest unfinished R1 slice and exact missing dependencies are recorded in docs/progress.md."
+      ]
+    },
+    {
+      "id": "TK-002",
+      "release": "R1",
+      "goal": "ADR stack (pin patch/minor), toolchain (IMPLEMENTATION_PLAN.md), dependency manifest, **review lisensi (GPL/AGPL; FreeRADIUS GPLv2 berjalan sebagai proses terpisah)** di `docs/progress.md` (bagian kompatibilitas), ClamAV (stub dev), Mailpit, layout repository, dev bootstrap, CI, lab RADIUS.",
+      "depends_on": [
+        {
+          "id": "TK-001",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "INF-01"
+      ],
+      "done_when": [
+        "Pinned stack lockfiles, dependency/license manifest, CI and all standard Make targets",
+        "Bootstrap in clean owned workspace; missing lock/digest or unsafe dev scanner fails release checks"
+      ]
+    },
+    {
+      "id": "TK-003",
+      "release": "R1",
+      "goal": "Buat model dan permission fondasi R1, kontrak API/enum/state, batas secret dan konfigurasi. Domain/tabel/ledger tiga lapis dibangun pada fase yang memakainya; R1 hanya menyiapkan interface/event sumber untuk buku platform.",
+      "depends_on": [
+        {
+          "id": "TK-002",
+          "milestone": "contract"
+        }
+      ],
+      "requirements": [
+        "API-01",
+        "API-02",
+        "DATA-01",
+        "DATA-02",
+        "DATA-03",
+        "GOAL-02",
+        "JOB-01",
+        "SYNC-01"
+      ],
+      "done_when": [
+        "Concrete R1 schema/API/permission/enums/state/config contracts and immutable platform payment source events exist.",
+        "Composite tenant FK, duplicate event and wrong permission are rejected in real PostgreSQL; full ledger enforcement belongs to TK-701."
+      ]
+    },
+    {
+      "id": "TK-004",
+      "release": "R1",
+      "goal": "Simulator RouterOS deterministik + failure injection + rencana lab nyata/CHR; fixture RADIUS (radclient).",
+      "depends_on": [
+        {
+          "id": "TK-003",
+          "milestone": "contract"
+        }
+      ],
+      "requirements": [],
+      "done_when": [
+        "Seeded synthetic adapters and fault barriers produce repeatable outcomes; real-lab plan separate",
+        "Simulator result never produces verified_lab; fault after send yields uncertain"
+      ]
+    },
+    {
+      "id": "TK-107",
+      "release": "R1",
+      "goal": "Registri konfigurasi dan release flag (seluruh kunci defaults.json, `BRAND_*`, `contact_confirmation`); landing publik menolak rilis bila `BRAND_*` kosong.",
+      "depends_on": [
+        {
+          "id": "TK-003",
+          "milestone": "contract"
+        }
+      ],
+      "requirements": [
+        "UX-01"
+      ],
+      "done_when": [
+        "Typed canonical registry, migration aliases and release flags; required brand inputs validated",
+        "Unknown/duplicate alias/type rejected; missing brand blocks public landing only"
+      ]
+    },
+    {
+      "id": "TK-101",
+      "release": "R1",
+      "goal": "User, tenant, membership, peran bawaan + Akuntan + Viewer + Kolektor + Agen, scope router, proteksi Owner terakhir; peran platform; MFA TOTP + kode pemulihan, reauth 10 menit, kebijakan sesi, rate limit login, email transaksional.",
+      "depends_on": [
+        {
+          "id": "TK-003",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-004",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-107",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "SEC-01",
+        "TEN-01",
+        "TEN-02",
+        "TEN-03"
+      ],
+      "done_when": [
+        "Membership, roles, last Owner guard, MFA, reauth, recovery and sessions implemented",
+        "Revoked role/session, foreign tenant, expired reauth and last-owner deletion denied"
+      ]
+    },
+    {
+      "id": "TK-102",
+      "release": "R1",
+      "goal": "RLS/constraint, audit redaction, secret boundary, SupportGrant, suite negatif tenant.",
+      "depends_on": [
+        {
+          "id": "TK-101",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "DATA-01",
+        "DATA-02",
+        "OPS-SEC",
+        "PDP-01",
+        "PDP-02",
+        "PDP-03",
+        "PDP-04",
+        "PDP-05",
+        "RAD-13",
+        "SEC-01",
+        "SEC-04",
+        "SEC-05",
+        "TEN-01",
+        "TEN-02",
+        "TEN-03"
+      ],
+      "done_when": [
+        "FORCE RLS, composite FK, secret handling and SupportGrant cover every implemented resource",
+        "Runtime SQL bypass, pool reuse, expired grant and cross-tenant bulk rejected"
+      ]
+    },
+    {
+      "id": "TK-103",
+      "release": "R1",
+      "goal": "Outbox/job/attempt/lease/reconciliation dan U16; tes crash dan stale writer.",
+      "depends_on": [
+        {
+          "id": "TK-102",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-107",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-004",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "API-01",
+        "API-02",
+        "DATA-03",
+        "JOB-02",
+        "JOB-03",
+        "JOB-04",
+        "JOB-05",
+        "SYNC-03"
+      ],
+      "done_when": [
+        "Outbox+domain atomic, dedup event, typed kinds, lease and active domain contract state machine",
+        "Crash before commit, after send and stale worker cannot duplicate effect"
+      ]
+    },
+    {
+      "id": "TK-104",
+      "release": "R1",
+      "goal": "U01 (rangka), U02, U03 (kartu modul yang ada; R2 disembunyikan), U18, AppShell (sidebar 5 kelompok; header admin navy), tenant switcher, navigasi per permission, komponen status.",
+      "depends_on": [
+        {
+          "id": "TK-102",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-103",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-108",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "TEN-01",
+        "TEN-02",
+        "TEN-03",
+        "UX-01",
+        "UX-02",
+        "UX-05"
+      ],
+      "done_when": [
+        "AppShell and U01-U03/U18 render current permitted features and independent statuses",
+        "Foreign tenant caches cleared; R2 cards absent R1; unsupported actions denied server-side"
+      ]
+    },
+    {
+      "id": "TK-105",
+      "release": "R1",
+      "goal": "Seed PlanVersion/kuota; reservasi atomik, release/reconcile, renewal, usage projection; draft cap; plafon Platinum; aturan hitung.",
+      "depends_on": [
+        {
+          "id": "TK-102",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-107",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "SUB-01",
+        "SUB-02",
+        "SUB-03"
+      ],
+      "done_when": [
+        "Plan quota identity set, reservations, draft cap and replacement reconciliation",
+        "Concurrent reserve cannot exceed cap; pending uncertainty never frees quota"
+      ]
+    },
+    {
+      "id": "TK-106",
+      "release": "R1",
+      "goal": "Storage adapter privat + pipeline upload (MIME, ukuran, scan fail-closed, path opaque, signed URL 5 menit).",
+      "depends_on": [
+        {
+          "id": "TK-102",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-107",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "PAY-01",
+        "PAY-02",
+        "SEC-03"
+      ],
+      "done_when": [
+        "Private upload scan, opaque paths, encrypted durable object and authenticated URL gateway",
+        "Scanner unhealthy, traversal, wrong MIME, foreign scope or expired URL blocks access"
+      ]
+    },
+    {
+      "id": "TK-108",
+      "release": "R1",
+      "goal": "**Framework i18n**: katalog `id`/`en` (FormatJS + gettext), kunci stabil, ekstraksi CI, uji paritas, pseudo-locale, `Accept-Language`, `GET /meta/enums`, pemilih bahasa, bahasa tenant/pengguna/pelanggan, format IDR/tanggal/zona WIB-WITA-WIT, fallback ke `id` (I18N-01–10).",
+      "depends_on": [
+        {
+          "id": "TK-101",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-107",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "GOAL-06",
+        "I18N-01",
+        "I18N-02",
+        "I18N-03",
+        "I18N-04",
+        "I18N-05",
+        "I18N-06",
+        "I18N-07",
+        "I18N-08",
+        "I18N-09",
+        "I18N-10",
+        "UX-02",
+        "UX-05"
+      ],
+      "done_when": [
+        "id/en catalog and API q-weighted locale fallback; pseudo locale test-only",
+        "Missing placeholder, hardcoded visible strings, cross-tenant locale cache fail CI"
+      ]
+    },
+    {
+      "id": "TK-109",
+      "release": "R1",
+      "goal": "Render PDF invoice/kwitansi/laporan; snapshot issued bahasa, timezone, template version, nilai dan artifact/hash final sesuai kontrak domain aktif; reprint konsisten.",
+      "depends_on": [
+        {
+          "id": "TK-106",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-108",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "BIL-07",
+        "BIL-08",
+        "I18N-01",
+        "I18N-02",
+        "I18N-03",
+        "I18N-04",
+        "I18N-05",
+        "I18N-06",
+        "I18N-07",
+        "I18N-08",
+        "I18N-09",
+        "I18N-10"
+      ],
+      "done_when": [
+        "Issued PDF stores language/timezone/template/values/artifact hash immutable",
+        "External URL/file fetch denied; later template/locale changes do not change reprint"
+      ]
+    },
+    {
+      "id": "TK-201",
+      "release": "R1",
+      "goal": "Quotation/invoice/upload/verification/approval + entitlement transaksi+outbox; U14 dan subscription U18; upgrade (hari bonus), downgrade.",
+      "depends_on": [
+        {
+          "id": "TK-103",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-105",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-106",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-109",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "PAY-01",
+        "PAY-02",
+        "SUB-04"
+      ],
+      "done_when": [
+        "Quotation and SaaS approval commit payment/entitlement/outbox atomically",
+        "Two approvals produce one entitlement; incomplete funding never activates"
+      ]
+    },
+    {
+      "id": "TK-202",
+      "release": "R1",
+      "goal": "Peran platform terpisah; approve/reject/revision dengan audit.",
+      "depends_on": [
+        {
+          "id": "TK-201",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-102",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "PAY-03"
+      ],
+      "done_when": [
+        "Platform approve/reject/revision separated from payment-destination permission",
+        "Approver cannot edit account details; tenant roles cannot use platform endpoints"
+      ]
+    },
+    {
+      "id": "TK-203",
+      "release": "R1",
+      "goal": "Partial, selisih lebih (kredit), duplikat (peringatan), invoice expired, refund/koreksi, retry approval.",
+      "depends_on": [
+        {
+          "id": "TK-201",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-202",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "PAY-04",
+        "SUB-04"
+      ],
+      "done_when": [
+        "Partial, true distinct transfers, credits, expired invoice and corrections conserve money",
+        "Replay same bank event dedups; two genuine transfers are both payments"
+      ]
+    },
+    {
+      "id": "TK-204",
+      "release": "R1",
+      "goal": "Harga di U01; PaymentDestination editable (PRODUCT.md §4), `published=false`; kontak konfirmasi 082319199930; fair use Platinum pada landing.",
+      "depends_on": [
+        {
+          "id": "TK-104",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-201",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-107",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "PAY-03",
+        "UX-01"
+      ],
+      "done_when": [
+        "Authenticated payment instructions and landing only verified released features",
+        "Unconfigured brand blocks publication; bank seed absent public landing"
+      ]
+    },
+    {
+      "id": "TK-205",
+      "release": "R1",
+      "goal": "Mesin status SaaS (grace 7, restricted ≤ 30, ended; VPN/RADIUS 60 hari dengan notifikasi 7/3/1; data 180 hari) dengan job harian; **autentikasi RADIUS tenant tetap dilayani saat ended**; tanpa isolir internet.",
+      "depends_on": [
+        {
+          "id": "TK-201",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-103",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "SUB-05"
+      ],
+      "done_when": [
+        "E-based grace/restricted/ended, retention and controlled offboarding",
+        "SaaS debt cannot isolate subscriber; failed notice/recovery blocks withdrawal"
+      ]
+    },
+    {
+      "id": "TK-301",
+      "release": "R1",
+      "goal": "Registry peer/alamat unik, token hashed sekali pakai (TTL 15 menit), expiry/revoke/rotation, VPN manager typed, nftables default-deny termasuk RADIUS 1812/1813 dan 3799.",
+      "depends_on": [
+        {
+          "id": "TK-102",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-103",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-107",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "NET-01",
+        "NET-03",
+        "NET-06",
+        "NET-08"
+      ],
+      "done_when": [
+        "Unique peer/address, hashed nonce, typed VPN outbox reconciliation and least privilege",
+        "Expired/replayed token, identity mismatch, overlap and cross-peer paths denied"
+      ]
+    },
+    {
+      "id": "TK-302",
+      "release": "R1",
+      "goal": "Bootstrap bernamespace idempoten (ROUTEROS.md): preview, validasi enrollment, private key di router, kredensial dibangkitkan di router, mode `read_only`/`manage`, sertifikat api-ssl, pemeriksaan overlap; **tidak menyentuh `/radius`, `/ppp aaa`, profil Hotspot**.",
+      "depends_on": [
+        {
+          "id": "TK-301",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-304",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "NET-01",
+        "NET-03",
+        "NET-06",
+        "NET-08"
+      ],
+      "done_when": [
+        "Previewed owned management setup idempotent, TLS validation before privileged step",
+        "Existing AAA/Hotspot/default route/bridge/user/shared API config untouched without grant"
+      ]
+    },
+    {
+      "id": "TK-303",
+      "release": "R1",
+      "goal": "Health tunnel/API/auth/permission/TLS/capability terpisah; U05/U06.",
+      "depends_on": [
+        {
+          "id": "TK-301",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-304",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-104",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "MON-01",
+        "NET-04"
+      ],
+      "done_when": [
+        "Tunnel/API/TLS/auth/permission/capability health recorded separately U05/U06",
+        "TLS failure not mislabeled router power-down; unknown stays unknown"
+      ]
+    },
+    {
+      "id": "TK-304",
+      "release": "R1",
+      "goal": "Klien native API-SSL internal dengan certificate pin dan bounded I/O; REST alternatif default off; custom group teruji; target registry dan pencegahan SSRF. Tidak membangun SDK jaringan generik.",
+      "depends_on": [
+        {
+          "id": "TK-102",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-103",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-004",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "NET-04",
+        "NET-05",
+        "NET-07",
+        "SEC-02"
+      ],
+      "done_when": [
+        "Native API-SSL typed client, pin and egress registry; REST default off",
+        "Rebinding/redirect/wrong pin/expired cert/raw command rejected before secret send"
+      ]
+    },
+    {
+      "id": "TK-305",
+      "release": "R1",
+      "goal": "Uji NAT/CGNAT, UDP tertutup, reload firewall, IPv6, LAN sama antar-tenant, replay/expiry, reboot, v6 read-only dan mutasi/cutover ditolak, isolasi peer.",
+      "depends_on": [
+        {
+          "id": "TK-301",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-302",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-304",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "NET-02",
+        "NET-06",
+        "NET-08"
+      ],
+      "done_when": [
+        "NAT/CGNAT/UDP/IPv6/firewall reload/reboot and unsupported v6 suite",
+        "No peer-to-peer/internal access or unauthorized downgrade fallback"
+      ]
+    },
+    {
+      "id": "TK-306",
+      "release": "R1",
+      "goal": "FreeRADIUS multi-tenant melalui facade EXECUTE-only kontrak domain aktif/kontrak domain aktif; projection-writer scoped tenant dalam transaksi bisnis; Message-Authenticator, bind tunnel, client revision/reload terverifikasi. Dua proses adalah process redundancy, bukan host HA; klaim HA menunggu failure domain independen/G4 .",
+      "depends_on": [
+        {
+          "id": "TK-102",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-103",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-105",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "GOAL-05",
+        "RAD-01",
+        "RAD-02",
+        "RAD-03",
+        "RAD-04",
+        "RAD-05",
+        "RAD-13",
+        "RAD-14"
+      ],
+      "done_when": [
+        "Tenant NAS identity and EXECUTE-only facade, transactional projection, proper dictionary",
+        "Direct table access/spoofed tenant/client identity and bad authenticator denied"
+      ]
+    },
+    {
+      "id": "TK-307",
+      "release": "R1",
+      "goal": "Lifecycle klien NAS (`radius.nas`) bersama enrollment/revoke/replace; rotasi secret; uji isolasi tenant (T19) dan atribut (T16) dengan radclient.",
+      "depends_on": [
+        {
+          "id": "TK-301",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-306",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "RAD-01",
+        "RAD-02",
+        "RAD-03"
+      ],
+      "done_when": [
+        "Enrollment/revoke/replace update revisioned NAS clients and verified reload",
+        "Wrong/old secret, unknown NAS or generation mismatch never Accept"
+      ]
+    },
+    {
+      "id": "TK-401",
+      "release": "R1",
+      "goal": "Discovery PPP/Hotspot/pools/interface/queue/firewall(FastTrack)/RADIUS/`ppp aaa`; bounded reads; tanpa password.",
+      "depends_on": [
+        {
+          "id": "TK-304",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-103",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "GOAL-01",
+        "GOAL-03",
+        "IMP-01",
+        "IMP-05"
+      ],
+      "done_when": [
+        "Bounded read-only discovery creates timestamped fingerprint snapshot",
+        "No password fetch or router write; non-PPPoE/admin remain unmanaged"
+      ]
+    },
+    {
+      "id": "TK-402",
+      "release": "R1",
+      "goal": "Snapshot/fingerprint/mapping; filter `service` (pppoe/any dimigrasi; lainnya `unmanaged`); `service=any` direview; RADIUS eksternal → jalur S4.",
+      "depends_on": [
+        {
+          "id": "TK-401",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-306",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "DATA-01",
+        "DATA-02",
+        "GOAL-01",
+        "GOAL-03",
+        "IMP-02",
+        "IMP-04",
+        "IMP-05"
+      ],
+      "done_when": [
+        "Stable mapping handles service any review and external RADIUS path S4",
+        "Changing handle without matching fingerprint cannot rebind an account"
+      ]
+    },
+    {
+      "id": "TK-403",
+      "release": "R1",
+      "goal": "**Wizard adopsi/migrasi U07 8 langkah** (database-only), progres per tenant, revalidasi snapshot, peringatan FastTrack.",
+      "depends_on": [
+        {
+          "id": "TK-402",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-408",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-410",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-411",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-105",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-108",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "GOAL-01",
+        "GOAL-03",
+        "IMP-02",
+        "IMP-03",
+        "IMP-04",
+        "RAD-09",
+        "UX-06"
+      ],
+      "done_when": [
+        "Eight-step adoption persists tenant progress, revalidates snapshot and commits DB only",
+        "Stale preview, quota race or unresolved identity blocks commit; no router writes"
+      ]
+    },
+    {
+      "id": "TK-404",
+      "release": "R1",
+      "goal": "U08 CSV: template berversi, mode (termasuk password migrasi), streaming validation, preview, chunk commit idempoten; batas 10 MiB/10.000 baris (plafon 20/20.000 setelah uji beban).",
+      "depends_on": [
+        {
+          "id": "TK-403",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-106",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-107",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "CSV-01",
+        "CSV-02",
+        "CSV-03",
+        "GOAL-01",
+        "GOAL-03",
+        "SEC-03",
+        "SUB-01",
+        "SUB-02",
+        "SUB-03"
+      ],
+      "done_when": [
+        "Versioned streaming CSV modes, preview, explicit clear_fields and idempotent chunks",
+        "Byte/record ceiling, cross-tenant references and formula/secret leakage rejected"
+      ]
+    },
+    {
+      "id": "TK-405",
+      "release": "R1",
+      "goal": "U04 CRUD/pencarian/filter; pilihan akhir yang menyatakan efek ke router; password dibangkitkan, tampil sekali, reveal berizin (reauth, audit, 30 dtk); rotasi aksi terpisah; tab Akses.",
+      "depends_on": [
+        {
+          "id": "TK-104",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-108",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-408",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-410",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-411",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "CUS-01",
+        "CUS-02",
+        "UX-03",
+        "UX-04"
+      ],
+      "done_when": [
+        "U04 draft/link/create/activate actions preserve separate service and credential states",
+        "Reveal needs live permission+reauth; rotation separate; failure keeps customer"
+      ]
+    },
+    {
+      "id": "TK-406",
+      "release": "R1",
+      "goal": "Drift (scan 6 jam + on-demand + preflight): `missing_source`, `needs_review`, `hold_unknown`, `local_account_shadow`, `binding_invalid`, `radius_client_missing`.",
+      "depends_on": [
+        {
+          "id": "TK-401",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-402",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-103",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "SYNC-01",
+        "SYNC-02"
+      ],
+      "done_when": [
+        "Scheduled/on-demand/preflight drift tracks exact identity and ownership",
+        "Unknown manual disabled state never auto-cleared; handle-only match denied"
+      ]
+    },
+    {
+      "id": "TK-407",
+      "release": "R1",
+      "goal": "Rename router; export berizin; archive/termination; offboarding (export akun RADIUS terenkripsi); **pelepasan dan penggantian router** (akun tidak dipetakan ulang; 30 hari tumpang tindih).",
+      "depends_on": [
+        {
+          "id": "TK-405",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-301",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-307",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-106",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "GOAL-05",
+        "LIF-01",
+        "LIF-02",
+        "LIF-03",
+        "LIF-04",
+        "PDP-01",
+        "PDP-02",
+        "PDP-03",
+        "PDP-04",
+        "PDP-05",
+        "RAD-11",
+        "SUB-01",
+        "SUB-02",
+        "SUB-03",
+        "UX-06"
+      ],
+      "done_when": [
+        "Rename/export/archive/release/replacement preserve identities and overlap rules",
+        "No automatic remap/disconnect/delete after 30 days; pending writer fenced"
+      ]
+    },
+    {
+      "id": "TK-408",
+      "release": "R1",
+      "goal": "TechnicalProfile/CommercialPackage(kecepatan, FUP, `first_period_policy`)/PackageRouterBinding(pool); hash profil.",
+      "depends_on": [
+        {
+          "id": "TK-102",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-306",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-107",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "PRO-01",
+        "RAD-04",
+        "RAD-05"
+      ],
+      "done_when": [
+        "Separate technical profile, commercial package, per-router binding and hash",
+        "Package speed edits do not mutate physical profile; invalid tenant/pool rejected"
+      ]
+    },
+    {
+      "id": "TK-409",
+      "release": "R1",
+      "goal": "Analisis dampak edit profil router (baca saja); blok edit langsung bila unmanaged terdampak.",
+      "depends_on": [
+        {
+          "id": "TK-401",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-408",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "PRO-02"
+      ],
+      "done_when": [
+        "Read-only profile impact counts managed and unmanaged consumers",
+        "Direct edit of shared profile blocked; no mutation enabled in R1"
+      ]
+    },
+    {
+      "id": "TK-410",
+      "release": "R1",
+      "goal": "**Mesin penggabungan identitas lintas router**: kandidat gabung/konflik/peringatan; keputusan `merge/keep_one/rename`; uji dengan fixture dua router.",
+      "depends_on": [
+        {
+          "id": "TK-402",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-105",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "GOAL-01",
+        "GOAL-03",
+        "GOAL-05",
+        "IMP-03",
+        "RAD-09"
+      ],
+      "done_when": [
+        "Identity merge uses structural compatibility then secure credential comparison",
+        "No name/MAC/phone-only merge; conflicts require explicit merge/keep/rename outcome"
+      ]
+    },
+    {
+      "id": "TK-411",
+      "release": "R1",
+      "goal": "**Sumber password S1–S4**: akun migrasi sementara (≤ 24 jam, penghapus otomatis, batas laju, verifikasi hilang), CSV, password baru, impor RADIUS eksternal; `password_unknown` tidak diproyeksikan.",
+      "depends_on": [
+        {
+          "id": "TK-304",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-402",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-106",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "GOAL-01",
+        "GOAL-03",
+        "IMP-03",
+        "NET-04",
+        "NET-05",
+        "NET-07",
+        "RAD-09"
+      ],
+      "done_when": [
+        "S1-S4 credential acquisition, unknown state and cleanup-safe harvest",
+        "Missing guaranteed TTL cleanup blocks privileged S1; no plaintext staging/log"
+      ]
+    },
+    {
+      "id": "TK-412",
+      "release": "R1",
+      "goal": "U19 bagian Akun (daftar, reveal, tangguhkan, MAC lock, batas sesi) dan status per router.",
+      "depends_on": [
+        {
+          "id": "TK-405",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-306",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-108",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "RAD-02",
+        "TEN-03"
+      ],
+      "done_when": [
+        "U19 account list, scoped reveal/MAC/session controls and per-router status",
+        "Read access does not demand cutover permission; mutation permission enforced separately"
+      ]
+    },
+    {
+      "id": "TK-501",
+      "release": "R1",
+      "goal": "Pembuatan/ubah akun akses idempoten (DB + proyeksi) dan job atribut (CoA/Disconnect); `uncertain` tidak diulang buta; \"Buat akun\"/\"Buat dan aktifkan\".",
+      "depends_on": [
+        {
+          "id": "TK-103",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-306",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-307",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-405",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-408",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "CUS-01",
+        "CUS-02",
+        "RAD-04",
+        "RAD-05",
+        "RAD-06",
+        "SYNC-03"
+      ],
+      "done_when": [
+        "Create/update account+projection atomic; Disconnect/CoA verified independently",
+        "CoA unsupported fails capability; replay and uncertain result not resent blindly"
+      ]
+    },
+    {
+      "id": "TK-509",
+      "release": "R1",
+      "goal": "**Cutover engine B0–B6** (RAD-10): preflight+backup, paritas server-side, pasang klien (ROUTEROS.md), canary, aktif penuh, otoritatif per batch, rollback; `enforcement_mode`; metode B5 sesuai lab; U19 bagian Cutover. Hanya mode `manage` dan `radius.cutover`.",
+      "depends_on": [
+        {
+          "id": "TK-302",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-403",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-406",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-501",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-510",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-507",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-511",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "GOAL-01",
+        "GOAL-03",
+        "GOAL-05",
+        "RAD-10",
+        "RAD-11",
+        "RAD-14"
+      ],
+      "done_when": [
+        "B0-B6 cutover with snapshot parity/canary/full observation/owned batches",
+        "No local-shadow canary, unauthorized deletion, global rollback or shortened observation"
+      ]
+    },
+    {
+      "id": "TK-510",
+      "release": "R1",
+      "goal": "Ingest accounting (`radacct` dipartisi), `connection_state`, janitor sesi basi, `usage_daily`, retensi; `Simultaneous-Use` lintas router.",
+      "depends_on": [
+        {
+          "id": "TK-306",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-103",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "MON-01",
+        "MON-02",
+        "MON-03",
+        "MON-04",
+        "RAD-07",
+        "RAD-14"
+      ],
+      "done_when": [
+        "Accounting session identity, dedup delta, partitions, stale unknown and strict admission",
+        "Missing Start/Stop or reordered counters cannot free occupied limit or forge Stop"
+      ]
+    },
+    {
+      "id": "TK-511",
+      "release": "R1",
+      "goal": "Monitoring RADIUS (rasio auth, latensi, antrean, klien hilang), insiden, runbook rollback; dua alamat RADIUS pada router.",
+      "depends_on": [
+        {
+          "id": "TK-306",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-307",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-502",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-503",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "MON-05",
+        "RAD-08"
+      ],
+      "done_when": [
+        "Auth/latency/queue/client health and dual configured RADIUS targets",
+        "Two processes same host cannot claim host HA"
+      ]
+    },
+    {
+      "id": "TK-502",
+      "release": "R1",
+      "goal": "Monitoring U13: collector bounded, timestamps, stale (>3× interval)/unknown/gap, counter reset/wrap, circuit breaker, insiden dedup, status router, insiden platform saat collector gagal.",
+      "depends_on": [
+        {
+          "id": "TK-303",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-510",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-103",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "MON-01",
+        "MON-02",
+        "MON-03",
+        "MON-04",
+        "MON-05"
+      ],
+      "done_when": [
+        "Bounded collector samples metadata/counter resets/gaps and incidents",
+        "Collector outage is platform incident; not all routers down; no double WAN/LAN count"
+      ]
+    },
+    {
+      "id": "TK-503",
+      "release": "R1",
+      "goal": "Prometheus internal; query template; tanpa label username/telepon/invoice; retensi 15/90/400 hari.",
+      "depends_on": [
+        {
+          "id": "TK-502",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-102",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "MON-01",
+        "MON-02",
+        "MON-03",
+        "MON-04",
+        "MON-06"
+      ],
+      "done_when": [
+        "Internal Prometheus raw15d plus PostgreSQL aggregates90/400d",
+        "No PII/high-cardinality username/invoice labels; tenant cannot arbitrary query"
+      ]
+    },
+    {
+      "id": "TK-504",
+      "release": "R1",
+      "goal": "U12 jadwal backup per router/timezone; password binary dibangkitkan platform; kategori routine/manual/prechange; backup pre-change otomatis sebelum cutover.",
+      "depends_on": [
+        {
+          "id": "TK-103",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-106",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-303",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "BKP-01",
+        "BKP-02",
+        "BKP-04"
+      ],
+      "done_when": [
+        "Timezone scheduler and manual/prechange generation with key version and category",
+        "No catalog success before all mandatory artifacts; prechange required for cutover"
+      ]
+    },
+    {
+      "id": "TK-505",
+      "release": "R1",
+      "goal": "**Spike transfer**: SFTP push via VPN (primer), pull dengan host key dipin (cadangan); ukuran 64 MiB; receiver tanpa shell.",
+      "depends_on": [
+        {
+          "id": "TK-304",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-301",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-106",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "BKP-03"
+      ],
+      "done_when": [
+        "SFTP push identity controls or pinned pull fallback per proved capability",
+        "No shell/path escape/ignore-host validation; unsafe receiver blocks transfer"
+      ]
+    },
+    {
+      "id": "TK-506",
+      "release": "R1",
+      "goal": "Staging → verifikasi → enkripsi + durable → commit → retensi transaksional → prune async; orphan recovery; watermark; headroom.",
+      "depends_on": [
+        {
+          "id": "TK-504",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-505",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "BKP-01",
+        "BKP-02",
+        "BKP-04",
+        "BKP-06"
+      ],
+      "done_when": [
+        "Stage→verify→encrypt/durable→catalog→async prune is crash-safe",
+        "Partial/new failed backup never evicts valid old generation; watermark/headroom halt"
+      ]
+    },
+    {
+      "id": "TK-507",
+      "release": "R1",
+      "goal": "Unduh berizin + audit; kunci pemulihan (reauth+MFA); manual/prechange; restore hanya lewat runbook lab.",
+      "depends_on": [
+        {
+          "id": "TK-506",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-102",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "BKP-01",
+        "BKP-02",
+        "BKP-04",
+        "BKP-05"
+      ],
+      "done_when": [
+        "Authorized download/key recovery and explicit model-bound restore procedure",
+        "Wrong tenant/expired grant/reauth denies; only owned artifacts cleaned"
+      ]
+    },
+    {
+      "id": "TK-508",
+      "release": "R4",
+      "goal": "**R4/P9**: edit/clone profil fisik router melalui ChangePlan; dependency kontrak P9, capability G1 dan recovery teruji. P5 hanya discovery profil dan uji FastTrack/queue di lab; tidak membuka mutasi profil produk R1 (kontrak domain aktif, PRO-02).",
+      "depends_on": [
+        {
+          "id": "TK-409",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-902",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-905",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "PRO-02"
+      ],
+      "done_when": [
+        "R4 physical profile clone/edit via ChangePlan with consumer impact",
+        "R1-R3 cannot mutate physical profiles; unmanaged affected blocks direct edit"
+      ]
+    },
+    {
+      "id": "TK-601",
+      "release": "R2",
+      "goal": "Invoice/periode/due date/payment/allocation/partial/overpayment/aging; `fixed_monthly`/`anniversary`, `prepaid`/`postpaid`, `first_period_policy`; scheduler unik; snapshot harga; dokumen per bahasa; promo/add-on (BIL-07).",
+      "depends_on": [
+        {
+          "id": "TK-203",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-405",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-109",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-103",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "BIL-01",
+        "BIL-02",
+        "BIL-03",
+        "BIL-07",
+        "BIL-08",
+        "GOAL-02"
+      ],
+      "done_when": [
+        "Invoice periods/unique scheduler/allocation/promo/add-on/snapshots and aging",
+        "Payment cannot auto-activate; issued price unchanged; same event idempotent"
+      ]
+    },
+    {
+      "id": "TK-602",
+      "release": "R2",
+      "goal": "Scheduler isolir (harian 01:00 zona tenant) hanya kandidat berversi; worker baca ulang payment/policy/hold/revision; simulasi (ID 24 jam) wajib; policy default off; grace 3 hari.",
+      "depends_on": [
+        {
+          "id": "TK-601",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-406",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-103",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "ACT-01",
+        "ACT-02"
+      ],
+      "done_when": [
+        "Off-by-default policy, fresh simulation and 01:00 tenant candidate scheduler",
+        "Stale policy/simulation/hold or nonauthoritative router prevents effect"
+      ]
+    },
+    {
+      "id": "TK-603",
+      "release": "R2",
+      "goal": "Isolir/aktivasi via RADIUS (RAD-06, RADIUS.md §7, kontrak domain aktif): suspend memproyeksikan Reject, restore memproyeksikan Accept sesuai hold/binding; Disconnect terpisah dan verifikasi sesuai arah. Isolir terbatas opsional R3; hanya enforcement authoritative yang terbukti.",
+      "depends_on": [
+        {
+          "id": "TK-509",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-510",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-602",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-605",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "ACT-03",
+        "ACT-04",
+        "RAD-06"
+      ],
+      "done_when": [
+        "Reject+positive Disconnect verification, authorized manual Accept restoration",
+        "No interim silence proof; all NAS/IPv6/local shadows considered"
+      ]
+    },
+    {
+      "id": "TK-604",
+      "release": "R2",
+      "goal": "U09/U10: filter periode; aktivasi manual; snapshot; validasi per item; retry item aman.",
+      "depends_on": [
+        {
+          "id": "TK-601",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-603",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-104",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "ACT-05",
+        "GOAL-02",
+        "UX-03",
+        "UX-04"
+      ],
+      "done_when": [
+        "U09/U10 snapshot bulk and per-item current permission/payment validation",
+        "Foreign or changed item blocks that item without undoing valid successes"
+      ]
+    },
+    {
+      "id": "TK-605",
+      "release": "R2",
+      "goal": "Restore atribut hanya milik aplikasi yang cocok; hold mengalahkan pembayaran; override izin+alasan.",
+      "depends_on": [
+        {
+          "id": "TK-501",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-602",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "ACT-05"
+      ],
+      "done_when": [
+        "Restore only owned isolation attributes at matching revision",
+        "Payment cannot clear manual/security/technical hold; explicit override audited"
+      ]
+    },
+    {
+      "id": "TK-606",
+      "release": "R2",
+      "goal": "Uji bayar sebelum/sesudah enqueue, saat eksekusi, router offline, aktivasi ganda; policy berubah → `cancelled`.",
+      "depends_on": [
+        {
+          "id": "TK-603",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-604",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "ACT-02",
+        "JOB-04"
+      ],
+      "done_when": [
+        "Payment/enqueue/send/lease races produce deterministic safe outcomes",
+        "After possible effect cannot mark cancelled; paid-after-isolation awaits manual activation"
+      ]
+    },
+    {
+      "id": "TK-607",
+      "release": "R2",
+      "goal": "Migrasi saldo: opening balance cutover; review paid-through/tunggakan; tanpa double count.",
+      "depends_on": [
+        {
+          "id": "TK-601",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-003",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "ACC-08",
+        "ACC-09",
+        "BIL-04"
+      ],
+      "done_when": [
+        "Opening-balance cutover review with paid-through/debt snapshots",
+        "No historical invoice double posting; automation stays off before acceptance"
+      ]
+    },
+    {
+      "id": "TK-608",
+      "release": "R2",
+      "goal": "Dokumen koreksi: refund, diskon, write-off, pembatalan, deposit.",
+      "depends_on": [
+        {
+          "id": "TK-601",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-003",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "BIL-05"
+      ],
+      "done_when": [
+        "Source-linked refund/discount/write-off/void/deposit correction events",
+        "Posted history never deleted; independent operation approval and idempotency"
+      ]
+    },
+    {
+      "id": "TK-609",
+      "release": "R2",
+      "goal": "**Kolektor**: bundel/portal terbatas, penerimaan tunai bernomor, saldo \"belum disetor\", setoran, selisih, laporan; pengingat penagihan (BIL-06).",
+      "depends_on": [
+        {
+          "id": "TK-601",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-102",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-109",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "ACC-03",
+        "BIL-06",
+        "COL-01",
+        "COL-02",
+        "COL-03",
+        "GOAL-06"
+      ],
+      "done_when": [
+        "Scoped collector receipts, uncleared cash, settlement discrepancy and reminder events",
+        "Collector sees only own assigned scope; posted payment not contingent on settlement"
+      ]
+    },
+    {
+      "id": "TK-701",
+      "release": "R2",
+      "goal": "COA default (FINANCE.md §2), opening balance, FrameworkVersion, journal/line, posting rules, period lock; ledger tiga lapis dengan tes bypass; buku platform.",
+      "depends_on": [
+        {
+          "id": "TK-003",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-601",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "ACC-01",
+        "ACC-05",
+        "ACC-11",
+        "ACC-12",
+        "GOAL-04"
+      ],
+      "done_when": [
+        "COA/books/periods/framework and SQL three-layer posting enforcement",
+        "Unbalanced/cross-book/closed-period/direct SQL bypass rejected"
+      ]
+    },
+    {
+      "id": "TK-702",
+      "release": "R2",
+      "goal": "Posted immutable; reversal/adjustment; source-event dedup; closed-period; rounding; sisa pengakuan ke periode terakhir.",
+      "depends_on": [
+        {
+          "id": "TK-701",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-607",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-608",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "ACC-01",
+        "ACC-02",
+        "ACC-05",
+        "ACC-08",
+        "ACC-09",
+        "GOAL-04"
+      ],
+      "done_when": [
+        "Immutable posting, reversal, source-event uniqueness, exact rounding and recognition",
+        "Duplicate/reordered events and reopen across year boundary cannot corrupt history"
+      ]
+    },
+    {
+      "id": "TK-703",
+      "release": "R2",
+      "goal": "Piutang, kas/bank/e-wallet, pendapatan diterima di muka + recognition, utang/beban, persediaan, aset/penyusutan, **kolektor, cadangan piutang, payment fee, `TaxRule`**.",
+      "depends_on": [
+        {
+          "id": "TK-702",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-609",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "ACC-02",
+        "ACC-03",
+        "ACC-04",
+        "ACC-06",
+        "GOAL-04"
+      ],
+      "done_when": [
+        "Subledgers/collector/assets/fees/tax rules use versioned posting templates",
+        "Unknown tax rates require explicit effective rule; no universal tax hardcode"
+      ]
+    },
+    {
+      "id": "TK-704",
+      "release": "R2",
+      "goal": "Statement import dedup, split/merge match, tie-out subledger/control.",
+      "depends_on": [
+        {
+          "id": "TK-703",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "ACC-07",
+        "GOAL-04"
+      ],
+      "done_when": [
+        "Statement dedup, split/merge matches and subledger/control reconciliation",
+        "Statement balance cannot replace book; duplicate import cannot repeat posting"
+      ]
+    },
+    {
+      "id": "TK-705",
+      "release": "R2",
+      "goal": "U11: jurnal, buku besar, neraca saldo, laba-rugi, posisi keuangan, arus kas, aging, penerimaan harian, saldo kolektor, pendapatan per paket/router/area; basis/periode/drill-down; \"Belum final\".",
+      "depends_on": [
+        {
+          "id": "TK-704",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-109",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "ACC-10",
+        "GOAL-04",
+        "UX-06"
+      ],
+      "done_when": [
+        "U11 reports with basis/period/drilldown and unfinished-label semantics",
+        "Reports not final without required review; each tenant/book separated"
+      ]
+    },
+    {
+      "id": "TK-801",
+      "release": "R3",
+      "goal": "GenieACS terpisah, NBI internal, enrollment CPE (kredensial per-device).",
+      "depends_on": [
+        {
+          "id": "TK-102",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-103",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-301",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-106",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "ACS-01",
+        "ACS-02",
+        "ACS-03",
+        "ACS-04",
+        "ACS-05",
+        "ACS-06",
+        "ACS-08",
+        "ACS-09",
+        "ACS-10"
+      ],
+      "done_when": [
+        "Private GenieACS/Mongo, gateway and installed per-device claim credentials",
+        "Unclaimed/conflicting DeviceID never receives tenant credentials; NBI not public"
+      ]
+    },
+    {
+      "id": "TK-802",
+      "release": "R3",
+      "goal": "Capability per model/firmware; task lifecycle; karantina; matriks dari lab; virtual parameter TR-098/181.",
+      "depends_on": [
+        {
+          "id": "TK-801",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-004",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "ACS-01",
+        "ACS-02",
+        "ACS-03",
+        "ACS-04",
+        "ACS-05",
+        "ACS-06",
+        "ACS-08",
+        "ACS-09",
+        "ACS-10"
+      ],
+      "done_when": [
+        "TR098/TR181 mapping by references, capability model and active domain contract lifecycle",
+        "Unknown model unsupported; masked/write-only secret not treated as readback proof"
+      ]
+    },
+    {
+      "id": "TK-803",
+      "release": "R3",
+      "goal": "U15 Wi-Fi/config/optical hanya yang didukung; reboot/firmware dengan review; **rotasi password PPPoE terkoordinasi ACS↔RADIUS**.",
+      "depends_on": [
+        {
+          "id": "TK-802",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-501",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-412",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "ACS-01",
+        "ACS-02",
+        "ACS-03",
+        "ACS-04",
+        "ACS-05",
+        "ACS-06"
+      ],
+      "done_when": [
+        "U15 supported Wi-Fi/optical/config and coordinated CPE↔RADIUS rotation",
+        "Shared PPP path without proved recovery blocks automatic rotation"
+      ]
+    },
+    {
+      "id": "TK-804",
+      "release": "R3",
+      "goal": "Tiket/insiden/work order, inventaris (biaya ke akuntansi), assignment history, ODP, alokasi port atomik.",
+      "depends_on": [
+        {
+          "id": "TK-703",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-405",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-102",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "ACS-07",
+        "OPS-01",
+        "OPS-02",
+        "OPS-03"
+      ],
+      "done_when": [
+        "Inventory/ODP/ticket/incident/work-order with atomic port allocation and audit",
+        "Two assignments cannot consume same port; foreign location/customer denied"
+      ]
+    },
+    {
+      "id": "TK-805",
+      "release": "R3",
+      "goal": "Portal pelanggan (berbahasa pilihan) dan portal agen/kolektor berscope.",
+      "depends_on": [
+        {
+          "id": "TK-609",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-804",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-807",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-808",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-108",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "OPS-04"
+      ],
+      "done_when": [
+        "Separate customer/agent/collector sessions with narrow resource scopes",
+        "Payment upload not activation; portal cannot raw ACS/router/operator endpoints"
+      ]
+    },
+    {
+      "id": "TK-806",
+      "release": "R3",
+      "goal": "Notifikasi (default off; email SMTP tenant + adapter provider; templat per bahasa; dedup, rate limit).",
+      "depends_on": [
+        {
+          "id": "TK-103",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-108",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-609",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-804",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "BIL-06",
+        "MON-05",
+        "OPS-05"
+      ],
+      "done_when": [
+        "Off-by-default tenant channels, locale templates, dedup and rate cap input",
+        "Missing channel grant/consent/recipient or full-secret payload prevents sending"
+      ]
+    },
+    {
+      "id": "TK-807",
+      "release": "R3",
+      "goal": "**Voucher Hotspot**: batch, reservasi kuota atomik, atribut RADIUS, cetak/ekspor, cabut/perpanjang, kedaluwarsa.",
+      "depends_on": [
+        {
+          "id": "TK-105",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-306",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-510",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-408",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-703",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "GOAL-06",
+        "HSP-01",
+        "HSP-02",
+        "HSP-03",
+        "HSP-04",
+        "RAD-12"
+      ],
+      "done_when": [
+        "Voucher issuance reserves quota, random codes, counters, expiry and RADIUS projection",
+        "Concurrent 200/100 vs remaining250 no predetermined winner or excess; retry no duplicate"
+      ]
+    },
+    {
+      "id": "TK-808",
+      "release": "R3",
+      "goal": "**Agen/reseller**: stok, penjualan, komisi, setoran, jurnal.",
+      "depends_on": [
+        {
+          "id": "TK-807",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-703",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-102",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "ACC-01",
+        "ACC-05",
+        "AGT-01",
+        "AGT-02",
+        "AGT-03",
+        "GOAL-06"
+      ],
+      "done_when": [
+        "Agent stock/sale/commission/settlement and scoped quota",
+        "Sales-agent and reseller accounting cannot silently share incompatible policy"
+      ]
+    },
+    {
+      "id": "TK-809",
+      "release": "R3",
+      "goal": "**FUP/kuota data** berbasis accounting + aksi (turunkan kecepatan/isolir) dan CoA/Disconnect.",
+      "depends_on": [
+        {
+          "id": "TK-510",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-501",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-603",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-807",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "GOAL-06",
+        "HSP-05"
+      ],
+      "done_when": [
+        "Accounting-based FUP threshold/action uses policy revision and bounded counters",
+        "Duplicate/reset/wrap packet cannot double quota; no usage money charge without enabled plan"
+      ]
+    },
+    {
+      "id": "TK-810",
+      "release": "R3",
+      "goal": "**Prospek, survei, instalasi, work order** dan siklus pelanggan (LIF-01–04).",
+      "depends_on": [
+        {
+          "id": "TK-804",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-601",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-405",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "GOAL-06",
+        "LIF-01",
+        "LIF-02",
+        "LIF-03",
+        "LIF-04",
+        "OPS-01",
+        "OPS-02",
+        "OPS-03"
+      ],
+      "done_when": [
+        "Prospect/survey/install/active/terminate flows, equipment/deposit and history",
+        "Installation not active until verified; archive does not erase financial evidence"
+      ]
+    },
+    {
+      "id": "TK-811",
+      "release": "R3",
+      "goal": "**RADIUS edge replica** (sinkron tarikan bertanda tangan, antrean accounting).",
+      "depends_on": [
+        {
+          "id": "TK-306",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-307",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-510",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-511",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "RAD-08",
+        "RAD-14"
+      ],
+      "done_when": [
+        "Signed tenant snapshots, monotonic revision, 900s TTL and queued accounting replay",
+        "Partition strict global admission fails closed; expired snapshot no new login"
+      ]
+    },
+    {
+      "id": "TK-901",
+      "release": "R4",
+      "goal": "U17 dua pintu; static IP/prefix/gateway; DHCP lease.",
+      "depends_on": [
+        {
+          "id": "TK-304",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-408",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-104",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "CFG-01",
+        "CFG-02",
+        "WAN-01",
+        "WAN-02",
+        "WAN-03",
+        "WAN-04"
+      ],
+      "done_when": [
+        "U17 separate customer/WAN entry, typed static prefix/gateway/DHCP lease",
+        "Unsupported overlapping topology blocked; DNS never guessed gateway"
+      ]
+    },
+    {
+      "id": "TK-902",
+      "release": "R4",
+      "goal": "ChangePlan immutable (snapshot, template, ownership, diff, impact, expiry, backup, recovery).",
+      "depends_on": [
+        {
+          "id": "TK-901",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-406",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-507",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-103",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "CFG-01",
+        "CFG-02",
+        "WAN-01",
+        "WAN-02",
+        "WAN-03",
+        "WAN-04"
+      ],
+      "done_when": [
+        "Immutable ChangePlan contains exact ownership/diff/impact/expiry/backup/recovery",
+        "Stale or incomplete plan, only control path at risk without recovery cannot apply"
+      ]
+    },
+    {
+      "id": "TK-903",
+      "release": "R4",
+      "goal": "Single, failover recursive (≥2 target; hysteresis 3/5), weighted PCC hanya topologi teruji; PCC diblokir bila ada Hotspot server; probe lewat ISP benar; rute VPN/RADIUS tetap valid saat failover.",
+      "depends_on": [
+        {
+          "id": "TK-902",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-502",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "CFG-01",
+        "CFG-02",
+        "WAN-01",
+        "WAN-02",
+        "WAN-03",
+        "WAN-04"
+      ],
+      "done_when": [
+        "Proved single/failover/PCC templates with path-forced probes and 3/5 hysteresis",
+        "Active Hotspot blocks PCC; no bonding claim; VPN/RADIUS control remains reachable"
+      ]
+    },
+    {
+      "id": "TK-904",
+      "release": "R4",
+      "goal": "Local/VPN/DNAT/return path/FastTrack (pengecualian objek templat)/queue/IPv6; templat PPPoE/Hotspot server, pool, profil (ROUTEROS.md) untuk router pengganti.",
+      "depends_on": [
+        {
+          "id": "TK-902",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-903",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "CFG-01",
+        "CFG-02",
+        "WAN-01",
+        "WAN-02",
+        "WAN-03",
+        "WAN-04"
+      ],
+      "done_when": [
+        "Local/VPN/NAT/return/IPv6/queue templates alter owned objects only",
+        "No mass FastTrack/customer firewall rewrite or unsafe router replacement assumptions"
+      ]
+    },
+    {
+      "id": "TK-905",
+      "release": "R4",
+      "goal": "Apply bertahap + checkpoint/readback; `uncertain/recovery_required`; recovery hook bila lulus lab.",
+      "depends_on": [
+        {
+          "id": "TK-904",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-103",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "CFG-01",
+        "CFG-02",
+        "WAN-01",
+        "WAN-02",
+        "WAN-03",
+        "WAN-04"
+      ],
+      "done_when": [
+        "Stepwise apply checkpoints/readback and uncertainty/recovery hook contract",
+        "No blind retry or unscoped reset on lost control; stale writer fenced"
+      ]
+    },
+    {
+      "id": "TK-906",
+      "release": "R4",
+      "goal": "Adapter OLT terpilih setelah matriks model/protokol disahkan (ACS-07).",
+      "depends_on": [
+        {
+          "id": "TK-802",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-804",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-902",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "ACS-07"
+      ],
+      "done_when": [
+        "Per-model typed OLT interface only after named protocol/model matrix approved",
+        "No supported model from placeholder or ACS capability inference"
+      ]
+    },
+    {
+      "id": "TK-1001",
+      "release": "SCOPED_R1_R4",
+      "goal": "Catat inventory aktual yang diketahui dan input target yang belum tersedia sesuai OPERATIONS; kontrak lokal boleh lengkap tanpa mengarang fakta remote.",
+      "depends_on": [],
+      "requirements": [
+        "INF-02",
+        "INF-03"
+      ],
+      "done_when": [
+        "Local runtime inventory and remote target input contract recorded; missing physical facts explicitly unknown.",
+        "Actual target inventory required only before target deployment/verification; no capacity assertion invented."
+      ]
+    },
+    {
+      "id": "TK-1002",
+      "release": "SCOPED_R1_R4",
+      "goal": "Deployment reproducible (Compose+systemd), secret injection, health check, resource limit, rotasi log, sertifikat, expand/contract, worker drain.",
+      "depends_on": [
+        {
+          "id": "TK-002",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-107",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-1001",
+          "milestone": "contract"
+        }
+      ],
+      "requirements": [
+        "INF-01",
+        "INF-02",
+        "INF-03"
+      ],
+      "done_when": [
+        "Reproducible artifacts, secret injection, healthchecks, drain and expand/contract deployment",
+        "No Docker socket/root API; no deploy without stage-specific mandate"
+      ]
+    },
+    {
+      "id": "TK-1003",
+      "release": "SCOPED_R1_R4",
+      "goal": "Observability (queue age, uncertain, API/DB lock, disk/staging, backup lag, collector lag, auth failure RADIUS).",
+      "depends_on": [
+        {
+          "id": "TK-103",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-106",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-502",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-511",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "NFR-01",
+        "NFR-03",
+        "OPS-SEC"
+      ],
+      "done_when": [
+        "Queue/DB/disk/receiver/collector/RADIUS metric and alert rules scoped by release",
+        "Absent ACS R1 not false outage; metrics cannot expose tenant secrets"
+      ]
+    },
+    {
+      "id": "TK-1004",
+      "release": "SCOPED_R1_R4",
+      "goal": "Off-host DB/WAL/artifact/key/VPN/ACS/RADIUS config backup; drill restore; tahan mutasi sampai rekonsiliasi; RADIUS dipulihkan lebih dulu.",
+      "depends_on": [
+        {
+          "id": "TK-506",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-507",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-1002",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "BKP-05",
+        "NFR-02",
+        "NFR-04"
+      ],
+      "done_when": [
+        "Off-host DB/WAL/artifact/key/VPN/RADIUS/ACS restore plan per released services",
+        "Mutations stay fenced until payment/policy/accounting reconciliation; keys required"
+      ]
+    },
+    {
+      "id": "TK-1005",
+      "release": "SCOPED_R1_R4",
+      "goal": "Benchmark 10 → 100 → 1.000 tenant (router/service/CPE/RADIUS auth+acct), soak, reconnect storm, fairness; HA RADIUS; tentukan spesifikasi VM dari hasil.",
+      "depends_on": [
+        {
+          "id": "TK-1002",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-1003",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-1004",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-511",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "NFR-01",
+        "NFR-03"
+      ],
+      "done_when": [
+        "Authorized staged load/soak/storm/fairness/HA measures pinned environment",
+        "No capacity above measured stage; same-host redundancy not HA"
+      ]
+    },
+    {
+      "id": "TK-1006",
+      "release": "SCOPED_R1_R4",
+      "goal": "Runbook incident, rotasi kredensial/secret RADIUS, kunci hilang, job macet, support access, offboarding router, rollback cutover, restore, insiden kebocoran data (PDP-04).",
+      "depends_on": [
+        {
+          "id": "TK-102",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-103",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-205",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-407",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-507",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-509",
+          "milestone": "build"
+        },
+        {
+          "id": "TK-1004",
+          "milestone": "build"
+        }
+      ],
+      "requirements": [
+        "PDP-01",
+        "PDP-02",
+        "PDP-03",
+        "PDP-04",
+        "PDP-05",
+        "RAD-13"
+      ],
+      "done_when": [
+        "Versioned incident/offboarding/key/secret/job/cutover/restore runbooks and PDP clock",
+        "Missing legal channel or professional review blocks relevant production gate, not dry-run docs"
+      ]
+    }
+  ]
+}
