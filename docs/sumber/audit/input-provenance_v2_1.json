@@ -1,0 +1,327 @@
+{
+  "schema_version": "2.1",
+  "package_revision": "2.1-macro.1",
+  "recorded_date_local": "2026-10-29",
+  "timezone": "Asia/Jakarta",
+  "scope": "observed_direct_inputs_and_reported_earlier_lineage",
+  "direct_inputs": [
+    {
+      "filename": "MicroTix-Documentation-Quality-Ready.zip",
+      "size_bytes": 295364,
+      "sha256": "5e55d03ce8c166c6c16befc9ed4f5f5f356cc5bc345f9325048e86af88d31c5c"
+    },
+    {
+      "filename": "MicroTix-File-1-Kontrak-Revisi-Lengkap.md",
+      "size_bytes": 72766,
+      "sha256": "f3d76e0498b6510802a280f90874b5e87de109a01df438face403f9aeb8adbc6"
+    },
+    {
+      "filename": "MicroTix-File-1-Seluruh-Isi-Arsip.md",
+      "size_bytes": 1018983,
+      "sha256": "81df683965b84e2e3ca541f40aecf07c8be9a94d4ad4bd45476f05f3506b8975"
+    },
+    {
+      "filename": "MicroTix-Template-Onboarding-Server-GNS3-1.md",
+      "size_bytes": 20646,
+      "sha256": "ea11ff38c6f9e40e9cf86dab6e08624eecb3276444e2ba735a2ddda1d38c3f75"
+    }
+  ],
+  "direct_repository": {
+    "file_count": 37,
+    "uncompressed_bytes": 1016000,
+    "manifest_entries_verified": 36,
+    "files": [
+      {
+        "path": "MicroTix-File-1-Kontrak-Revisi-Lengkap.md",
+        "size_bytes": 72766,
+        "sha256": "f3d76e0498b6510802a280f90874b5e87de109a01df438face403f9aeb8adbc6"
+      },
+      {
+        "path": "MicroTix-Template-Onboarding-Server-GNS3.md",
+        "size_bytes": 20646,
+        "sha256": "ea11ff38c6f9e40e9cf86dab6e08624eecb3276444e2ba735a2ddda1d38c3f75"
+      },
+      {
+        "path": "README.md",
+        "size_bytes": 3510,
+        "sha256": "e1a4e766b7e7ec6f94bd6ddfaca6e50c57a3b84bc421b9fa2188303e728ecb42"
+      },
+      {
+        "path": "agent/AGENTS_v2_1.md",
+        "size_bytes": 13298,
+        "sha256": "2fd94ecb2817d4f7d688fa98bf2495fae66700e180abd40ea4cb4511cfa2dd9c"
+      },
+      {
+        "path": "agent/tugas_v2_1.md",
+        "size_bytes": 45440,
+        "sha256": "40d7378f91cdcfc4e2f4cfab24501ffe35121be27dbb573af1dd8b48d142e18d"
+      },
+      {
+        "path": "bootstrap_docs.sh",
+        "size_bytes": 3241,
+        "sha256": "6e52be1e12985c8da66337ccb9e6cbc02d36122228920b32c8230b35f5a11de4"
+      },
+      {
+        "path": "sumber/PRD_SaaS_RTRWNet_v2_1.md",
+        "size_bytes": 95431,
+        "sha256": "edfa94068764b25b2e21cc190cc78ffb914aadcbd3a470352c662f88fdbf27b4"
+      },
+      {
+        "path": "sumber/Panduan_Akuntansi_ISP_v2_1.md",
+        "size_bytes": 13792,
+        "sha256": "2b79ba14fd40584df9697d4132007f4cc53bead6e717f150766565fc1a6ede2a"
+      },
+      {
+        "path": "sumber/Playbook_RouterOS_v2_1.md",
+        "size_bytes": 11409,
+        "sha256": "74800f9eef80dded43b3283068c0b9fe33a3c4b77594232b4f28cd23227105a8"
+      },
+      {
+        "path": "sumber/Spesifikasi_ACS_TR069_v2_1.md",
+        "size_bytes": 10975,
+        "sha256": "eae054fe15b5ef6a1e5f071453f9d88bb34d3ecc70a96d5dab5cff2d1fcd2208"
+      },
+      {
+        "path": "sumber/Spesifikasi_RADIUS_dan_Migrasi_v2_1.md",
+        "size_bytes": 20095,
+        "sha256": "447e205ba5fbfd64505ce66980f52c8ce07848fa868b774f8b102de906801bc6"
+      },
+      {
+        "path": "sumber/Spesifikasi_i18n_v2_1.md",
+        "size_bytes": 7608,
+        "sha256": "ba26107f1c43d7ab4cff36859f83833ece3c10ca2912ee664bfc5991978ed0b3"
+      },
+      {
+        "path": "sumber/Technical_Design_RTRWNet_v2_1.md",
+        "size_bytes": 63588,
+        "sha256": "eb3173d6207c8abdb586cc21f7e86a636bdb99b358a9ecfd3639e26aed7c2a48"
+      },
+      {
+        "path": "sumber/UIUX_Design_RTRWNet_v2_1.md",
+        "size_bytes": 42646,
+        "sha256": "ef3523df0c85224dedcfc51fb1061ae182dbe9f21a31df0a3bb60e3af61b0775"
+      },
+      {
+        "path": "sumber/audit/Documentation_Audit_Report_v2_1.md",
+        "size_bytes": 10901,
+        "sha256": "b40ec00a76e50f24906cc62605dd15d4014eddfe81928c39ab592b9b0382e10f"
+      },
+      {
+        "path": "sumber/audit/Documentation_Changelog_v2_1.md",
+        "size_bytes": 1051,
+        "sha256": "a48d8d941b4c0ce1541b64fbc94f1cde0b5e7b4c053481b198b4bcc8f81a544b"
+      },
+      {
+        "path": "sumber/audit/Documentation_Quality_Gate_Results_v2_1.md",
+        "size_bytes": 1443,
+        "sha256": "a54ef0c3aa8e980b59d3992f54cf98813eac14da4e818336c7d7fde1cbad8dbe"
+      },
+      {
+        "path": "sumber/audit/Source_to_Output_Map_v2_1.md",
+        "size_bytes": 5579,
+        "sha256": "c79945b23247aeac00e6aac521aef61c6203846bcd9e2868b4507bb89e68e3f6"
+      },
+      {
+        "path": "sumber/audit/Unresolved_Issues_v2_1.md",
+        "size_bytes": 1514,
+        "sha256": "f171e100623364b11b5da02eb663f0e8beb842ad4ce7474d984d4a167338343a"
+      },
+      {
+        "path": "sumber/audit/static-verification_v2_1.json",
+        "size_bytes": 2091,
+        "sha256": "8e05539b929988415651ee62252d9130463835d8b5290a7d3195c308cfc40287"
+      },
+      {
+        "path": "sumber/decisions_log.md",
+        "size_bytes": 16358,
+        "sha256": "24e43fed98e18875ef71d29e50b8bada246b52a57fe723ca33da9a340d6d7818"
+      },
+      {
+        "path": "sumber/quality/CI_Test_Orchestration_v2_1.md",
+        "size_bytes": 14746,
+        "sha256": "c50afdebaf772945ed5e4cb7cdf938a552ffeac878816fc395b2b5e1fbc58081"
+      },
+      {
+        "path": "sumber/quality/Compatibility_and_Hardware_Matrix_v2_1.md",
+        "size_bytes": 15480,
+        "sha256": "8500ce57103b709fa646701eec26c122bcaf0a41077a2d80d24e16bf42267caa"
+      },
+      {
+        "path": "sumber/quality/GNS3_Lab_Architecture_v2_1.md",
+        "size_bytes": 3315,
+        "sha256": "265f4b7a67526a9a5c41898b7671af89cb766725a13cb7af1e1e31300aa9b5a3"
+      },
+      {
+        "path": "sumber/quality/Lab_Onboarding_and_Access_v2_1.md",
+        "size_bytes": 6633,
+        "sha256": "b387c18ee306277006c6a17bad96511969f12bf719ebfe06e9b19cabe228bb73"
+      },
+      {
+        "path": "sumber/quality/Performance_Reliability_DR_Plan_v2_1.md",
+        "size_bytes": 11957,
+        "sha256": "4a90f4b759f769921f4be835767d9ed7c28654a8d8bc3157ced9c211ee85a655"
+      },
+      {
+        "path": "sumber/quality/Quality_Gates_and_Release_Readiness_v2_1.md",
+        "size_bytes": 6852,
+        "sha256": "9aa10a8c38faa7bbbc8d88483e2c40ac40cdef5c747138284ebdcd34f47b3907"
+      },
+      {
+        "path": "sumber/quality/Quality_Standards_v2_1.md",
+        "size_bytes": 10774,
+        "sha256": "d93a2df8afeacb2d6506a3eb1a1a4e1e9236764ec8ea45c1e7e55b57ab2c2336"
+      },
+      {
+        "path": "sumber/quality/Security_Test_Plan_v2_1.md",
+        "size_bytes": 21037,
+        "sha256": "e6d80b70ceb9915a0540e7e356951a389b2405003f043c2152654da9027c3cf7"
+      },
+      {
+        "path": "sumber/quality/Test_Case_Specifications_v2_1.md",
+        "size_bytes": 205639,
+        "sha256": "6c6fe95e492c70ab88c78792e20d74a00e21f3a60c5412ac0b653be48ac86698"
+      },
+      {
+        "path": "sumber/quality/Test_Coverage_Matrix_v2_1.md",
+        "size_bytes": 2692,
+        "sha256": "e95551dde17688756ebb6b27f4ed8549c86f41038f1bc8ecc4c5ebc473d0607e"
+      },
+      {
+        "path": "sumber/quality/Test_Evidence_and_Reporting_v2_1.md",
+        "size_bytes": 4160,
+        "sha256": "2efe3cbf45c515511c63b3cf00ec3ae73fefe47add099167b482658b7caf533c"
+      },
+      {
+        "path": "sumber/quality/Test_Strategy_v2_1.md",
+        "size_bytes": 11788,
+        "sha256": "23257428688f5e31eebf37ac8d02592c7bdff33dfdbfe06316c39ab00e849f65"
+      },
+      {
+        "path": "sumber/quality/test-case-registry_v2_1.json",
+        "size_bytes": 221965,
+        "sha256": "a0a33663dcad80527b753917791cc01e0a4f53f924f769e447ff5a9ba16ea1bf"
+      },
+      {
+        "path": "sumber/source-manifest_v1_4.md",
+        "size_bytes": 3654,
+        "sha256": "3bee1548dd4409a2835f6f7ef48e30cf9b4bf6130ad4a9307d9b16e1eeee757e"
+      },
+      {
+        "path": "sumber/source-manifest_v2_0.md",
+        "size_bytes": 7184,
+        "sha256": "3a6276f781b89869c1e28431e9d10b94a07a854a8f5e611d4536ccee085b9934"
+      },
+      {
+        "path": "sumber/source-manifest_v2_1.md",
+        "size_bytes": 4742,
+        "sha256": "d7a8c1be92703d40b0b9c6d1701dc3f596baa8397156b69d2ca0d44994cdb8e2"
+      }
+    ]
+  },
+  "pairing": {
+    "external_master_equals_zip_master": true,
+    "external_onboarding_equals_zip_onboarding": true,
+    "aggregate_matches_all_37_zip_files_byte_for_byte": true
+  },
+  "historical_reported_not_reverified": {
+    "original_32_file_zip_sha256": "ae643be87a746d97b966d534221e8d55dc45375e4c673f76cbc977c0d0dca140",
+    "original_onboarding_sha256": "7d494656126435a98ee336730d7ffe478e293f435d4f2aa821bf20813bd1a2dc",
+    "original_file_count": 32,
+    "original_bytes": 549017,
+    "original_manifest_entries_reported_matching": 31,
+    "v1_4_original_archive_available": false,
+    "v2_0_original_archive_available": false
+  },
+  "observed_input_static_report": {
+    "schema_version": "2.1",
+    "audit_date_local": "2026-10-29",
+    "scope": "static_document_and_package_validation",
+    "reviewer_type": "self_review",
+    "checks": {
+      "onboarding_yaml_unique_keys_and_version": {
+        "result": "PASS",
+        "detail": null
+      },
+      "onboarding_defaults_grant_no_access": {
+        "result": "PASS",
+        "detail": null
+      },
+      "onboarding_safe_network_defaults": {
+        "result": "PASS",
+        "detail": null
+      },
+      "paired_onboarding_bytes_identical": {
+        "result": "PASS",
+        "detail": null
+      },
+      "paired_contract_bytes_identical": {
+        "result": "PASS",
+        "detail": null
+      },
+      "registry_64_children_20_security": {
+        "result": "PASS",
+        "detail": null
+      },
+      "registry_unique_case_ids": {
+        "result": "PASS",
+        "detail": null
+      },
+      "every_case_complete": {
+        "result": "PASS",
+        "detail": null
+      },
+      "no_fabricated_runtime_results": {
+        "result": "PASS",
+        "detail": null
+      },
+      "all_24_parent_ids": {
+        "result": "PASS",
+        "detail": null
+      },
+      "md_json_spec_identical_to_registry": {
+        "result": "PASS",
+        "detail": null
+      },
+      "matrix_exact_64_child_ids": {
+        "result": "PASS",
+        "detail": null
+      },
+      "case_dependency_dag": {
+        "result": "PASS",
+        "detail": null
+      },
+      "provenance_identical_source-manifest_v1_4.md": {
+        "result": "PASS",
+        "detail": null
+      },
+      "provenance_identical_source-manifest_v2_0.md": {
+        "result": "PASS",
+        "detail": null
+      },
+      "decision_id_sets_preserved": {
+        "result": "PASS",
+        "detail": null
+      },
+      "payment_destination_strings_preserved": {
+        "result": "PASS",
+        "detail": null
+      },
+      "task_id_sets_preserved": {
+        "result": "PASS",
+        "detail": null
+      },
+      "markdown_fences_closed": {
+        "result": "PASS",
+        "detail": []
+      },
+      "no_application_source_code_created": {
+        "result": "PASS",
+        "detail": null
+      }
+    },
+    "failed_checks": [],
+    "runtime_tests_executed": 0,
+    "release_flags_changed": 0
+  },
+  "runtime_tests_executed_in_macro_consolidation": 0
+}

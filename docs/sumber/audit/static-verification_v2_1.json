@@ -1,0 +1,235 @@
+{
+  "schema_version": "2.1",
+  "package_revision": "2.1-macro.1",
+  "audit_date_local": "2026-10-29",
+  "timezone": "Asia/Jakarta",
+  "scope": "static_document_validation_before_final_manifest_seal",
+  "reviewer_type": "self_review",
+  "checks": {
+    "input_manifest_36_of_36": {
+      "result": "PASS",
+      "detail": {
+        "file_count": 37,
+        "bytes": 1016000
+      }
+    },
+    "input_pairing_and_37_aggregate_blocks": {
+      "result": "PASS",
+      "detail": null
+    },
+    "all_37_input_paths_preserved": {
+      "result": "PASS",
+      "detail": null
+    },
+    "both_provenance_manifests_unchanged": {
+      "result": "PASS",
+      "detail": null
+    },
+    "registry_id_set_preserved": {
+      "result": "PASS",
+      "detail": null
+    },
+    "registry_64_child_20_security": {
+      "result": "PASS",
+      "detail": null
+    },
+    "registry_24_parents": {
+      "result": "PASS",
+      "detail": null
+    },
+    "all_cases_not_run": {
+      "result": "PASS",
+      "detail": null
+    },
+    "assertion_ids_unique": {
+      "result": "PASS",
+      "detail": {
+        "assertion_count": 318
+      }
+    },
+    "original_assertions_preserved": {
+      "result": "PASS",
+      "detail": null
+    },
+    "required_case_fields": {
+      "result": "PASS",
+      "detail": null
+    },
+    "specification_json_objects_equal_registry": {
+      "result": "PASS",
+      "detail": null
+    },
+    "matrix_exact_64_child_ids": {
+      "result": "PASS",
+      "detail": null
+    },
+    "dependencies_known": {
+      "result": "PASS",
+      "detail": null
+    },
+    "case_dependency_DAG": {
+      "result": "PASS",
+      "detail": null
+    },
+    "local_profile_no_server_preflight_inheritance": {
+      "result": "PASS",
+      "detail": {
+        "local_profile_case_count": 31
+      }
+    },
+    "remote_cases_retain_V1_V3": {
+      "result": "PASS",
+      "detail": null
+    },
+    "master_gate_macro_projection_exact": {
+      "result": "PASS",
+      "detail": null
+    },
+    "projection_Test_Strategy_v2_1": {
+      "result": "PASS",
+      "detail": null
+    },
+    "projection_Test_Evidence_and_Reporting_v2_1": {
+      "result": "PASS",
+      "detail": null
+    },
+    "projection_Security_Test_Plan_v2_1": {
+      "result": "PASS",
+      "detail": null
+    },
+    "projection_GNS3_Lab_Architecture_v2_1": {
+      "result": "PASS",
+      "detail": null
+    },
+    "projection_Lab_Onboarding_and_Access_v2_1": {
+      "result": "PASS",
+      "detail": null
+    },
+    "projection_Compatibility_and_Hardware_Matrix_v2_1": {
+      "result": "PASS",
+      "detail": null
+    },
+    "projection_Quality_Standards_v2_1": {
+      "result": "PASS",
+      "detail": null
+    },
+    "projection_CI_Test_Orchestration_v2_1": {
+      "result": "PASS",
+      "detail": null
+    },
+    "projection_Performance_Reliability_DR_Plan_v2_1": {
+      "result": "PASS",
+      "detail": null
+    },
+    "identifier_preservation_tugas_v2_1": {
+      "result": "PASS",
+      "detail": null
+    },
+    "identifier_preservation_decisions_log": {
+      "result": "PASS",
+      "detail": null
+    },
+    "payment_destinations_preserved": {
+      "result": "PASS",
+      "detail": null
+    },
+    "commercial_plans_preserved": {
+      "result": "PASS",
+      "detail": null
+    },
+    "all_46_audit_ids_and_8_macro_ids": {
+      "result": "PASS",
+      "detail": null
+    },
+    "verifier_negative_controls": {
+      "result": "PASS",
+      "detail": [
+        "path:'../escape'",
+        "path:'/absolute'",
+        "path:'a/../b'",
+        "path:'a//b'",
+        "path:'a\\\\b'",
+        "path:'.hidden'",
+        "path:'a\\tb'",
+        "missing_file",
+        "extra_file",
+        "same_length_hash_tamper",
+        "size_tamper",
+        "empty_or_missing_manifest_table",
+        "zero_manifest_count",
+        "tree_symlink",
+        "zip_traversal",
+        "zip_duplicate",
+        "zip_symlink"
+      ]
+    },
+    "onboarding_safe_draft_no_grant": {
+      "result": "PASS",
+      "detail": null
+    },
+    "markdown_fences_and_encoding": {
+      "result": "PASS",
+      "detail": null
+    },
+    "readme_relative_links_resolve": {
+      "result": "PASS",
+      "detail": null
+    },
+    "40_target_paths_unique": {
+      "result": "PASS",
+      "detail": null
+    },
+    "no_application_code_or_runtime_result_created": {
+      "result": "PASS",
+      "detail": null
+    }
+  },
+  "failed_checks": [],
+  "runtime_tests_executed": 0,
+  "runtime_case_counts": {
+    "NOT_RUN": 84,
+    "PASS": 0,
+    "FAIL": 0
+  },
+  "runtime_pass_rate": null,
+  "gate_readiness": {
+    "G0": {
+      "status": "BLOCKED",
+      "evaluation_kind": "prerequisite_readiness",
+      "runtime_executed": false
+    },
+    "G1": {
+      "status": "BLOCKED",
+      "evaluation_kind": "prerequisite_readiness",
+      "runtime_executed": false
+    },
+    "G2": {
+      "status": "BLOCKED",
+      "evaluation_kind": "prerequisite_readiness",
+      "runtime_executed": false
+    },
+    "G3": {
+      "status": "BLOCKED",
+      "evaluation_kind": "prerequisite_readiness",
+      "runtime_executed": false
+    },
+    "G4": {
+      "status": "BLOCKED",
+      "evaluation_kind": "prerequisite_readiness",
+      "runtime_executed": false
+    },
+    "G5": {
+      "status": "BLOCKED",
+      "evaluation_kind": "prerequisite_readiness",
+      "runtime_executed": false
+    }
+  },
+  "formal_document_quality_gate_signoff": "NOT_EVALUATED",
+  "release_flags_changed": 0,
+  "final_manifest_and_zip_verification": {
+    "record_location": "external consolidated Markdown export envelope",
+    "reason": "avoid self-referential digest cycle",
+    "not_claimed_in_this_preseal_record": true
+  },
+  "python_version": "3.12.14"
+}

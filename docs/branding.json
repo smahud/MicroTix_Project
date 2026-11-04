@@ -1,0 +1,16 @@
+{
+  "project_id": "microtix",
+  "project_name": "MicroTix",
+  "application_name": "MicroTix",
+  "display_name": "MicroTix",
+  "environment_overrides": {
+    "project_name": "PROJECT_NAME",
+    "application_name": "APP_NAME",
+    "display_name": "BRAND_NAME"
+  },
+  "rules": [
+    "Display branding is configurable; stable IDs, API paths, database names, tenant identities and persisted data must not be derived from mutable display names.",
+    "Render product labels through the shared branding configuration; no hardcoded product labels in future application code.",
+    "A display-name change must not require migrations or invalidate sessions, credentials or integrations."
+  ]
+}

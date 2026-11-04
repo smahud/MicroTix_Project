@@ -1,0 +1,387 @@
+{
+  "revision": "2.1-microtix.1",
+  "scope": "all repository payloads except this manifest; Git metadata excluded",
+  "status": "BYTE_INVENTORY_ONLY; SEMANTIC_REVALIDATION_PENDING",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 2511,
+      "sha256": "a031d2c61088c67080847b37f8408bbcfa04de822b2e0142280d6138b9ff1abe"
+    },
+    {
+      "path": "docs/MicroTix-File-1-Kontrak-Revisi-Lengkap.md",
+      "bytes": 103285,
+      "sha256": "af8a12c8503899f3d725a52e89c4f62393885336eb19d0a9a1a4348ed586d4b1"
+    },
+    {
+      "path": "docs/MicroTix-Template-Onboarding-Server-GNS3.md",
+      "bytes": 22026,
+      "sha256": "76d73118270ad05b9768d1348e49588d33d877d6a3aa140a5cc85dae160c8c32"
+    },
+    {
+      "path": "docs/NAME_MIGRATION.md",
+      "bytes": 831,
+      "sha256": "af0cca641018999bd96e5da2a71055949a9ccb1d9be20c792915e74501cdc035"
+    },
+    {
+      "path": "docs/README.md",
+      "bytes": 2073,
+      "sha256": "6dec64578f55f6fcb001d834b927b756a8dae3c1b3e4e9f05342057c6949adf6"
+    },
+    {
+      "path": "docs/agent/AGENTS_v2_1.md",
+      "bytes": 14332,
+      "sha256": "14c2656ef3d4432df1c705b86cf53719ae2be9da27f067a90f99c356847225ab"
+    },
+    {
+      "path": "docs/agent/CLAUDE.md",
+      "bytes": 554,
+      "sha256": "eb6071c76bf201f71adacb16b468ea9e12a416a906a8173cbe62993a5083f5a1"
+    },
+    {
+      "path": "docs/agent/START_BUILD.md",
+      "bytes": 2079,
+      "sha256": "96d2ff094435ff3d1acdd488d8ef735a0ab067f78188b77713dcb76f9bc33ba5"
+    },
+    {
+      "path": "docs/agent/task-contracts_v2_1.json",
+      "bytes": 455779,
+      "sha256": "bad04ce0cdd2f51fe2cefb3ec4c1d9e0380e8ad940a755ba8807f95c231b0edf"
+    },
+    {
+      "path": "docs/agent/tugas_v2_1.md",
+      "bytes": 47473,
+      "sha256": "514474b9016d62714514c14b0900f05595217fe6e6fa420a44455712423606e1"
+    },
+    {
+      "path": "docs/audit-history/AI_Context_and_Handoff_Optimization.md",
+      "bytes": 8556,
+      "sha256": "cd61a6b709a716d9d8d55eb4158ca1e9ca59afeb17c8c003af843687b5b46483"
+    },
+    {
+      "path": "docs/audit-history/Claude_Code_Implementation_Handoff.md",
+      "bytes": 5242,
+      "sha256": "41441ea96c0f6774b7cbaafb82931ffd2e251f557c666a7e3b0e800b59b96262"
+    },
+    {
+      "path": "docs/audit-history/Contradiction_and_Resolution_Register.md",
+      "bytes": 2898,
+      "sha256": "4546d8a5ef92c992d348ba5a0348476b65502e518a71a8ee14b65fd7abe3a12e"
+    },
+    {
+      "path": "docs/audit-history/Delivery_Verification.json",
+      "bytes": 21671,
+      "sha256": "c4817353695216965dfab0c6963ac00db033823b35c0bf9fdb2db79c748a79e7"
+    },
+    {
+      "path": "docs/audit-history/Documentation_Change_Log.md",
+      "bytes": 7646,
+      "sha256": "7269b373dc5ee51ebe5a2cfa0c54049f6ede7f8eebe1dec47276a7d1fcd53ed4"
+    },
+    {
+      "path": "docs/audit-history/Duplicate_and_Overlap_Register.md",
+      "bytes": 34158,
+      "sha256": "b577216001dd59b3d3ad3da9ac1d4965cebc848f3f32e1ff229aee53a05ba37d"
+    },
+    {
+      "path": "docs/audit-history/FINAL_AUDIT_REPORT.md",
+      "bytes": 9294,
+      "sha256": "8b7f443d463b3074e0163dc67e8887d8dc8d850969d8fdc848668b3231564fe2"
+    },
+    {
+      "path": "docs/audit-history/Final_Integrity_Verification.json",
+      "bytes": 17742,
+      "sha256": "d92755669e1da0b61dca0d5839ce9c90a825fdb8419c3958565e6f5396c97f51"
+    },
+    {
+      "path": "docs/audit-history/Independent_Semantic_Review_Packet.md",
+      "bytes": 3051,
+      "sha256": "fd09cec3b2bf1b7b374172487005e945d763f46101721ff0243d5a023c2ceff9"
+    },
+    {
+      "path": "docs/audit-history/MicroTix-Control-Export-v2_1-build_1.md",
+      "bytes": 77228,
+      "sha256": "cf072a6db55aa4035fb3efa7802129ea1fa6ab1e6b316f7f3a8d66bc74d4e832"
+    },
+    {
+      "path": "docs/audit-history/Normative_Authority_Registry.json",
+      "bytes": 807485,
+      "sha256": "3624f6b64cc4f61e6064b3ead91dcbcfa39e41e43b73712a180f192c94266962"
+    },
+    {
+      "path": "docs/audit-history/Owner_Decision_Requests.md",
+      "bytes": 2606,
+      "sha256": "d79b7e9b0dcf6d153b124fb2f480b0c2186e74a6712a0693decf1ec2acf4e1c6"
+    },
+    {
+      "path": "docs/audit-history/README_BUNDLE.md",
+      "bytes": 3988,
+      "sha256": "7c8d583746868226b9e1b8c230c5d9ac4e742917f700c91626a164fd257564ea"
+    },
+    {
+      "path": "docs/audit-history/Requirements_Traceability_Matrix.json",
+      "bytes": 388123,
+      "sha256": "c62cc937ed56c30af93a3861831795ffe9c39b65290730edb061ef606c79cabd"
+    },
+    {
+      "path": "docs/audit-history/Requirements_Traceability_Matrix.md",
+      "bytes": 21141,
+      "sha256": "beec35c4bae597ccb0250b72d6bea20757f0501b807961597f7c11df77f6993c"
+    },
+    {
+      "path": "docs/audit-history/Unresolved_Decisions_and_Blockers.md",
+      "bytes": 3670,
+      "sha256": "4c8c3cfe79251cd2cd72a4c77f4f636b87a6a425517175a7198adead62240b4c"
+    },
+    {
+      "path": "docs/bootstrap_docs.sh",
+      "bytes": 3239,
+      "sha256": "973ee87f3ebbc0c1cb7a2963869b2940a108b495523dc9e4b33c33870a5beb0b"
+    },
+    {
+      "path": "docs/branding.json",
+      "bytes": 684,
+      "sha256": "3eb85197cfa9396890ea246bec169f5583e6336b74209d59f74e36c04542cab4"
+    },
+    {
+      "path": "docs/sumber/PRD_SaaS_RTRWNet_v2_1.md",
+      "bytes": 96503,
+      "sha256": "57a728c48955616892982344869dd6522496764bfa55c832228c16236911c641"
+    },
+    {
+      "path": "docs/sumber/Panduan_Akuntansi_ISP_v2_1.md",
+      "bytes": 14685,
+      "sha256": "753892af73ef70879eb109376e0f6ff93ad8657b2454ad67d80ae734bcc7830a"
+    },
+    {
+      "path": "docs/sumber/Playbook_RouterOS_v2_1.md",
+      "bytes": 10361,
+      "sha256": "f0d753a7e102900470d068fbf3bb34b636cb4c7b3195738cd9f24ea7a634a289"
+    },
+    {
+      "path": "docs/sumber/Spesifikasi_ACS_TR069_v2_1.md",
+      "bytes": 11857,
+      "sha256": "f820b837ef788fbeac7234e5753dff38cb84ed1b49212ece389203ab1cee49a5"
+    },
+    {
+      "path": "docs/sumber/Spesifikasi_RADIUS_dan_Migrasi_v2_1.md",
+      "bytes": 18921,
+      "sha256": "1ff3b80054bbaefead457f7aff4d0931ad8e3e68ca4740d9b7889a9c2a1ad3b2"
+    },
+    {
+      "path": "docs/sumber/Spesifikasi_i18n_v2_1.md",
+      "bytes": 7774,
+      "sha256": "2ab969b6ffdd8e592e889933535e2896db63c2b8444faceed935623eb2983fb4"
+    },
+    {
+      "path": "docs/sumber/Technical_Design_RTRWNet_v2_1.md",
+      "bytes": 67508,
+      "sha256": "d0d38e5e78ab147941c608fcaa8b8100d9798a0afa592aca162320d890540b4a"
+    },
+    {
+      "path": "docs/sumber/UIUX_Design_RTRWNet_v2_1.md",
+      "bytes": 42537,
+      "sha256": "f7a6a106925cce5d8f3986a2cd1a6595516ca4d044e32f95894a4aea9238e630"
+    },
+    {
+      "path": "docs/sumber/audit/Documentation_Audit_Report_v2_1.md",
+      "bytes": 11844,
+      "sha256": "6e887f0c734dd4bfaa10308df8d49028bb2fc5b6dc4a12d1a753aad22da7f3bb"
+    },
+    {
+      "path": "docs/sumber/audit/Documentation_Changelog_v2_1.md",
+      "bytes": 14460,
+      "sha256": "883e49551b8a06c6e29eaeabc8f4a3b1cb52b135053de097a9d8a0560c84b446"
+    },
+    {
+      "path": "docs/sumber/audit/Documentation_Quality_Gate_Results_v2_1.md",
+      "bytes": 1847,
+      "sha256": "8b9f35c6cd3a918a5ae3793e4927821faec3e13cb1944a296ff26a8b592a981b"
+    },
+    {
+      "path": "docs/sumber/audit/Macro_Consolidation_Report_v2_1.md",
+      "bytes": 3708,
+      "sha256": "90c535f14f4e91cf216ff3df9227db2d1be00f85e0cfb22f76bc1de502cd3e48"
+    },
+    {
+      "path": "docs/sumber/audit/Requirements_Traceability_Matrix.json",
+      "bytes": 388123,
+      "sha256": "c62cc937ed56c30af93a3861831795ffe9c39b65290730edb061ef606c79cabd"
+    },
+    {
+      "path": "docs/sumber/audit/Source_to_Output_Map_v2_1.md",
+      "bytes": 10963,
+      "sha256": "1f4138d9afefd8c1f0c65a8834dc48f083afc870a9cbfbd47929dc8532c66461"
+    },
+    {
+      "path": "docs/sumber/audit/Unresolved_Issues_v2_1.md",
+      "bytes": 3662,
+      "sha256": "efcc3f1928a8041c29f7ee1d209ad52769849b2ef4cee772af1a0ade8cb8e763"
+    },
+    {
+      "path": "docs/sumber/audit/input-provenance_v2_1.json",
+      "bytes": 11108,
+      "sha256": "4a911c3a426e482c09796a8e26e7a1f84b3bbc78ded11fa8bda11c3a5b9df2be"
+    },
+    {
+      "path": "docs/sumber/audit/static-verification_v2_1.json",
+      "bytes": 5685,
+      "sha256": "3c13ed0562752f920830de0defa411805cab32c9de741bfafe91a9e01f7051fc"
+    },
+    {
+      "path": "docs/sumber/contracts/Execution_Design_v2_1.md",
+      "bytes": 13640,
+      "sha256": "0b5dfdb47e4fd28041e35c665edb97b1efe062ba062f6df73da3914f810aeaf9"
+    },
+    {
+      "path": "docs/sumber/contracts/Owner_Decision_Requests.md",
+      "bytes": 2606,
+      "sha256": "d79b7e9b0dcf6d153b124fb2f480b0c2186e74a6712a0693decf1ec2acf4e1c6"
+    },
+    {
+      "path": "docs/sumber/contracts/execution-profile.schema.json",
+      "bytes": 6558,
+      "sha256": "dcfd2d0047f8a4b569890b0df202678c58293d1346e254ebb001b441339061c5"
+    },
+    {
+      "path": "docs/sumber/contracts/job-kind-registry_v2_1.json",
+      "bytes": 33232,
+      "sha256": "4fbdd72354ef98cfb133e9e929439b90ea713a114a2541edabbb1f5730d4e79a"
+    },
+    {
+      "path": "docs/sumber/contracts/parameter-registry_v2_1.json",
+      "bytes": 105166,
+      "sha256": "47ced4235e377dd4c9d289a483d5d43a8a3f9c03a8b19bbea327023d6f37e092"
+    },
+    {
+      "path": "docs/sumber/contracts/target-registry.schema.json",
+      "bytes": 5753,
+      "sha256": "3c53925de09beec13dd2c2f20365fe5d12ef957a0241957eae2f2d0c8708c0b5"
+    },
+    {
+      "path": "docs/sumber/decisions_log.md",
+      "bytes": 17108,
+      "sha256": "918b57cac3219664a304fbe8630f9ebc6da2546ae01af59629fbbde9924c0c38"
+    },
+    {
+      "path": "docs/sumber/quality/CI_Test_Orchestration_v2_1.md",
+      "bytes": 14055,
+      "sha256": "f8f6a56c317650efd78218b10a1d5672a6a0a1a0b19d3bc790ccab9964809884"
+    },
+    {
+      "path": "docs/sumber/quality/Compatibility_and_Hardware_Matrix_v2_1.md",
+      "bytes": 14973,
+      "sha256": "6b44602343b144a141698e88c6ffb3a2984afd0ff1d9384e6a8b86bb6139d668"
+    },
+    {
+      "path": "docs/sumber/quality/GNS3_Lab_Architecture_v2_1.md",
+      "bytes": 3346,
+      "sha256": "ea7f309fe30d049b2030fd5bb4786058e65cb6c944fc5fed3b3da3628ed54eb3"
+    },
+    {
+      "path": "docs/sumber/quality/Lab_Onboarding_and_Access_v2_1.md",
+      "bytes": 6093,
+      "sha256": "8a4317a17d31332e1c49e2392f09f6fa723bc2eb06accdd75ae89137993aefc6"
+    },
+    {
+      "path": "docs/sumber/quality/Performance_Reliability_DR_Plan_v2_1.md",
+      "bytes": 11988,
+      "sha256": "7aba48c68675d53c8abf4cd531702944668c9d0eeb70ec49d27d1efddd22d675"
+    },
+    {
+      "path": "docs/sumber/quality/Quality_Gates_and_Release_Readiness_v2_1.md",
+      "bytes": 48260,
+      "sha256": "b1aa8810514611ac6446b88864b6b3218e54a81e04adfeb837fdaa2199a95a07"
+    },
+    {
+      "path": "docs/sumber/quality/Quality_Standards_v2_1.md",
+      "bytes": 10940,
+      "sha256": "abdca06ea5df565f2834596bc20406682a394d6157b0b3c5ccfccc55d6527014"
+    },
+    {
+      "path": "docs/sumber/quality/Security_Test_Plan_v2_1.md",
+      "bytes": 20615,
+      "sha256": "b2ac69f2541c78fb688d253c17e6e55a77b730614196a4e25f6040290466a913"
+    },
+    {
+      "path": "docs/sumber/quality/Test_Case_Specifications_v2_1.md",
+      "bytes": 224319,
+      "sha256": "32d8909f32378322b6edd7882a0bcf7a0322759f08d9a5f948992d73f8815d44"
+    },
+    {
+      "path": "docs/sumber/quality/Test_Coverage_Matrix_v2_1.md",
+      "bytes": 3081,
+      "sha256": "35f8db4f01ee8fc1e117085ef3a8a80eecac84a2b1969c7d270b7bf2f3442ac7"
+    },
+    {
+      "path": "docs/sumber/quality/Test_Evidence_and_Reporting_v2_1.md",
+      "bytes": 4191,
+      "sha256": "cc53249ee71f8484a3b1d8051ae5816ba88dca5673a3c30489959be788245e2e"
+    },
+    {
+      "path": "docs/sumber/quality/Test_Strategy_v2_1.md",
+      "bytes": 11304,
+      "sha256": "9aed4c9eb4a2e799480833dade93b78628aeab0e56c0fe27335c7ca8adc0a117"
+    },
+    {
+      "path": "docs/sumber/quality/asvs/ASVS_5.0.0_en.csv",
+      "bytes": 105100,
+      "sha256": "98c8fe911b9edb403af8ee05d3ce8201ecac2659e313b053890a62847cdcf680"
+    },
+    {
+      "path": "docs/sumber/quality/asvs/README.md",
+      "bytes": 958,
+      "sha256": "2bc3b7aa8d9a2e09851c5dc8b72b8d0408a52ece890cb727f90e39281a95e3a4"
+    },
+    {
+      "path": "docs/sumber/quality/asvs-applicability_v2_1.json",
+      "bytes": 387700,
+      "sha256": "49130600fcf294c1707df8af775fee0407067980a06d1d600d2fa4794208b84e"
+    },
+    {
+      "path": "docs/sumber/quality/release-applicability_v2_1.json",
+      "bytes": 453872,
+      "sha256": "0453a2506aef425bc4c6120a5060e26ef9ed887372655af29f30d77e00c8a9e4"
+    },
+    {
+      "path": "docs/sumber/quality/supplemental-test-registry_v2_1.json",
+      "bytes": 605268,
+      "sha256": "a25d2e606c625e905d3ee4dc73388578c581ddb55229692cda0fa0a3b9b7e744"
+    },
+    {
+      "path": "docs/sumber/quality/test-case-registry_v2_1.json",
+      "bytes": 240311,
+      "sha256": "8851b7ea7f88dfd9dcec1cec6b34c2f149c785bfc44c7f8547934160d2624a70"
+    },
+    {
+      "path": "docs/sumber/source-manifest_v1_4.md",
+      "bytes": 3654,
+      "sha256": "3bee1548dd4409a2835f6f7ef48e30cf9b4bf6130ad4a9307d9b16e1eeee757e"
+    },
+    {
+      "path": "docs/sumber/source-manifest_v2_0.md",
+      "bytes": 7182,
+      "sha256": "da9e3eb315fa4fd3cdd0d14b3b3be36b4d512ded499610868dabeea340b386e3"
+    },
+    {
+      "path": "docs/sumber/source-manifest_v2_1.md",
+      "bytes": 12832,
+      "sha256": "62217ea9c85c5a25d7b38f7e8e4d9ad79e14d905e22ffd4357184689c5c22984"
+    },
+    {
+      "path": "docs/tools/task_context_v2_1.py",
+      "bytes": 1613,
+      "sha256": "8804c110b863808c0580a613059b5dd5f53831ca1d7c77169a134be29c2fd80c"
+    },
+    {
+      "path": "docs/tools/validate_execution_docs_v2_1.py",
+      "bytes": 15175,
+      "sha256": "b6058080ece24838471ddf7d3e38d67e1f80a69d0d156ddc0c6e55eaaea41497"
+    },
+    {
+      "path": "docs/tools/verify_repository_v2_1.py",
+      "bytes": 7914,
+      "sha256": "12dfdffeeec91e161152c005b5c271d7fefd4c28259e158e5bcdd0c8ce52102f"
+    }
+  ]
+}
