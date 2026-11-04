@@ -1,0 +1,47 @@
+{
+  "name": "microtix-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --pretty",
+    "lint": "eslint src --ext ts,tsx --max-warnings 0",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "i18n:build": "python3 scripts/build_catalogs.py",
+    "i18n:check": "python3 scripts/check_i18n.py",
+    "a11y:contrast": "python3 scripts/check_contrast.py",
+    "check:all": "tsc -b --pretty false && eslint src --ext ts,tsx && vitest run && python3 scripts/check_i18n.py && python3 scripts/check_contrast.py"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.62.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-intl": "^6.8.9",
+    "react-router-dom": "^6.28.0"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/react": "^16.1.0",
+    "@types/node": "^26.6.6",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^8.57.1",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "jsdom": "^25.0.1",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11",
+    "vitest": "^2.1.8"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

@@ -1,0 +1,87 @@
+/* MicroTix design tokens — sumber: docs/UI_UX.md §2 (jangan diubah sepihak) */
+:root {
+  /* Warna dasar */
+  --mt-bg: #f4f6f8;
+  --mt-surface: #ffffff;
+  --mt-text: #172b4d;
+  --mt-text-secondary: #475569;
+  --mt-primary: #1d4ed8;
+  --mt-primary-hover: #1a47c2;
+  --mt-primary-active: #1740ad;
+  --mt-primary-subtle: #eff4ff;
+  --mt-border: #cbd5e1;
+  --mt-border-strong: #94a3b8;
+  --mt-header-admin: #0f2a4a;
+
+  /* Status — teks di atas surface lembut (kontras diukur pada implementasi) */
+  --mt-success-fg: #166534;
+  --mt-success-bg: #dcfce7;
+  --mt-success-border: #86efac;
+  --mt-warning-fg: #92400e;
+  --mt-warning-bg: #fef3c7;
+  --mt-warning-border: #fcd34d;
+  --mt-danger-fg: #b91c1c;
+  --mt-danger-bg: #fee2e2;
+  --mt-danger-border: #fca5a5;
+  --mt-info-fg: #1d4ed8;
+  --mt-info-bg: #eff4ff;
+  --mt-info-border: #bfdbfe;
+  --mt-neutral-fg: #475569;
+  --mt-neutral-bg: #f1f5f9;
+  --mt-neutral-border: #e2e8f0;
+
+  /* Tipografi — sans-serif sistem; body 16, label 14, judul 24–32; tabel desktop ≥14 */
+  --mt-font-sans:
+    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    'Noto Sans', sans-serif;
+  --mt-font-mono:
+    ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  --mt-text-xs: 0.75rem;
+  --mt-text-sm: 0.875rem;
+  --mt-text-base: 1rem;
+  --mt-text-lg: 1.125rem;
+  --mt-text-xl: 1.5rem;
+  --mt-text-2xl: 2rem;
+
+  /* Spacing: 4, 8, 12, 16, 24, 32 */
+  --mt-space-1: 4px;
+  --mt-space-2: 8px;
+  --mt-space-3: 12px;
+  --mt-space-4: 16px;
+  --mt-space-6: 24px;
+  --mt-space-8: 32px;
+
+  /* Radius: 8 */
+  --mt-radius: 8px;
+  --mt-radius-sm: 6px;
+
+  /* Elevation — minimum, fungsional */
+  --mt-shadow-1: 0 1px 2px rgba(23, 43, 77, 0.06), 0 1px 3px rgba(23, 43, 77, 0.08);
+  --mt-shadow-2: 0 4px 12px rgba(23, 43, 77, 0.1), 0 2px 4px rgba(23, 43, 77, 0.06);
+  --mt-shadow-overlay: 0 12px 32px rgba(15, 42, 74, 0.18);
+
+  /* Fokus terlihat (WCAG 2.2 — focus ring tidak tertutup) */
+  --mt-focus-ring: 0 0 0 2px #ffffff, 0 0 0 4px #1d4ed8;
+
+  /* Target sentuh produk 44×44 */
+  --mt-touch: 44px;
+
+  /* Layout */
+  --mt-sidebar-w: 264px;
+  --mt-header-h: 60px;
+  --mt-content-max: 1280px;
+
+  /* Motion — halus dan fungsional; hormati prefers-reduced-motion */
+  --mt-motion-fast: 120ms;
+  --mt-motion: 180ms;
+  --mt-motion-slow: 260ms;
+  --mt-ease: cubic-bezier(0.2, 0.4, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --mt-motion-fast: 0ms;
+    --mt-motion: 0ms;
+    --mt-motion-slow: 0ms;
+  }
+}
