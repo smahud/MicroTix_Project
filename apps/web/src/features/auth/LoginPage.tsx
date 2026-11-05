@@ -41,7 +41,13 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const res = await login(email, password);
-      if (res.requires_totp) setStage('totp');
+      if (res.requires_totp) {
+        setStage('totp');
+      } else {
+        // Login non-MFA selesai — sesi aktif; lanjut ke aplikasi (paritas
+        // jalur TOTP yang menavigasi setelah verifikasi).
+        navigate('/app');
+      }
     } catch (err) {
       // Pesan gagal login selalu sama — tidak mengungkap akun (UI_UX.md §3)
       setFormError(t('auth.login_mismatch'));

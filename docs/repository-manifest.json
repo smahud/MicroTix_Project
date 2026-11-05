@@ -18,8 +18,8 @@
   "files": [
     {
       "path": "README.md",
-      "bytes": 3268,
-      "sha256": "cd6a053dceb078ea8b07b177fb9c508ac5b5f1dc85b34e93d95ddea170f02c1a"
+      "bytes": 3291,
+      "sha256": "3eaff610f5e8d05b4615b1f15416231ce59d990d14ab06d4165664a4cb801bf4"
     },
     {
       "path": "docs/ACCEPTANCE.md",
@@ -33,8 +33,8 @@
     },
     {
       "path": "docs/ARCHITECTURE.md",
-      "bytes": 24443,
-      "sha256": "71169172a0e679ccb816aefe28a2c87e09e3d54f670df3bb9101a839431e51e7"
+      "bytes": 24459,
+      "sha256": "b85a0e0ec342c4a36062180118b0bfff40262000d90f470d3f8be6889fe75bdf"
     },
     {
       "path": "docs/AUDIT_REPORT.md",

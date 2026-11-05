@@ -2,7 +2,7 @@
 
 Aplikasi SaaS untuk pengusaha RT/RW Net Indonesia: MikroTik, pelanggan berbasis RADIUS per perusahaan, penagihan, pembayaran, pembukuan, monitoring dan backup.
 
-**Status: kandidat beta 0.1 (R1-core)** — frontend DAN backend keduanya terimplementasi dan teruji: 222 tes backend (PostgreSQL nyata + RLS), 42 tes frontend, verifikasi FreeRADIUS nyata 15/15, smoke live API 20/20. Fitur jaringan pada perangkat fisik menunggu bukti lab (gate G1) — status jujur per fitur: [docs/BETA_RELEASE_STATUS.md](docs/BETA_RELEASE_STATUS.md); bukti eksekusi: [docs/BETA_TEST_EVIDENCE.md](docs/BETA_TEST_EVIDENCE.md); rekam jejak: [docs/progress.md](docs/progress.md).
+**Status: kandidat beta 0.1 (R1-core)** — frontend DAN backend keduanya terimplementasi dan teruji: 252 tes backend (PostgreSQL nyata + RLS), 42 tes frontend, E2E browser nyata 7/7, verifikasi FreeRADIUS nyata 15/15, smoke live API 20/20. Fitur jaringan pada perangkat fisik menunggu bukti lab (gate G1) — status jujur per fitur: [docs/BETA_RELEASE_STATUS.md](docs/BETA_RELEASE_STATUS.md); bukti eksekusi: [docs/BETA_TEST_EVIDENCE.md](docs/BETA_TEST_EVIDENCE.md); rekam jejak: [docs/progress.md](docs/progress.md).
 
 ## Instalasi resmi (satu perintah)
 

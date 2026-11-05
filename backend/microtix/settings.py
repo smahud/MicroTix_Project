@@ -116,6 +116,15 @@ CSRF_COOKIE_HTTPONLY = False  # SPA membaca cookie untuk header x-csrf-token
 CSRF_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SECURE = ENV == "production"
 CSRF_HEADER_NAME = "HTTP_X_CSRF_TOKEN"
+# Topologi dev/E2E: Vite dev server (127.0.0.1:5173) mem-proxy /api ke backend
+# (127.0.0.1:8010) — browser same-origin, tapi Django melihat Origin port
+# berbeda. Percayai origin itu HANYA di non-produksi (produksi Caddy
+# same-origin 443 — daftar tetap kosong, tidak ada pelembutan).
+CSRF_TRUSTED_ORIGINS = (
+    []
+    if ENV == "production"
+    else ["http://127.0.0.1:5173", "http://localhost:5173"]
+)
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = "DENY"
@@ -179,6 +188,21 @@ if MT_ROUTEROS_ADAPTER not in ("simulator", "api_ssl"):
     raise ImproperlyConfigured(
         f"MT_ROUTEROS_ADAPTER tidak sah: {MT_ROUTEROS_ADAPTER!r} (simulator|api_ssl)"
     )
+
+# Kunci publik WireGuard host dari installer (instalasi.sh §9.13):
+# /etc/microtix/wireguard/server_public.key → env → model WireGuardHost.
+# Kunci privat TIDAK pernah masuk proses aplikasi (pegangan host root:600).
+# Kosong = dev/test: fallback deterministik jujur (bukan klaim X25519).
+from .wg import validate_public_key as _validate_wg_pubkey
+
+MT_WG_SERVER_PUBKEY = os.environ.get("MT_WG_SERVER_PUBKEY", "")
+try:
+    MT_WG_SERVER_PUBKEY = _validate_wg_pubkey(MT_WG_SERVER_PUBKEY)
+except ValueError as _exc:
+    raise ImproperlyConfigured(
+        f"MT_WG_SERVER_PUBKEY tidak sah ({_exc}): "
+        "harus kunci publik X25519 base64 44 karakter (keluaran `wg pubkey`)."
+    ) from None
 
 LOGGING = {
     "version": 1,

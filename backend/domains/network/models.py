@@ -138,7 +138,18 @@ class WireGuardHost(models.Model):
 
     Private key disimpan sebagai referensi terenkripsi (SecretBox), bukan
     plaintext; reconciler host menulis konfigurasi wg terkelola MicroTix.
+
+    Adopsi keypair installer (instalasi.sh §9.13): publikasi kunci publik
+    diambil dari env MT_WG_SERVER_PUBKEY (X25519 base64 dari `wg pubkey`).
+    Kunci privat TIDAK pernah masuk proses aplikasi — pegangan host
+    (root:600, /etc/microtix/wireguard/server_private.key); private_key_ref
+    dikosongkan saat adopsi. Tanpa env (dev/test): fallback deterministik
+    jujur (key_source=generated_dev, bukan klaim X25519).
     """
+
+    class KeySource(models.TextChoices):
+        INSTALLER_ENV = "installer_env"
+        GENERATED_DEV = "generated_dev"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     interface_name = models.CharField(max_length=16, default="mtx-wg0")
@@ -146,6 +157,10 @@ class WireGuardHost(models.Model):
     subnet_cidr = models.CharField(max_length=24, default="100.127.0.0/16")
     public_key = models.CharField(max_length=64, blank=True, default="")
     private_key_ref = models.TextField(blank=True, default="")
+    key_source = models.CharField(
+        max_length=16, choices=KeySource.choices, default=KeySource.GENERATED_DEV
+    )
+    adopted_at = models.DateTimeField(null=True, blank=True)
     desired_revision = models.IntegerField(default=1)
     applied_revision = models.IntegerField(default=0)
     updated_at = models.DateTimeField(default=dj_timezone.now)

@@ -1,6 +1,66 @@
 # MicroTix — checkpoint kemajuan
 
-Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-05 (Asia/Jakarta).
+Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-06 (Asia/Jakarta).
+
+## Checkpoint SESI-2026-11-06 — WireGuard host adoption + harness E2E (audit truth → WG-1 → E2E-1)
+
+**Scope**: sesi pertama di bawah CONTRACT.md (report/). Mulai dari `main` @
+`bbee21c`. Baseline diverifikasi ulang dari nol pada sandbox baru (PostgreSQL
+17.11 deb-extract + patch jalur share non-root; FreeRADIUS 3.2.7 deb + libtalloc
+/libpcap/libpq/rlm_sql_postgresql): **222/222 + RADIUS nyata 15/15 + FE 42/42 +
+build live + docs PASS** — klaim konsolidasi sebelumnya TERKONFIRMASI.
+
+### WG-1: adopsi keypair installer WireGuard host + render peers + probe (P1 handoff §5)
+
+**Latar**: installer membuat keypair X25519 NYATA + `wg0.conf` + env
+`MT_WG_SERVER_PUBKEY`, tapi backend MENGABAIKANNYA — `_wg_host()` membuat kunci
+sendiri + publikasi placeholder deterministik (sha256 hex). Bootstrap script
+memuat placeholder → tunnel tak akan pernah handshake pada host produksi.
+
+**Implementasi** (jujur, tanpa weakening):
+- `settings.py`: `MT_WG_SERVER_PUBKEY` divalidasi (X25519 base64 32-byte; salah → ImproperlyConfigured). Kunci privat TIDAK pernah masuk proses aplikasi.
+- Model `WireGuardHost`: +`key_source` (installer_env|generated_dev) +`adopted_at` (migrasi 0009). RLS host tetap dikecualikan (platform singleton, sesuai 0004).
+- `adopt_wg_host_key()` + command `adopt_wg_host` (--check utk doctor): idempoten; **rotasi DITOLAK bila ada peer aktif** (peers memegang kunci lama — rotasi = operasi jaringan terjadwal, bukan silent break); tanpa peer → adopsi + revision bump + private_key_ref dibersihkan.
+- `render_host_config()` + command `render_wg_config`: render wg0.conf dari state host+peers lintas-tenant via `tenant_scope` eksplisit per tenant (§4, bukan broad SELECT); berkas 0600; **PrivateKey hanya dengan --private-key-file (root)**; PENDING/APPLIED/DRIFT dirender (desired), REMOVED tidak.
+- `probe_handshakes()` + `probe_wg`: `wg show <iface> latest-handshakes` → pembaruan `last_handshake_at` monotonik + drift evidence (unknown_on_interface/missing_on_interface); binary/interface tak ada → **BLOCKED exit 2 jujur** (stub berlabel hanya utk jalur pembaruan di tes, source=stub — bukan klaim host).
+- Desain: TIDAK menambah job kind — worker produksi berjalan non-root, `wg show` butuh root → job probe akan selalu gagal di topologi produksi; probe = command ops (jujur, anti-job-palsu). Gap registri `verify_api_ssl` (dipakai tapi hilang dari JOB_KINDS) DIPERBAIKI + daftar kind ARCHITECTURE §6 disinkronkan.
+- Installer: `setup_wireguard()` kini memanggil `adopt_wg_host` (gagal = die, karena bootstrap dengan kunci salah = tunnel diam-diam rusak) + `render_wg_config` ke `$WG_DIR/rendered`; doctor menambah cek `adopt_wg_host --check`; upgrade menjalankan `setup_wireguard` (idempoten).
+
+**Verifikasi**: **252/252** (222 + 23 WG + 7 hardening post-review: validasi pubkey X25519 murni teruji unit (F6), parser epoch overflow tidak fatal (F5), `--check` tanpa baris host = no_host read-only (F2), evidence source stub vs host_wg jujur (F3), migrasi state jobs/0003_alter_job_kind (F1 — P1 dari reviewer), gitignore artefak playwright (F4), asersi judul diperkuat (F8)). `make e2e` 7/7 hijau. Docs check PASS (manifest --refresh, perubahan disengaja).
+
+### E2E-1: harness Playwright `make e2e` (P1 handoff §5 — mengganti NOT_RUN)
+
+**Harness**: `apps/web/e2e` — Playwright 1.57 (Chromium 1200), backend runserver
+NYATA (PG17+RLS, dev_bootstrap idempoten, seed 2 tenant), Vite dev + proxy
+`/api` + `VITE_API_MODE=live` (guard anti-mock tetap berlaku); token verifikasi
+email dibaca dari LOG email konsol (jalur email dev nyata — tanpa bypass API);
+ID tenant seed diekspor dari DB utk uji isolasi; `--config` eksplisit (tanpa ini
+playwright memuat spec vitest unit → 0 tes); vitest `exclude e2e/**`; tsconfig
+baru `tsconfig.e2e.json` masuk `tsc -b`.
+
+**Alur teruji (7/7, exit 0)**: login happy (owner seed) → overview data nyata;
+login salah → pesan generik; `/app` tanpa sesi → redirect login; **isolasi
+tenant: URL tenant asing → 404 envelope + nol data bocor di UI**; **register →
+email (token konsol) → verify (klik) → login → tenant baru tampil**; landing
+i18n id; mobile 360px drawer → empty state jujur.
+
+**2 bug nyata ditemukan + diperbaiki harness** (bukti nilai harness):
+1. FE: login non-MFA TIDAK pernah navigasi (`LoginPage` hanya menangani
+   requires_totp; jalur TOTP-lah yang dites era mock). Fix: `navigate('/app')`
+   + refresh konteks sesi paritas loginTotp.
+2. CSRF: topologi dev proxy → Django 4+ menolak Origin 5173 (403 login di
+   browser). Fix: `CSRF_TRUSTED_ORIGINS` non-produksi saja; produksi same-origin
+   tetap kosong.
+
+### Blocker (tetap, jujur)
+- Gate A/G (host Debian 13 root+domain) + G1 (lab MikroTik) — prasyarat eksternal.
+- Probe WG interface nyata + `wg-quick@wg0` — langkah ops host (BLOCKED di sandbox).
+- CI e2e job di GitHub Actions belum ditambahkan (harness lokal hijau; caching browser CI = pekerjaan lanjutan).
+
+### Langkah berikutnya
+1. M6/M7 billing/ledger R2 (P2; docs/FINANCE.md) — slice vertikal berikutnya.
+2. CI job e2e (opsional, hati-hati flakiness).
+3. Ops host Gate A/G → `adopt_wg_host` + `probe_wg` + render pada host nyata.
 
 ## Checkpoint INTEGRATION-1 — Recovery dua agent paralel + konsolidasi beta-0.1 (preserve → audit → port → verifikasi)
 

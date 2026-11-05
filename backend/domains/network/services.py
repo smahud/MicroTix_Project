@@ -11,14 +11,23 @@ Jaminan:
   bukan mengubah jaringan (§2.1).
 - Skrip bootstrap TIDAK reset/reboot; hanya objek milik platform (rtrw);
 - API-SSL tidak dibuka publik — rule input sempit dari /32 server.
+
+Host WireGuard (§9.13 instalasi.sh): adopsi keypair installer via env
+MT_WG_SERVER_PUBKEY — kunci privat tetap di tangan host (root), proses
+aplikasi hanya memegang kunci publik; tanpa env: fallback deterministik
+dev/test yang jujur (bukan klaim X25519).
 """
 from __future__ import annotations
 
 import hashlib
 import ipaddress
+import os
 import secrets
-from datetime import timedelta
+import shutil
+import subprocess
+from datetime import datetime, timedelta, timezone as dt_timezone
 
+from django.conf import settings
 from django.utils import timezone
 from domains.common.crypto import SecretBox
 from domains.common.envelope import ApiError
@@ -40,18 +49,122 @@ _STAGE_CODES = ["vpn_handshake", "api_verify", "auth_permission", "compatibility
 
 
 def _wg_host() -> WireGuardHost:
-    """Singleton host state — private key terenkripsi (di luar DB plaintext)."""
+    """Singleton host state — adopsi pubkey installer bila env tersedia.
+
+    Env MT_WG_SERVER_PUBKEY (instalasi.sh §9.13) → public_key X25519 nyata;
+    private_key_ref kosong (privat dipegang host, root:600 — aplikasi tidak
+    pernah memegangnya). Tanpa env (dev/test): kunci sendiri + representasi
+    deterministik jujur (key_source=generated_dev).
+    """
     host = WireGuardHost.objects.first()
     if host is None:
-        private = secrets.token_urlsafe(32)
-        host = WireGuardHost.objects.create(
-            interface_name="mtx-wg0",
-            listen_port=51820,
-            subnet_cidr="100.127.0.0/16",
-            private_key_ref=SecretBox.encrypt(private),
-        )
-        _set_host_public_key(host, private)
+        pub = getattr(settings, "MT_WG_SERVER_PUBKEY", "")
+        if pub:
+            host = WireGuardHost.objects.create(
+                interface_name="wg0",
+                listen_port=51820,
+                subnet_cidr="100.127.0.0/16",
+                public_key=pub,
+                private_key_ref="",
+                key_source=WireGuardHost.KeySource.INSTALLER_ENV,
+                adopted_at=timezone.now(),
+            )
+        else:
+            private = secrets.token_urlsafe(32)
+            host = WireGuardHost.objects.create(
+                interface_name="mtx-wg0",
+                listen_port=51820,
+                subnet_cidr="100.127.0.0/16",
+                private_key_ref=SecretBox.encrypt(private),
+                key_source=WireGuardHost.KeySource.GENERATED_DEV,
+            )
+            _set_host_public_key(host, private)
     return host
+
+
+def _any_active_peer() -> bool:
+    """Peer aktif lintas tenant — eksplisit per tenant (ARCHITECTURE §4:
+    bukan broad SELECT tanpa scope; scope bersarang aman/reentrant)."""
+    from domains.tenancy.models import Tenant
+
+    for (tenant_id,) in Tenant.objects.values_list("id"):
+        with tenant_scope(tenant_id):
+            if WireGuardPeer.objects.exclude(state=WireGuardPeer.State.REMOVED).exists():
+                return True
+    return False
+
+
+def _host_address(host: WireGuardHost) -> str:
+    return str(next(ipaddress.ip_network(host.subnet_cidr).hosts()))
+
+
+def adopt_wg_host_key(*, check_only: bool = False) -> dict:
+    """Adopsi kunci publik installer (env) oleh WireGuardHost — idempoten.
+
+    - Tanpa env: no-op jujur (fallback dev deterministik dipertahankan).
+    - Sudah adopsi sama: no-op.
+    - Peer aktif ada + kunci BERBEDA: DITOLAK (rotasi = operasi jaringan
+      terjadwal — peers lama memegang kunci lama; jangan diam-diam putus).
+    - Tanpa peer aktif: adopsi + revision bump + private_key_ref dibersihkan.
+    - check_only: TANPA MUTASI SAMA SEKALI — baris host dibaca tanpa membuat
+      (host belum ada → status no_host jujur, bukan adopsi diam-diam).
+    """
+    pub = getattr(settings, "MT_WG_SERVER_PUBKEY", "")
+    if check_only:
+        host = WireGuardHost.objects.first()  # read-only: tidak pernah membuat
+        if host is None:
+            return {
+                "status": "no_host",
+                "changed": False,
+                "key_source": "",
+                "interface": "",
+                "public_key": "",
+                "note": "baris WireGuardHost belum ada — jalankan adopt_wg_host (bukan --check)",
+            }
+    else:
+        host = _wg_host()
+    base = {
+        "status": "ok",
+        "changed": False,
+        "public_key": host.public_key,
+        "key_source": host.key_source,
+        "interface": host.interface_name,
+    }
+    if not pub:
+        base.update(
+            status="no_env",
+            note="MT_WG_SERVER_PUBKEY kosong — representasi dev deterministik dipertahankan (jujur, bukan X25519)",
+        )
+        return base
+    if host.public_key == pub and host.key_source == WireGuardHost.KeySource.INSTALLER_ENV:
+        base["note"] = "pubkey installer sudah diadopsi"
+        return base
+    if _any_active_peer():
+        base.update(
+            status="refused",
+            note=(
+                "kunci BERBEDA terdeteksi dengan peer aktif — rotasi ditolak "
+                "(peers memegang kunci lama; jalankan rotasi terjadwal + re-enrollment)"
+            ),
+        )
+        return base
+    if check_only:
+        base.update(status="mismatch", changed=True, note="pubkey env belum diadopsi (tidak ada peer aktif — aman diadopsi)")
+        return base
+    host.public_key = pub
+    host.key_source = WireGuardHost.KeySource.INSTALLER_ENV
+    host.private_key_ref = ""  # privat dipegang host (root) — bukan aplikasi
+    host.interface_name = "wg0"  # nama interface installer (wg0.conf)
+    host.listen_port = 51820
+    host.adopted_at = timezone.now()
+    host.desired_revision += 1
+    host.save(update_fields=[
+        "public_key", "key_source", "private_key_ref", "interface_name",
+        "listen_port", "adopted_at", "desired_revision", "updated_at",
+    ])
+    base.update(changed=True, public_key=pub, key_source=host.key_source, interface=host.interface_name)
+    base["note"] = "pubkey installer diadopsi"
+    return base
 
 
 def _set_host_public_key(host: WireGuardHost, private: str | None = None) -> None:
@@ -238,6 +351,204 @@ def _public_host_hint() -> str:
     import os
 
     return os.environ.get("MT_PUBLIC_HOST", "microtix.example")
+
+
+# ---------------------------------------------------------------------------
+# Host WireGuard: render konfigurasi + probe handshake (ops host; §9.13)
+# ---------------------------------------------------------------------------
+
+
+def render_host_config(target_dir: str, *, private_key_file: str | None = None) -> dict:
+    """Render wg0.conf dari state host+peers — desired state, ops mengaplikasikan.
+
+    TIDAK menyentuh interface aktif; idempoten; berkas 0600. PrivateKey hanya
+    disematkan bila ops (root) memberi --private-key-file; tanpa itu: baris
+    komentar jujur (wg-quick membutuhkan PrivateKey — digabung host).
+    Peer REMOVED tidak dirender; PENDING/APPLIED/DRIFT dirender (desired).
+    """
+    from domains.config.registry import registry
+
+    host = _wg_host()
+    keepalive = registry().get_int("vpn.keepalive_s")
+    addr = _host_address(host)
+    now = timezone.now().isoformat()
+    embedded = False
+    private_value = ""
+    if private_key_file:
+        with open(private_key_file, "r", encoding="utf-8") as fh:
+            private_value = fh.read().strip()
+        if not private_value:
+            raise ApiError.validation({
+                "private_key_file": [{"code": "invalid", "message": "berkas kunci privat kosong"}],
+            })
+        embedded = True
+
+    lines = [
+        f"# MicroTix render host WireGuard — dibuat {now}",
+        f"# sumber: network_wireguard_host revision desired={host.desired_revision}",
+        "# Terapkan (root): wg-quick strip wg0 + ganti berkas + wg-quick up wg0",
+        "# atau: wg syncconf wg0 <(wg-quick strip wg0 | grep -v '^#')",
+        "[Interface]",
+        f"Address = {addr}/32",
+        f"ListenPort = {host.listen_port}",
+    ]
+    if embedded:
+        lines.append(f"PrivateKey = {private_value}")
+    else:
+        lines.append("# PrivateKey = DIISI OLEH OPS HOST (root) dari /etc/microtix/wireguard/server_private.key")
+
+    peer_count = 0
+    tenants_touched = 0
+    from domains.tenancy.models import Tenant
+
+    for tenant in Tenant.objects.order_by("id"):
+        rendered_for_tenant = 0
+        with tenant_scope(tenant.id):
+            peers = (
+                WireGuardPeer.objects.exclude(state=WireGuardPeer.State.REMOVED)
+                .select_related("router", "enrollment")
+                .order_by("allowed_ip")
+            )
+            for peer in peers:
+                router_code = peer.router.router_code if peer.router else "-"
+                lines += [
+                    "",
+                    f"# tenant={peer.tenant_id} router={router_code} state={peer.state} rev={peer.desired_revision}",
+                    "[Peer]",
+                    f"PublicKey = {peer.public_key}",
+                    f"AllowedIPs = {peer.allowed_ip}/32",
+                    f"PersistentKeepalive = {keepalive}",
+                ]
+                rendered_for_tenant += 1
+        if rendered_for_tenant:
+            tenants_touched += 1
+        peer_count += rendered_for_tenant
+
+    os.makedirs(target_dir, exist_ok=True)
+    out_path = os.path.join(target_dir, f"{host.interface_name}.conf")
+    body = "\n".join(lines) + "\n"
+    fd = os.open(out_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        fh.write(body)
+    os.chmod(out_path, 0o600)
+    return {
+        "status": "ok",
+        "file": out_path,
+        "peers": peer_count,
+        "tenants": tenants_touched,
+        "host_address": f"{addr}/32",
+        "listen_port": host.listen_port,
+        "private_key_embedded": embedded,
+        "desired_revision": host.desired_revision,
+    }
+
+
+def parse_handshake_output(text: str) -> dict[str, datetime | None]:
+    """Parse keluaran `wg show <iface> latest-handshakes` — murni, teruji unit.
+
+    Format: "<public-key>\t<epoch-seconds>" per baris; epoch 0 = belum pernah.
+    """
+    result: dict[str, datetime | None] = {}
+    for line in text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        parts = line.split()
+        if len(parts) != 2:
+            continue  # baris tidak dikenal diabaikan (bukan error fatal)
+        pubkey, epoch = parts[0], parts[1]
+        try:
+            seconds = int(epoch)
+        except ValueError:
+            continue
+        if seconds <= 0:
+            result[pubkey] = None
+            continue
+        try:
+            # Epoch absurd (overflow/os) diabaikan — baris tak dikenal tidak
+            # boleh menjatuhkan probe (kontrak: bukan error fatal).
+            result[pubkey] = datetime.fromtimestamp(seconds, tz=dt_timezone.utc)
+        except (OverflowError, OSError, ValueError):
+            continue
+    return result
+
+
+def probe_handshakes(*, interface: str | None = None, wg_bin: str | None = None) -> dict:
+    """Probe handshake interface host via `wg show <iface> latest-handshakes`.
+
+    Jalur NYATA butuh binary `wg` + akses root ke interface host (ops/sudo).
+    Tanpa itu: status BLOCKED jujur — tidak pernah dipalsukan PASS. Pembaruan
+    last_handshake_at monotonik (tidak mundur); peers tak dikenal pada
+    interface dilaporkan sebagai drift evidence.
+    """
+    host = _wg_host()
+    iface = interface or host.interface_name
+    binpath = wg_bin or os.environ.get("MT_WG_PROBE_BIN", "wg")
+    resolved = shutil.which(binpath) if os.path.dirname(binpath) == "" else (
+        binpath if os.path.exists(binpath) else None
+    )
+    if not resolved:
+        return {
+            "status": "blocked",
+            "interface": iface,
+            "error": f"binary wg tidak ditemukan ({binpath}) — probe membutuhkan wireguard-tools pada host (ops root)",
+        }
+    try:
+        proc = subprocess.run(
+            [resolved, "show", iface, "latest-handshakes"],
+            capture_output=True, text=True, timeout=10,
+        )
+    except subprocess.TimeoutExpired:
+        return {"status": "blocked", "interface": iface, "error": "wg show timeout 10s"}
+    if proc.returncode != 0:
+        return {
+            "status": "blocked",
+            "interface": iface,
+            "error": f"wg show gagal (exit {proc.returncode}): {(proc.stderr or proc.stdout).strip()[:200]}",
+        }
+    parsed = parse_handshake_output(proc.stdout)
+
+    updated = 0
+    seen_pubkeys: set[str] = set()
+    missing_on_interface: list[dict] = []
+    from domains.tenancy.models import Tenant
+
+    for tenant in Tenant.objects.order_by("id"):
+        with tenant_scope(tenant.id):
+            peers = WireGuardPeer.objects.exclude(state=WireGuardPeer.State.REMOVED)
+            for peer in peers:
+                seen_pubkeys.add(peer.public_key)
+                new_hs = parsed.get(peer.public_key)
+                if new_hs is None and peer.public_key not in parsed:
+                    missing_on_interface.append({
+                        "peer_id": str(peer.id), "tenant_id": str(peer.tenant_id),
+                        "public_key": peer.public_key, "state": peer.state,
+                    })
+                elif new_hs is not None:
+                    if peer.last_handshake_at is None or new_hs > peer.last_handshake_at:
+                        peer.last_handshake_at = new_hs
+                        peer.save(update_fields=["last_handshake_at"])
+                        updated += 1
+    unknown_on_interface = sorted(set(parsed) - seen_pubkeys)
+    # Label bukti jujur: binary `wg` sistem = host nyata; binary override
+    # (mis. stub tes) dilabeli stub — tidak mengklaim probe host nyata.
+    default_wg = os.environ.get("MT_WG_PROBE_BIN", "wg")
+    source_label = "host_wg" if resolved.endswith("/wg") or resolved == default_wg == "wg" else "stub"
+    try:
+        version = subprocess.run(
+            [resolved, "--version"], capture_output=True, text=True, timeout=5,
+        ).stdout.strip()
+    except subprocess.TimeoutExpired:
+        version = ""
+    return {
+        "status": "ok",
+        "interface": iface,
+        "updated": updated,
+        "peers_on_interface": len(parsed),
+        "unknown_on_interface": unknown_on_interface,
+        "missing_on_interface": missing_on_interface,
+        "evidence": {"source": source_label, "binary": resolved, "version": version},
+    }
 
 
 def complete_enrollment(token: str, wg_public_key: str) -> dict:

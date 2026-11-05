@@ -34,6 +34,7 @@ JOB_KINDS = (
     "router_release",
     "router_replace",
     "change_plan",
+    "verify_api_ssl",
 )
 
 
@@ -58,6 +59,7 @@ class JobKind(models.TextChoices):
     ROUTER_RELEASE = "router_release"
     ROUTER_REPLACE = "router_replace"
     CHANGE_PLAN = "change_plan"
+    VERIFY_API_SSL = "verify_api_ssl"
 
 
 class JobState(models.TextChoices):
