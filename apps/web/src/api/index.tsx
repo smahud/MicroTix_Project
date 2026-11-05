@@ -4,13 +4,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { API_MODE } from './client';
 import type { ApiClient } from './client';
 import { MockApiClient } from './mock/adapter';
+import { LiveApiClient } from './live/adapter';
 
 /**
  * Mode integrasi:
  * - 'mock' (default dev): adapter pengembangan in-browser, data simulasi berlabel.
- * - 'live': klien HTTP ke backend same-origin /api/v1 (belum tersedia di repo ini).
+ * - 'live': klien HTTP ke backend same-origin /api/v1 (TK-104). Jalankan backend
+ *   dan set VITE_API_MODE=live (+ MICROTIX_API untuk proxy dev server Vite).
  */
-const client: ApiClient = new MockApiClient();
+const client: ApiClient = API_MODE === 'live' ? new LiveApiClient() : new MockApiClient();
 
 const ApiContext = createContext<ApiClient>(client);
 
