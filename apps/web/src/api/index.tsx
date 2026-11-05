@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { API_MODE } from './client';
+import { API_MODE, PRODUCTION_MODE_MISCONFIGURED } from './client';
 import type { ApiClient } from './client';
 import { MockApiClient } from './mock/adapter';
 import { LiveApiClient } from './live/adapter';
@@ -12,6 +12,10 @@ import { LiveApiClient } from './live/adapter';
  * - 'live': klien HTTP ke backend same-origin /api/v1 (TK-104). Jalankan backend
  *   dan set VITE_API_MODE=live (+ MICROTIX_API untuk proxy dev server Vite).
  */
+if (PRODUCTION_MODE_MISCONFIGURED) {
+  // Jangan pernah menjalankan adapter mock pada build produksi.
+  throw new Error('Konfigurasi produksi tidak sah: VITE_API_MODE harus "live".');
+}
 const client: ApiClient = API_MODE === 'live' ? new LiveApiClient() : new MockApiClient();
 
 const ApiContext = createContext<ApiClient>(client);

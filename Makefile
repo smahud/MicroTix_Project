@@ -12,10 +12,10 @@ WEB := apps/web
 -include $(BACKEND)/.env
 export
 
-.PHONY: help bootstrap lint typecheck test test-integration test-contract test-radius i18n-check e2e build migrate seed worker
+.PHONY: help bootstrap lint typecheck test test-integration test-contract test-radius smoke radius-config i18n-check e2e build migrate seed worker
 
 help:
-	@echo "Target: bootstrap lint typecheck test test-integration test-contract i18n-check build migrate seed worker"
+	@echo "Target: bootstrap lint typecheck test test-integration test-contract smoke i18n-check radius-config build migrate seed worker"
 
 # --- Bootstrap: dependency pinned + DB/migrasi/seed + aplikasi lokal ---
 bootstrap:
@@ -45,14 +45,24 @@ test-contract:
 test-radius:
 	@echo "BLOCKED: butuh daemon FreeRADIUS 3.2 nyata + radclient pada lab Linux terisolasi."
 	@echo "Lingkungan sandbox ini tidak memiliki FreeRADIUS — jujur NOT_RUN, bukan exit 0 palsu."
+	@echo "Siap di host lab: infra/freeradius/README.md (RAD-14 checklist)."
 	@exit 1
+
+# --- Smoke live: runserver + curl, alur M1+M3/M4 nyata (20 asersi) ---
+smoke:
+	cd $(BACKEND) && bash scripts/smoke_live.sh
+
+# --- Konfigurasi klien NAS dari desired revision (dry-run aman) ---
+radius-config:
+	cd $(BACKEND) && $(PY) manage.py radius_reconcile --dry-run
 
 i18n-check:
 	cd $(WEB) && python3 scripts/check_i18n.py
 
 # --- E2E Playwright: harness menunggu backend live; jujur NOT_RUN saat belum ada ---
 e2e:
-	@echo "NOT_RUN: harness Playwright belum dibangun (lihat docs/progress.md langkah berikutnya)."
+	@echo "NOT_RUN: harness Playwright browser belum dibangun di sandbox ini (lihat progress.md)."
+	@echo "Pengganti verifikasi integrasi live: make smoke (20 asersi runserver+curl nyata)."
 	@exit 1
 
 build: ## Artefak backend (wheel) + frontend production

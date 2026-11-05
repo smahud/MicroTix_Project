@@ -251,4 +251,13 @@ export interface ApiClient {
 }
 
 export type ApiMode = 'mock' | 'live';
-export const API_MODE: ApiMode = (import.meta.env.VITE_API_MODE ?? 'mock') as ApiMode;
+
+/**
+ * Mode integrasi. Default dev = mock (terisolasi, berlabel). Produksi
+ * mengharuskan 'live' eksplisit: build gate vite.config.ts menolak build
+ * produksi tanpa VITE_API_MODE=live, dan runtime turut menolak (belt & braces)
+ * — mock tidak pernah menjadi fallback produksi.
+ */
+const rawMode = import.meta.env.VITE_API_MODE;
+export const API_MODE: ApiMode = rawMode === 'live' ? 'live' : 'mock';
+export const PRODUCTION_MODE_MISCONFIGURED = import.meta.env.PROD && API_MODE !== 'live';
