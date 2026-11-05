@@ -41,11 +41,11 @@ test-integration:
 test-contract:
 	cd $(BACKEND) && MT_ENV=test $(PY) -m pytest tests/contracts -q
 
-# --- RADIUS lab (FreeRADIUS nyata): belum dapat dijalankan di lingkungan ini ---
+# --- RADIUS nyata: harness menjalankan daemon FreeRADIUS 3.2 + radclient ---
+# (binary via MT_FREERADIUS_ROOT/MT_FREERADIUS_BIN bila non-root; produksi
+# memakai paket freeradius). Exit 0 hanya bila SELURUH uji lulus; 2 = BLOCKED.
 test-radius:
-	@echo "BLOCKED: butuh daemon FreeRADIUS 3.2 nyata + radclient pada lab Linux terisolasi."
-	@echo "Lingkungan sandbox ini tidak memiliki FreeRADIUS — jujur NOT_RUN, bukan exit 0 palsu."
-	@exit 1
+	cd backend && bash scripts/test_radius.sh
 
 i18n-check:
 	cd $(WEB) && python3 scripts/check_i18n.py
