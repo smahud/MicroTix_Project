@@ -8,8 +8,8 @@ INTEGRATION-1; bukti eksekusi: [BETA_TEST_EVIDENCE.md](BETA_TEST_EVIDENCE.md)).
 
 - **Kandidat**: `v0.1.0-beta.1` (release candidate; tag dibuat HANYA setelah
   CI hijau pada commit main yang diuji).
-- **Basis kanonis**: branch `integration/beta-0.1` → merge ke `main`
-  (SHA final tercatat di [AGENT_HANDOFF.md](AGENT_HANDOFF.md) dan `git log -1`).
+- **Basis kanonis**: `main` @ **`8da2c2d`** (merge commit PR #1 dari
+  `integration/beta-0.1`; CI GitHub Actions hijau: backend+frontend+docs).
 - **Sumber kebenaran tunggal**: `main`. Branch `parallel/beta-be2` dan
   `integration/beta-0.1` disimpan sebagai arsip riwayat — agent berikutnya
   WAJIB memulai dari `main`.
@@ -67,7 +67,7 @@ INTEGRATION-1; bukti eksekusi: [BETA_TEST_EVIDENCE.md](BETA_TEST_EVIDENCE.md)).
 | **verified_lab perangkat MikroTik fisik (G1)** | **BLOCKED** — tidak ada perangkat/lab CHR |
 | **Instalasi produksi nyata host root + domain (Gate A/G)** | **BLOCKED** — sandbox tanpa root/domain |
 | Browser E2E Playwright | **NOT_RUN** — harness belum dibangun |
-| CI GitHub Actions (backend/frontend/docs) | Menunggu push (PR integration/beta-0.1) |
+| CI GitHub Actions (backend/frontend/docs) | **HIJAU** pada `8da2c2d` (backend ✓ frontend ✓ docs ✓) |
 
 ## Known limitations
 

@@ -19,10 +19,10 @@ git log --oneline -5
 
 | Item | Nilai |
 |---|---|
-| Canonical main | `main` pada GitHub (SHA final: lihat `git rev-parse origin/main` setelah pull; merge integration/beta-0.1 + dokumen ini) |
+| Canonical main | `main` @ **`8da2c2d`** (merge commit PR #1; CI hijau: backend+frontend+docs). Update dokumen ini setelah setiap merge penting. |
 | Kandidat rilis | `v0.1.0-beta.1` (RC) — syarat tag: CI hijau pada commit main |
 | Basis konsolidasi | `integration/beta-0.1` (dari `cd5142c` = main pra-integrasi) |
-| Artefak terverifikasi terakhir | Lihat [BETA_TEST_EVIDENCE.md](BETA_TEST_EVIDENCE.md) (222/222 BE, 42/42 FE, RADIUS nyata 15/15, smoke 20/20, docs PASS) |
+| Artefak terverifikasi terakhir | [BETA_TEST_EVIDENCE.md](BETA_TEST_EVIDENCE.md) (222/222 BE, 42/42 FE, RADIUS nyata 15/15, smoke 20/20, docs PASS; CI GitHub hijau pada 8da2c2d) |
 | Status rilis | [BETA_RELEASE_STATUS.md](BETA_RELEASE_STATUS.md) — scope aktif/tidak aktif + gate |
 
 ## 3. Riwayat dua agent (context — jangan diulang)
@@ -53,7 +53,7 @@ git log --oneline -5
 | Prioritas | Task | Catatan |
 |---|---|---|
 | P0 | Eksekusi instalasi produksi nyata: host Debian 13 + root + `MT_DOMAIN` + DNS → `sudo bash instalasi.sh install` | Gate A/G; catat hasil gate di BETA_TEST_EVIDENCE.md |
-| P0 | Verifikasi CI GitHub Actions hijau pada main pasca-merge | jobs backend/frontend/docs |
+| P0 | ~~Verifikasi CI GitHub Actions hijau pada main pasca-merge~~ **SELESAI** (8da2c2d: backend+frontend+docs hijau) | jobs backend/frontend/docs |
 | P1 | Lab MikroTik CHR (atau fisik) untuk G1: jalankan T01/T16–T18/T20–T21 | Setelah lulus: `MT_ROUTEROS_ADAPTER=api_ssl` boleh diuji; cutover B3–B5 dengan NAS nyata |
 | P1 | Aktifasi WireGuard host: `systemctl enable --now wg-quick@wg0` + adopsi keypair installer oleh model `WireGuardHost` + probe handshake | Installer sudah menyiapkan keypair/wg0.conf/env |
 | P1 | Harness Playwright E2E (`make e2e`) | Ganti smoke terbatas |
