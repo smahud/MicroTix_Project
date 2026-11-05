@@ -12,6 +12,8 @@ urlpatterns = [
     path("api/v1/", include("domains.jobs.urls")),        # pekerjaan
     path("api/v1/", include("domains.audit.urls")),       # audit timeline
     path("api/v1/", include("domains.subscriptions.urls")),  # paket/subscription
-    path("api/v1/", include("domains.network.urls")),     # registri router (R1 fondasi)
+    path("api/v1/", include("domains.network.urls")),     # router + enrollment + discovery
+    path("api/v1/", include("domains.customers.urls")),    # pelanggan/layanan (M4)
+    path("api/v1/", include("domains.access.urls")),       # akun AAA + status RADIUS (M3)
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
 ]

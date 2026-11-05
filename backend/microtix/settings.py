@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     "domains.audit",
     "domains.subscriptions",
     "domains.network",
+    "domains.customers",
+    "domains.access",
     "domains.config",
     "domains.i18n",
 ]
@@ -163,6 +165,21 @@ ALLOWED_HOSTS = [h for h in os.environ.get("MT_ALLOWED_HOSTS", "localhost,127.0.
 
 # --- Keamanan skema upload/tandatangan (TK-106) ---
 MT_UPLOAD_SIGNING_KEY = os.environ.get("MT_UPLOAD_SIGNING_KEY", SECRET_KEY)
+
+# --- Jaringan & enrollment (M3; ROUTEROS.md §2) ---
+MT_ENV = ENV  # cermin eksplisit untuk kode yang memeriksa lingkungan
+# Pubkey host WireGuard (installer menghasilkan; private key hanya di host).
+MT_WG_SERVER_PUBKEY = os.environ.get("MT_WG_SERVER_PUBKEY", "")
+# Endpoint publik WG host (diisi router pada peer): "host:port".
+MT_WG_ENDPOINT = os.environ.get("MT_WG_ENDPOINT", "")
+# Base URL publik platform (dipakai skrip bootstrap untuk probe).
+MT_PUBLIC_BASE_URL = os.environ.get("MT_PUBLIC_BASE_URL", "")
+# Verifikasi sumber probe: production default WAJIB dari IP tunnel reserved.
+MT_ENROLL_VERIFY_SOURCE = os.environ.get("MT_ENROLL_VERIFY_SOURCE", "") == "1" or (
+    ENV == "production" and os.environ.get("MT_ENROLL_VERIFY_SOURCE", "1") != "0"
+)
+# Adapter RouterOS aktif: simulator (dev/test) | api_ssl (butuh bukti lab G1).
+MT_ROUTEROS_ADAPTER = os.environ.get("MT_ROUTEROS_ADAPTER", "simulator")
 
 LOGGING = {
     "version": 1,

@@ -24,6 +24,8 @@ class RouterContext:
     routeros_version: str = "7.15"
     architecture: str = "arm64"
     credential_ref: str = ""
+    # Pin sertifikat API-SSL (SHA-256 hex) dari enrollment (TK-304).
+    cert_pin: str = ""
 
 
 @dataclass
