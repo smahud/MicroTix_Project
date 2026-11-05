@@ -1,0 +1,33 @@
+# MicroTix — gitignore
+
+# Python / backend
+backend/.venv
+backend/.storage/
+backend/.static/
+backend/dist/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Database lokal (dev sandbox)
+pgdata/
+pgrun/
+*.sql.local
+
+# Node / frontend
+node_modules/
+apps/web/dist/
+apps/web/.env.local
+
+# Secret & environment — JANGAN commit
+.env
+*.pem
+*.key
+secret*.txt
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/

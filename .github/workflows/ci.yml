@@ -1,0 +1,82 @@
+# CI MicroTix — backend (Python 3.13 + PostgreSQL 17) + frontend (pnpm)
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: microtix
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      MT_ENV: test
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/microtix
+      MT_SECRET_KEY: ci-secret-key-0123456789abcdef0123456789
+      MT_SECRET_BOX_KEY: ci-secret-box-0123456789abcdef0123456789
+      MT_STORAGE_ROOT: /tmp/mtx-ci-storage
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install dependensi pinned
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install Django==5.2.19 djangorestframework==3.16.1 drf-spectacular==0.28.0 \
+            "psycopg[binary]==3.2.13" argon2-cffi==25.1.0 cryptography==50.0.2 \
+            gunicorn==26.2.0 pytest==8.4.2 pytest-django==4.14.0
+      - name: Django system check
+        working-directory: backend
+        run: python manage.py check
+      - name: Unit + integrasi + kontrak (PostgreSQL nyata)
+        working-directory: backend
+        run: python -m pytest tests -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+      - name: Install
+        working-directory: apps/web
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        working-directory: apps/web
+        run: pnpm exec tsc -b --pretty false
+      - name: Lint
+        working-directory: apps/web
+        run: pnpm exec eslint src --ext ts,tsx
+      - name: Vitest
+        working-directory: apps/web
+        run: pnpm exec vitest run
+      - name: i18n parity
+        working-directory: apps/web
+        run: python3 scripts/check_i18n.py
+      - name: Build
+        working-directory: apps/web
+        run: pnpm exec vite build
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Static docs check
+        run: python3 docs/tools/check_docs.py

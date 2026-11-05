@@ -1,0 +1,35 @@
+[project]
+name = "microtix-backend"
+version = "0.1.0"
+description = "MicroTix — backend ISP management platform (Django 5.2 LTS, PostgreSQL 17)"
+requires-python = ">=3.13,<3.14"
+
+# TK-002: dependensi dipin patch-exact. FreeRADIUS (GPLv2) berjalan sebagai
+# proses terpisah dan tidak diimpor di sini; lisensi dependensi Python di bawah
+# semuanya BSD/MIT/Apache-2.0 (django BSD, DRF BSD, drf-spectacular BSD-3,
+# psycopg LGPL-3.0-with-GPL... lihat docs/progress.md bagian kompatibilitas).
+dependencies = [
+  "Django==5.2.19",
+  "djangorestframework==3.16.1",
+  "drf-spectacular==0.28.0",
+  "psycopg[binary]==3.2.13",
+  "argon2-cffi==25.1.0",
+  "cryptography==50.0.2",
+  "gunicorn==26.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest==8.4.2",
+  "pytest-django==4.14.0",
+]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = []
+
+[tool.pytest.ini_options]
+# dikonfigurasi via pytest.ini di backend/

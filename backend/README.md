@@ -1,32 +1,64 @@
 # Backend MicroTix
 
-Direktori ini dicadangkan untuk layanan backend MicroTix. **Belum ada kode backend yang diimplementasikan atau dikonfigurasi** — repository berangkat dari tahap documentation-first, dan frontend R1 berjalan pada adapter mock terisolasi (`apps/web`, `VITE_API_MODE=mock`).
+Backend Django 5.2 LTS + PostgreSQL 17 — modular monolith sesuai
+`docs/ARCHITECTURE.md`. Status implementasi: **M0 fondasi + M1 identitas/job/subscription** (lihat `docs/progress.md` checkpoint BE-1).
 
-Frontend dan backend sengaja dipisahkan direktori agar keduanya dapat dikonfigurasi dan berevolusi secara mandiri:
-
-- `apps/web/` — frontend (React + TypeScript + Vite), sudah terimplementasi untuk R1.
-- `backend/` — layanan backend, akan dikonfigurasi kemudian (direktori ini).
-
-## Struktur yang direncanakan
-
-Sesuai `docs/ARCHITECTURE.md` (§ Struktur implementasi), saat backend mulai dikonfigurasi, direktori ini diisi dengan:
+## Struktur
 
 ```
 backend/
-  domains/    # identity, tenancy, subscriptions, customers, access,
-              # network, jobs, backups, i18n; kemudian billing, ledger,
-              # monitoring, field operations saat diperlukan
-  adapters/   # routeros, radius, storage, acs
-  infra/      # compose, systemd, nftables, caddy, freeradius
-  tests/      # contracts, integration, router_lab, radius_lab, e2e
+  microtix/           # settings (env-driven), urls, dburl parser
+  domains/
+    common/           # envelope error, kursor, tenant context RLS, kripto, idempotency
+    tenancy/          # Tenant, Membership, permission per peran
+    identity/         # User, TOTP RFC 6238, kode pemulihan, sesi, reauth
+    jobs/             # engine job (state machine §6), outbox, worker
+    audit/            # audit event + redaction
+    subscriptions/    # PlanVersion (harga PRODUCT.md), kuota atomik, invoice SaaS
+    network/          # registri router (fondasi R1; enrollment M3)
+    config/           # registri defaults.json, branding, health, enums, seed
+    i18n/             # katalog pesan id/en + label enum
+  adapters/routeros/  # antarmuka adapter + simulator deterministik (TK-004)
+  infra/              # bootstrap SQL, Caddyfile contoh
+  tests/              # unit / integration (PostgreSQL nyata) / contracts
 ```
 
-## Titik sambung frontend
+## Menjalankan (dev)
 
-Kontrak integrasi sudah disiapkan pada `apps/web/src/api/` (`client.ts`, `http.ts`, `contracts.ts`):
+```bash
+# 1. PostgreSQL 17 + peran + database + migrasi + seed dua tenant
+bash scripts/dev_bootstrap.sh        # atau: make bootstrap dari akar repo
 
-- Endpoint yang terdokumentasi di `docs/ARCHITECTURE.md` §5 diimplementasikan terhadap antarmuka `ApiClient` typed.
-- Endpoint yang menunggu backend ditandai eksplisit `PENDING_BACKEND` di header `client.ts`.
-- Beralih ke integrasi live: set `VITE_API_MODE=live` + proxy, tanpa mengubah komponen halaman.
+# 2. API
+.venv/bin/python manage.py runserver 127.0.0.1:8000
 
-Mulai dari `docs/IMPLEMENTATION_PLAN.md` (milestone M0–M1) dan `docs/ARCHITECTURE.md` sebelum menulis kode backend.
+# 3. Worker job (opsional; tanpa worker, job tetap antre jujur)
+.venv/bin/python manage.py runworker --loop
+```
+
+Environment (lihat `microtix/settings.py`): `MT_ENV`, `DATABASE_URL`
+(peran runtime `mtx_app`), `MIGRATE_DATABASE_URL` (peran migrator `mtx_migrator`),
+`MT_SECRET_KEY`, `MT_SECRET_BOX_KEY` (kunci AEAD di luar DB), `MT_STORAGE_ROOT`.
+
+## Pengujian
+
+```bash
+.venv/bin/python -m pytest tests -q          # seluruh suite (PostgreSQL uji nyata)
+.venv/bin/python -m pytest tests/unit -q     # domain murni
+.venv/bin/python -m pytest tests/integration tests/contracts -q
+```
+
+`make test-radius` dan `make e2e` jujur NOT_RUN/BLOCKED — membutuhkan daemon
+FreeRADIUS nyata dan harness Playwright (lihat progress.md).
+
+## Live mode frontend
+
+```bash
+cd apps/web
+MICROTIX_API=http://127.0.0.1:8000 VITE_API_MODE=live pnpm dev
+```
+
+Endpoint aktif M1: auth lengkap (login+TOTP, register, verifikasi, reauth),
+tenant switch, meta/enums/branding/config, health, jobs (U16), audit timeline,
+subscription/plans/quotations/payment-submissions, registri router (baca).
+Endpoint fase M2+ mengembalikan 404 envelope `not_found` — tidak ada data palsu.
