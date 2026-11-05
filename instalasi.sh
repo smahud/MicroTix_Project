@@ -331,7 +331,7 @@ setup_firewall() {
 # ----------------------------------------------------------------------------
 setup_wireguard() {
   log "Menyiapkan WireGuard host (keypair CSPRNG, jaringan 100.127.0.0/16)..."
-  [ "$DRY_RUN" -eq 1 ] && { echo "[dry-run] keypair + wg0.conf + env MT_WG_SERVER_PUBKEY"; return; }
+  [ "$DRY_RUN" -eq 1 ] && { echo "[dry-run] keypair + wg0.conf + env MT_WG_SERVER_PUBKEY + adopt_wg_host + render_wg_config"; return; }
   if [ ! -f "$WG_DIR/server_private.key" ]; then
     umask 077
     wg genkey > "$WG_DIR/server_private.key"
@@ -365,6 +365,27 @@ setup_wireguard() {
     echo "MT_WG_SERVER_PUBKEY=${PUB}" >> "$ENV_FILE"
   fi
   chown root:"$RUN_GROUP" "$ENV_FILE"; chmod 640 "$ENV_FILE"
+  # Adopsi pubkey oleh model WireGuardHost backend (idempoten; rotasi dengan
+  # peer aktif ditolak jujur oleh command). Gagal adopsi = bootstrap script
+  # akan memuat kunci salah → install dihentikan (jujur, bukan diam-diam).
+  (
+    cd "$INSTALL_ROOT/backend"
+    set -a; . "$ENV_FILE"; set +a
+    "$INSTALL_ROOT/venv/bin/python" manage.py adopt_wg_host \
+      || die "adopt_wg_host gagal — pubkey host tidak diadopsi backend (lihat JSON di atas)."
+  )
+  # Render konfigurasi host (peers desired) untuk ops — TANPA PrivateKey
+  # (privat tetap di $WG_DIR/server_private.key milik root; berkas 0600).
+  (
+    cd "$INSTALL_ROOT/backend"
+    set -a; . "$ENV_FILE"; set +a
+    "$INSTALL_ROOT/venv/bin/python" manage.py render_wg_config \
+      --target "$WG_DIR/rendered" \
+      || die "render_wg_config gagal (render peers host)."
+    chown -R root:"$RUN_GROUP" "$WG_DIR/rendered"; chmod -R o-rwx "$WG_DIR/rendered"
+  )
+  log "Pubkey host diadopsi backend; render peers: $WG_DIR/rendered/wg0.conf (tanpa PrivateKey)."
+  log "Aktivasi interface tetap langkah ops (§9.13): systemctl enable --now wg-quick@wg0."
 }
 
 # ----------------------------------------------------------------------------
@@ -578,6 +599,15 @@ do_doctor() {
   for svc in microtix-api microtix-worker; do
     systemctl is-active --quiet "$svc" || { warn "$svc tidak aktif: journalctl -u $svc -n 50"; PREFLIGHT_OK=0; }
   done
+  # WireGuard host: env pubkey diadopsi backend? (read-only --check; tanpa mutasi)
+  if [ -f "$ENV_FILE" ] && [ -d "$INSTALL_ROOT/backend" ]; then
+    (
+      cd "$INSTALL_ROOT/backend"
+      set -a; . "$ENV_FILE"; set +a
+      "$INSTALL_ROOT/venv/bin/python" manage.py adopt_wg_host --check >/dev/null 2>&1 \
+        || warn "WireGuard host: pubkey env belum diadopsi backend (jalankan: manage.py adopt_wg_host) — atau cek koneksi DB."
+    )
+  fi
   [ "$PREFLIGHT_OK" -eq 1 ] && log "Doctor: semua pemeriksaan utama sehat." || log "Doctor: temuan di atas perlu ditindak."
 }
 
@@ -597,6 +627,7 @@ do_upgrade() {
   deploy_backend
   build_frontend
   setup_caddy
+  setup_wireguard   # idempoten: keypair dipertahankan; pubkey env + adopsi backend + render peers diperbarui
   [ "$DRY_RUN" -ne 1 ] && { systemctl restart microtix-api microtix-worker; health_checks; }
   log "Upgrade selesai."
 }

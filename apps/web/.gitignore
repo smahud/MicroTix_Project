@@ -3,3 +3,7 @@ dist
 coverage
 *.local
 .DS_Store
+# Artefak harness Playwright (hasil uji, bukan kode) — F4 review
+test-results/
+playwright-report/
+

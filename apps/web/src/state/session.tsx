@@ -53,8 +53,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   );
 
   const login = useCallback(
-    async (email: string, password: string) => api.login(email, password),
-    [api],
+    async (email: string, password: string) => {
+      const res = await api.login(email, password);
+      if (!res.requires_totp) {
+        // Login non-MFA: sesi aktif — segarkan konteks (paritas loginTotp),
+        // lalu halaman login yang menavigasi ke /app.
+        queryClient.removeQueries({ predicate: (q) => q.queryKey[0] !== 'session' });
+        await queryClient.refetchQueries({ queryKey: ['session'] });
+      }
+      return res;
+    },
+    [api, queryClient],
   );
 
   const loginTotp = useCallback(

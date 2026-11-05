@@ -37,7 +37,8 @@ $ psql -t -c "SELECT count(*) FROM information_schema.role_table_grants
 | # | Perintah | Hasil |
 |---|---|---|
 | 2.1 | `python manage.py check` | System check identified no issues |
-| 2.2 | `pytest tests -q` | **222 passed** (207 + 1 regresi RLS bersarang + 14 API-SSL) |
+| 2.2 | `pytest tests -q` | **222 passed** (207 + 1 regresi RLS bersarang + 14 API-SSL) — verifikasi ulang 2026-11-06: 222 PASS sebelum perubahan sesi |
+| 2.2b | `manage.py makemigrations --check --dry-run` (post-review F1) | **CLEAN** (jobs/0003_alter_job_kind dibuat + diterapkan; tidak ada drift migrasi) |
 | 2.3 | `REVOKE ALL ... radius` → `manage.py grant_runtime` | OK (skema: public, radius); grant tabel radius **0 → 28**; USAGE=t; public 180 tetap |
 | 2.4 | `bash scripts/test_radius.sh` (jalur fresh tanpa grant manual) | **PASS 15/15** |
 | 2.5 | `tsc -b --pretty false` | 0 error |
@@ -62,22 +63,48 @@ $ psql -t -c "SELECT count(*) FROM information_schema.role_table_grants
   late-Start tanpa reopen + Simultaneous-Use=1 (auth saat sesi terbuka →
   Reject).
 
-## 3. Yang TIDAK dieksekusi (jujur)
+## 3. Sesi 2026-11-06 — WG host + harness E2E (commit kanonis: lihat report/LATEST_HANDOFF.md)
+
+| # | Perintah | Hasil |
+|---|---|---|
+| 3.1 | `MT_ENV=test .venv/bin/python -m pytest tests -q` (baseline ulang sebelum perubahan) | **222 passed** (verifikasi ulang klaim lama pada environment baru — PostgreSQL 17.11 deb + patch jalur share non-root) |
+| 3.2 | `bash scripts/test_radius.sh` (FreeRADIUS 3.2.7 deb-extract + libtalloc/libpcap/libpq + rlm_sql_postgresql) | **PASS 15/15** |
+| 3.3 | `MT_ENV=test .venv/bin/python -m pytest tests -q` (setelah WG + E2E + perbaikan review) | **252 passed** (222 + 23 WG + 7 hardening post-review: validasi pubkey murni, parser overflow, --check read-only no_host) |
+| 3.4 | `tsc -b` / `eslint src` / `vitest run` | 0 error / 0 error / **42 passed** (kini termasuk typecheck e2e specs via tsconfig.e2e) |
+| 3.5 | `VITE_API_MODE=live pnpm exec vite build` | sukses (bundle live) |
+| 3.6 | `make e2e` (Playwright 1.57 + Chromium 1200; backend runserver nyata + PG17 + RLS; Vite dev proxy) | **7/7 PASS, exit 0** — login happy/error, guard /app, isolasi tenant (404 envelope + nol kebocoran data lintas tenant), register→verifikasi email (token dari email konsol dev)→login tenant baru, landing i18n, mobile 360px drawer→empty state jujur |
+| 3.7 | `bash -n instalasi.sh` + `shellcheck -S error instalasi.sh` | OK / **0 error** (warning pra-ada tidak berubah) |
+| 3.8 | `python3 docs/tools/check_docs.py` | **PASS** (manifest direfresh — perubahan dokumen disengaja) |
+| 3.9 | `manage.py adopt_wg_host` / `render_wg_config` / `probe_wg` (dev DB, tanpa env pubkey) | `no_env` jujur (fallback dev) / render wg0.conf tanpa PrivateKey, 0600 / **BLOCKED exit 2** (binary wg tidak ada — jujur, bukan PASS palsu) |
+
+### Bug nyata yang ditemukan + diperbaiki harness E2E
+
+1. **Login non-MFA tidak pernah menavigasi** (`LoginPage.tsx` hanya menangani
+   `requires_totp`): jalur TOTP-lah yang dites era mock; owner seed live TANPA
+   MFA login sukses 200 tapi halaman diam. Perbaikan: `navigate('/app')` +
+   refresh konteks sesi (paritas `loginTotp`).
+2. **CSRF lintas-origin dev**: topologi harness (Vite 5173 → proxy → 8010)
+   ditolak `Origin` Django 4+ → 403. Perbaikan: `CSRF_TRUSTED_ORIGINS`
+   khusus non-produksi (produksi Caddy same-origin — daftar tetap kosong).
+
+## 4. Yang TIDAK dieksekusi (jujur — diperbarui sesi 2026-11-06)
 
 | Item | Status | Penyebab |
 |---|---|---|
 | Tes lab perangkat MikroTik fisik/CHR (T01/T10/T17) | **BLOCKED** | Tidak ada perangkat/lab pada sandbox |
 | Instalasi produksi host root + domain (Gate A/G) | **BLOCKED** | Sandbox tanpa root/domain publik |
-| Browser E2E Playwright | **NOT_RUN** | Harness belum dibangun |
-| CI GitHub Actions | Menunggu push PR | Eksekusi pasca-push (lihat progress.md) |
+| Probe handshake WG pada interface host NYATA | **BLOCKED** | `probe_wg` butuh binary wg + akses root pada host (jalur parser + pembaruan peer teruji stub berlabel; BLOCKED exit 2 terbukti jujur) |
+| Aktivasi interface `wg-quick@wg0` | **BLOCKED** | Langkah ops host (butuh Gate A/G) |
+| ~~Browser E2E Playwright~~ | **7/7 PASS** | `make e2e` (lihat §3.6) |
+| CI GitHub Actions (push sesi ini) | Menunggu push | Eksekusi pasca-push (lihat progress.md) |
 
-## 4. Ringkasan gate (ACCEPTANCE.md)
+## 5. Ringkasan gate (ACCEPTANCE.md)
 
 | Gate | Status scope beta |
 |---|---|
-| G0 desain & kontrak | LULUS (docs check PASS + tes kontrak 8+ dalam 222) |
+| G0 desain & kontrak | LULUS (docs check PASS + tes kontrak 8+ dalam 245) |
 | G1 RouterOS/RADIUS nyata | **SEBAGIAN**: RADIUS daemon nyata 15/15; perangkat router fisik BLOCKED → fitur mutasi router & api_ssl default TIDAK diaktifkan |
-| G2 keamanan & isolasi | LULUS untuk scope aktif (RLS fail-closed + reentrant, CSRF, AEAD, redaction; secret scanning via review — tidak ada secret dalam commit) |
+| G2 keamanan & isolasi | LULUS untuk scope aktif (RLS fail-closed + reentrant, CSRF, AEAD, redaction; E2E membuktikan 404 generik lintas tenant di browser nyata; secret scanning via review — tidak ada secret dalam commit) |
 | G3 pilot terbatas | BELUM (menunggu instalasi nyata) |
 | G4 benchmark/scale | N/A beta |
 | G5 observability & recovery drill | SEBAGIAN (health/ready + backup job; drill penuh menunggu host nyata) |

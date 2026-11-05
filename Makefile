@@ -50,10 +50,12 @@ test-radius:
 i18n-check:
 	cd $(WEB) && python3 scripts/check_i18n.py
 
-# --- E2E Playwright: harness menunggu backend live; jujur NOT_RUN saat belum ada ---
+# --- E2E Playwright: browser nyata + backend nyata (IMPLEMENTATION_PLAN §4) ---
+# Harness: apps/web/e2e (run.sh menyiapkan DB/seed/runserver; config webServer
+# menjalankan Vite dev + proxy /api, VITE_API_MODE=live). Browser: chromium.
 e2e:
-	@echo "NOT_RUN: harness Playwright belum dibangun (lihat docs/progress.md langkah berikutnya)."
-	@exit 1
+	cd $(WEB) && pnpm exec playwright install chromium 2>/dev/null || true
+	bash $(WEB)/e2e/run.sh
 
 build: ## Artefak backend (wheel) + frontend production
 	$(PY) -m pip install -q build && cd $(BACKEND) && $(PY) -m build --wheel -o dist/ 2>/dev/null || true

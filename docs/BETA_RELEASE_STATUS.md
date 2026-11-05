@@ -63,7 +63,7 @@ INTEGRATION-1; bukti eksekusi: [BETA_TEST_EVIDENCE.md](BETA_TEST_EVIDENCE.md)).
 
 | Suite | Hasil |
 |---|---|
-| Backend unit+integrasi+kontrak (PostgreSQL nyata) | **222/222 PASS** |
+| Backend unit+integrasi+kontrak (PostgreSQL nyata) | **252/252 PASS** (222 konsolidasi + 23 WG-1 + 7 hardening post-review; sesi 2026-11-06) |
 | Frontend (tsc/eslint/vitest/i18n) | **42/42 + 0 error + parity 908** |
 | RADIUS nyata (FreeRADIUS+radclient) | **15/15 PASS** |
 | Smoke live API (runserver+curl, alur pendaftaran→enrollment→layanan) | **20/20 PASS** (basis be2) |
@@ -71,7 +71,7 @@ INTEGRATION-1; bukti eksekusi: [BETA_TEST_EVIDENCE.md](BETA_TEST_EVIDENCE.md)).
 | Installer: sintaks + shellcheck + dry-run | **PASS** (preflight menolak disk 8GB<10GB dengan benar) |
 | **verified_lab perangkat MikroTik fisik (G1)** | **BLOCKED** — tidak ada perangkat/lab CHR |
 | **Instalasi produksi nyata host root + domain (Gate A/G)** | **BLOCKED** — sandbox tanpa root/domain |
-| Browser E2E Playwright | **NOT_RUN** — harness belum dibangun |
+| Browser E2E Playwright | **7/7 PASS** (sesi 2026-11-06: `make e2e` — Chromium nyata ↔ backend nyata; login happy/error, guard, isolasi tenant 404, register→verifikasi email→login tenant baru, i18n, mobile 360px) |
 | CI GitHub Actions (backend/frontend/docs) | **HIJAU** pada `8da2c2d` (backend ✓ frontend ✓ docs ✓) |
 
 ## Known limitations
@@ -80,12 +80,17 @@ INTEGRATION-1; bukti eksekusi: [BETA_TEST_EVIDENCE.md](BETA_TEST_EVIDENCE.md)).
    **simulator** secara default — capability evidence selalu mencatat
    `source=simulator, verified_lab=false`; tidak ada klaim perangkat nyata.
 2. WireGuard: installer menyiapkan keypair + `wg0.conf` + env
-   `MT_WG_SERVER_PUBKEY`; **aktifasi interface** dan adopsi keypair oleh model
-   backend adalah langkah manual/ops berikutnya (belum otomatis penuh).
+   `MT_WG_SERVER_PUBKEY`; **adopsi keypair oleh model `WireGuardHost`
+   (X25519 nyata) + render peers host + probe handshake kini DIIMPLEMENTASI**
+   (`adopt_wg_host`/`render_wg_config`/`probe_wg`); **aktifasi interface
+   (`systemctl enable --now wg-quick@wg0`) dan probe pada host nyata tetap
+   langkah ops — belum ada bukti lab WG**.
 3. HTTPS publik memerlukan `MT_DOMAIN` + DNS; tanpa itu installer jujur
    mengembalikan `INSTALL_PARTIAL` (exit 3) — bukan beta publik.
-4. Publikasi kunci publik WG host pada skrip bootstrap masih memakai
-   representasi deterministik beta (konversi X25519 murni menunggu lab WG).
+4. Publikasi kunci publik WG host: **jalur adopsi installer (X25519 nyata)
+   aktif** via env `MT_WG_SERVER_PUBKEY` (fallback deterministik hanya bila
+   env kosong — dev/test, berlabel `key_source=generated_dev`). Probe handshake
+   pada interface host NYATA menunggu host root (bukan sandbox).
 5. Email dev via konsol; SMTP produksi dikonfigurasi lewat env.
 
 ## Deployment readiness

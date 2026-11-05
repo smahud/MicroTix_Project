@@ -55,8 +55,8 @@ git log --oneline -5
 | P0 | Eksekusi instalasi produksi nyata: host Debian 13 + root + `MT_DOMAIN` + DNS → `sudo bash instalasi.sh install` → setelah lulus, **buat tag `v0.1.0-beta.1`** menunjuk commit teruji | Gate A/G; catat hasil gate di BETA_TEST_EVIDENCE.md; ini satu-satunya penahan tag |
 | P0 | ~~Verifikasi CI GitHub Actions hijau pada main pasca-merge~~ **SELESAI** (8da2c2d: backend+frontend+docs hijau) | jobs backend/frontend/docs |
 | P1 | Lab MikroTik CHR (atau fisik) untuk G1: jalankan T01/T16–T18/T20–T21 | Setelah lulus: `MT_ROUTEROS_ADAPTER=api_ssl` boleh diuji; cutover B3–B5 dengan NAS nyata |
-| P1 | Aktifasi WireGuard host: `systemctl enable --now wg-quick@wg0` + adopsi keypair installer oleh model `WireGuardHost` + probe handshake | Installer sudah menyiapkan keypair/wg0.conf/env |
-| P1 | Harness Playwright E2E (`make e2e`) | Ganti smoke terbatas |
+| P1 | ~~Aktifasi WireGuard host~~ **SEBAGIAN SELESAI (sesi 2026-11-06)**: adopsi keypair installer oleh `WireGuardHost` + render peers host + probe handshake (`adopt_wg_host`/`render_wg_config`/`probe_wg`; installer memanggilnya; 23 tes baru). Sisa: `systemctl enable --now wg-quick@wg0` + probe host nyata = ops host (butuh Gate A/G) | Lihat report/ sesi 2026-11-06 + BETA_RELEASE_STATUS.md batasan 2/4 |
+| P1 | ~~Harness Playwright E2E (`make e2e`)~~ **SELESAI (sesi 2026-11-06)**: `make e2e` — Chromium nyata + backend nyata; 7/7 PASS (login happy/error, guard, isolasi tenant, register→verify→login, i18n, mobile). Menemukan + memperbaiki 2 bug nyata: navigasi login non-MFA (FE) + CSRF_TRUSTED_ORIGINS dev-topologi | Spec: `apps/web/e2e/`; jalankan `make e2e` |
 | P2 | M6/M7 billing/ledger R2 (TK-201–205 lanjutan, invoice, pembayaran) | Ikuti docs/FINANCE.md |
 | P2 | Wizard U07 8-langkah + penggabungan identitas lintas router (TK-410) | Lihat docs/UI_UX.md |
 | P3 | ACS R3, OLT/WAN R4 | Jangan dipaksakan sebelum gate |

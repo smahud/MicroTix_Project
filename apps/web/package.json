@@ -14,7 +14,8 @@
     "i18n:build": "python3 scripts/build_catalogs.py",
     "i18n:check": "python3 scripts/check_i18n.py",
     "a11y:contrast": "python3 scripts/check_contrast.py",
-    "check:all": "tsc -b --pretty false && eslint src --ext ts,tsx && vitest run && python3 scripts/check_i18n.py && python3 scripts/check_contrast.py"
+    "check:all": "tsc -b --pretty false && eslint src --ext ts,tsx && vitest run && python3 scripts/check_i18n.py && python3 scripts/check_contrast.py",
+    "e2e": "bash e2e/run.sh"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.62.0",
@@ -37,7 +38,8 @@
     "jsdom": "^25.0.1",
     "typescript": "^5.6.3",
     "vite": "^5.4.11",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.8",
+    "@playwright/test": "1.57.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

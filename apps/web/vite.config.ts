@@ -62,5 +62,8 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
+    // Spec Playwright E2E BUKAN unit vitest (butuh browser + backend nyata;
+    // dijalankan lewat `make e2e`). Tanpa ini vitest ikut memuat e2e/specs.
+    exclude: ['e2e/**', 'node_modules/**', 'dist/**'],
   },
 });
