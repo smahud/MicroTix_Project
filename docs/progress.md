@@ -2,6 +2,66 @@
 
 Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-05 (Asia/Jakarta).
 
+## Checkpoint BE-2 — Konsolidasi beta: M3 inti (enrollment/RADIUS/proyeksi) + M4 fondasi + installer hardened (frontend live ditegakkan)
+
+**Scope**: konsolidasi lanjutan dari BE-1 sesuai master prompt V4 — bukan rewrite. Menutup inti R1 yang memungkinkan alur beta nyata: enrollment router (TK-301/302), klien API-SSL native (TK-304), domain akses AAA + proyeksi radius.* + facade SQL multi-tenant (TK-306/307 sebagian), layanan pelanggan + CSV S2 (TK-405/404 subset), hardening instalasi.sh (§9), gate frontend live. Status rilis dinyatakan pada [BETA_RELEASE_NOTES.md](BETA_RELEASE_NOTES.md): **BETA_READY_WITH_LIMITATIONS**.
+
+### Status implementasi
+
+| Area | Status | Catatan |
+|---|---|---|
+| Bugfix grant_runtime | done | SQL lama memakai %-formatting Python di atas %I PostgreSQL → ValueError pada DB nyata (tidak pernah tereksekusi sebelumnya). Ditulis ulang: identifier tervalidasi regex + %%I ter-escape; kini mencakup skema public+radius; diverifikasi mtx_app mendapat SELECT/INSERT |
+| tenant_scope reentrant | done | BUG SISTEMIK ditemukan tes: scope dalam reset GUC ke '' saat keluar → memutus konteks scope luar (view→service). Kini menyimpan+memulihkan nilai sebelumnya; tanpa scope luar tetap fail-closed. Semua 142 tes lulus |
+| Enrollment router (TK-301/302) | done | Draft+issue: token 256-bit hanya hash+TTL 15 mnt; /32 reserved dari 100.127.0.0/16 via jalur GUC platform_service (UNIQUE global, alokasi lintas-tenant); bootstrap script bernamespace rtrw- idempoten (password API CSPRNG platform disuntik kanal rahasia §2.5; allowed-address hanya /32 server; TIDAK menyentuh konfigurasi pelanggan); probe endpoint mesin (token di body, bukan URL) → konsumsi atomik: Router read_only + credential_ref AEAD + NAS desired rev 1 + audit; replay nonce/identitas sama = logical; identitas beda = 409; produksi memverifikasi sumber IP tunnel (MT_ENROLL_VERIFY_SOURCE default on di production) |
+| Skema radius.* + facade (TK-306) | done | Migrasi 0003: nas/radcheck/radreply/radusergroup/radgroupreply/radacct/radpostauth + RLS tenant identik + policy bootstrap (radius_svc) + facade SECURITY DEFINER (lookup_nas menetapkan GUC sempit lalu binding tenant; check/reply tetap RLS GUC; search_path terkualifikasi). Facade: NAS IP = SATU-SATUNYA pengikat tenant; NAS tak dikenal = secure discard |
+| Proyeksi + resolver (RAD-02..05) | done | access_account sumber kebenaran (username case-sensitive 64chr/64B, secret_ref AEAD); project_account hapus+tulis ulang atomik; suspend → Auth-Type Reject TANPA Cleartext-Password; activate → atribut terkini; rotate_password satu transaksi; resolver murni: precedence override router > statis > pool, rate rx/tx bit/s, Expiration midnight lokal, eligibility (state/credential/validitas/kind/allowed routers) |
+| NAS lifecycle + reconciler (TK-307) | done | ensure_nas/rotate (desired_revision naik; applied hanya setelah probe), radius_reconcile --dry-run/--apply (validasi freeradius -C; tanpa binary = BLOCKED jujur exit≠0)/--mark-applied (probe revision harus cocok desired) |
+| Klien API-SSL (TK-304) | done | Protokol biner RouterOS lengkap (length-prefixed words, !re/!done/!trap), TLS + PINNING fingerprint SHA-256, bounded connect/read/word/response, koneksi hanya ke tunnel IP terdaftar (anti-SSRF), login modern; mutation/cutover/backup menolak jujur "pending_lab". 14 tes termasuk server TLS in-process (handshake nyata + pin mismatch ditolak) |
+| Discovery (TK-401) | done-partial | Job router_discovery read-only via adapter aktif (simulator dev; api_ssl produksi): akun PPP/Hotspot TANPA password + snapshot fingerprint/summary; health probe job menulis sampel jujur (unreachable = sampel down, bukan job gagal). Wizard 8 langkah belum |
+| Layanan + CSV (TK-405/404) | done-partial | POST /services: customer+service+akun AAA+kuota atomik (reservasi commit/release benar) + proyeksi sekaligus; reveal reauth-gated (tes 403 tanpa reauth); list/filter kursor; connection_state jujur unknown. CSV S2: validasi tanpa tulis + preview + commit job idempoten per baris (username existing skipped), batas 10k/10MiB |
+| instalasi.sh hardened (§9) | done | Tanpa eval (array quoting); dependensi eksplisit + nodejs/pnpm/rsync/wireguard-tools; password psql via STDIN+escape; unsupported OS DITOLAK (bukan warning); WireGuard host keypair+wg0.conf+env pubkey; FreeRADIUS opsional MT_ENABLE_RADIUS=1; upgrade kini rebuild frontend+layanan+backup terverifikasi pg_restore --list; collectstatic; GATE NYATA: exit 2 INSTALL_FAILED / exit 3 INSTALL_PARTIAL (domain/TLS) / 0 SUCCESS — kegagalan health/worker/artefak/izin membuat installer GAGAL |
+| Frontend live gate (§5) | done | Plugin vite menolak build produksi tanpa VITE_API_MODE=live (terverifikasi exit 1 vs 0); runtime juga menolak (belt & braces); adapter live telah mengimplementasikan seluruh ApiClient sejak BE-1 |
+| i18n backend | done | Katalog enrollment.*/access.* id/en untuk error baru |
+
+### Verifikasi aktual (command + hasil)
+
+| Command | Exit | Hasil |
+|---|---|---|
+| `pytest tests -q` | 0 | **142/142 lulus** = 96 lama + 46 baru: unit resolver (17), unit API-SSL (14, termasuk TLS in-process), integrasi proyeksi/facade/RLS radius (18), integrasi enrollment (11), integrasi services/CSV (7), kontrak M3 (16) |
+| `bash scripts/smoke_live.sh` (baru; runserver+curl nyata) | 0 | **20/20 PASS**: health; register→verify; enrollment issued (token sekali) → bootstrap token-salah 401 → script rtrw- → probe consumed + replay logical → router terdaftar → NAS desired 1 → discovery job 202 → worker sukses (simulator, jujur bukan lab) → service+proyeksi → suspend/activate → CSV → tenant asing 404 |
+| `tsc -b` / `eslint` / `vitest run` (web) | 0 | 0 error; 42/42 |
+| `VITE_API_MODE= vite build` | 1 | DITOLAK oleh gate (bukti tidak ada fallback mock produksi) |
+| `VITE_API_MODE=live vite build` | 0 | dist produksi |
+| `bash -n instalasi.sh` + dry-run penuh + shim id | 0 | alur 17 langkah; preflight menolak disk 8GB<10GB (uji sungguhan); gate exit-code dipisah |
+| `python3 docs/tools/check_docs.py` | 0 | PASS |
+
+Lingkungan uji: Linux sandbox Debian 13; Python 3.13.5; PostgreSQL **17.4 asli** (zonky tanpa root); Node v24 + pnpm 12.16.1. Tanpa host root/domain publik/MikroTik fisik/FreeRADIUS daemon — lihat blocker.
+
+### Keputusan engineering (reversible, dicatat)
+
+1. **Probe enrollment = endpoint mesin** (MachineTokenAuth tanpa CSRF): pemanggil router tanpa sesi; otorisasi = token sekali pakai + TTL + nonce + (produksi) sumber IP tunnel. CSRF tidak relevan tanpa cookie; kelas auth ini HANYA untuk endpoint token-gated ini.
+2. **Facade NAS lookup via GUC sempit** (`app.radius_facade` + `app.platform_service`): row_security=off TIDAK dapat melewati FORCE RLS (bahkan owner). Kebijakan GUC = jalur baca bootstrap minimum; check/reply tetap di bawah RLS konteks tenant.
+3. **tenant_scope reentrant dengan restore**: nilai sebelumnya disimpan dan dipulihkan; tanpa scope luar tetap fail-closed ''. Mengubah perilaku lama yang asumsinya tidak ada scope bersarang — diverifikasi seluruh suite.
+4. **Password akun API-SSL dibangkitkan platform (CSPRNG) dan disuntik ke skrip bootstrap** — ROUTEROS.md §2.5 alternatif injeksi kanal rahasia; generator router tidak dipakai karena belum terbukti per build. Tersimpan credential_ref AEAD; pindah ke router saat complete.
+5. **Cutover B0–B6 sengaja TIDAK dibangun** (gate G1; ACCEPTANCE §3) — router hasil enrollment selalu read_only; tidak ada tombol palsu.
+6. **`radius_reconcile --apply` tanpa binary freeradius = CommandError BLOCKED** — bukan echo sukses.
+7. **Alokasi /32 lintas tenant** membaca lewat GUC platform_service (kebijakan RLS terpisah) karena alokasi memang global; ditandai jelas di kebijakan.
+
+### Blocker / dependency
+
+- **Git push belum tersedia** (tidak ada kredensial remote di sandbox) — commit lokal terstruktur dibuat; push menunggu PAT.
+- **FreeRADIUS daemon + host root + domain publik + MikroTik fisik tidak tersedia** — `make test-radius` jujur BLOCKED; instalasi produksi nyata belum dieksekusi; verified_lab = tidak ada klaim.
+- **Playwright browser harness** belum dibangun (smoke live sebagai gantian; tetap todo).
+- Wizard U07 8-langkah/identitas lintas router (TK-410), S1/S3/S4, monitoring berkala (TK-502/503), backup router (TK-504–507), PDF (TK-109), M2 billing penuh — belum (lihat BETA_RELEASE_NOTES §3).
+
+### Langkah berikutnya
+
+1. Push seluruh commit saat PAT tersedia; verifikasi remote SHA.
+2. Eksekusi instalasi.sh pada host Debian 13 root + domain (Gate A/G nyata) — dokumentasikan hasil gate.
+3. Lab FreeRADIUS (RAD-14 checklist) → setelah lulus: aktifkan MT_ENABLE_RADIUS=1, probe secret, mark-applied.
+4. CHR/router fisik untuk G1 (T01, T16–T18, T20–T21) → baru pertimbangkan cutover B0–B6.
+5. Lanjut M4: wizard 8 langkah + penggabungan identitas; monitoring collector.
+
 ## Checkpoint BE-1 — Backend M0 fondasi + M1 identitas/job/subscription (frontend mock → backend nyata)
 
 **Scope**: backend/ dari nol sesuai `docs/ARCHITECTURE.md`; M0 (TK-002, TK-003, TK-004 sebagian simulator, TK-107) + M1 inti (TK-101, TK-102, TK-103, TK-105, TK-108, TK-104 live adapter). Endpoint fase M2+ sengaja tidak dibangun (anti API palsu, §5) — 404 envelope `not_found`.

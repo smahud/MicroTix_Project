@@ -15,8 +15,8 @@
   "files": [
     {
       "path": "README.md",
-      "bytes": 1816,
-      "sha256": "e3450bea524391468321f07091edbaf63160d4417194f4daba31356d3a8f2304"
+      "bytes": 3125,
+      "sha256": "e80eebaee15784c360cc86ee73ac637d96c41fa2a69fac9221206bcb386ba663"
     },
     {
       "path": "docs/ACCEPTANCE.md",
@@ -37,6 +37,11 @@
       "path": "docs/AUDIT_REPORT.md",
       "bytes": 22515,
       "sha256": "623031225cf8279ca61f83ce14bdbf809fff53c841c056aa9154a9e7e6b8c0db"
+    },
+    {
+      "path": "docs/BETA_RELEASE_NOTES.md",
+      "bytes": 8056,
+      "sha256": "7913cf693caa53c887d15d955ca98067b5a6d6b21e9e3980949b44fae5a7cb86"
     },
     {
       "path": "docs/FINANCE.md",
