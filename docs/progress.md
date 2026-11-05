@@ -2,6 +2,82 @@
 
 Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-05 (Asia/Jakarta).
 
+## Checkpoint BE-2 — Konsolidasi + M3/M4/M5 slice beta (audit → fix → integrasi → verifikasi nyata)
+
+**Scope**: konsolidasi baseline BE-1/FE-1 (bukan rebuild): perbaikan bug nyata hasil audit, penutupan M4 (pelanggan/layanan/akun akses/CSV/migrasi DB-only), M5-ops (backup/monitoring/approval platform), M3 inti (enrollment WireGuard+API-SSL, discovery, cutover B0–B6, **FreeRADIUS NYATA dengan verifikasi radclient**), guard anti-mock frontend, hardening instalasi.sh, pengujian menyeluruh.
+
+### Bug konsolidasi yang ditemukan & diperbaiki (bukti: sebelumnya gagal/jalan-setengah)
+
+| Bug | Dampak | Perbaikan |
+|---|---|---|
+| `dev_bootstrap.sh` path `BACKEND="$ROOT/backend"` | Skrip dev gagal di langkah 5 | `BACKEND="$ROOT"` |
+| `grant_runtime.py` %-formatting Python vs `%I` SQL | `ValueError` — command TIDAK PERNAH berjalan (instalasi.sh hanya di-dry-run; test DB dimiliki mtx_app sehingga tak tersentuh) | f-string + validasi identifier |
+| Env test non-deterministik | `pytest tests/unit` gagal bergantung env shell (pytest-django memuat settings sebelum conftest; MT_SECRET_BOX_KEY terbeku kosong) | `microtix/settings_test.py` sebagai DJANGO_SETTINGS_MODULE pytest.ini |
+| `instalasi.sh` build frontend tanpa `VITE_API_MODE=live` | **Deployment produksi akan membundle MOCK** (§5 dilanggar) | Guard build vite (gagal jelas) + runtime guard + installer set eksplisit |
+| `instalasi.sh` Caddy `handle_path /api/*` | **Seluruh API produksi 404** (prefix dikupas; backend melayani /api/v1 penuh) | `handle /api/*` |
+| `instalasi.sh` tanpa Node.js/pnpm/rsync | Build frontend pasti gagal di Debian 13 bersih | apt nodejs/npm + corepack pnpm@12.16.1 + rsync |
+| `run()` memakai `eval` | Risiko shell-injection | Eksekusi langsung + run_sh majemuk |
+| Signal `weak=True` (closure di `ready()`) | **Proyeksi RADIUS diam-diam mati** setelah GC closure — dibuktikan repro minimal lalu diperbaiki | `weak=False` |
+| Scope bersarang `tenant_scope` saling me-reset GUC | Kegagalan RLS tak terduga di job handler | Konvensi caller-provides-scope konsisten |
+
+### Status implementasi (per area)
+
+| Area | Status | Catatan |
+|---|---|---|
+| M4 Pelanggan/layanan/akun akses | done | Customer/Service/AccessAccount (RADIUS §3: UNIQUE(tenant,username), secret_ref AEAD, credential_state jujur); CRUD + reveal (reauth + no-store); CSV create/link/validate/commit; migrasi: discovery→konflik identitas (merge/keep_one/rename)→commit DB-only (router TIDAK diubah); mode belum tersedia → 503 jujur |
+| M5 Backup | done | job backup_router: commit-before-prune, retention per kategori, evidence {source:simulator, verified_lab:false}; router belum enroll → gagal jujur |
+| M5 Monitoring | done | /monitor dari RouterHealthSample; unknown ≠ down; radius null tanpa data |
+| M2 Approval platform | done | /platform/payment-submissions (platform_admin; 404 generik); approve atomik → invoice paid + subscription ACTIVE + source event immutable + audit/outbox |
+| M3 Enrollment | done | Draft→token 256-bit hash-only (TTL 24 j; plaintext SecretBox, dibersihkan saat konsumsi)→skrip bootstrap idempoten TANPA reset/reboot, rule input sempit /32, token di BODY→bridge (replay identitas sama = logis sama; beda = 409)→job verify (simulator; capability jujur)→router read-only + peer WG |
+| M3 Discovery | done | Snapshot+DiscoveryObject; password TIDAK dibaca; sesi migrasi tertaut |
+| M3 RADIUS skema+facade | done | Skema `radius` + RLS + policy bootstrap; facade SECURITY DEFINER transaksi-local; authorize 5 kolom posisi rlm_sql; accounting idempoten + monotonik + late-Start tanpa reopen; session_count/list; post_auth |
+| M3 RADIUS proyeksi+reconciler | done | Signal transaksi-sama; Auth-Type Reject saat suspend; rate hanya dari package pola sah; NAS secret CSPRNG + revision; clients.conf + modul sql via facade (%{Packet-Src-IP-Address}) + site; `freeradius -C` lulus |
+| M3 Cutover B0–B6 | done | B0 preflight jujur (alasan spesifik); B1 parity sintetis; B2 install+readback; B3/B4 jendela observasi NYATA (pending_observation, tidak dipercepat); B5 authoritative; B6 rollback |
+| M3 Release/replace | done | router_release (peer REMOVED + NAS deproyeksi; router fisik tidak disentuh) + router_replace |
+| Guard frontend anti-mock | done | Build produksi tanpa live gagal jelas; runtime guard; installer set live |
+| instalasi.sh hardening | done | Node/pnpm/rsync/wireguard-tools; FreeRADIUS fase-gated (MT_ENABLE_RADIUS=1) via reconciler; password psql via stdin; tolak non-Debian-13; gerbang wajib → INSTALL_FAILED exit≠0 / INSTALL_PARTIAL tanpa domain; upgrade = backup+verifikasi+frontend+Caddy; collectstatic; admin non-interaktif opsional |
+
+### Verifikasi aktual (command + hasil)
+
+| Command | Exit | Hasil |
+|---|---|---|
+| `pytest tests -q` (PostgreSQL 17 nyata) | 0 | **207/207 lulus** (72 BE-1 + 42 ops + 51 customers + 12 radius-config + 14 radius integration/contract + 16 enrollment dll.) |
+| `bash scripts/test_radius.sh` (FreeRADIUS 3.2.7 NYATA + radclient + relay UDP) | 0 | **15/15 PASS**: T16 PAP valid→Accept+Mikrotik-Rate-Limit; salah password→Reject; restart→tetap Accept; secret salah→secure discard; radpostauth tanpa password. T19 username sama via NAS B→Accept data B; password A→Reject (isolasi). T20 suspended→Reject. T21 Start/Interim/Stop + counter monotonik + late-Start tanpa reopen + Simultaneous-Use=1 |
+| `make test-radius` | 0 | harness sama |
+| `tsc -b && eslint && vitest run` | 0 | 42/42; 0 error |
+| `vite build` TANPA live | ≠0 | gagal jelas (guard anti-mock sesuai desain) |
+| `VITE_API_MODE=live vite build` | 0 | bundle produksi live |
+| `bash -n instalasi.sh` + dry-run 17 langkah | 0 | sintaks OK; preflight menolak disk<10GB; RADIUS jujur nonaktif tanpa flag |
+| `python3 docs/tools/check_docs.py` | 0 | dokumentasi valid |
+
+Lingkungan: Linux sandbox Debian 13; Python 3.13; PostgreSQL 17.4 nyata (peran mtx_migrator/mtx_app); FreeRADIUS 3.2.7 + radclient NYATA (binary deb trixie, non-root); Node 24 + pnpm 12.16.1. **Tanpa perangkat MikroTik fisik** — enrollment/discovery/cutover jalur simulator (capability: source=simulator, verified_lab=false).
+
+### Keputusan engineering (reversible, dicatat)
+
+1. Relay UDP harness (radclient tak bisa bind sumber) — resolusi tenant dari alamat sumber; decoy NAS-IP payload diabaikan (§4).
+2. Kunci sesi accounting derivat host(NAS):Acct-Session-Id bila Acct-Unique-Session-Id absen.
+3. rlm_sql 3.2: authorize 5 kolom posisi; accounting `type{}` + reference (tolower dari rlm_expr — modul expr ditambahkan); post-auth bersarang.
+4. Policy bootstrap GUC konsisten: `facade_bootstrap` (radius.nas) + `enroll_bridge` (network_router_enrollment) — SELECT terbatas tanpa melemahkan RLS.
+5. Token enrollment plaintext hanya SecretBox-terenkripsi selama TTL; dikosongkan saat konsumsi.
+6. Konvensi caller-provides-scope ditegakkan semua handler/service.
+7. `weak=False` wajib untuk receiver lokal di AppConfig.ready().
+8. Respons 202 ketat {job_id, status_url}; ringkasan migrasi server-side (session.counts).
+
+### Blocker / keterbatasan beta (jujur)
+
+- Perangkat MikroTik fisik tidak tersedia → bukti simulator; T01/T10/T17 belum verified_lab.
+- Interface WireGuard host tak bisa dibuat non-root → reconciler menulis konfigurasi; penerapan wg = langkah ops host (didokumentasikan), bukan klaim tunnel aktif.
+- B3/B4 cutover menunggu jendela observasi NYATA — bukti penuh butuh NAS produksi.
+- HTTPS produksi butuh MT_DOMAIN+DNS — tanpa itu INSTALL_PARTIAL (bukan beta publik).
+- Gate A (instalasi produksi nyata Debian 13 + root) belum dapat dijalankan di sandbox.
+
+### Langkah berikutnya
+
+1. Lab MikroTik fisik/CHR: enrollment nyata, API-SSL pin, cutover B3–B5 penuh.
+2. Penerapan WireGuard host via systemd + probe handshake.
+3. M6/M7 billing/ledger R2 sesuai roadmap.
+4. Playwright e2e (`make e2e`) — harness belum dibangun (NOT_RUN jujur).
+
 ## Checkpoint BE-1 — Backend M0 fondasi + M1 identitas/job/subscription (frontend mock → backend nyata)
 
 **Scope**: backend/ dari nol sesuai `docs/ARCHITECTURE.md`; M0 (TK-002, TK-003, TK-004 sebagian simulator, TK-107) + M1 inti (TK-101, TK-102, TK-103, TK-105, TK-108, TK-104 live adapter). Endpoint fase M2+ sengaja tidak dibangun (anti API palsu, §5) — 404 envelope `not_found`.
