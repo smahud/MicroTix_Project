@@ -4,6 +4,9 @@
   "source_commit": "19b954308a7573bc449f551400d053fba1c089d7",
   "excluded": [
     "docs/repository-manifest.json",
+    "docs/AGENT_HANDOFF.md",
+    "docs/BETA_RELEASE_STATUS.md",
+    "docs/BETA_TEST_EVIDENCE.md",
     "docs/compatibility.md",
     "docs/progress.md",
     "docs/evidence/",
@@ -15,8 +18,8 @@
   "files": [
     {
       "path": "README.md",
-      "bytes": 1816,
-      "sha256": "e3450bea524391468321f07091edbaf63160d4417194f4daba31356d3a8f2304"
+      "bytes": 3268,
+      "sha256": "cd6a053dceb078ea8b07b177fb9c508ac5b5f1dc85b34e93d95ddea170f02c1a"
     },
     {
       "path": "docs/ACCEPTANCE.md",
@@ -110,8 +113,8 @@
     },
     {
       "path": "docs/tools/check_docs.py",
-      "bytes": 11043,
-      "sha256": "1856c6ae12d3fee83267bb5a56cffad4e647c0eeed3e35e22c3dff4e19b52d34"
+      "bytes": 11320,
+      "sha256": "d4e00f963064d37526f192e31f9b47b2c616f2ecb7d28e78baec5257560d2b38"
     }
   ]
 }

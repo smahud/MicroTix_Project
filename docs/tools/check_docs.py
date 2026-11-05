@@ -24,7 +24,11 @@ REQUIRED = {
 }
 MANIFEST = 'docs/repository-manifest.json'
 DYNAMIC_DIRS = ('docs/evidence/', 'docs/runbooks/', 'docs/adr/')
-DYNAMIC_FILES = {'docs/progress.md', 'docs/compatibility.md'}
+# Dokumen status/handoff hidup (diperbarui tiap sesi agent) — tidak di-hash-pin
+# sebagai kontrak; selaras perlakuan progress.md (master prompt §5/§14).
+DYNAMIC_FILES = {'docs/progress.md', 'docs/compatibility.md',
+                 'docs/AGENT_HANDOFF.md', 'docs/BETA_RELEASE_STATUS.md',
+                 'docs/BETA_TEST_EVIDENCE.md'}
 LINK = re.compile(r'(?<!!)\[[^\]\n]+\]\(([^\s)]+)(?:\s+"[^"]*")?\)')
 
 
