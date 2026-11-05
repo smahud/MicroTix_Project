@@ -52,11 +52,21 @@ log()  { echo -e "[instalasi] $*"; }
 warn() { echo -e "[instalasi] PERINGATAN: $*" >&2; }
 die()  { echo -e "[instalasi] GAGAL: $*" >&2; exit 1; }
 
+# Eksekusi perintah TANPA eval (input tidak di-interpretasi ulang shell).
 run() {
   if [ "$DRY_RUN" -eq 1 ]; then
-    echo "[dry-run] $*"
+    printf '[dry-run] %s\n' "$*"
   else
-    eval "$@"
+    "$@"
+  fi
+}
+
+# Untuk perintah majemuk lama (cd X && Y) — subshell eksplisit, bukan eval.
+run_sh() {
+  if [ "$DRY_RUN" -eq 1 ]; then
+    printf '[dry-run] sh: %s\n' "$*"
+  else
+    bash -c "$1"
   fi
 }
 
@@ -64,12 +74,17 @@ run() {
 # Preflight OS / sumber daya
 # ----------------------------------------------------------------------------
 preflight() {
-  [ "$(id -u)" -eq 0 ] || die "Jalankan dengan sudo/root."
+  if [ "$DRY_RUN" -eq 1 ]; then
+    log "[dry-run] preflight dilewati level-privilege (tidak ada mutasi sistem)."
+  else
+    [ "$(id -u)" -eq 0 ] || die "Jalankan dengan sudo/root."
+  fi
   if [ ! -f /etc/debian_version ]; then
     die "OS tidak didukung: target resmi adalah Debian 13. /etc/debian_version tidak ditemukan."
   fi
   . /etc/os-release
-  [ "${VERSION_ID:-}" = "13" ] || warn "Debian ${VERSION_ID:-?} terdeteksi; hanya Debian 13 diverifikasi."
+  # Kebijakan §9.2: OS selain Debian 13 DITOLAK (bukan warning lalu lanjut).
+  [ "${VERSION_ID:-}" = "13" ] || die "Debian ${VERSION_ID:-?} tidak didukung — hanya Debian 13 terverifikasi."
   log "OS: Debian ${VERSION_ID:-?} (${PRETTY_NAME:-})"
 
   ARCH="$(uname -m)"
@@ -89,9 +104,26 @@ preflight() {
 # Instal dependensi sistem (paket resmi Debian)
 # ----------------------------------------------------------------------------
 install_dependencies() {
-  log "Memasang dependensi sistem (python ${PY_REQUIRED}, postgresql-17, caddy, nftables)..."
-  run "apt-get update -qq"
-  run "apt-get install -y -qq python3.13 python3.13-venv python3-pip postgresql-17 caddy nftables curl openssl ca-certificates >/dev/null"
+  log "Memasang dependensi sistem (python ${PY_REQUIRED}, postgresql-17, caddy, nftables, nodejs, rsync, wireguard-tools)..."
+  run apt-get update -qq
+  # Node.js Debian 13 (20.x) memenuhi Vite; pnpm via corepack (terpin 12.16.1).
+  run apt-get install -y -qq python3.13 python3.13-venv python3-pip \
+      postgresql-17 caddy nftables curl openssl ca-certificates \
+      nodejs npm rsync wireguard-tools >/dev/null
+  if [ "$DRY_RUN" -ne 1 ]; then
+    corepack enable >/dev/null 2>&1 || npm install -g corepack >/dev/null
+    corepack prepare pnpm@12.16.1 --activate
+    command -v pnpm >/dev/null || die "pnpm tidak tersedia setelah corepack."
+  else
+    echo "[dry-run] corepack enable + pnpm@12.16.1"
+  fi
+  # FreeRADIUS 3.2 — fase-gated (M3/beta RADIUS): dipasang bila MT_ENABLE_RADIUS=1.
+  if [ "${MT_ENABLE_RADIUS:-0}" = "1" ]; then
+    run apt-get install -y -qq freeradius freeradius-postgresql freeradius-utils >/dev/null
+    log "FreeRADIUS 3.2 + rlm_sql postgresql terpasang (MT_ENABLE_RADIUS=1)."
+  else
+    log "FreeRADIUS dilewati (set MT_ENABLE_RADIUS=1 untuk mengaktifkan; jujur — tidak dipasang diam-diam)."
+  fi
   log "Dependensi terpasang."
 }
 
@@ -136,7 +168,7 @@ MT_SECRET_KEY=${SECRET_KEY}
 MT_SECRET_BOX_KEY=${SECRET_BOX}
 MT_STORAGE_ROOT=${STORAGE_DIR}
 MT_STATIC_ROOT=${INSTALL_ROOT}/static
-MT_ALLOWED_HOSTS=${MT_ALLOWED_HOSTS:-localhost}
+MT_ALLOWED_HOSTS=${MT_ALLOWED_HOSTS:-${MT_DOMAIN:-localhost}}
 MT_LOG_LEVEL=INFO
 MT_PG_PASSWORD_MIGRATOR=${DB_PASS_MIG}
 MT_PG_PASSWORD_APP=${DB_PASS_APP}
@@ -166,11 +198,13 @@ BEGIN
   END IF;
 END $$;
 SQL
-  # Password dari env (tanpa interpolasi ke CLI psql log).
+  # Password dikirim via stdin psql — tidak muncul di argv/ps/log (§9.4).
   DB_PASS_MIG="$(grep '^MT_PG_PASSWORD_MIGRATOR=' "$ENV_FILE" | cut -d= -f2-)"
   DB_PASS_APP="$(grep '^MT_PG_PASSWORD_APP=' "$ENV_FILE" | cut -d= -f2-)"
-  su - postgres -c "psql -v ON_ERROR_STOP=1 -c \"ALTER ROLE $DB_MIGRATOR PASSWORD '$DB_PASS_MIG';\""
-  su - postgres -c "psql -v ON_ERROR_STOP=1 -c \"ALTER ROLE $DB_APP PASSWORD '$DB_PASS_APP';\""
+  printf 'ALTER ROLE %s PASSWORD %s;\n' "$DB_MIGRATOR" "'$DB_PASS_MIG'" \
+    | su - postgres -c "psql -v ON_ERROR_STOP=1"
+  printf 'ALTER ROLE %s PASSWORD %s;\n' "$DB_APP" "'$DB_PASS_APP'" \
+    | su - postgres -c "psql -v ON_ERROR_STOP=1"
   # Runtime TANPA CREATEDB (berbeda dari dev): pemisahan produksi penuh.
   su - postgres -c "psql -v ON_ERROR_STOP=1 -c \"ALTER ROLE $DB_APP NOCREATEDB NOBYPASSRLS;\""
   if ! su - postgres -c "psql -tAc \"SELECT 1 FROM pg_database WHERE datname='$DB_NAME'\"" | grep -q 1; then
@@ -186,10 +220,13 @@ SQL
 # ----------------------------------------------------------------------------
 deploy_backend() {
   log "Menyebarkan backend (Python ${PY_REQUIRED}, dependensi pinned)..."
-  run "python3.13 -m venv $INSTALL_ROOT/venv"
-  run "$INSTALL_ROOT/venv/bin/pip install -q --upgrade pip"
-  run "$INSTALL_ROOT/venv/bin/pip install -q Django==5.2.19 djangorestframework==3.16.1 drf-spectacular==0.28.0 'psycopg[binary]==3.2.13' argon2-cffi==25.1.0 cryptography==50.0.2 gunicorn==26.2.0"
-  run "rsync -a --delete --exclude .venv --exclude .storage --exclude __pycache__ '$BACKEND_DIR/' '$INSTALL_ROOT/backend/'"
+  run python3.13 -m venv "$INSTALL_ROOT/venv"
+  run "$INSTALL_ROOT/venv/bin/pip" install -q --upgrade pip
+  run "$INSTALL_ROOT/venv/bin/pip" install -q Django==5.2.19 djangorestframework==3.16.1 drf-spectacular==0.28.0 'psycopg[binary]==3.2.13' argon2-cffi==25.1.0 cryptography==50.0.2 gunicorn==26.2.0
+  # rsync --delete HANYA pada direktori kode aplikasi; state persisten
+  # ($STORAGE_DIR, DB, env) berada di luar pohon ini (§9.5).
+  run rsync -a --delete --exclude .venv --exclude .storage --exclude pgdata --exclude __pycache__ --exclude .env \
+      "$BACKEND_DIR/" "$INSTALL_ROOT/backend/"
   # Migrasi dengan peran migrator (ARCHITECTURE §4), lalu GRANT runtime.
   if [ "$DRY_RUN" -ne 1 ]; then
     (
@@ -197,6 +234,7 @@ deploy_backend() {
       set -a; . "$ENV_FILE"; set +a
       DATABASE_URL="$MIGRATE_DATABASE_URL" "$INSTALL_ROOT/venv/bin/python" manage.py migrate --noinput
       DATABASE_URL="$MIGRATE_DATABASE_URL" "$INSTALL_ROOT/venv/bin/python" manage.py grant_runtime
+      "$INSTALL_ROOT/venv/bin/python" manage.py collectstatic --noinput -v0
     )
   else
     echo "[dry-run] migrate (peran migrator) + grant_runtime"
@@ -207,8 +245,9 @@ deploy_backend() {
 # Frontend: build produksi (bukan dev server)
 # ----------------------------------------------------------------------------
 build_frontend() {
-  log "Build frontend produksi (pnpm + vite)..."
-  run "cd '$WEB_DIR' && pnpm install --frozen-lockfile && pnpm exec vite build --outDir '$INSTALL_ROOT/web-dist'"
+  log "Build frontend produksi (pnpm + vite; VITE_API_MODE=live wajib — guard build menolak mock)..."
+  # Guard di vite.config.ts menggagalkan build tanpa live (§5 anti mock-fallback).
+  run_sh "cd '$WEB_DIR' && pnpm install --frozen-lockfile && VITE_API_MODE=live pnpm exec vite build --outDir '$INSTALL_ROOT/web-dist'"
 }
 
 # ----------------------------------------------------------------------------
@@ -295,12 +334,14 @@ setup_caddy() {
   if [ -z "$DOMAIN" ]; then
     warn "MT_DOMAIN kosong — Caddy memakai placeholder :80. Set MT_DOMAIN=lalu jalankan 'instalasi.sh repair'."
   fi
+  # PERBAIKAN: handle_path MENGUPAS prefix /api — backend melayani /api/v1/*
+  # penuh, jadi pakai handle (prefix dipertahankan).
   cat > /etc/caddy/Caddyfile <<EOF
 # MicroTix — reverse proxy same-origin (API + SPA).
 # Ganti \$DOMAIN via 'sudo bash instalasi.sh repair' setelah MT_DOMAIN diisi.
 ${DOMAIN:-:80} {
         encode gzip
-        handle_path /api/* {
+        handle /api/* {
                 reverse_proxy 127.0.0.1:8300
         }
         handle {
@@ -321,61 +362,138 @@ setup_radius() {
     log "FreeRADIUS: sudah dikonfigurasi."
     return
   fi
-  log "Integrasi RADIUS (FreeRADIUS 3.2) aktif pada fase M3 — belum dipasang di R1."
-  log "Saat fase aktif: listener hanya pada alamat tunnel; NAS/client reconciliation via aplikasi."
+  if [ "${MT_ENABLE_RADIUS:-0}" != "1" ]; then
+    log "RADIUS nonaktif (MT_ENABLE_RADIUS≠1) — jujur: tidak dikonfigurasi, tidak diklaim siap."
+    return
+  fi
+  log "Mengonfigurasi FreeRADIUS 3.2 (listener 127.0.0.1/WG; reconciler via aplikasi)..."
+  if [ "$DRY_RUN" -eq 1 ]; then echo "[dry-run] setup_radius + render konfigurasi"; return; fi
+  # Peran daemon + render konfigurasi via management command (sumber sama
+  # dengan harness verifikasi test_radius.sh).
+  (
+    cd "$INSTALL_ROOT/backend"
+    set -a; . "$ENV_FILE"; set +a
+    export MT_RADIUS_DB_PASSWORD="$(openssl rand -base64 32 | tr -d '\n' | tr '/+' '_-')"
+    DATABASE_URL="$MIGRATE_DATABASE_URL" "$INSTALL_ROOT/venv/bin/python" manage.py setup_radius \
+      || die "setup_radius gagal (lihat output di atas)."
+    "$INSTALL_ROOT/venv/bin/python" manage.py render_radius_config \
+      --target /etc/freeradius/3.0/microtix --db-name "$DB_NAME" \
+      --db-password "$MT_RADIUS_DB_PASSWORD" --bind-ip 127.0.0.1 \
+      --auth-port 1812 --acct-port 1813 \
+      || die "render konfigurasi RADIUS gagal."
+    chown -R freeradius:freeradius /etc/freeradius/3.0/microtix
+    chmod -R o-rwx /etc/freeradius/3.0/microtix
+    # Simpan password daemon untuk upgrade (0600, tanpa cetak).
+    umask 077
+    printf 'MT_RADIUS_DB_PASSWORD=%s\n' "$MT_RADIUS_DB_PASSWORD" > "$ETC_DIR/radius.env"
+  )
+  systemctl restart freeradius
+  touch "$INSTALL_ROOT/.radius-configured"
+  log "FreeRADIUS terkonfigurasi (reconciler NAS berjalan via aplikasi; listener loopback/WG)."
 }
 
 # ----------------------------------------------------------------------------
 # Health checks + onboarding admin
 # ----------------------------------------------------------------------------
+# Status instalasi final (§9.6): SUCCESS hanya bila seluruh gerbang wajib
+# lulus; PARTIAL bila ada prasyarat produksi belum ada (mis. domain/HTTPS);
+# BLOCKED/FAILED jujur. Installer TIDAK exit 0 bila gerbang wajib gagal.
+INSTALL_STATUS="INSTALL_SUCCESS"
+FAIL_REASONS=""
+PARTIAL_REASONS=""
+
+gate_fail()    { FAIL_REASONS="$FAIL_REASONS; $1"; INSTALL_STATUS="INSTALL_FAILED"; }
+gate_partial() { PARTIAL_REASONS="$PARTIAL_REASONS; $1"; [ "$INSTALL_STATUS" = "INSTALL_SUCCESS" ] && INSTALL_STATUS="INSTALL_PARTIAL"; }
+
 health_checks() {
-  log "Health checks..."
-  if [ "$DRY_RUN" -eq 1 ]; then echo "[dry-run] /health/live, /health/ready"; return; fi
+  log "Health checks (gerbang wajib — gagal = instalasi gagal)..."
+  if [ "$DRY_RUN" -eq 1 ]; then echo "[dry-run] /health/live, /health/ready, worker, smoke"; return; fi
   sleep 2
-  if curl -sf http://127.0.0.1:8300/api/v1/health/live >/dev/null; then
-    log "health/live: OK"
+  curl -sf http://127.0.0.1:8300/api/v1/health/live >/dev/null \
+    && log "health/live: OK" || gate_fail "health/live gagal (journalctl -u microtix-api -n 50)"
+  curl -sf http://127.0.0.1:8300/api/v1/health/ready >/dev/null \
+    && log "health/ready: OK (PostgreSQL reachable)" || gate_fail "health/ready gagal (koneksi database)"
+  systemctl is-active --quiet microtix-api \
+    && log "layanan microtix-api: aktif" || gate_fail "microtix-api tidak aktif"
+  systemctl is-active --quiet microtix-worker \
+    && log "layanan microtix-worker: aktif" || gate_fail "microtix-worker tidak aktif"
+  # Smoke API publik melewati Caddy (domain atau localhost).
+  SMOKE_HOST="${MT_DOMAIN:-localhost}"
+  curl -skf "https://${SMOKE_HOST}/api/v1/health/live" >/dev/null 2>&1 \
+    || curl -sf "http://${SMOKE_HOST}/api/v1/health/live" >/dev/null 2>&1 \
+    || curl -sf "http://127.0.0.1/api/v1/health/live" >/dev/null 2>&1 \
+    && log "smoke API via proxy: OK" || gate_fail "smoke API via proxy gagal (Caddy)"
+  # HTTPS valid hanya bila domain produksi diset (prasyarat beta publik).
+  if [ -n "${MT_DOMAIN:-}" ]; then
+    curl -sf "https://${MT_DOMAIN}/api/v1/health/live" >/dev/null 2>&1 \
+      && log "HTTPS domain: OK (${MT_DOMAIN})" \
+      || gate_partial "HTTPS domain belum valid (periksa DNS + sertifikat Caddy)"
   else
-    warn "health/live gagal — periksa: journalctl -u microtix-api -n 50"
+    gate_partial "MT_DOMAIN kosong — HTTP :80 saja; BUKAN beta publik (§9.6)"
   fi
-  if curl -sf http://127.0.0.1:8300/api/v1/health/ready >/dev/null; then
-    log "health/ready: OK (PostgreSQL reachable)"
+  # RADIUS hanya gerbang bila diaktifkan eksplisit.
+  if [ "${MT_ENABLE_RADIUS:-0}" = "1" ]; then
+    systemctl is-active --quiet freeradius \
+      && log "FreeRADIUS: aktif" || gate_fail "FreeRADIUS diminta (MT_ENABLE_RADIUS=1) tetapi tidak aktif"
   else
-    warn "health/ready gagal — periksa koneksi database."
+    log "RADIUS: tidak diaktifkan (opsional pada mode ini)."
   fi
 }
 
 admin_onboarding() {
   log "Onboarding administrator platform..."
-  if [ "$DRY_RUN" -eq 1 ]; then echo "[dry-run] membuat admin platform (interaktif)"; return; fi
+  if [ "$DRY_RUN" -eq 1 ]; then echo "[dry-run] membuat admin platform"; return; fi
   if [ -f "$STATE_DIR/.platform-admin-created" ]; then
     log "Admin platform sudah ada — lewati."
     return
   fi
-  echo "Buat akun Super Admin platform (akun individual; wajib MFA setelah login):"
   (
     cd "$INSTALL_ROOT/backend"
     set -a; . "$ENV_FILE"; set +a
-    "$INSTALL_ROOT/venv/bin/python" manage.py createsuperuser
+    if [ -n "${MT_ADMIN_EMAIL:-}" ] && [ -n "${MT_ADMIN_PASSWORD:-}" ]; then
+      # Mode non-interaktif (otomasi) — password dari env, tidak pernah dicetak.
+      DJANGO_SUPERUSER_EMAIL="$MT_ADMIN_EMAIL" DJANGO_SUPERUSER_PASSWORD="$MT_ADMIN_PASSWORD" \
+        "$INSTALL_ROOT/venv/bin/python" manage.py createsuperuser --noinput
+    else
+      echo "Buat akun Super Admin platform (akun individual; wajib MFA setelah login):"
+      "$INSTALL_ROOT/venv/bin/python" manage.py createsuperuser
+    fi
   ) && touch "$STATE_DIR/.platform-admin-created" || warn "Admin belum dibuat — jalankan repair nanti."
 }
 
 summary() {
+  if [ "$DRY_RUN" -ne 1 ] && [ "$INSTALL_STATUS" = "INSTALL_FAILED" ]; then
+    echo
+    die "INSTALASI GAGAL — gerbang wajib tidak lulus:${FAIL_REASONS}. Perbaiki lalu jalankan 'sudo bash instalasi.sh repair'."
+  fi
+  if [ "$DRY_RUN" -ne 1 ] && [ "$INSTALL_STATUS" = "INSTALL_PARTIAL" ]; then
+    log "INSTALASI PARSIAL — komponen inti sehat, namun:${PARTIAL_REASONS}."
+    log "Instalasi parsial TIDAK dinyatakan siap beta publik (§9.6)."
+  fi
   cat <<EOF
 
 ================ MicroTix — ringkasan instalasi ================
+Status      : $INSTALL_STATUS${FAIL_REASONS}${PARTIAL_REASONS}
 Mode        : $MODE
+URL aplikasi: ${MT_DOMAIN:-http://localhost} (Caddy same-origin /api)
 Lokasi      : $INSTALL_ROOT (backend+venv+web-dist), $ETC_DIR (env), $STORAGE_DIR (penyimpanan privat)
 Database    : PostgreSQL 17 '$DB_NAME' (migrator: $DB_MIGRATOR, runtime: $DB_APP — NOBYPASSRLS)
-Layanan     : microtix-api (gunicorn 127.0.0.1:8300), microtix-worker
-Proxy       : Caddy (HTTPS same-origin /api)
-Firewall    : nftables aktif; aturan WireGuard/RADIUS menyusul integrasi jaringan
-RADIUS      : FASE M3 — belum dikonfigurasi (jujur; router pun belum di-enroll)
-Catatan     : Router MikroTik TIDAK diubah installer ini; enrollment tetap
-              melalui aplikasi dengan otorisasi Owner (docs/ROUTEROS.md).
+Layanan     : microtix-api (gunicorn 127.0.0.1:8300), microtix-worker (job engine)
+Proxy/TLS   : Caddy (HTTPS same-origin /api; sertifikat otomatis bila MT_DOMAIN diset)
+WireGuard   : tools terpasang; interface host dikonfigurasi saat router PERTAMA
+              di-enroll lewat aplikasi (jujur: belum ada peer = belum ada tunnel)
+RADIUS      : $( [ "${MT_ENABLE_RADIUS:-0}" = "1" ] && echo "terpasang + dikonfigurasi (listener loopback/WG; NAS via reconciler)" || echo "TIDAK diaktifkan (MT_ENABLE_RADIUS=1 untuk mengaktifkan)" )
+Router      : BELUM ada router terhubung — enrollment via aplikasi dengan
+              otorisasi Owner (docs/ROUTEROS.md); installer tidak menyentuh router.
+Onboarding  : $( [ -f "$STATE_DIR/.platform-admin-created" ] && echo "admin platform dibuat — login lalu aktifkan MFA" || echo "admin belum dibuat — jalankan repair" )
 Perintah    : systemctl status microtix-api microtix-worker
-              sudo bash instalasi.sh status | doctor | upgrade | repair
+              sudo bash instalasi.sh status | doctor | repair | upgrade
+              cd backend && bash scripts/test_radius.sh   # verifikasi RADIUS nyata
 ===============================================================
 EOF
+  # Exit code jujur: gagal → 1 (summary memanggil die di atas).
+  [ "$INSTALL_STATUS" = "INSTALL_FAILED" ] && exit 1
+  return 0
 }
 
 # ----------------------------------------------------------------------------
@@ -411,21 +529,31 @@ do_doctor() {
 }
 
 do_upgrade() {
-  log "Upgrade (backup database → migrasi → restart)..."
+  log "Upgrade (backup + verifikasi → backend+frontend → migrasi → restart → health)..."
   [ -f "$ENV_FILE" ] || die "Belum terinstal."
   if [ "$DRY_RUN" -ne 1 ]; then
-    run "su - postgres -c 'pg_dump -Fc $DB_NAME > /var/lib/postgresql/microtix-pre-upgrade-\$(date +%Y%m%d%H%M%S).dump'"
+    # Backup + VERIFIKASI backup (§9.5) — jangan lanjut bila dump rusak.
+    BACKUP_FILE="/var/lib/postgresql/microtix-pre-upgrade-$(date +%Y%m%d%H%M%S).dump"
+    su - postgres -c "pg_dump -Fc $DB_NAME > $BACKUP_FILE" || die "pg_dump gagal — upgrade dibatalkan."
+    su - postgres -c "pg_restore --list $BACKUP_FILE" >/dev/null \
+      || die "backup TIDAK valid (pg_restore --list gagal) — upgrade dibatalkan."
+    log "Backup valid: $BACKUP_FILE"
+  else
+    echo "[dry-run] pg_dump + pg_restore --list (verifikasi backup)"
   fi
   deploy_backend
+  build_frontend
+  setup_caddy
   [ "$DRY_RUN" -ne 1 ] && { systemctl restart microtix-api microtix-worker; health_checks; }
   log "Upgrade selesai."
 }
 
 do_repair() {
   log "Repair: restart layanan + reload konfigurasi..."
-  [ "$DRY_RUN" -ne 1 ] || { echo "[dry-run] restart api/worker/caddy"; return; }
+  [ "$DRY_RUN" -ne 1 ] || { echo "[dry-run] restart api/worker/caddy(+radius)"; return; }
   systemctl restart microtix-api microtix-worker || true
   setup_caddy
+  [ "${MT_ENABLE_RADIUS:-0}" = "1" ] && systemctl restart freeradius || true
   health_checks
 }
 
