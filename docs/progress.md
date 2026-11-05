@@ -49,7 +49,7 @@ Lingkungan uji: Linux sandbox Debian 13; Python 3.13.5; PostgreSQL **17.4 asli**
 
 ### Blocker / dependency
 
-- **Git push belum tersedia** (tidak ada kredensial remote di sandbox) — commit lokal terstruktur dibuat; push menunggu PAT.
+- **Git push BLOCKED** — tidak ada kredensial GitHub di environment ini (tidak ada env GH_TOKEN/GITHUB_TOKEN, gh CLI, ~/.git-credentials, ~/.netrc, atau berkas di upload/). 6 commit lokal terstruktur siap push (2c09261..925aa14); push menunggu PAT fine-grained (Contents read/write, repo smahud/MicroTix_Project). Remote SHA BELUM terverifikasi — tidak ada klaim pushed.
 - **FreeRADIUS daemon + host root + domain publik + MikroTik fisik tidak tersedia** — `make test-radius` jujur BLOCKED; instalasi produksi nyata belum dieksekusi; verified_lab = tidak ada klaim.
 - **Playwright browser harness** belum dibangun (smoke live sebagai gantian; tetap todo).
 - Wizard U07 8-langkah/identitas lintas router (TK-410), S1/S3/S4, monitoring berkala (TK-502/503), backup router (TK-504–507), PDF (TK-109), M2 billing penuh — belum (lihat BETA_RELEASE_NOTES §3).
