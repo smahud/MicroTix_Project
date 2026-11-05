@@ -360,7 +360,7 @@ def run_discovery(router: Router) -> dict:
     Pemanggil (job engine) sudah membuka tenant_scope (konvensi repo).
     """
     from adapters.routeros.base import RouterContext
-    from adapters.routeros.simulator import RouterOsSimulator
+    from adapters.routeros.factory import active_adapter_name, active_routeros_adapter
 
     ctx = RouterContext(
         router_id=str(router.id),
@@ -370,7 +370,7 @@ def run_discovery(router: Router) -> dict:
         routeros_version=router.routeros_version or "7.15",
         credential_ref=router.credential_ref,
     )
-    adapter = RouterOsSimulator()
+    adapter = active_routeros_adapter()
     snapshot = DiscoverySnapshot.objects.create(tenant_id=router.tenant_id, router=router)
     accounts = adapter.list_accounts(ctx)
     count = 0
@@ -397,7 +397,7 @@ def run_discovery(router: Router) -> dict:
     MigrationSession.objects.filter(router=router, state="pending_discovery").update(
         snapshot=snapshot, state="discovered"
     )
-    # Sampel kesehatan pertama (simulator; source tercatat jujur).
+    # Sampel kesehatan pertama (source jujur sesuai adapter aktif).
     from domains.network.models import RouterHealthSample
 
     health = adapter.read_health(ctx)
@@ -409,6 +409,6 @@ def run_discovery(router: Router) -> dict:
         cpu_percent=health.get("cpu_percent"),
         memory_percent=health.get("memory_percent"),
         uptime_s=health.get("uptime_s"),
-        source="simulator",
+        source=active_adapter_name(),
     )
     return {"snapshot_id": str(snapshot.id), "accounts": count}

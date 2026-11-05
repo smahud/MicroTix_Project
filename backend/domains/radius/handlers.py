@@ -121,13 +121,13 @@ def _b1_parity(run: CutoverRun, ctx: JobContext) -> None:
 
 
 def _b2_install(run: CutoverRun, ctx: JobContext) -> None:
-    """Install B2: klien RADIUS + rule sempit via adapter (simulator dev)."""
-    from adapters.routeros.simulator import RouterOsSimulator as SimulatorAdapter
+    """Install B2: klien RADIUS + rule sempit via adapter aktif (default simulator)."""
+    from adapters.routeros.factory import active_routeros_adapter
 
     from domains.radius.projection import nas_state
     from domains.radius.services import radius_primary
 
-    adapter = SimulatorAdapter()
+    adapter = active_routeros_adapter()
     nas = nas_state(run.router)
     plan = adapter.install_radius_client(
         _router_ctx(run.router),
@@ -192,14 +192,14 @@ def _b4_shadow(run: CutoverRun, ctx: JobContext) -> None:
 
 
 def _b5_authoritative(run: CutoverRun, ctx: JobContext) -> None:
-    from adapters.routeros.simulator import RouterOsSimulator as SimulatorAdapter
+    from adapters.routeros.factory import active_adapter_name, active_routeros_adapter
 
-    adapter = SimulatorAdapter()
+    adapter = active_routeros_adapter()
     plan = adapter.set_aaa(_router_ctx(run.router), {"use_radius": "yes"})
     adapter.apply_action(_router_ctx(run.router), plan)
     readback = adapter.verify_action(_router_ctx(run.router), plan)
     ok = bool(readback.get("verified", False))
-    _ev(run).update({"aaa_readback_ok": ok, "method": "simulator_disable"})
+    _ev(run).update({"aaa_readback_ok": ok, "method": f"{active_adapter_name()}_disable"})
     if not ok:
         run.state = CutoverRun.State.FAILED
         _save(run)

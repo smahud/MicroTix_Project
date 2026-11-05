@@ -9,6 +9,8 @@ import os
 import secrets
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+
 from .dburl import parse_db_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -167,6 +169,16 @@ ALLOWED_HOSTS = [h for h in os.environ.get("MT_ALLOWED_HOSTS", "localhost,127.0.
 
 # --- Keamanan skema upload/tandatangan (TK-106) ---
 MT_UPLOAD_SIGNING_KEY = os.environ.get("MT_UPLOAD_SIGNING_KEY", SECRET_KEY)
+
+# Adapter RouterOS aktif (konsolidasi beta-0.1): simulator (default, dev/test)
+# atau api_ssl (klien native TLS+pinning — jalur produksi; adapter menolak
+# mutasi dengan kode pending_lab sampai bukti lab G1, jadi aktifasi dini
+# tidak bisa mengklaim integrasi perangkat nyata).
+MT_ROUTEROS_ADAPTER = os.environ.get("MT_ROUTEROS_ADAPTER", "simulator")
+if MT_ROUTEROS_ADAPTER not in ("simulator", "api_ssl"):
+    raise ImproperlyConfigured(
+        f"MT_ROUTEROS_ADAPTER tidak sah: {MT_ROUTEROS_ADAPTER!r} (simulator|api_ssl)"
+    )
 
 LOGGING = {
     "version": 1,
