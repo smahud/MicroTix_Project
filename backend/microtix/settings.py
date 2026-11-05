@@ -43,6 +43,10 @@ INSTALLED_APPS = [
     "domains.audit",
     "domains.subscriptions",
     "domains.network",
+    "domains.customers",
+    "domains.radius",
+    "domains.backups",
+    "domains.monitoring",
     "domains.config",
     "domains.i18n",
 ]
