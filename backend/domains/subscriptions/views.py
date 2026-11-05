@@ -1,4 +1,5 @@
-"""API subscription — GET /subscription, /plans, POST quotations, submissions."""
+"""API subscription — GET /subscription, /plans, POST quotations, submissions,
+dan antrean keputusan platform admin (M2): /platform/payment-submissions."""
 from __future__ import annotations
 
 from drf_spectacular.utils import extend_schema
@@ -118,3 +119,104 @@ class PaymentSubmissionView(TenantApiView):
             {"submission_id": str(submission.id), "state": submission.state},
             status=status.HTTP_201_CREATED,
         )
+
+
+# ---------------------------------------------------------------------------
+# Platform admin (M2) — U14. Route di luar /tenants/: izin platform
+# (request.user.platform_admin), BUKAN payments.verify tenant (§5).
+# Non-platform admin → 404 generik (tidak membocorkan keberadaan antrean).
+
+
+class PlatformApiView(APIView):
+    """Basis view platform-scope: hanya user.platform_admin.
+
+    Metode keamanan (diperiksa manual di initial, bukan IsAuthenticated DRF
+    — SessionAuthentication tanpa WWW-Authenticate memaksa anonim jadi 403,
+    sedangkan kontrak §5 meminta 401): 401 bila belum masuk; 404 generik
+    untuk pengguna terautentikasi tanpa peran platform (tidak membocorkan
+    keberadaan antrean). Jalur ini tidak mengambil konteks tenant.
+    """
+
+    permission_classes: list = []
+
+    def initial(self, request: Request, *args, **kwargs) -> None:
+        super().initial(request, *args, **kwargs)
+        user = getattr(request, "user", None)
+        if user is None or not getattr(user, "is_authenticated", False):
+            raise ApiError.unauthorized()
+        if not getattr(user, "platform_admin", False):
+            raise ApiError.not_found()
+
+
+def platform_submission_info(submission: PaymentSubmission) -> dict:
+    """Bentuk PlatformPaymentSubmission kontrak frontend (contracts.ts)."""
+    reviewer = getattr(submission, "reviewed_by", None)
+    return {
+        "id": str(submission.id),
+        "tenant_display_name": submission.tenant.display_name,
+        "saas_invoice_id": str(submission.invoice_id),
+        "plan_code": submission.invoice.plan.code,
+        "period_months": submission.invoice.term_months,
+        "amount": f"{submission.amount:.2f}",
+        "submitted_at": submission.submitted_at.isoformat(),
+        "state": submission.state,
+        "assignee": reviewer.full_name if reviewer else None,
+    }
+
+
+class PlatformSubmissionListView(PlatformApiView):
+    @extend_schema(summary="Antrean bukti pembayaran SaaS lintas tenant (platform)")
+    def get(self, request: Request) -> Response:
+        queue = request.query_params.get("queue", "")
+        if not queue:
+            raise ApiError.validation(
+                {"queue": [{"code": "required", "message": "queue wajib diisi"}]}
+            )
+        submissions = services.list_platform_queue(queue)
+        return Response([platform_submission_info(s) for s in submissions])
+
+
+def _decision_body(request: Request) -> str:
+    body = request.data if isinstance(request.data, dict) else {}
+    return str(body.get("reason", "") or "")
+
+
+class PlatformSubmissionApproveView(PlatformApiView):
+    @idempotent("platform_submission_approve", resource_from=lambda request, kwargs: kwargs.get("submission_id", ""))
+    @extend_schema(summary="Setujui bukti → invoice paid + subscription aktif")
+    def post(self, request: Request, submission_id: str) -> Response:
+        services.decide_platform_submission(
+            submission_id,
+            "approve",
+            actor=request.user,
+            request_id=getattr(request, "mt_request_id", "") or "",
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class PlatformSubmissionRejectView(PlatformApiView):
+    @idempotent("platform_submission_reject", resource_from=lambda request, kwargs: kwargs.get("submission_id", ""))
+    @extend_schema(summary="Tolak bukti pembayaran (alasan wajib)")
+    def post(self, request: Request, submission_id: str) -> Response:
+        services.decide_platform_submission(
+            submission_id,
+            "reject",
+            actor=request.user,
+            reason=_decision_body(request),
+            request_id=getattr(request, "mt_request_id", "") or "",
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class PlatformSubmissionRevisionView(PlatformApiView):
+    @idempotent("platform_submission_revision", resource_from=lambda request, kwargs: kwargs.get("submission_id", ""))
+    @extend_schema(summary="Minta perbaikan bukti pembayaran (alasan wajib)")
+    def post(self, request: Request, submission_id: str) -> Response:
+        services.decide_platform_submission(
+            submission_id,
+            "request_revision",
+            actor=request.user,
+            reason=_decision_body(request),
+            request_id=getattr(request, "mt_request_id", "") or "",
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)

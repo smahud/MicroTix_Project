@@ -174,6 +174,15 @@ class PaymentSubmission(models.Model):
     submitted_by = models.ForeignKey("identity.User", null=True, on_delete=models.SET_NULL, db_column="submitted_by_id")
     submitted_at = models.DateTimeField(default=dj_timezone.now)
     reviewed_at = models.DateTimeField(null=True, blank=True)
+    # Reviewer platform (M2): pengambil keputusan — mengisi assignee kontrak
+    # PlatformPaymentSubmission dan jejak koreksi (FINANCE.md §16 salah approval).
+    reviewed_by = models.ForeignKey(
+        "identity.User",
+        null=True,
+        on_delete=models.SET_NULL,
+        db_column="reviewed_by_id",
+        related_name="payment_submissions_reviewed",
+    )
     review_note = models.TextField(blank=True, default="")
 
     class Meta:

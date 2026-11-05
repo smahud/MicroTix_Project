@@ -11,4 +11,25 @@ urlpatterns = [
         views.PaymentSubmissionView.as_view(),
         name="payment-submission",
     ),
+    # --- Platform admin (M2): izin platform, di luar konteks tenant (§5). ---
+    path(
+        "platform/payment-submissions",
+        views.PlatformSubmissionListView.as_view(),
+        name="platform-payment-submissions",
+    ),
+    path(
+        "platform/payment-submissions/<str:submission_id>/approve",
+        views.PlatformSubmissionApproveView.as_view(),
+        name="platform-submission-approve",
+    ),
+    path(
+        "platform/payment-submissions/<str:submission_id>/reject",
+        views.PlatformSubmissionRejectView.as_view(),
+        name="platform-submission-reject",
+    ),
+    path(
+        "platform/payment-submissions/<str:submission_id>/request-revision",
+        views.PlatformSubmissionRevisionView.as_view(),
+        name="platform-submission-revision",
+    ),
 ]
