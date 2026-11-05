@@ -36,7 +36,10 @@ WEB_DIR="$REPO_DIR/apps/web"
 ETC_DIR="/etc/microtix"
 STATE_DIR="/var/lib/microtix"
 STORAGE_DIR="/var/lib/microtix/storage"
+BACKUP_DIR="/var/lib/microtix/backups"
 LOG_DIR="/var/log/microtix"
+WG_DIR="$ETC_DIR/wireguard"
+WG_CONF="$WG_DIR/wg0.conf"
 RUN_USER="microtix"
 RUN_GROUP="microtix"
 DB_NAME="microtix"
@@ -135,11 +138,13 @@ create_users_dirs() {
   if ! id -u "$RUN_USER" >/dev/null 2>&1; then
     run "useradd --system --home $STATE_DIR --shell /usr/sbin/nologin $RUN_USER"
   fi
-  for d in "$INSTALL_ROOT" "$ETC_DIR" "$STATE_DIR" "$STORAGE_DIR" "$LOG_DIR"; do
+  for d in "$INSTALL_ROOT" "$ETC_DIR" "$STATE_DIR" "$STORAGE_DIR" "$BACKUP_DIR" "$LOG_DIR" "$WG_DIR"; do
     run "mkdir -p '$d'"
   done
   run "chown -R $RUN_USER:$RUN_GROUP '$STORAGE_DIR' '$LOG_DIR'"
   run "chmod 750 '$ETC_DIR' '$STORAGE_DIR' '$LOG_DIR'"
+  run "chown root:$RUN_GROUP '$WG_DIR'"
+  run "chmod 700 '$WG_DIR'"
 }
 
 # ----------------------------------------------------------------------------
@@ -322,6 +327,47 @@ setup_firewall() {
 }
 
 # ----------------------------------------------------------------------------
+# WireGuard host (§9.13) — keypair CSPRNG + wg0.conf idempoten (port be2)
+# ----------------------------------------------------------------------------
+setup_wireguard() {
+  log "Menyiapkan WireGuard host (keypair CSPRNG, jaringan 100.127.0.0/16)..."
+  [ "$DRY_RUN" -eq 1 ] && { echo "[dry-run] keypair + wg0.conf + env MT_WG_SERVER_PUBKEY"; return; }
+  if [ ! -f "$WG_DIR/server_private.key" ]; then
+    umask 077
+    wg genkey > "$WG_DIR/server_private.key"
+    wg pubkey < "$WG_DIR/server_private.key" > "$WG_DIR/server_public.key"
+    chmod 600 "$WG_DIR/server_private.key"
+    chmod 644 "$WG_DIR/server_public.key"
+    log "Keypair WireGuard dibuat (private 600 di $WG_DIR)."
+  else
+    log "Keypair WireGuard sudah ada — dipertahankan."
+  fi
+  PUB="$(cat "$WG_DIR/server_public.key")"
+  if [ ! -f "$WG_CONF" ]; then
+    # Private key ditulis via berkas (bukan argumen proses) dengan mode 600.
+    {
+      echo "# MicroTix — antarmuka manajemen router (peers dihasilkan reconciler)."
+      echo "# Aktifkan: systemctl enable --now wg-quick@wg0"
+      echo "[Interface]"
+      echo "Address = 100.127.0.1/32"
+      echo "ListenPort = 51820"
+      echo "PrivateKey = $(cat "$WG_DIR/server_private.key")"
+    } > "$WG_CONF"
+    chmod 600 "$WG_CONF"
+    log "Konfigurasi $WG_CONF dibuat (alamat 100.127.0.1/32, port 51820)."
+  else
+    log "Konfigurasi $WG_CONF sudah ada — dipertahankan."
+  fi
+  # Publikasikan pubkey ke env aplikasi (bootstrap script memerlukannya).
+  if grep -q '^MT_WG_SERVER_PUBKEY=' "$ENV_FILE" 2>/dev/null; then
+    sed -i "s|^MT_WG_SERVER_PUBKEY=.*|MT_WG_SERVER_PUBKEY=${PUB}|" "$ENV_FILE"
+  else
+    echo "MT_WG_SERVER_PUBKEY=${PUB}" >> "$ENV_FILE"
+  fi
+  chown root:"$RUN_GROUP" "$ENV_FILE"; chmod 640 "$ENV_FILE"
+}
+
+# ----------------------------------------------------------------------------
 # Caddy reverse proxy + HTTPS
 # ----------------------------------------------------------------------------
 setup_caddy() {
@@ -480,8 +526,9 @@ Lokasi      : $INSTALL_ROOT (backend+venv+web-dist), $ETC_DIR (env), $STORAGE_DI
 Database    : PostgreSQL 17 '$DB_NAME' (migrator: $DB_MIGRATOR, runtime: $DB_APP — NOBYPASSRLS)
 Layanan     : microtix-api (gunicorn 127.0.0.1:8300), microtix-worker (job engine)
 Proxy/TLS   : Caddy (HTTPS same-origin /api; sertifikat otomatis bila MT_DOMAIN diset)
-WireGuard   : tools terpasang; interface host dikonfigurasi saat router PERTAMA
-              di-enroll lewat aplikasi (jujur: belum ada peer = belum ada tunnel)
+WireGuard   : host keypair + $WG_CONF disiapkan (port be2; idempoten);
+              aktifkan: systemctl enable --now wg-quick@wg0 — peers ditambah
+              reconciler saat router di-enroll via aplikasi
 RADIUS      : $( [ "${MT_ENABLE_RADIUS:-0}" = "1" ] && echo "terpasang + dikonfigurasi (listener loopback/WG; NAS via reconciler)" || echo "TIDAK diaktifkan (MT_ENABLE_RADIUS=1 untuk mengaktifkan)" )
 Router      : BELUM ada router terhubung — enrollment via aplikasi dengan
               otorisasi Owner (docs/ROUTEROS.md); installer tidak menyentuh router.
@@ -491,8 +538,14 @@ Perintah    : systemctl status microtix-api microtix-worker
               cd backend && bash scripts/test_radius.sh   # verifikasi RADIUS nyata
 ===============================================================
 EOF
-  # Exit code jujur: gagal → 1 (summary memanggil die di atas).
-  [ "$INSTALL_STATUS" = "INSTALL_FAILED" ] && exit 1
+  # Exit code jujur (konsolidasi beta-0.1, port be2): gagal → 1,
+  # parsial (inti sehat, prasyarat publik belum lengkap) → 3, sukses → 0.
+  if [ "$INSTALL_STATUS" = "INSTALL_FAILED" ]; then
+    exit 1
+  fi
+  if [ "$INSTALL_STATUS" = "INSTALL_PARTIAL" ]; then
+    exit 3
+  fi
   return 0
 }
 
@@ -571,6 +624,7 @@ case "$MODE" in
     build_frontend
     deploy_services
     setup_firewall
+    setup_wireguard
     setup_caddy
     setup_radius
     health_checks
