@@ -6,8 +6,13 @@ INTEGRATION-1; bukti eksekusi: [BETA_TEST_EVIDENCE.md](BETA_TEST_EVIDENCE.md)).
 
 ## Version candidate
 
-- **Kandidat**: `v0.1.0-beta.1` (release candidate; tag dibuat HANYA setelah
-  CI hijau pada commit main yang diuji).
+- **Kandidat**: `v0.1.0-beta.1` — commit kandidat: **`1ccf264`** (CI hijau:
+  backend+frontend+docs).
+- **Status tagging: NOT_READY (§15)** — tag DITUNDA sampai **Gate A/G**
+  (instalasi bersih pada host Debian 13 nyata: root + `MT_DOMAIN` + DNS →
+  `INSTALL_SUCCESS`) dieksekusi dan lulus. Sandbox konsolidasi tidak dapat
+  memverifikasinya (tanpa root/domain). Setelah Gate A/G lulus, tag dibuat
+  menunjuk tepat ke commit main teruji — bukan commit yang belum diverifikasi.
 - **Basis kanonis**: `main` @ **`8da2c2d`** (merge commit PR #1 dari
   `integration/beta-0.1`; CI GitHub Actions hijau: backend+frontend+docs).
 - **Sumber kebenaran tunggal**: `main`. Branch `parallel/beta-be2` dan
