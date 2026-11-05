@@ -252,3 +252,10 @@ export interface ApiClient {
 
 export type ApiMode = 'mock' | 'live';
 export const API_MODE: ApiMode = (import.meta.env.VITE_API_MODE ?? 'mock') as ApiMode;
+
+// Defense-in-depth (§5): produksi tanpa mode live gagal KERAS di runtime —
+// bukan diam-diam memakai mock. Build guard vite sudah mencegah hal ini;
+// guard ini menutup jalur bundle manual.
+if (import.meta.env.PROD && API_MODE !== 'live') {
+  throw new Error('Konfigurasi produksi tidak sah: VITE_API_MODE=live wajib.');
+}
