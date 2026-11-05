@@ -6,8 +6,9 @@
 # - Idempoten; tidak memasang layanan host produksi.
 set -euo pipefail
 
+# Skrip berada di backend/scripts/ → ROOT = direktori backend.
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BACKEND="$ROOT/backend"
+BACKEND="$ROOT"
 PGHOST="${MT_PGHOST:-127.0.0.1}"
 PGPORT="${MT_PGPORT:-55432}"
 export PGHOST PGPORT
@@ -68,8 +69,11 @@ EOF
 
 set -a; . "$BACKEND/.env"; set +a
 
-# --- 4. Migrasi sebagai migrator ---
+# --- 4. Migrasi sebagai migrator + GRANT runtime ---
 DATABASE_URL="$MIGRATE_DATABASE_URL" .venv/bin/python manage.py migrate --noinput
+# Tabel dimiliki migrator; peran runtime mtx_app memerlukan GRANT DML eksplisit
+# (paritas dengan `make migrate` dan instalasi.sh §M8).
+DATABASE_URL="$MIGRATE_DATABASE_URL" .venv/bin/python manage.py grant_runtime
 
 # --- 5. Seed (paket + dua tenant sintetis bila belum ada) ---
 .venv/bin/python manage.py seed_dev

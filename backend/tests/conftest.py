@@ -1,4 +1,6 @@
-"""Fixture pytest — environment test ditetapkan sebelum Django dimuat.
+"""Fixture pytest — environment test di-bootstrap oleh microtix/settings_test
+(DJANGO_SETTINGS_MODULE di pytest.ini) yang dieksekusi paling awal oleh
+pytest-django; setdefault env di conftest terbukti terlambat.
 
 Test database dibuat pytest-django oleh peran mtx_app (CREATEDB khusus dev);
 tabel dimiliki peran pembuat DB namun FORCE RLS tetap berlaku (§4).
@@ -10,14 +12,6 @@ from __future__ import annotations
 
 import os
 import time
-
-os.environ.setdefault("MT_ENV", "test")
-os.environ.setdefault(
-    "DATABASE_URL", os.environ.get("TEST_DATABASE_URL", "postgresql://mtx_app@127.0.0.1:55432/microtix")
-)
-os.environ.setdefault("MT_SECRET_KEY", "test-secret-key-0123456789abcdef0123456789abcdef")
-os.environ.setdefault("MT_SECRET_BOX_KEY", "test-secret-box-0123456789abcdef0123456789")
-os.environ.setdefault("MT_STORAGE_ROOT", "/tmp/mtx-test-storage")
 
 import django  # noqa: E402
 
