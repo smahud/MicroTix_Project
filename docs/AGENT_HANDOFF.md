@@ -19,7 +19,7 @@ git log --oneline -5
 
 | Item | Nilai |
 |---|---|
-| Canonical main | `main` @ **`8da2c2d`** (merge commit PR #1; CI hijau: backend+frontend+docs). Update dokumen ini setelah setiap merge penting. |
+| Canonical main | `main` @ **`f575388`** (merge commit PR #2, sesi 2026-11-06; CI hijau: backend+frontend+docs pada f575388; diverifikasi via API). Handoff kanonis sesi terakhir: [report/LATEST_HANDOFF.md](../report/LATEST_HANDOFF.md) |
 | Kandidat rilis | `v0.1.0-beta.1` — commit kandidat `1ccf264` (CI hijau). **Tag DITUNDA (§15: NOT_READY)** hingga Gate A/G (instalasi host nyata) lulus; jalankan lalu tag menunjuk commit teruji |
 | Basis konsolidasi | `integration/beta-0.1` (dari `cd5142c` = main pra-integrasi) |
 | Artefak terverifikasi terakhir | [BETA_TEST_EVIDENCE.md](BETA_TEST_EVIDENCE.md) (222/222 BE, 42/42 FE, RADIUS nyata 15/15, smoke 20/20, docs PASS; CI GitHub hijau pada 8da2c2d) |
