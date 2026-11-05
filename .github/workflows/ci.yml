@@ -20,7 +20,7 @@ jobs:
           --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       MT_ENV: test
-      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/microtix
+      DATABASE_URL: postgresql://mtx_app:ci-app-0123456789@127.0.0.1:5432/microtix
       MT_SECRET_KEY: ci-secret-key-0123456789abcdef0123456789
       MT_SECRET_BOX_KEY: ci-secret-box-0123456789abcdef0123456789
       MT_STORAGE_ROOT: /tmp/mtx-ci-storage
@@ -29,6 +29,16 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
+      - name: Peran runtime non-privilege (RLS diuji sungguhan)
+        # Superuser postgres melewati RLS → 4 tes RLS gagal palsu. Suite
+        # wajib berjalan sebagai peran biasa NOBYPASSRLS (paritas produksi:
+        # mtx_app). CREATEDB diperlukan pytest-django untuk test database.
+        run: |
+          psql "postgresql://postgres:postgres@127.0.0.1:5432/microtix" -v ON_ERROR_STOP=1 -c "DO \$\$ BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='mtx_app') THEN
+              CREATE ROLE mtx_app LOGIN PASSWORD 'ci-app-0123456789' CREATEDB;
+            END IF;
+          END \$\$;"
       - name: Install dependensi pinned
         working-directory: backend
         run: |
@@ -70,9 +80,11 @@ jobs:
       - name: i18n parity
         working-directory: apps/web
         run: python3 scripts/check_i18n.py
-      - name: Build
+      - name: Build (produksi live — mock DITOLAK gate §5)
         working-directory: apps/web
         run: pnpm exec vite build
+        env:
+          VITE_API_MODE: live
 
   docs:
     runs-on: ubuntu-latest

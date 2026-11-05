@@ -34,12 +34,19 @@ def set_tenant_context(db_wrapper_or_conn, tenant_id: str | uuid.UUID) -> None:
 def tenant_scope(tenant_id: str | uuid.UUID):
     """Buka transaksi dengan konteks tenant; semua query di dalam tunduk RLS.
 
-    Saat keluar, GUC direset fail-closed (string kosong → policy NULL → tanpa
-    baris) sehingga koneksi pooled/nes-transaction tidak membawa konteks lama.
+    Reentrant (konsolidasi beta-0.1, port dari agent paralel): scope dalam
+    (mis. service dipanggil dari view/handler yang sudah berjalan dalam
+    scope) MENYIMPAN nilai sebelumnya dan memulihkannya saat keluar — bukan
+    mereset ke kosong, yang akan memutus konteks scope luar.
+
+    Tanpa scope luar: keluar dengan reset fail-closed (string kosong →
+    policy NULL → tanpa baris) sehingga koneksi pooled/non-transaction
+    tidak membawa konteks lama.
     """
     from django.db import connection
 
     tenant = _validate_uuid(tenant_id)
+    previous = current_tenant_id()
     try:
         with transaction.atomic():
             with connection.cursor() as cur:
@@ -48,7 +55,15 @@ def tenant_scope(tenant_id: str | uuid.UUID):
     finally:
         try:
             with connection.cursor() as cur:
-                cur.execute("SELECT set_config('app.tenant_id', '', false)")
+                if previous:
+                    # Pulihkan nilai scope luar (transaction-local pada
+                    # transaksi yang sama — keduanya is_local=true).
+                    cur.execute(
+                        "SELECT set_config('app.tenant_id', %s, true)", [previous]
+                    )
+                else:
+                    # Fail-closed: reset sesi agar tidak ada konteks bocor.
+                    cur.execute("SELECT set_config('app.tenant_id', '', false)")
         except Exception:  # pragma: no cover - koneksi bermasalah: biarkan fail-closed
             pass
 

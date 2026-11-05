@@ -2,6 +2,83 @@
 
 Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-05 (Asia/Jakarta).
 
+## Checkpoint INTEGRATION-1 — Recovery dua agent paralel + konsolidasi beta-0.1 (preserve → audit → port → verifikasi)
+
+**Scope**: master prompt V5. Dua agent bekerja paralel dari baseline `ee15ada`: Agent A mendorong 9 commit ke `main` (konsolidasi M3/M4/M5 + RADIUS nyata), Agent B mendorong 7 commit ke `parallel/beta-be2` (M3 inti + klien API-SSL + installer hardened; push sempat BLOCKED di environment asal, kemudian ter-push ke branch tersebut). Misi: selamatkan seluruh pekerjaan, audit keduanya, konsolidasikan tanpa duplikasi backend, verifikasi, siapkan beta.
+
+### Pemetaan branch (zero work loss)
+
+| Branch | Isi | Status |
+|---|---|---|
+| `main` (`cd5142c`) | 9 commit Agent A: M3 penuh (enrollment/discovery/cutover B0–B6/release-replace), M4 penuh (pelanggan/layanan/CSV/migrasi identitas), M5 (backup/monitoring/approval M2), RADIUS dengan **verifikasi FreeRADIUS nyata 15/15**, guard anti-mock, installer hardened | Diverifikasi ulang sesi ini: 207/207 tes + 15/15 RADIUS nyata |
+| `parallel/beta-be2` (`c9023e6`) | 7 commit Agent B: enrollment/API-SSL native/facade radius multi-tenant/resolver/CSV subset/installer hardened/BETA_RELEASE_NOTES | Diverifikasi ulang sesi ini: 142/142 tes + smoke live 20/20 |
+| `integration/beta-0.1` | Dari `origin/main` + port aset unik be2 (lihat bawah) | Kanonis kandidat beta |
+
+Kedua branch dipertahankan apa adanya di remote (tidak ada force-push/reset; `parallel/beta-be2` tidak dihapus).
+
+### Verifikasi ulang baseline (sebelum integrasi — bukan mengandalkan klaim lama)
+
+| Target | Command | Hasil |
+|---|---|---|
+| main backend | `pytest tests -q` (PostgreSQL 17.11 nyata, peran mtx_migrator/mtx_app) | **207/207 PASS** |
+| main RADIUS nyata | `bash scripts/test_radius.sh` (FreeRADIUS 3.2.7 non-root + radclient + relay UDP) | **15/15 PASS** — SETELAH perbaikan grant (lihat bug #1) |
+| be2 backend | `pytest tests -q` (PG terpisah port 55433) | **142/142 PASS** |
+| be2 smoke live | `bash scripts/smoke_live.sh` (runserver + curl) | **20/20 PASS** |
+| main frontend | `tsc -b` / `eslint` / `vitest run` / `VITE_API_MODE=live vite build` | 0 error / 42/42 / build OK |
+| docs + i18n | `check_docs.py` / `check_i18n.py` | PASS / parity 908 kunci |
+
+### Bug konsolidasi yang ditemukan & diperbaiki (bukti reproduksi sesi ini)
+
+| Bug | Dampak | Perbaikan |
+|---|---|---|
+| `grant_runtime` main hanya grant schema `public` | **P0**: peran runtime kehilangan akses schema `radius` pada DB milik migrator → proyeksi RADIUS patah di jalur produksi (tes lolos karena test-DB dimiliki app — terbukti saat `test_radius.sh` BLOCKED "permission denied for schema radius" pada instalasi bersih) | Port logika be2: enumerasi `pg_namespace` dinamis (public+radius+schema baru otomatis); `%I` di-escape `%%I` (psycopg + params). Bukti: revoke→grant→28 grant tabel radius + USAGE |
+| `tenant_scope` non-reentrant (reset GUC ke kosong saat keluar scope dalam) | Scope bersarang (view→service, handler→service) memutus konteks scope luar; main hanya mengandalkan konvensi caller-provides-scope | Port be2: simpan nilai sebelumnya + pulihkan saat keluar; tanpa scope luar tetap fail-closed. Regresi test baru `test_nested_scope_restores_outer_context` |
+| Klien API-SSL tidak ada di main | Jalur produksi `MT_ROUTEROS_ADAPTER` tidak tersedia — semua verifikasi hanya simulator | Port be2 utuh: `apiclient.py` (protokol biner + TLS + pin SHA-256 + bounded + anti-SSRF) + `cert_pin` RouterContext + factory `MT_ROUTEROS_ADAPTER=simulator\|api_ssl` + 14 tes (server TLS in-process). Mutasi menolak jujur `*_pending_lab` (gate G1) |
+| Installer tanpa infrastruktur WireGuard host (§9.13) | Keypair host + wg0.conf tidak disiapkan; MT_WG_SERVER_PUBKEY tidak terpublikasi | Port be2: `setup_wireguard()` idempoten (key lama dipertahankan; private 600 via berkas) + exit code PARTIAL=3 |
+| `dev_bootstrap.sh` be2 masih `BACKEND="$ROOT/backend"` | Skrip be2 gagal langkah 5 (main sudah punya fix) | Tidak di-port — versi main lebih benar |
+
+### Keputusan konsolidasi (apa yang TIDAK di-port dari be2, dan alasannya)
+
+| Item be2 | Keputusan | Alasan |
+|---|---|---|
+| `domains/access/*` (app AAA terpisah: models/resolver/services/views + migrasi 0001–0003) | **Tidak di-port** | Duplikasi domain `radius` milik main (master prompt §17: jangan dua versi backend). Versi main lebih lengkap (cutover B0–B6, reconciler, harness verifikasi nyata 15/15) dan punya bukti FreeRADIUS real |
+| `domains/network/enrollment.py` + migrasi 0003–0005 be2 | **Tidak di-port** | main punya evolusi schema lebih jauh (migrasi 0003–0008: token_ref, enroll_bridge_policy, peer) + alur lengkap; migrasi be2 akan merusak dependency graph |
+| `domains/customers/csv_import.py` + migrasi be2 | **Tidak di-port** | main memilikinya dalam `customers/services.py` + alur migrasi identitas (discovery→konflik→merge/keep_one/rename) yang lebih lengkap |
+| `backend/infra/freeradius/*` (template statis) | **Tidak di-port** | main punya `render_radius_config` (management command) yang menghasilkan konfigurasi setara dari data nyata + sudah diverifikasi `freeradius -C` |
+| Guard vite be2 (varian `enforce: 'pre'`) | **Tidak di-port** | main sudah punya gate setara (terverifikasi: build tanpa live DITOLAK sesi ini) |
+| `docs/BETA_RELEASE_NOTES.md` | **Diarahkan ke dokumen kanonis baru** | Master prompt §14 minta `BETA_RELEASE_STATUS.md`; isi materialnya diserap ke sana + matriks kepatuhan |
+
+### Verifikasi hasil integrasi (integration/beta-0.1)
+
+| Command | Exit | Hasil |
+|---|---|---|
+| `pytest tests -q` (PG 17.11 nyata) | 0 | **222/222** = 207 main + 1 regresi scope-bersarang + 14 API-SSL |
+| `python manage.py check` | 0 | tidak ada isu |
+| `bash scripts/test_radius.sh` (fresh: grants dicabut dulu, hanya via `grant_runtime` baru) | 0 | **15/15 PASS** — jalur fresh-install RADIUS utuh tanpa intervensi manual |
+| `tsc -b` / `eslint src` / `vitest run` | 0 | 0 error / 42/42 |
+| `VITE_API_MODE=live vite build` / tanpa live | 0 / ≠0 | build live OK; build mock DITOLAK |
+| `bash -n instalasi.sh` + `shellcheck -S error` | 0 | sintaks OK; 0 error shellcheck (warning minor pra-ada: var tak terpakai) |
+| Dry-run installer di sandbox | ≠0 | **preflight menolak benar** (disk 8GB < 10GB minimum — gerbang bekerja) |
+| `python3 docs/tools/check_docs.py` | 0 | PASS |
+
+Lingkungan: Debian 13 sandbox; Python 3.13.5; PostgreSQL 17.11 (binary deb non-root + shim share-path); FreeRADIUS 3.2.7 + radclient (deb trixie, non-root); Node 24 + pnpm 12.16.1. **Tanpa perangkat MikroTik fisik / host root / domain publik** — bukti verified_lab tetap BLOCKED sesuai gate G1.
+
+### Blocker / keterbatasan beta (jujur — tidak berubah dari BE-2 kecuali yang diperbaiki)
+
+- Perangkat MikroTik fisik tidak tersedia → enrollment/discovery/cutover/API-SSL tetap jalur simulator pada default; T01/T10/T17 belum verified_lab.
+- WireGuard host: installer kini menyiapkan keypair + wg0.conf + env; **aktifasi interface** (`systemctl enable --now wg-quick@wg0`) dan adopsi keypair oleh model `WireGuardHost` backend = langkah ops berikutnya (belum otomatis penuh).
+- Instalasi produksi nyata (host Debian 13 + root + domain) belum dieksekusi — Gate A/G terbuka.
+- B3/B4 cutover menunggu jendela observasi nyata dengan NAS produksi.
+- Playwright e2e belum dibangun (smoke live sebagai pengganti terbatas).
+
+### Langkah berikutnya
+
+1. PR `integration/beta-0.1` → main (CI: backend/frontend/docs) → merge → tag `v0.1.0-beta.1` (RC).
+2. Lab MikroTik CHR/fisik untuk G1 (T01/T16–T18/T20–T21) → baru aktifkan `MT_ROUTEROS_ADAPTER=api_ssl` dan cutover B3–B5.
+3. Eksekusi instalasi.sh pada host Debian 13 root + domain (Gate A/G) — dokumentasikan hasil gate.
+4. Adopsi keypair WG installer oleh backend + probe handshake.
+5. M6/M7 billing/ledger R2 sesuai roadmap.
+
 ## Checkpoint BE-2 — Konsolidasi + M3/M4/M5 slice beta (audit → fix → integrasi → verifikasi nyata)
 
 **Scope**: konsolidasi baseline BE-1/FE-1 (bukan rebuild): perbaikan bug nyata hasil audit, penutupan M4 (pelanggan/layanan/akun akses/CSV/migrasi DB-only), M5-ops (backup/monitoring/approval platform), M3 inti (enrollment WireGuard+API-SSL, discovery, cutover B0–B6, **FreeRADIUS NYATA dengan verifikasi radclient**), guard anti-mock frontend, hardening instalasi.sh, pengujian menyeluruh.

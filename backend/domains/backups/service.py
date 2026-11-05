@@ -39,15 +39,17 @@ BACKUP_RUN_KIND = "backup_router"  # kontrak FE JobKind (§5)
 API_CATEGORY = {"routine": "routine", "manual": "manual", "prechange": "pre_change"}
 
 
-def select_adapter() -> RouterOsSimulator:
+def select_adapter() -> "RouterOsAdapter":
     """Seleksi adapter RouterOS untuk jalur backup.
 
-    adapters/routeros/__init__.py belum memasang selektor (M5): dev/test
-    memakai simulator deterministik. Klien API-SSL nyata aktif bersama
-    enrollment terverifikasi (M3+) — saat itu seleksi pindah ke sana dan
-    hasilnya boleh diverifikasi lab.
+    Konsolidasi beta-0.1 (port be2): factory bersama MT_ROUTEROS_ADAPTER
+    (default simulator). Klien API-SSL nyata (api_ssl) menolak backup
+    dengan kode backup_pending_lab sampai bukti lab G1 — jujur, bukan
+    sukses palsu.
     """
-    return RouterOsSimulator()
+    from adapters.routeros.factory import active_routeros_adapter
+
+    return active_routeros_adapter()
 
 
 def _config_int(key: str) -> int:

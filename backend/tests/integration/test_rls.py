@@ -44,6 +44,20 @@ def test_context_is_transaction_local(tenant_a):
     assert current_tenant_id() is None
 
 
+def test_nested_scope_restores_outer_context(tenant_a, tenant_b):
+    """Regresi konsolidasi beta-0.1 (port be2): scope dalam memulihkan
+    konteks scope luar saat keluar — bukan reset ke kosong."""
+    with tenant_scope(tenant_a.id):
+        with tenant_scope(tenant_b.id):
+            assert current_tenant_id() == str(tenant_b.id)
+        # Keluar scope dalam: konteks kembali ke tenant_a (bukan None/'').
+        assert current_tenant_id() == str(tenant_a.id)
+        record(tenant_id=tenant_a.id, action_code="nested.restore.ok")
+        assert AuditEvent.objects.filter(action_code="nested.restore.ok").count() == 1
+    # Keluar scope terluar: fail-closed kembali.
+    assert current_tenant_id() is None
+
+
 def test_composite_fk_rejects_cross_tenant_reference(tenant_a, tenant_b, db):
     """FK komposit: JobDetail tidak boleh menunjuk job tenant lain."""
     from domains.jobs.models import Job, JobDetail, JobKind
