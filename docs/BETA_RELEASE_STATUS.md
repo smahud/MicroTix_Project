@@ -38,6 +38,8 @@ INTEGRATION-1; bukti eksekusi: [BETA_TEST_EVIDENCE.md](BETA_TEST_EVIDENCE.md)).
 | **Klien API-SSL RouterOS native** (TLS + pin SHA-256 + bounded + anti-SSRF) — tersedia via `MT_ROUTEROS_ADAPTER=api_ssl`; default simulator | `test_apiclient.py` (14 tes, server TLS in-process) |
 | Frontend live adapter penuh (CSRF, idempotency) + **gate anti-mock** (build produksi tanpa live DITOLAK) | 42/42 FE + verifikasi build sesi ini |
 | Installer `instalasi.sh`: install/status/doctor/repair/upgrade/dry-run; 17 langkah; WireGuard host; exit 1/3/0 | `bash -n` + shellcheck 0 error + dry-run + gerbang preflight terbukti menolak |
+| **Dokumen terbit PDF (TK-109, sesi 2026-11-06 lanjutan 3)**: invoice internet & kwitansi — snapshot bahasa/zona/templat/nilai + sha256, reprint dari artifact tersimpan (T23-I18-02), renderer terbatas jaringan/file (xhtml2pdf invariant; tanpa fetch eksternal), immutable via trigger DB | `tests/unit/test_documents_render.py` (15) + `tests/integration/test_documents_api.py` (9) |
+| **Billing internet M6 core (TK-601, sesi 2026-11-06 lanjutan 3)**: paket penagihan BIL-02 (fixed_monthly/anniversary, prepaid/postpaid, due_day clamp, first_period_policy), invoice + snapshot harga + UNIQUE periode anti-scheduler-ganda (AC-BIL), penerimaan dua tahap submitted→verified/rejected + alokasi ≤ nilai/sisa + kredit + kwitansi bernomor + aging bucket; pembayaran tidak otomatis aktivasi; scheduler `issue_due_invoices` zona tenant (idempoten, dry-run) | `test_billing_calendar.py` (32 unit) + `test_billing_invoice_flow.py` (23) + `test_billing_payments.py` (21) + `test_billing_contract.py` (3); backend 355/355 |
 
 ### Fitur TIDAK aktif (jujur — jangan diaktifkan tanpa gate)
 
@@ -46,7 +48,7 @@ INTEGRATION-1; bukti eksekusi: [BETA_TEST_EVIDENCE.md](BETA_TEST_EVIDENCE.md)).
 | `MT_ROUTEROS_ADAPTER=api_ssl` sebagai default | Tanpa bukti perangkat lab | **G1**: T01/T16–T18/T20–T21 pada CHR/fisik |
 | Mutasi konfigurasi router (apply/cutover/backup via API-SSL) | Adapter menolak `*_pending_lab` | G1 + pilot G3 |
 | Cutover authoritative pada NAS produksi | B3/B4 butuh jendela observasi nyata | G1/G3 |
-| R2 billing/ledger penuh, isolir otomatis | Belum diimplementasi (backlog) | Roadmap M6/M7 |
+| R2 sisa M6/M7 (UI U09/U10 TK-604, isolir otomatis TK-602+, saldo pembuka TK-607, dokumen koreksi TK-608, kolektor TK-609, ledger M7 TK-701+) | M6 core engine (TK-601) + dokumen (TK-109) sudah aktif sesi 2026-11-06 lanjutan 3; sisanya backlog | Roadmap M6/M7 lanjutan |
 | R3 ACS, R4 OLT/WAN advanced | Deferred (master prompt §7 P3) | Roadmap R3/R4 |
 | Auto-isolir pelanggan | Tanpa bukti keamanan + pilot | G2/G3 |
 

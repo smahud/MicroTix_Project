@@ -39,6 +39,9 @@ class Tenant(models.Model):
     # Namespace internal stabil — tidak berubah saat nama display diganti (§9).
     namespace = models.CharField(max_length=32, unique=True, editable=False)
     timezone = models.CharField(max_length=64, default="Asia/Jakarta")
+    # Bahasa default tenant (I18N-06): rantai bahasa dokumen pelanggan =
+    # preferensi pelanggan → bahasa default tenant → id (I18N-01 §2).
+    locale = models.CharField(max_length=5, default="id")
     created_at = models.DateTimeField(default=dj_timezone.now)
     archived_at = models.DateTimeField(null=True, blank=True)
 
