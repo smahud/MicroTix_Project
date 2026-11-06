@@ -1,83 +1,84 @@
-# LATEST_HANDOFF — Kanonis (sesi 2026-11-06)
+# LATEST_HANDOFF — Kanonis (sesi 2026-11-06 lanjutan: bootstrap in-repo + fix harness T19)
 
-Diperbarui atomik SETELAH integrasi terverifikasi. Dokumen ini adalah titik
-masuk WAJIB agent berikutnya (CONTRACT.md §10; dokumen handoff lain di
-docs/AGENT_HANDOFF.md tetap sebagai panduan alur — perbarui statusnya, jangan
-duplikasi laporan penuh).
+Diperbarui atomik SETELAH verifikasi sesi. Dokumen ini adalah titik masuk
+WAJIB agent berikutnya (CONTRACT.md §10; dokumen handoff lain di
+docs/AGENT_HANDOFF.md tetap sebagai panduan alur — perbarui statusnya,
+jangan duplikasi laporan penuh).
 
 ## 1. Status kanonis SAAT INI
 
 | Item | Nilai |
 |---|---|
 | **Branch kanonis** | `main` |
-| **Commit remote terverifikasi** | **`f5753884ff99f397c27b4f6b4993b9b40a385bb6`** (merge PR #2; diverifikasi via GitHub API `branches/main` 2026-11-05T19:2xZ; lokal `git rev-parse origin/main` = `f575388`) |
-| **CI pada commit merge** | **HIJAU**: backend ✓ frontend ✓ docs ✓ (GitHub Actions, jobs semua `completed success`) |
-| PR | **#2** `session/2026-11-06-wg-e2e` → main (merged, commit sesi `b07504a`) |
-| Rilis kandidat | `v0.1.0-beta.1` tetap **NOT_READY (§15)** — penahan tunggal tetap Gate A/G (instalasi host Debian 13 nyata root+domain), BUKAN pekerjaan kode |
-| CONTRACT.md | Diperbarui pemilik DURASI sesi ini (`1fff190`) — kewajiban BARU: lab GNS3 API-driven (§7), target kapasitas 1.000 tenant (§7), proses perubahan dokumen terkontrol (§4). Laporan sesi ini SUDAH patuh format §10 |
+| **Commit remote terverifikasi** | **`f284ce8`** (diverifikasi `git ls-remote` 2026-11-06; tree kode identik dengan merge PR #2 `f575388` — CI hijau backend+frontend+docs diverifikasi sesi sebelumnya via API) |
+| **Branch sesi (push via PAT, status lihat §2/§4)** | `session/2026-11-06-bootstrap-inrepo`: `1e326dc` (setup_env.sh in-repo + manifest) → `98ea90d` (fix harness T19 no-reply) → commit docs (laporan + handoff ini) |
+| PR | #1, #2 SUDAH merged; PR sesi ini: lihat status terkini di repo (dibuat sesi ini via PAT) |
+| Rilis kandidat | `v0.1.0-beta.1` tetap **NOT_READY** — penahan tunggal tetap Gate A/G (instalasi host Debian 13 nyata root+domain), BUKAN pekerjaan kode |
+| CONTRACT.md | Versi `1fff190` (lab GNS3 API-driven §7; kapasitas 1.000 tenant; proses perubahan dokumen terkontrol §4) |
 
-## 2. Yang diselesaikan + diverifikasi sesi ini (bukti nyata)
+## 2. Yang diselesaikan + diverifikasi sesi lanjutan ini (bukti nyata)
 
-1. **Baseline diaudit ulang dari nol** (bukan percaya klaim): 222/222 backend,
-   RADIUS nyata 15/15, FE 42/42 + tsc/eslint/build live, docs PASS, shellcheck 0
-   error — pada environment sandbox BARU (PostgreSQL 17.11 deb-extract + patch
-   jalur share non-root; FreeRADIUS 3.2.7 deb + rlm_sql_postgresql).
-2. **WG-1 (P1)**: adopsi keypair installer X25519 NYATA oleh `WireGuardHost`
-   (`MT_WG_SERVER_PUBKEY` tervalidasi murni `microtix/wg.py`); `adopt_wg_host`
-   (rotasi dengan peer aktif DITOLAK; `--check` read-only); `render_wg_config`
-   (peers lintas-tenant via scope eksplisit; 0600; tanpa PrivateKey default);
-   `probe_wg` (`wg show`; BLOCKED exit 2 jujur tanpa binary; pembaruan
-   `last_handshake_at` monotonik). Installer memanggil adopt+render; doctor
-   cek adopsi; upgrade idempoten. **252/252** (222 + 30 baru).
-3. **E2E-1 (P1)**: `make e2e` NYATA (menggantikan NOT_RUN) — Playwright 1.57 +
-   Chromium + backend PG17/RLS nyata. **7/7 PASS**: login happy/error, guard,
-   **isolasi tenant (404 envelope + nol kebocoran)**, **register→verifikasi
-   email→login tenant baru**, i18n, mobile 360px. **Menemukan + memperbaiki 2
-   bug nyata**: navigasi login non-MFA (FE; era mock hanya uji TOTP) + CSRF
-   dev-topology (produksi tetap kosong — tidak dilemahkan).
-4. **Gap registri pra-ada**: `verify_api_ssl` masuk `JOB_KINDS`/`JobKind` +
-   migrasi state `jobs/0003` (temuan reviewer F1/P1 — diperbaiki sebelum merge;
-   `makemigrations --check` CLEAN).
-5. **Review independen** (sub-agent, menjalankan ulang verifikasi sendiri):
-   APPROVE-WITH-NOTES → F1–F6/F8 diterapkan → laporan `report/reviewer/20261105T191840Z-independent-review.md`.
-6. **Laporan kontrak**: `report/orchestrator/20261105T191826Z-wg-host-adoption.md`,
-   `report/orchestrator/20261105T191830Z-e2e-harness.md` (+ handoff ini).
+1. **Insiden daur ulang sandbox** (jujur): `/home/z/my-project` direset
+   platform di tengah sesi — commit lokal bagian-1 (`64ac004`/`18cf506`)
+   HILANG sebelum sempat ter-push (PAT belum tersedia saat itu). Pelajaran:
+   push sesegera mungkin setelah verifikasi; jangan menumpuk commit lokal.
+   Bagian-2 sesi ini merekonstruksi semuanya dan diverifikasi ulang penuh.
+2. **`docs/tools/setup_env.sh` in-repo** (`1e326dc`): bootstrap sandbox
+   PG17+FreeRADIUS AGENT_HANDOFF §8 — menutup gap "script hanya hidup di
+   sandbox". `MT_SANDBOX_BASE` overridable + diekspor; **rebuild
+   byte-identik** terbukti (sha256 postgres+initdb); jalur fresh + no-op
+   idempoten exit 0; shellcheck 0 findings; manifest `--refresh` 21→22,
+   docs PASS.
+3. **Fix harness T19** (`98ea90d`): cabang FAIL uji isolasi T19 lama
+   mengklaim "KEBOCORAN TENANT" juga saat radclient **tanpa balasan**
+   (timeout) — klaim kebocoran tanpa bukti Access-Accept. Investigasi:
+   1x FAIL pada run pertama sesi ini (RC_OUT hilang); reproduksi 4/4 PASS
+   (termasuk urutan persis); konflasi terbukti dari kode; akar run pertama
+   tidak terbukti (dugaan: no-reply transient). Fix: tiga luaran dibedakan
+   (Reject=PASS / Accept=FAIL kebocoran+bukti / no-reply=FAIL "isolasi
+   TIDAK terverifikasi, bukan bukti kebocoran"). Pasca-fix 2/2 PASS 15/15.
+4. **Verifikasi ulang penuh pasca-rekonstruksi**: backend **252/252** (2x),
+   RADIUS nyata **15/15** (total 7 run sesi ini: 1 FAIL-T19 terinvestigasi
+   + 6 PASS), docs PASS (22 file), `instalasi.sh` bash -n OK.
+5. **Laporan kontrak**:
+   `report/orchestrator/20261106T063225Z-setup-env-inrepo-push.md`
+   (kronologi insiden + investigasi T19 lengkap) + handoff ini.
 
 ## 3. Bloker beta tetap (jujur — prasyarat eksternal, bukan kode)
 
 | Bloker | Butuh |
 |---|---|
-| **Gate A/G** (satu-satunya penahan tag `v0.1.0-beta.1`) | Host Debian 13 nyata + root + `MT_DOMAIN` + DNS → `sudo bash instalasi.sh install` → `INSTALL_SUCCESS`; lalu `manage.py adopt_wg_host` + `systemctl enable --now wg-quick@wg0` + `manage.py probe_wg` + render/apply wg0.conf |
+| **Gate A/G** (penahan tunggal tag `v0.1.0-beta.1`) | Host Debian 13 nyata + root + `MT_DOMAIN` + DNS → `sudo bash instalasi.sh install` → `INSTALL_SUCCESS`; lalu `adopt_wg_host` + `wg-quick@wg0` + `probe_wg` + render/apply wg0.conf |
 | **G1 lab MikroTik** (CHR/fisik) | Lab untuk T01/T16–T18/T20–T21 → aktifkan `MT_ROUTEROS_ADAPTER=api_ssl`, cutover B3–B5 |
-| **Lab GNS3 API-driven** (CONTRACT §7 BARU) | Infrastruktur GNS3 (server/VM) + image CHR berlisensi; harness reproducible + profil topologi + bukti machine-readable |
-| Probe wg interface host nyata | Termasuk Gate A/G (sandbox tanpa root) |
+| **Lab GNS3 API-driven** (CONTRACT §7) | Infrastruktur GNS3 + image CHR berlisensi; harness reproducible + profil topologi |
 
-## 4. Cabang tidak tergabung
+## 4. Cabang kerja
 
-Tidak ada. `session/2026-11-06-wg-e2e` sudah merged (PR #2) — cabang arsip
-`parallel/beta-be2` + `integration/beta-0.1` tetap dipertahankan (riwayat).
+- `session/2026-11-06-bootstrap-inrepo` — hasil sesi ini (3 commit: tools →
+  fix harness → docs); push via PAT sesi ini. Status merge/SHA remote
+  terverifikasi: bagian ini diperbarui atomik oleh commit handoff-lock
+  pasca-merge (pola sesi sebelumnya) — jangan percaya klaim tanpa
+  `git ls-remote`.
+- Arsip riwayat (remote): `parallel/beta-be2`, `integration/beta-0.1`,
+  `session/2026-11-06-wg-e2e`.
 
 ## 5. Prioritas eksekusi berikutnya (urut)
 
-1. **M6/M7 billing/ledger R2** (P2 handoff; FINANCE.md) — pekerjaan kode
-   independen TERBESAR berikutnya yang tidak butuh lab: ledger double-entry
-   DB-enforced (TK-701), invoice prabayar/pascabayar (TK-601+), pengakuan
-   bulanan + residual, alokasi/overpayment. Vertical slice per task, ikuti
-   FINANCE.md §16 (posting minimal 2 baris, debit=kredit deferred, dsb.).
-2. **Lab GNS3 harness** (CONTRACT §7 baru): mulai dari harness API-driven
-   reproducible + profil topologi dasar — catat blocker image CHR berlisensi
-   dengan tepat; jangan overengineer (CONTRACT §3).
+1. **M6/M7 billing/ledger R2** (P2; FINANCE.md) — pekerjaan kode independen
+   TERBESAR berikutnya tanpa lab: ledger double-entry DB-enforced (TK-701),
+   invoice prabayar/pascabayar (TK-601+), pengakuan bulanan + residual,
+   alokasi/overpayment. Vertical slice per task, ikuti FINANCE.md §16.
+2. **Lab GNS3 harness** (CONTRACT §7): harness API-driven reproducible +
+   profil topologi dasar; catat blocker image CHR berlisensi dengan tepat.
 3. **Ops host Gate A/G** saat host tersedia (P0 — penahan tag).
-4. Follow-up minor: CI job e2e opsional (caching browser + stabilitas);
-   doctor hint mismatch vs refused (F7); Makefile `playwright install || true`
-   (F10); perluas spec e2e (enrollment→job polling, CSV, reauth sensitif);
-   status WG host di UI (opsional, hindari tambah API surface tanpa kebutuhan).
+4. Follow-up minor: CI job e2e opsional; doctor hint mismatch vs refused
+   (F7); Makefile `playwright install || true` (F10); perluas spec e2e.
 
 ## 6. Titik mulai EKSAK agent berikutnya
 
 ```bash
 git fetch origin --prune
-git switch main && git pull --ff-only        # main @ f575388 (terverifikasi)
+git switch main && git pull --ff-only        # diverifikasi SHA via git ls-remote
 git log --oneline -5
 cd backend && bash scripts/dev_bootstrap.sh  # idempoten (butuh MT_PG_BIN bila sandbox baru)
 MT_ENV=test .venv/bin/python -m pytest tests -q          # 252 tes (PostgreSQL nyata)
@@ -88,24 +89,30 @@ pnpm exec vitest run && cd ../.. && make e2e              # 7/7 browser+backend 
 python3 docs/tools/check_docs.py && bash -n instalasi.sh
 ```
 
-Lingkungan sandbox baru: jalankan `bash /home/z/my-project/scripts/setup_env.sh`
-(PostgreSQL 17.11 deb + patch share-path non-root + FreeRADIUS + libs), venv via
-`uv venv .venv --python /usr/bin/python3.13 --seed`, pnpm wrapper
-`corepack pnpm@12.16.1`, Playwright 1.57 (Chromium 1200 sudah di cache
-`~/.cache/ms-playwright`), browser headless: `agent-browser`.
+Lingkungan sandbox baru: `bash docs/tools/setup_env.sh` (IN-REPO sejak
+`1e326dc`; basis default `/home/z/my-project`, override `MT_SANDBOX_BASE`),
+venv via `uv venv .venv --python /usr/bin/python3.13 --seed`
+(`python3.13 -m venv` gagal tanpa paket venv), pnpm wrapper
+`corepack pnpm@12.16.1`, Playwright 1.57 (Chromium 1200), browser headless:
+`agent-browser`.
 
-Baca: CONTRACT.md (VERSI BARU `1fff190` — khususnya §7 GNS3 + kapasitas),
-docs/AGENT_HANDOFF.md §5/§7, docs/progress.md checkpoint SESI-2026-11-06,
-docs/BETA_TEST_EVIDENCE.md §3, report/orchestrator/ + report/reviewer/ sesi ini.
+Baca: CONTRACT.md (versi `1fff190`), docs/AGENT_HANDOFF.md §5/§7/§8,
+docs/progress.md checkpoint teratas, report/orchestrator/ terbaru.
 
 ## 7. Risiko & keterbatasan yang diketahui
 
-- Semua interaksi router tetap jalur simulator (capability: source=simulator,
-  verified_lab=false) — TIDAK ada klaim perangkat nyata (G1).
-- WireGuard: adopsi keypair + render + probe DIIMPLEMENTASI; interface host
-  belum pernah hidup di mana pun (Gate A/G); fallback dev tetap placeholder
-  deterministik berlabel `generated_dev`.
-- E2E menguji alur auth/isolasi/onboarding/i18n/mobile; alur router nyata
-  menunggu lab; CI GitHub belum menjalankan e2e (hanya lokal/ops).
-- Vendor dipegang via `.git/config` lokal (PAT tidak pernah ditulis ke repo;
-  scan commit bersih).
+- **Daur ulang sandbox platform menghapus `/home/z/my-project`** (terjadi
+  2026-11-06): commit lokal yang belum ter-push HILANG. Push sesegera
+  mungkin; lab dapat dibangun ulang via `docs/tools/setup_env.sh`.
+- Semua interaksi router tetap jalur simulator (source=simulator,
+  verified_lab=false) — tidak ada klaim perangkat nyata (G1). WireGuard:
+  adopsi keypair + render + probe terimplementasi; interface host belum
+  pernah hidup (Gate A/G).
+- CI pada `f284ce8` sendiri tidak bisa dikonfirmasi ulang dari sandbox
+  (`api.github.com` 403 anonim; dengan PAT sesi ini dapat diakses); tree
+  kode identik dengan `f575388` yang CI-hijau.
+- PAT disimpan HANYA di `.git/config` lokal (tidak pernah di-commit);
+  scan commit bersih. PAT kedaluwarsa = push berikutnya BLOCKED lagi
+  (minta PAT baru dari pengguna).
+- Harness T19: run no-reply tetap FAIL (gate ketat) — ulangi run; kini
+  pesannya jujur (bukan klaim kebocoran).
