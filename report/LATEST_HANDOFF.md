@@ -10,11 +10,11 @@ jangan duplikasi laporan penuh).
 | Item | Nilai |
 |---|---|
 | **Branch kanonis** | `main` |
-| **Commit remote terverifikasi** | **`7d600146bd643b48f41b71ce5412c8d5abb89e06`** (merge PR #5; baseline sesi ini — SHA merge Phase-1 akan dikunci di commit handoff lanjutan setelah PR sesi ini diverifikasi `git ls-remote`) |
-| **PR sesi ini** | `session/2026-11-07-wg-onboarding` — Phase-1 onboarding router aman (WireGuard): perbaikan bug endpoint skrip + gateway hostname terkonfigurasi + kejujuran verifikasi + protokol/versi + isolasi pubkey/IP + UX + e2e worker nyata (lihat §2) |
+| **Commit remote terverifikasi** | **`8bb20c33d3bab15a469ade01bb4c665f56a8738a`** (merge PR #6; diverifikasi `git ls-remote` + API 2026-11-07; CI pada head PR `4ed2145` **HIJAU**: backend/frontend/docs semua success — diverifikasi via check-runs) |
+| **PR sesi ini** | **#6 SUDAH MERGED** (`session/2026-11-07-wg-onboarding`: Phase-1 onboarding router aman WireGuard — lihat §2) |
 | Rilis kandidat | `v0.1.0-beta.1` tetap **NOT_READY** — penahan tunggal tetap Gate A/G (instalasi host Debian 13 nyata root+domain), BUKAN pekerjaan kode |
 | CONTRACT.md | Versi `1fff190` (tidak diubah; amendment teknis dicatat PROPOSED di report/orchestrator/20261106T195642Z-*.md §3) |
-| Prioritas aktif | **Master directive user "Secure Router Connectivity"** (P0) — Phase-1 SELESAI; Phase-2 SSTP menunggu keputusan/lanjutan direktif; Gate A/G tetap penahan beta |
+| Prioritas aktif | **Master directive user "Secure Router Connectivity"** (P0) — Phase-1 SELESAI & TERINTEGRASI; Phase-2 SSTP menunggu keputusan/lanjutan direktif; Gate A/G tetap penahan beta |
 
 ## 2. Yang diselesaikan + diverifikasi sesi ini (bukti nyata)
 
@@ -79,7 +79,8 @@ jangan duplikasi laporan penuh).
 
 ## 4. Cabang kerja
 
-- `session/2026-11-07-wg-onboarding` — sesi ini (PR + status push: lihat §1).
+- `session/2026-11-07-wg-onboarding` — sesi ini (PR #6 **SUDAH MERGED**; SHA remote
+  terverifikasi §1).
 - Arsip riwayat (remote, tidak diubah): `parallel/beta-be2` (masih unmerged —
   jangan ditimpa), `integration/beta-0.1`, `session/2026-11-06-*`.
 
