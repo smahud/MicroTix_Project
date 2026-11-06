@@ -2,6 +2,110 @@
 
 Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-06 (Asia/Jakarta).
 
+## Checkpoint SESI-2026-11-06 (lanjutan 3) — M6 billing engine (TK-601) + dokumen PDF (TK-109)
+
+**Scope**: mulai dari `main` @ `79c42ec` (CI hijau diverifikasi via API;
+0 PR terbuka; cabang arsip di-port saat INTEGRATION-1 — tanpa pekerjaan
+yang belum digabung). Lingkungan sandbox dibangun ulang via
+`docs/tools/setup_env.sh` (deb-extract PG 17.11 + FreeRADIUS 3.2.7).
+Titik masuk topologis R2: **TK-109** (render PDF — prasyarat build TK-601,
+tugas M1 terakhir `not_started`) → **TK-601** (mesin invoice internet).
+Orkestrasi sub-agent per CONTRACT §5: implementasi `domains.documents`
+(TK-109) didelegasikan ke sub-agent di worktree terisolasi
+(`session/2026-11-06-docs-tk109`; diff direview + diintegrasikan oleh
+orchestrator); `domains.billing` (TK-601) dikerjakan orchestrator.
+
+**TK-109 — dokumen terbit PDF immutable** (`domains.documents`):
+- `IssuedDocument` (tenant, kind, doc_number UNIQUE(tenant,kind,number),
+  ref_type/ref_id polimorfik, locale/timezone/template_version/values
+  snapshot, storage_path opaque 0600, sha256, size) — **trigger DB
+  immutability** (BEFORE UPDATE OR DELETE, pola subs source event).
+- Renderer HTML→PDF per ARCHITECTURE.md §1 ("Dokumen"): **xhtml2pdf 0.2.28**
+  dipin (murni Python/wheels — tanpa pango/cairo; reportlab
+  `rl_config.invariant=1` → **PDF byte-deterministik**; keputusan solusi
+  terkecil dicatat di laporan sesi). Pembatasan jaringan/file dua lapis:
+  `ResourceAccessPolicy(allow_remote=False)` + guard `src=/href=` eksternal
+  (422) — tanpa fetch URL/berkas; semua nilai di-escape (anti injeksi HTML);
+  label dari katalog i18n (doc.*), bulan `doc.month.1..12`, format IDR
+  `Rp1.500.000` / `IDR 1,500,000` (I18N-03).
+- Bahasa rantai I18N-01 §2 (pelanggan → tenant → id; fallback parent),
+  snapshot saat issued; **reprint membaca artifact tersimpan + cek sha256**
+  (template v2 tidak pernah mengubah reprint — T23-I18-02 teruji).
+- API: GET /tenants/{t}/documents (kursor+filter) + GET .../{id} (PDF,
+  application/pdf, filename sanitasi) — customers.read; 401/403/404 jujur.
+- Tes: 15 unit + 9 integrasi (determinisme byte, escaping, guard eksternal,
+  trigger, konflik nomor, isolasi tenant, reprint snapshot, integritas).
+
+**TK-601 — mesin invoice internet M6** (`domains.billing`):
+- `BillingPackage` (BIL-02: siklus fixed_monthly/anniversary, prepaid/
+  postpaid, due_day clamp, first_period_policy full/prorata_daily ceil
+  Rp100/free; **anniversary + policy≠full ditolak jujur** — tanpa batas
+  kalender eksplisit; nama unik per tenant).
+- `InternetInvoice` (+lines): snapshot harga/kebijakan saat terbit
+  (perubahan harga paket TIDAK mengubah invoice issued — teruji);
+  **UNIQUE(tenant, service, kind, period_start, period_end)** mencegah
+  scheduler ganda (AC-BIL teruji dua run hari sama + IntegrityError langsung);
+  nomor `INV-{ns}-{YYYYMM}-{urut}` via kunci baris tenant (terserialisasi);
+  state draft/open/partial/paid/void; total 0 (free_until_next_period) →
+  paid jujur.
+- `ServiceCharge` (BIL-07): add_on/diskon nominal/persen + jendela masa
+  berlaku — semua disnapshot ke line; total negatif ditolak
+  (billing.invalid_total, bukan dipotong diam-diam).
+- `InternetPayment` (BIL-03 dua tahap): submitted (bukti upload ≠ posted;
+  transfer/e-wallet WAJIB bukti via pipeline TK-106 magic-bytes) →
+  verified (allocation ke ≥1 invoice + kwitansi) | rejected (alasan wajib);
+  `external_ref` unik per tenant (event bank sama dedup → 409; dua transfer
+  nyata tetap dua payment); alokasi ≤ nilai payment (sisa=kredit) dan ≤
+  sisa tagihan; partial tidak melunasi; **pembayaran TIDAK menyentuh
+  lifecycle service** (payment cannot auto-activate — teruji).
+- Kwitansi `RCP-{ns}-{YYYYMM}-{urut}` (BIL-08) terbit saat verify (dokumen
+  PDF menaut payment); alokasi kosong → kwitansi kredit penuh.
+- Aging bucket 0-30/31-60/61-90/>90 + not_due vs due_date (BIL-05; laporan
+  level invoice).
+- Scheduler `manage.py issue_due_invoices` (--date/--tenant/--dry-run;
+  tanggal tenant-lokal WIB/WITA/WIT — batas tengah hari lintas zona teruji;
+  catch-up periode terutang; layanan bermasalah dilewati tanpa menghentikan
+  tenant lain). **Pemasangan systemd timer 01:00 = langkah ops host Gate
+  A/G** (tidak dipasang diam-diam).
+- Field `Tenant.locale` (default id) + `Customer.locale` (kosong=belum diset)
+  — rantai bahasa dokumen I18N-01/I18N-06; `Service.billing_package` FK
+  PROTECT (paket dipakai tidak bisa dihapus — nonaktifkan via active).
+- RLS FORCE + policy tenant_isolation pada 6 tabel billing; FK komposit
+  (tenant,service)→customers_service, (tenant,invoice)→internet_invoice,
+  (tenant,payment)/(tenant,invoice)→allocation; allocation PROTECT dua sisi
+  (bukti keuangan tidak ikut terhapus).
+- API (services.provision/customers.read/payments.verify sesuai metode;
+  Idempotency-Key wajib pada mutasi; 401/403/404 generik sesuai §5):
+  packages CRUD, service↔package, charges, invoices list/detail/aging,
+  payments list/record/verify/reject/detail. UI U09/U10 = TK-604 (berikutnya).
+
+**Bug latensi pra-ada diperbaiki**: `Makefile` `PY`/`MANAGE` relatif rusak
+setelah `cd backend` (`backend/backend/.venv`) — target make test*
+gagal menjalankan venv; kini absolut `$(CURDIR)`. CI tak terdampak
+(CI memakai `python -m pytest` langsung) — make target kini benar-benar
+dipakai lokal per IMPLEMENTATION_PLAN §4.
+
+**Verifikasi aktual (PostgreSQL 17.11 nyata; peran mtx_migrator/mtx_app)**:
+`pytest tests -q` **355/355 PASS** (252 baseline + 103 baru: 32 unit
+kalender + 23 invoice flow + 21 payment + 24 documents + 3 kontrak);
+`makemigrations --check` no changes; `manage.py check` 0 isu;
+`make test` 138 / `make test-integration` 217 / `make test-contract` 29
+semua PASS; FreeRADIUS nyata **15/15** (T16/T19/T20/T21); FE tsc/eslint
+0 error, vitest **42/42**, build live OK, build mock DITOLAK (exit 1);
+`make e2e` **7/7** (Chromium nyata, backend nyata); `bash -n instalasi.sh`
+OK; docs check PASS.
+
+**Honest gaps (bukan klaim)**: UI U09/U10 belum (TK-604); scheduler belum
+dipasang sebagai timer host (Gate A/G); TK-602 isolir/TK-607 saldo
+pembuka/TK-608 dokumen koreksi/TK-609 kolektor belum; ledger M7 (TK-701+)
+belum — invoice/payment saat ini catatan sumber, tanpa posting ledger
+(disesuaikan urutan topologis TK-701 setelah TK-601 build); dokumen
+saas_invoice/report = kind terdaftar tanpa template (404 jujur).
+
+**Push**: branch sesi + PR → merge ke `main` via PAT (diverifikasi
+`git ls-remote` + CI hijau — lihat laporan sesi untuk SHA final).
+
+
 ## Checkpoint SESI-2026-11-06 (lanjutan 2) — setup_env.sh in-repo + fix harness T19 + push via PAT
 
 **Scope**: sesi lanjutan setelah konteks habis DAN sandbox terdaur ulang di

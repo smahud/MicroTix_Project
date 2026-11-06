@@ -57,8 +57,9 @@ git log --oneline -5
 | P1 | Lab MikroTik CHR (atau fisik) untuk G1: jalankan T01/T16–T18/T20–T21 | Setelah lulus: `MT_ROUTEROS_ADAPTER=api_ssl` boleh diuji; cutover B3–B5 dengan NAS nyata |
 | P1 | ~~Aktifasi WireGuard host~~ **SEBAGIAN SELESAI (sesi 2026-11-06)**: adopsi keypair installer oleh `WireGuardHost` + render peers host + probe handshake (`adopt_wg_host`/`render_wg_config`/`probe_wg`; installer memanggilnya; 23 tes baru). Sisa: `systemctl enable --now wg-quick@wg0` + probe host nyata = ops host (butuh Gate A/G) | Lihat report/ sesi 2026-11-06 + BETA_RELEASE_STATUS.md batasan 2/4 |
 | P1 | ~~Harness Playwright E2E (`make e2e`)~~ **SELESAI (sesi 2026-11-06)**: `make e2e` — Chromium nyata + backend nyata; 7/7 PASS (login happy/error, guard, isolasi tenant, register→verify→login, i18n, mobile). Menemukan + memperbaiki 2 bug nyata: navigasi login non-MFA (FE) + CSRF_TRUSTED_ORIGINS dev-topologi | Spec: `apps/web/e2e/`; jalankan `make e2e` |
-| P2 | M6/M7 billing/ledger R2 (TK-201–205 lanjutan, invoice, pembayaran) | Ikuti docs/FINANCE.md |
-| P2 | Wizard U07 8-langkah + penggabungan identitas lintas router (TK-410) | Lihat docs/UI_UX.md |
+| P2 | ~~TK-109 render PDF~~ **SELESAI (sesi 2026-11-06 lanjutan 3)**: `domains.documents` — PDF immutable snapshot + reprint konsisten (T23-I18-02), renderer terbatas jaringan/file (xhtml2pdf 0.2.28, invariant, escape+guard) | report/documents-dev/ sesi terbaru |
+| P2 | ~~M6 core engine TK-601~~ **SELESAI (sesi 2026-11-06 lanjutan 3)**: `domains.billing` — paket BIL-02, invoice prepaid/postpaid + snapshot + UNIQUE periode (AC-BIL), payment dua tahap + alokasi + kredit + kwitansi + aging, scheduler `issue_due_invoices`; 355/355 backend | UI U09/U10 (TK-604) BELUM — slice berikutnya |
+| P2 | Berikutnya (urut): **TK-604 UI U09/U10** (konsumsi API billing nyata) atau **TK-701 ledger M7** (TK-601 build kini ada → dependency puas); lalu TK-602 isolir/TK-607/TK-608/TK-609 | Ikuti FINANCE.md §16 + UI_UX §8; scheduler timer host ikut Gate A/G |
 | P3 | ACS R3, OLT/WAN R4 | Jangan dipaksakan sebelum gate |
 
 ## 6. Input eksternal yang dibutuhkan (tidak bisa dikerjakan agent sendirian)

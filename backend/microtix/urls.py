@@ -14,6 +14,8 @@ urlpatterns = [
     path("api/v1/", include("domains.subscriptions.urls")),  # paket/subscription
     path("api/v1/", include("domains.network.urls")),     # router/enrollment/discovery (M3)
     path("api/v1/", include("domains.customers.urls")),   # pelanggan/layanan/akun akses/CSV (M4)
+    path("api/v1/", include("domains.billing.urls")),     # paket/invoice/pembayaran internet (M6)
+    path("api/v1/", include("domains.documents.urls")),   # dokumen terbit PDF (TK-109)
     path("api/v1/", include("domains.radius.urls")),      # RADIUS status/cutover (M3)
     path("api/v1/", include("domains.backups.urls")),     # backup router (M5)
     path("api/v1/", include("domains.monitoring.urls")),  # monitoring (M5)

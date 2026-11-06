@@ -4,8 +4,10 @@
 SHELL := /bin/bash
 BACKEND := backend
 VENV := $(BACKEND)/.venv
-PY := $(VENV)/bin/python
-MANAGE := $(PY) $(BACKEND)/manage.py
+# Path absolut: target memakai `cd $(BACKEND)` — path relatif rusak
+# (pra-ada: `backend/.venv/...` setelah cd backend → backend/backend/.venv).
+PY := $(CURDIR)/$(VENV)/bin/python
+MANAGE := $(PY) $(CURDIR)/$(BACKEND)/manage.py
 WEB := apps/web
 
 # Environment dev default (file .env backend dipakai bila ada)

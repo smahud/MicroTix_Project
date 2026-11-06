@@ -27,6 +27,9 @@ class Customer(models.Model):
     email = models.CharField(max_length=255, blank=True, default="")
     address = models.CharField(max_length=255, blank=True, default="")
     notes = models.TextField(blank=True, default="")
+    # Bahasa komunikasi pelanggan (I18N-01 §2; kosong = belum diset → jatuh
+    # ke bahasa default tenant). Menentukan bahasa dokumen terbit (BIL-01).
+    locale = models.CharField(max_length=5, blank=True, default="")
     created_at = models.DateTimeField(default=dj_timezone.now)
 
     class Meta:
@@ -72,6 +75,17 @@ class Service(models.Model):
     service_code = models.CharField(max_length=32)
     # Paket layanan free-text untuk beta; katalog paket tersedia fase berikutnya.
     package_name = models.CharField(max_length=120, blank=True, default="")
+    # Paket penagihan M6 (TK-601, BIL-02): kebijakan siklus/waktu/due/jumlah
+    # diambil dari sini saat menerbitkan invoice. PROTECT — paket yang dipakai
+    # layanan tidak boleh dihapus (nonaktifkan via active=False).
+    billing_package = models.ForeignKey(
+        "billing.BillingPackage",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="services",
+        db_column="billing_package_id",
+    )
     kind = models.CharField(max_length=8, choices=Kind.choices, default=Kind.PPPOE)
     lifecycle = models.CharField(max_length=12, choices=Lifecycle.choices, default=Lifecycle.DRAFT)
     payment_status = models.CharField(max_length=12, choices=PaymentStatus.choices, default=PaymentStatus.NOT_BILLED)
