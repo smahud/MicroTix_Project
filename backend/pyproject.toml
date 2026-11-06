@@ -16,6 +16,11 @@ dependencies = [
   "argon2-cffi==25.1.0",
   "cryptography==50.0.2",
   "gunicorn==26.2.0",
+  # TK-109: HTML→PDF (ARCHITECTURE.md §1 baris Dokumen) — renderer dibatasi
+  # jaringan/file; murni Python+wheels (tanpa dependensi sistem: pango/cairo
+  # tidak diperlukan), deterministik via reportlab invariant. Keputusan
+  # dicatat pada laporan sesi (solusi terkecil yang compliant).
+  "xhtml2pdf==0.2.28",
 ]
 
 [project.optional-dependencies]
