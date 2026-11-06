@@ -273,8 +273,15 @@ Message-Authenticator = 0x00
 NAS-IP-Address = 127.0.0.99
 EOF
 rad_run "$NAS_B:18122" auth "$SECRET_B" "$WORK/auth-b-wrong.txt"
-if rad_expect_reject; then result PASS T19 "password tenant A ditolak oleh tenant B (isolasi)"
-else result FAIL T19 "password tenant A diterima tenant B — KEBOCORAN TENANT"; fi
+if rad_expect_reject; then
+  result PASS T19 "password tenant A ditolak oleh tenant B (isolasi)"
+elif printf '%s' "$RC_OUT" | grep -q "Received Access-Accept"; then
+  result FAIL T19 "password tenant A diterima tenant B — KEBOCORAN TENANT: $(printf '%s' "$RC_OUT" | grep -A20 'Received Access-Accept' | tr '\n' ';')"
+else
+  # Tanpa balasan BUKAN bukti kebocoran — isolasi T19 tidak terverifikasi
+  # (jujur; jangan klaim kebocoran tanpa Access-Accept yang diterima).
+  result FAIL T19 "tidak ada balasan daemon B (timeout) — isolasi T19 TIDAK terverifikasi (bukan bukti kebocoran): $(printf '%s' "$RC_OUT" | tail -3 | tr '\n' ' ')"
+fi
 
 # --- T21: accounting Start → Interim → Stop pada port acct + verifikasi DB
 cat >"$WORK/acct-start.txt" <<EOF
