@@ -29,7 +29,10 @@ pre-existing). FE: bit-identik dengan `f575388` CI-hijau — dijalankan CI
 GitHub pada PR sesi ini.
 
 **Push**: via PAT (hanya di `.git/config` lokal, tidak pernah di-commit).
-Blokir beta tetap: Gate A/G, G1 lab MikroTik, lab GNS3 §7.
+**MERGED**: PR #3 → main `1d26b7e39ad8c4b0766cac0899eca708b4edfe27`
+(diverifikasi `git ls-remote`; CI GitHub pada `8f6b173` HIJAU:
+backend/frontend/docs success). Blokir beta tetap: Gate A/G, G1 lab
+MikroTik, lab GNS3 §7.
 
 ## Checkpoint SESI-2026-11-06 — WireGuard host adoption + harness E2E (audit truth → WG-1 → E2E-1)
 

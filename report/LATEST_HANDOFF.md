@@ -10,9 +10,9 @@ jangan duplikasi laporan penuh).
 | Item | Nilai |
 |---|---|
 | **Branch kanonis** | `main` |
-| **Commit remote terverifikasi** | **`f284ce8`** (diverifikasi `git ls-remote` 2026-11-06; tree kode identik dengan merge PR #2 `f575388` — CI hijau backend+frontend+docs diverifikasi sesi sebelumnya via API) |
-| **Branch sesi (push via PAT, status lihat §2/§4)** | `session/2026-11-06-bootstrap-inrepo`: `1e326dc` (setup_env.sh in-repo + manifest) → `98ea90d` (fix harness T19 no-reply) → commit docs (laporan + handoff ini) |
-| PR | #1, #2 SUDAH merged; PR sesi ini: lihat status terkini di repo (dibuat sesi ini via PAT) |
+| **Commit remote terverifikasi** | **`1d26b7e39ad8c4b0766cac0899eca708b4edfe27`** (merge PR #3; diverifikasi via `git ls-remote` 2026-11-06T06:5xZ — lokal `git rev-parse origin/main` = `1d26b7e`; CI pada commit sesi `8f6b173` **HIJAU**: backend=success, frontend=success, docs=success — diverifikasi via API check-runs) |
+| **Branch sesi (SUDAH MERGED)** | `session/2026-11-06-bootstrap-inrepo` → main via **PR #3** (merged; commits sesi: `1e326dc` tools → `98ea90d` fix harness T19 → `8f6b173` docs) |
+| PR | #1, #2, **#3** SUDAH merged (tidak ada PR terbuka) |
 | Rilis kandidat | `v0.1.0-beta.1` tetap **NOT_READY** — penahan tunggal tetap Gate A/G (instalasi host Debian 13 nyata root+domain), BUKAN pekerjaan kode |
 | CONTRACT.md | Versi `1fff190` (lab GNS3 API-driven §7; kapasitas 1.000 tenant; proses perubahan dokumen terkontrol §4) |
 
@@ -40,7 +40,12 @@ jangan duplikasi laporan penuh).
 4. **Verifikasi ulang penuh pasca-rekonstruksi**: backend **252/252** (2x),
    RADIUS nyata **15/15** (total 7 run sesi ini: 1 FAIL-T19 terinvestigasi
    + 6 PASS), docs PASS (22 file), `instalasi.sh` bash -n OK.
-5. **Laporan kontrak**:
+5. **PUSH + PR + MERGE via PAT** (bukti, bukan klaim): push branch
+   (`8f6b173` diverifikasi `git ls-remote`); PR #3 dibuat via API; CI pada
+   `8f6b173` HIJAU (backend/frontend/docs semua success — poll API);
+   merge PR #3 → **main `1d26b7e`** diverifikasi `git ls-remote` = SHA
+   merge API. Commit handoff-lock ini menutup sesi.
+6. **Laporan kontrak**:
    `report/orchestrator/20261106T063225Z-setup-env-inrepo-push.md`
    (kronologi insiden + investigasi T19 lengkap) + handoff ini.
 
@@ -54,13 +59,11 @@ jangan duplikasi laporan penuh).
 
 ## 4. Cabang kerja
 
-- `session/2026-11-06-bootstrap-inrepo` — hasil sesi ini (3 commit: tools →
-  fix harness → docs); push via PAT sesi ini. Status merge/SHA remote
-  terverifikasi: bagian ini diperbarui atomik oleh commit handoff-lock
-  pasca-merge (pola sesi sebelumnya) — jangan percaya klaim tanpa
-  `git ls-remote`.
+- `session/2026-11-06-bootstrap-inrepo` — **SUDAH MERGED** (PR #3 → main
+  `1d26b7e`; SHA remote terverifikasi). Tetap dipertahankan di remote
+  sebagai arsip riwayat sesi (pola sesi sebelumnya).
 - Arsip riwayat (remote): `parallel/beta-be2`, `integration/beta-0.1`,
-  `session/2026-11-06-wg-e2e`.
+  `session/2026-11-06-wg-e2e`, `session/2026-11-06-bootstrap-inrepo`.
 
 ## 5. Prioritas eksekusi berikutnya (urut)
 
@@ -78,7 +81,7 @@ jangan duplikasi laporan penuh).
 
 ```bash
 git fetch origin --prune
-git switch main && git pull --ff-only        # diverifikasi SHA via git ls-remote
+git switch main && git pull --ff-only        # main @ 1d26b7e (terverifikasi)
 git log --oneline -5
 cd backend && bash scripts/dev_bootstrap.sh  # idempoten (butuh MT_PG_BIN bila sandbox baru)
 MT_ENV=test .venv/bin/python -m pytest tests -q          # 252 tes (PostgreSQL nyata)
