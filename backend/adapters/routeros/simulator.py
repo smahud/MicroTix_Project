@@ -105,6 +105,15 @@ class RouterOsSimulator:
 
     # --- kontrak adapter ---
 
+    def probe_connectivity(self, ctx: RouterContext) -> dict:
+        """Simulator TIDAK melakukan koneksi nyata — hasil jujur (§2.8).
+
+        Dipanggil hanya pada jalur adapter aktif non-simulator; jika dipanggil
+        pada simulator, kembalikan performed=False — jangan pernah mengklaim
+        probe nyata berhasil (hasil simulator tidak menjadi verified_lab).
+        """
+        return {"ok": False, "performed": False, "error": "simulator_no_real_connection"}
+
     def discover_capabilities(self, ctx: RouterContext) -> list[Capability]:
         router = self._guard(ctx)
         base = CAPABILITIES_V7 if ctx.routeros_version.startswith("7") else CAPABILITIES_V6

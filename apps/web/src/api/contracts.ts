@@ -57,6 +57,9 @@ export interface SessionUser {
 
 export type EnrollmentMode = 'read_only' | 'managed';
 
+/** Transport enrollment (arsitektur shared-port; Phase 1: hanya wireguard aktif). */
+export type EnrollmentProtocol = 'wireguard' | 'sstp' | 'l2tp_ipsec' | 'openvpn';
+
 export type EnrollmentState =
   | 'draft'
   | 'enrollment_issued'
@@ -73,6 +76,18 @@ export interface RouterEnrollmentRequest {
   router_code: string;
   location?: string | null;
   mode: EnrollmentMode;
+  /** Protokol transport — default backend 'wireguard'; selain itu ditolak 422 jujur. */
+  protocol?: EnrollmentProtocol;
+  /** Versi RouterOS deklarasi pemilik (mis. "7.15.3"); WireGuard butuh v7.1+. */
+  routeros_version?: string;
+}
+
+/** Meta endpoint gateway pada skrip bootstrap — preview UI (ROUTEROS.md §2.2). */
+export interface BootstrapGateway {
+  hostname: string;
+  listen_port: number;
+  api_port: number;
+  server_tunnel_ip: string;
 }
 
 export interface BootstrapScript {
@@ -81,6 +96,9 @@ export interface BootstrapScript {
   script: string;
   expires_at: string;
   purpose_summary: string[];
+  protocol?: EnrollmentProtocol | string;
+  routeros_version?: string;
+  gateway?: BootstrapGateway;
 }
 
 export interface RouterHealth {
@@ -110,9 +128,18 @@ export interface RouterSummary {
 
 export interface RouterDetail extends RouterSummary {
   identity: string | null;
-  capability: Record<string, boolean>;
+  capability: Record<string, boolean | string>;
+  /** Pelabelan jujur sumber verifikasi (simulator ≠ perangkat nyata). */
+  verification?: RouterVerification;
   uptime_s: number | null;
   serial: string | null;
+}
+
+export interface RouterVerification {
+  source: string | null;
+  verified_lab: boolean;
+  api_ssl: boolean;
+  wireguard: boolean;
 }
 
 /* ---------- Discovery/adopsi (U07) ---------- */

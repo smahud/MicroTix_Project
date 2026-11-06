@@ -153,6 +153,13 @@ create_users_dirs() {
 secure_secrets() {
   if [ -f "$ENV_FILE" ] && [ "$DRY_RUN" -ne 1 ]; then
     log "Environment ada — secret dipertahankan."
+    # Upgrade-safe: pastikan MT_DOMAIN (hostname publik gateway VPN untuk skrip
+    # bootstrap router — vpn.gateway_hostname) tersedia bagi aplikasi bila operator
+    # mensetnya dan berkas lama belum memuatnya. Idempoten; tanpa menimpa nilai lain.
+    if [ -n "${MT_DOMAIN:-}" ] && ! grep -q '^MT_DOMAIN=' "$ENV_FILE" 2>/dev/null; then
+      printf 'MT_DOMAIN=%s\n' "$MT_DOMAIN" >> "$ENV_FILE"
+      log "MT_DOMAIN ditambahkan ke $ENV_FILE (gateway hostname bootstrap)."
+    fi
     return
   fi
   log "Membuat secret CSPRNG..."
@@ -174,6 +181,7 @@ MT_SECRET_BOX_KEY=${SECRET_BOX}
 MT_STORAGE_ROOT=${STORAGE_DIR}
 MT_STATIC_ROOT=${INSTALL_ROOT}/static
 MT_ALLOWED_HOSTS=${MT_ALLOWED_HOSTS:-${MT_DOMAIN:-localhost}}
+MT_DOMAIN=${MT_DOMAIN:-}
 MT_LOG_LEVEL=INFO
 MT_PG_PASSWORD_MIGRATOR=${DB_PASS_MIG}
 MT_PG_PASSWORD_APP=${DB_PASS_APP}

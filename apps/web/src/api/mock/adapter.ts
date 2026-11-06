@@ -578,9 +578,29 @@ export class MockApiClient implements ApiClient {
     const fe: Record<string, { code: string; message: string }[]> = {};
     if (!input.display_name.trim()) fe.display_name = [{ code: 'required', message: 'Nama tampilan wajib diisi' }];
     if (!/^[A-Z0-9-]{2,16}$/.test(input.router_code)) fe.router_code = [{ code: 'pattern', message: 'Kode router 2–16 karakter: huruf besar, angka, tanda hubung' }];
+    // Paritas backend: hanya wireguard (Phase 1) dan WireGuard butuh v7.1+.
+    const protocol = (input.protocol ?? 'wireguard') as string;
+    if (protocol !== 'wireguard') {
+      fe.protocol = [{ code: 'unsupported', message: 'Protokol belum didukung rilis ini — hanya WireGuard (SSTP/L2TP/IPsec/OpenVPN menyusul per fase)' }];
+    }
+    const rosVersion = (input.routeros_version ?? '7').replace(/^[vV]+/, '');
+    if (!/^\d+(?:\.\d+){0,3}$/.test(rosVersion)) {
+      fe.routeros_version = [{ code: 'invalid', message: 'Format versi RouterOS tidak valid (contoh: 7.15.3)' }];
+    } else if (protocol === 'wireguard') {
+      const parts = rosVersion.split('.').map(Number);
+      if (parts[0]! < 7) {
+        fe.routeros_version = [{ code: 'wireguard_requires_v7', message: 'WireGuard membutuhkan RouterOS v7.1+ — RouterOS v6 akan didukung melalui SSTP (belum tersedia di rilis ini)' }];
+      } else if (parts[0]! === 7 && parts.length > 1 && parts[1]! < 1) {
+        fe.routeros_version = [{ code: 'wireguard_requires_v7_1', message: 'WireGuard hadir sejak RouterOS v7.1 — versi 7.0 belum memuat WireGuard' }];
+      }
+    }
     if (Object.keys(fe).length) fail('validation_error', 'Periksa kembali isian Anda', fe);
     const id = `enr-${Math.random().toString(36).slice(2, 7)}`;
-    const draft: RouterEnrollmentDraft = { id, request: input, state: 'enrollment_issued' };
+    const draft: RouterEnrollmentDraft = {
+      id,
+      request: { ...input, protocol: 'wireguard', routeros_version: rosVersion },
+      state: 'enrollment_issued',
+    };
     this.enrollments.set(id, draft);
     this.enrollmentIssuedAt.set(id, Date.now());
     this.enrollmentStage.set(id, 0);
@@ -601,11 +621,20 @@ export class MockApiClient implements ApiClient {
     );
     const enrState: EnrollmentProgress['state'] =
       stageIdx >= 4 ? 'discovery_ready' : stageIdx >= 2 ? 'api_verified' : stageIdx >= 1 ? 'tunnel_seen' : 'bootstrap_pending';
+    // Pelabelan jujur paritas backend: mock = simulator — TIDAK pernah diklaim
+    // sebagai konektivitas perangkat nyata (verification.source='simulator').
+    const verification =
+      enrState === 'discovery_ready'
+        ? { source: 'simulator', verified_lab: false, api_ssl: false, wireguard: false }
+        : { source: null, verified_lab: false, api_ssl: false, wireguard: false };
     return delay(
       {
         enrollment_id: enrollmentId,
         state: enrState,
         stage_detail: stageCodes.map((code, i) => ({ code, state: states[i]! })),
+        protocol: draft.request.protocol ?? 'wireguard',
+        routeros_version: draft.request.routeros_version ?? '7',
+        verification,
       },
       200,
     );
@@ -620,15 +649,32 @@ export class MockApiClient implements ApiClient {
     const mode = draft.request.mode === 'managed' ? 'read+write' : 'read-only';
     return delay({
       enrollment_id: enrollmentId,
+      protocol: 'wireguard',
+      routeros_version: draft.request.routeros_version ?? '7',
       script: [
-        '# MicroTix bootstrap — DEV FIXTURE, jangan dijalankan pada perangkat nyata',
-        `:mt-enroll id=${enrollmentId} mode=${mode};`,
-        '/interface wireguard peers set mt-tenant allowed-address=10.64.0.71/32;',
-        '/radius add service=ppp address=10.10.0.5 secret=<redacted> timeout=3000ms;',
-        '/radius add service=ppp address=10.10.0.6 secret=<redacted> timeout=3000ms backup;',
+        '# MicroTix bootstrap — DEV FIXTURE (mock), jangan dijalankan pada perangkat nyata',
+        `# Protokol: wireguard · mode=${mode} · RouterOS: ${draft.request.routeros_version ?? '7'}`,
+        ':local iface "mtx-wg"',
+        ':if ([/interface/wireguard/find where name=$iface] = "") do={ /interface/wireguard/add name=$iface listen-port=13231; }',
+        '/interface/wireguard/peers/add interface=$iface public-key="<dev-fixture-server-pubkey>" \\',
+        '    endpoint-address="microtix.invalid" endpoint-port=51820 \\',
+        '    allowed-address=("100.127.0.1" . "/32") persistent-keepalive=25s',
+        '/tool/fetch url="https://microtix.invalid/api/v1/bridge/enroll-complete" http-method=post \\',
+        '    http-data="{\\"token\\":\\"<dev-fixture-token>\\"}" http-header-field="Content-Type: application/json"',
       ].join('\n'),
       expires_at: new Date(issuedAt + 900_000).toISOString(),
-      purpose_summary: ['Membuat peer WireGuard ke server', 'Mengaktifkan klien API-SSL', 'Memasang klien RADIUS primer/sekunder (mode Kelola)'],
+      gateway: {
+        hostname: 'microtix.invalid',
+        listen_port: 51820,
+        api_port: 8729,
+        server_tunnel_ip: '100.127.0.1',
+      },
+      purpose_summary: [
+        'Membuat interface WireGuard + peer ke gateway publik + alamat tunnel /32 (DEV FIXTURE — mock).',
+        'Endpoint gateway: microtix.invalid:51820/UDP — API manajemen hanya dari /32 server via tunnel.',
+        'Tanpa reset/reboot/perubahan route default/DNS/DHCP/NAT/bridge/akun existing.',
+        'Mock: skrip ini simulasi tampilan; verifikasi perangkat nyata menunggu lab G1.',
+      ],
     });
   }
 
@@ -647,6 +693,7 @@ export class MockApiClient implements ApiClient {
       ...r,
       identity: `rtrw-${routerId}-node`,
       capability: { pppoe: true, hotspot: true, radius_client: true, fasttrack_detect: true },
+      verification: { source: 'simulator', verified_lab: false, api_ssl: false, wireguard: false },
       uptime_s: 86400 * 12,
       serial: 'ABCD1234567',
     });

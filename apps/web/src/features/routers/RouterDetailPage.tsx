@@ -231,17 +231,38 @@ export default function RouterDetailPage({ tenantId }: { tenantId: string }) {
 
                   <div className="mt-card mt-card-pad">
                     <h2 style={{ fontSize: 'var(--mt-text-base)', marginBottom: 'var(--mt-space-3)' }}>{t('routers.capability_title')}</h2>
+                    {/* Sumber verifikasi jujur (master directive §10): simulator ≠ perangkat nyata. */}
+                    {r.verification ? (
+                      <div className="mt-row-between" style={{ marginBottom: 'var(--mt-space-3)', paddingBottom: 'var(--mt-space-2)', borderBottom: '1px solid var(--mt-neutral-border)' }}>
+                        <span className="mt-small mt-muted">{t('routers.verification_source')}</span>
+                        {r.verification.source === 'simulator' ? (
+                          <span className="mt-small" data-testid="verification-source">
+                            <Icon name="alertTriangle" size={14} style={{ color: 'var(--mt-warning-fg)', verticalAlign: '-2px' }} />{' '}
+                            {t('routers.verification_simulated')}
+                          </span>
+                        ) : r.verification.source === 'api_ssl' ? (
+                          <span className="mt-small" data-testid="verification-source">
+                            <Icon name="shield" size={14} style={{ color: 'var(--mt-info-fg)', verticalAlign: '-2px' }} />{' '}
+                            {t('routers.verification_api_ssl')}
+                          </span>
+                        ) : (
+                          <span className="mt-small mt-muted" data-testid="verification-source">{t('common.unknown')}</span>
+                        )}
+                      </div>
+                    ) : null}
                     <ul className="mt-small mt-muted" style={{ paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      {Object.entries(r.capability).map(([k, v]) => (
-                        <li key={k} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          {v ? (
-                            <Icon name="checkCircle" size={15} style={{ color: 'var(--mt-success-fg)' }} />
-                          ) : (
-                            <Icon name="x" size={15} style={{ color: 'var(--mt-text-secondary)' }} />
-                          )}
-                          {t(`routers.cap_${k}` as never, undefined as never)}
-                        </li>
-                      ))}
+                      {Object.entries(r.capability)
+                        .filter(([, v]) => typeof v === 'boolean')
+                        .map(([k, v]) => (
+                          <li key={k} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            {v ? (
+                              <Icon name="checkCircle" size={15} style={{ color: 'var(--mt-success-fg)' }} />
+                            ) : (
+                              <Icon name="x" size={15} style={{ color: 'var(--mt-text-secondary)' }} />
+                            )}
+                            {t(`routers.cap_${k}` as never, undefined as never)}
+                          </li>
+                        ))}
                     </ul>
                   </div>
                 </div>

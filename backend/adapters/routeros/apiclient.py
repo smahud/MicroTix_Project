@@ -135,6 +135,9 @@ def parse_response(sentences: list[list[str]]) -> list[dict[str, Any]]:
 @dataclass
 class ApiSslConnection:
     sock: ssl.SSLSocket
+    # Fingerprint SHA-256 sertifikat peer saat handshake — bukti teramati
+    # (dipakai probe_connectivity; pin dibandingkan saat login path aktif).
+    peer_cert_sha256: str = ""
 
     def close(self) -> None:
         try:
@@ -193,7 +196,7 @@ class ApiSslAdapter:
             sock.close()
             raise RouterOsError(f"cert_pin_mismatch:{pin[:16]}")
         sock.settimeout(self.read_timeout)
-        return ApiSslConnection(sock=sock)
+        return ApiSslConnection(sock=sock, peer_cert_sha256=pin)
 
     def _login(self, conn: ApiSslConnection, ctx: RouterContext) -> None:
         username, password = self._credentials(ctx)
@@ -228,6 +231,29 @@ class ApiSslAdapter:
             conn.close()
 
     # --- RouterOsAdapter ---
+
+    def probe_connectivity(self, ctx: RouterContext) -> dict:
+        """Probe jangkauan TCP+TLS ke api_port router TANPA login (§2.8).
+
+        Bukti jujur: handshake TLS sukses + fingerprint sertifikat teramati.
+        Tidak mengklaim login/permission — itu jalur read_health setelah akun
+        API platform dipasang pada router (skrip v2, lab G1).
+        """
+        if not ctx.tunnel_ip:
+            return {"ok": False, "error": "router_without_tunnel"}
+        try:
+            conn = self._connect(ctx)
+        except UnreachableError as exc:
+            return {"ok": False, "error": f"unreachable:{exc.message}"}
+        except RouterOsError as exc:
+            return {"ok": False, "error": exc.message}
+        fingerprint = conn.peer_cert_sha256
+        conn.close()
+        return {
+            "ok": True,
+            "cert_sha256": fingerprint,
+            "note": "tls tanpa login; pembandingan pin saat login path aktif",
+        }
 
     def discover_capabilities(self, ctx: RouterContext) -> list[Capability]:
         rows = self._query(ctx, ["/system/resource/print"])

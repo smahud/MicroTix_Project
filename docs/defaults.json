@@ -1,5 +1,5 @@
 {
-  "revision": "2.2",
+  "revision": "2.3",
   "owner": "Runtime technical defaults; commercial values PRODUCT.md; display values branding.json",
   "rules": [
     "Unknown keys and duplicate JSON keys rejected.",
@@ -122,6 +122,17 @@
         ]
       },
       "change_rule": "Override only inside documented bounds and scope; otherwise reviewed ADR plus registry revision before use. Snapshot per run; issued records unchanged.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "vpn.gateway_hostname",
+      "type": "string",
+      "unit": "hostname",
+      "default": null,
+      "nullable": true,
+      "scope": "deployment",
+      "bounds": null,
+      "change_rule": "Hostname publik gateway VPN (tanpa scheme/port) yang disematkan pada skrip bootstrap router. Rantai resolusi: kunci ini (env MT_OVERRIDE_VPN__GATEWAY_HOSTNAME, nilai JSON string) → MT_PUBLIC_HOST → MT_DOMAIN. Produksi tanpa nilai = skrip DITOLAK (gateway_hostname_unconfigured) — bukan fallback palsu. Format divalidasi hostname/IPv4 saat penggunaan.",
       "basis": "engineering_default"
     },
     {

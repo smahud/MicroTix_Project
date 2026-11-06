@@ -41,9 +41,17 @@ from domains.network.models import (
     WireGuardHost,
     WireGuardPeer,
 )
+from adapters.routeros.base import UnreachableError
 
 ENROLL_TOKEN_TTL_S = 24 * 3600  # token enrollment 24 jam (§2.1)
 BOOTSTRAP_TTL_S = 900           # skrip bootstrap 15 menit (enroll.token_ttl_s)
+
+# Transport enrollment yang DIDUKUNG implementasi ini (master directive §6/§8:
+# arsitektur shared-port multi-protokol; Phase 1 = WireGuard saja — protokol
+# lain ditolak jujur, bukan diterima diam-diam. Dasar kompatibilitas versi:
+# report/researcher/20261106T183941Z-routeros-vpn-capability-matrix.md).
+SUPPORTED_ENROLLMENT_PROTOCOLS = ("wireguard",)
+_WIREGUARD_MIN_ROS_MAJOR = 7  # WireGuard hadir sejak RouterOS 7.1 (sumber riset)
 
 _STAGE_CODES = ["vpn_handshake", "api_verify", "auth_permission", "compatibility"]
 
@@ -182,11 +190,24 @@ def _set_host_public_key(host: WireGuardHost, private: str | None = None) -> Non
 
 
 def allocate_tunnel_ip() -> str:
-    """Alokasi /32 bebas dari carve host — deterministik, bentrok → error jujur."""
+    """Alokasi /32 bebas dari carve host — deterministik, bentrok → error jujur.
+
+    Keterlihatan lintas tenant: keunikan /32 bersifat GLOBAL (§2.1), namun RLS
+    membatasi query per tenant — kumpulkan IP terpakai dengan iterasi scope
+    per tenant (pola _any_active_peer; konvensi repo). Tanpa ini, dua tenant
+    dapat memilih /32 yang sama dan melanggar constraint unik global (bug
+    isolasi §7 — ditemukan test RTR-DUP lintas tenant). Caller sudah membuka
+    scope; scope bersarang reentrant (tenant_context).
+    """
     host = _wg_host()
     network = ipaddress.ip_network(host.subnet_cidr)
-    used = set(Router.objects.exclude(tunnel_ip=None).values_list("tunnel_ip", flat=True))
-    used |= set(RouterEnrollment.objects.values_list("tunnel_ip", flat=True))
+    used: set[str] = set()
+    from domains.tenancy.models import Tenant
+
+    for (tenant_id,) in Tenant.objects.values_list("id"):
+        with tenant_scope(tenant_id):
+            used.update(Router.objects.exclude(tunnel_ip=None).values_list("tunnel_ip", flat=True))
+            used.update(RouterEnrollment.objects.values_list("tunnel_ip", flat=True))
     for candidate in network.hosts():
         if str(candidate) == "100.127.0.1":
             continue  # alamat host interface
@@ -200,7 +221,13 @@ def _hash_token(token: str) -> str:
 
 
 def create_enrollment(tenant_id: str, payload: dict, *, actor=None) -> RouterEnrollment:
-    """Draft enrollment + token terbit (state enrollment_issued)."""
+    """Draft enrollment + token terbit (state enrollment_issued).
+
+    Field baru (master directive §9): `protocol` (default wireguard — selain
+    itu ditolak 422 jujur) dan `routeros_version` (deklarasi pemilik;
+    WireGuard mensyaratkan v7.1+). API lama tanpa kedua field tetap sah
+    (default wireguard/"7") — kompatibilitas klien existing dijaga.
+    """
     display_name = str(payload.get("display_name", "") or "").strip()[:120]
     router_code = str(payload.get("router_code", "") or "").strip().upper()[:16]
     errors: dict[str, list] = {}
@@ -215,6 +242,44 @@ def create_enrollment(tenant_id: str, payload: dict, *, actor=None) -> RouterEnr
     mode = payload.get("mode") or "read_only"
     if mode not in Router.Mode.values:
         errors["mode"] = [{"code": "choice", "message": "mode harus read_only atau managed"}]
+    protocol = str(payload.get("protocol") or "wireguard").strip().lower()[:16]
+    if protocol not in SUPPORTED_ENROLLMENT_PROTOCOLS:
+        errors["protocol"] = [
+            {
+                "code": "unsupported",
+                "message": (
+                    "Protokol belum didukung rilis ini — hanya WireGuard "
+                    "(SSTP/L2TP/IPsec/OpenVPN menyusul per fase)"
+                ),
+            }
+        ]
+    routeros_version = str(payload.get("routeros_version") or "7").strip().lstrip("vV")
+    if not re.fullmatch(r"\d+(?:\.\d+){0,3}", routeros_version):
+        errors["routeros_version"] = [
+            {"code": "invalid", "message": "Format versi RouterOS tidak valid (contoh: 7.15.3)"}
+        ]
+    elif protocol == "wireguard":
+        parts = routeros_version.split(".")
+        major = int(parts[0])
+        if major < _WIREGUARD_MIN_ROS_MAJOR:
+            errors["routeros_version"] = [
+                {
+                    "code": "wireguard_requires_v7",
+                    "message": (
+                        "WireGuard membutuhkan RouterOS v7.1+ — RouterOS v6 akan "
+                        "didukung melalui SSTP (belum tersedia di rilis ini)"
+                    ),
+                }
+            ]
+        elif major == 7 and len(parts) > 1 and int(parts[1]) < 1:
+            # WireGuard hadir tepat pada 7.1 — build 7.0 tidak memuatnya
+            # (sumber: riset capability matrix report/researcher/).
+            errors["routeros_version"] = [
+                {
+                    "code": "wireguard_requires_v7_1",
+                    "message": "WireGuard hadir sejak RouterOS v7.1 — versi 7.0 belum memuat WireGuard",
+                }
+            ]
     if errors:
         raise ApiError.validation(errors)
     # Konvensi repo: caller provides scope (view TenantApiView / job engine).
@@ -231,6 +296,8 @@ def create_enrollment(tenant_id: str, payload: dict, *, actor=None) -> RouterEnr
         display_name=display_name,
         router_code=router_code,
         mode=mode,
+        protocol=protocol,
+        routeros_version=routeros_version,
         tunnel_ip=tunnel_ip,
         token_hash=_hash_token(token),
         token_ref=SecretBox.encrypt(token),  # terenkripsi; TTL bootstrap
@@ -271,20 +338,47 @@ def enrollment_progress(enrollment: RouterEnrollment) -> dict:
         }
         for i, code in enumerate(_STAGE_CODES)
     ]
-    return {"enrollment_id": str(enrollment.id), "state": state, "stage_detail": detail}
+    # Pelabelan jujur sumber verifikasi (master directive §10): simulator tidak
+    # pernah dipresentasikan sebagai konektivitas perangkat nyata.
+    capability: dict = {}
+    if enrollment.router_id:
+        router = Router.objects.filter(id=enrollment.router_id).first()
+        if router is not None and router.capability:
+            capability = router.capability
+    verification = {
+        "source": capability.get("source"),
+        "verified_lab": bool(capability.get("verified_lab", False)),
+        "api_ssl": bool(capability.get("api_ssl", False)),
+        "wireguard": bool(capability.get("wireguard", False)),
+    }
+    return {
+        "enrollment_id": str(enrollment.id),
+        "state": state,
+        "stage_detail": detail,
+        "protocol": enrollment.protocol,
+        "routeros_version": enrollment.routeros_version or None,
+        "verification": verification,
+    }
 
 
 def bootstrap_script(enrollment: RouterEnrollment) -> dict:
-    """Skrip bootstrap RouterOS — idempoten, tanpa reset, objek rtrw milik platform.
+    """Skrip bootstrap RouterOS v7 (WireGuard) — idempoten, tanpa reset.
 
     Token berada di BODY callback (bukan URL/analytics §2.2). Skrip hanya
-    berlaku 15 menit (enroll.token_ttl_s). Kejujuran beta: diverifikasi pada
-    simulator; perangkat produksi menunggu lab (purpose_summary).
+    berlaku 15 menit (enroll.token_ttl_s). Endpoint peer = hostname publik
+    gateway dari konfigurasi (vpn.gateway_hostname / MT_PUBLIC_HOST /
+    MT_DOMAIN) — TIDAK PERNAH IP tunnel internal. Private key WireGuard
+    dibangkitkan router sendiri (§2.3) — skrip tidak pernah memuat/membaca
+    kunci privat. Port listener dari state host; port API dari enrollment.
+    Kejujuran beta: sintaks teruji terhadap simulator; perangkat produksi
+    menunggu lab G1 (purpose_summary).
     """
     if enrollment.status not in (RouterEnrollment.Status.DRAFT, RouterEnrollment.Status.AWAITING_BOOTSTRAP):
         raise ApiError.conflict()
     if enrollment.token_expires_at < timezone.now():
         raise ApiError.conflict("expired", "error.conflict")
+    if enrollment.protocol != "wireguard":  # defense-in-depth: state tersimpan
+        raise ApiError.conflict("protocol_unsupported", "error.conflict")
     host = _wg_host()
     if not enrollment.token_ref:
         # Token sudah dikonsumsi atau draft dari sesi sebelumnya.
@@ -293,64 +387,136 @@ def bootstrap_script(enrollment: RouterEnrollment) -> dict:
         token = SecretBox.decrypt(enrollment.token_ref).decode()
     except Exception:
         raise ApiError.conflict("token_unreadable", "error.conflict") from None
-    tunnel_ip = enrollment.tunnel_ip
+    from domains.config.registry import registry
+
+    keepalive = registry().get_int("vpn.keepalive_s")
+    gateway = gateway_hostname()
     wg_addr = str(next(ipaddress.ip_network(host.subnet_cidr).hosts()))
-    script = f"""# MicroTix bootstrap enrollment — RouterOS v7 (idempoten)
-# Tujuan: interface WireGuard + peer + alamat tunnel + rule input sempit.
-# TIDAK ada reset/reboot/perubahan route default/akun existing.
-:local iface "mtx-wg"
-:local srvkey "{host.public_key}"
-:local srvaddr "{wg_addr}"
-:local myaddr "{tunnel_ip}/32"
-:local token "$TOKEN_PLACEHOLDER"
-# 1) Interface WireGuard milik platform (cek dulu — tidak menduplikasi)
-:if ([/interface/wireguard/find where name=$iface] = "") do={{ \\
-    /interface/wireguard/add name=$iface listen-port=13231 private-key=([/certificate/scep-server/get scep-url] . "" . ""); \\
-}}
-# Catatan: private key WG dibangkitkan router sendiri (§2.3):
-:if ([/interface/wireguard/find where name=$iface] = "") do={{ \\
-    /interface/wireguard/add name=$iface listen-port=13231; \\
-}}
-:local privkey [/interface/wireguard/get [find name=$iface] private-key
-/interface/wireguard/peers/remove [find interface=$iface]
-# 2) Peer ke platform — hanya /32 server, bukan 0.0.0.0/0
-/interface/wireguard/peers/add interface=$iface public-key=$srvkey \\
-    endpoint-address=([:tostr $srvaddr]) endpoint-port=51820 \\
-    allowed-address=(($srvaddr) . "/32") persistent-keepalive=25s
-# 3) Alamat tunnel /32 milik platform
-:if ([/ip/address/find where interface=$iface and address=$myaddr] = "") do={{ \\
-    /ip/address/add interface=$iface address=$myaddr; \\
-}}
-# 4) Rule input sempit: API-SSL hanya dari /32 server pada interface ini
-:if ([/ip/firewall/filter/find where comment="rtrw-mgmt-api"] = "") do={{ \\
-    /ip/firewall/filter/add chain=input action=accept protocol=tcp dst-port=8729 \\
-        src-address=($srvaddr . "/32") in-interface=$iface comment="rtrw-mgmt-api" place-before=0; \\
-}}
-# 5) Callback platform — token + kunci publik WG di BODY HTTPS (bukan URL)
-:local pub [/interface/wireguard/get [find name=$iface] public-key
-/tool/fetch url=("https://MATRIX_HOST/api/v1/bridge/enroll-complete") \\
-    http-method=post http-data=(\\{{"token": "$token", "wg_public_key": "$pub"\\}}) \\
-    http-header-field="Content-Type: application/json"
-:put "MicroTix bootstrap selesai — periksa dasbor platform."
-"""
-    script = script.replace("$TOKEN_PLACEHOLDER", token).replace("MATRIX_HOST", _public_host_hint())
+    script = _ROUTEROS_WG_TEMPLATE
+    for placeholder, value in (
+        ("{GATEWAY}", gateway),
+        ("{HOST_PUBKEY}", host.public_key),
+        ("{WG_ADDR}", wg_addr),
+        ("{TUNNEL_IP}", str(enrollment.tunnel_ip)),
+        ("{WG_PORT}", str(host.listen_port)),
+        ("{API_PORT}", str(enrollment.api_port)),
+        ("{KEEPALIVE}", str(keepalive)),
+        ("{TOKEN}", token),
+    ):
+        script = script.replace(placeholder, value)
     return {
         "enrollment_id": str(enrollment.id),
+        "protocol": enrollment.protocol,
+        "routeros_version": enrollment.routeros_version or "7",
         "script": script,
         "expires_at": (timezone.now() + timedelta(seconds=BOOTSTRAP_TTL_S)).isoformat(),
+        # Tujuan endpoint diekspos eksplisit untuk preview UI (ROUTEROS.md §2.2:
+        # "UI menunjukkan tujuan endpoint dan diff semua objek").
+        "gateway": {
+            "hostname": gateway,
+            "listen_port": host.listen_port,
+            "api_port": enrollment.api_port,
+            "server_tunnel_ip": wg_addr,
+        },
         "purpose_summary": [
-            "Membuat interface WireGuard + peer platform + alamat tunnel /32 (objek rtrw).",
+            "Membuat interface WireGuard + peer ke gateway publik + alamat tunnel /32 (objek rtrw milik platform).",
+            f"Endpoint gateway: {gateway}:{host.listen_port}/UDP — API manajemen hanya dari /32 server via tunnel.",
             "Rule input sempit API-SSL hanya dari /32 server (API tidak dibuka publik).",
-            "Tanpa reset/reboot/perubahan route default/DNS/DHCP/akun existing.",
-            "Beta: skrip diverifikasi pada simulator; perangkat fisik menunggu lab.",
+            "Tanpa reset/reboot/perubahan route default/DNS/DHCP/NAT/bridge/akun existing.",
+            "Beta: sintaks skrip diverifikasi pada simulator; perangkat fisik menunggu lab G1.",
         ],
     }
 
 
-def _public_host_hint() -> str:
-    import os
+# Skrip RouterOS v7 (WireGuard) — placeholder diisi render-time dari state
+# tervalidasi (gateway hostname, kunci publik host, /32, port) — bukan dari
+# string bebas frontend (master directive §9). Baris "\" = lanjutan baris
+# RouterOS; \" di dalam string = kutip ter-escape RouterOS.
+_ROUTEROS_WG_TEMPLATE = """# MicroTix bootstrap enrollment — RouterOS v7 · WireGuard — idempoten
+# Gateway: {GATEWAY}:{WG_PORT}/UDP · API manajemen: {WG_ADDR}:{API_PORT}/TCP via tunnel
+# TIDAK ada reset/reboot/perubahan route default/DNS/DHCP/NAT/bridge/akun existing.
+:local iface "mtx-wg"
+:local srvkey "{HOST_PUBKEY}"
+:local srvaddr "{WG_ADDR}"
+:local myaddr "{TUNNEL_IP}/32"
+:local token "{TOKEN}"
+# 1) Interface WireGuard milik platform — private key dibangkitkan router
+#    SENDIRI (ROUTEROS.md §2.3); kunci privat tidak pernah keluar router.
+:if ([/interface/wireguard/find where name=$iface] = "") do={ \\
+    /interface/wireguard/add name=$iface listen-port=13231; \\
+}
+# 2) Peer ke gateway PUBLIK platform — allowed-address HANYA /32 server
+#    (bukan 0.0.0.0/0). Idempoten: peer lama milik platform diganti.
+/interface/wireguard/peers/remove [find interface=$iface]
+/interface/wireguard/peers/add interface=$iface public-key=$srvkey \\
+    endpoint-address="{GATEWAY}" endpoint-port={WG_PORT} \\
+    allowed-address=($srvaddr . "/32") persistent-keepalive={KEEPALIVE}s
+# 3) Alamat tunnel /32 milik platform.
+:if ([/ip/address/find where interface=$iface and address=$myaddr] = "") do={ \\
+    /ip/address/add interface=$iface address=$myaddr; \\
+}
+# 4) Rule input sempit: API-SSL hanya dari /32 server pada interface manajemen.
+:if ([/ip/firewall/filter/find where comment="rtrw-mgmt-api"] = "") do={ \\
+    /ip/firewall/filter/add chain=input action=accept protocol=tcp dst-port={API_PORT} \\
+        src-address=($srvaddr . "/32") in-interface=$iface comment="rtrw-mgmt-api" place-before=0; \\
+}
+# 5) Callback platform — token + kunci publik WG di BODY HTTPS (bukan URL §2.2).
+#    GAP TERDOKUMENTASI (lab G1): check-certificate belum diaktifkan — RouterOS
+#    tidak memverifikasi CA platform secara bawaan; validasi sertifikat + SNTP
+#    menunggu bukti lab (lihat report/orchestrator sesi Phase-1). Token sekali
+#    pakai + TTL 15 menit + konsumsi atomik membatasi dampak.
+:local pub [/interface/wireguard/get [find name=$iface] public-key]
+:local cb ("{\\"token\\":\\"" . $token . "\\",\\"wg_public_key\\":\\"" . $pub . "\\"}")
+/tool/fetch url="https://{GATEWAY}/api/v1/bridge/enroll-complete" \\
+    http-method=post http-data=$cb http-header-field="Content-Type: application/json"
+:put "MicroTix bootstrap selesai — pantau status verifikasi di dasbor platform."
+"""
 
-    return os.environ.get("MT_PUBLIC_HOST", "microtix.example")
+_GATEWAY_DEV_FALLBACK = "microtix.invalid"  # TLD .invalid (RFC 2606) — placeholder dev/test jujur
+
+
+def _validate_gateway_hostname(host: str) -> None:
+    """Validasi hostname/IPv4 publik — tolak scheme, port, path, spasi, oktet >255."""
+    import re
+
+    if not 1 <= len(host) <= 253:
+        raise ApiError.conflict("gateway_hostname_invalid", "error.conflict")
+    if re.fullmatch(r"\d{1,3}(?:\.\d{1,3}){3}", host):
+        if all(0 <= int(octet) <= 255 for octet in host.split(".")):
+            return  # IPv4 literal publik sah
+        raise ApiError.conflict("gateway_hostname_invalid", "error.conflict")
+    label = r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?"
+    if not re.fullmatch(rf"{label}(?:\.{label})*", host):
+        raise ApiError.conflict("gateway_hostname_invalid", "error.conflict")
+
+
+def gateway_hostname() -> str:
+    """Hostname publik gateway VPN untuk skrip bootstrap (master directive §6).
+
+    Rantai sumber (semua non-rahasia; mekanisme konfigurasi yang ada):
+    1. registri defaults.json `vpn.gateway_hostname`
+       (override env MT_OVERRIDE_VPN__GATEWAY_HOSTNAME — nilai JSON string);
+    2. env MT_PUBLIC_HOST;
+    3. env MT_DOMAIN (installer — Gate A/G).
+    Produksi tanpa nilai → error jujur (TIDAK ada fallback palsu);
+    dev/test → placeholder .invalid yang tidak dapat diresolve.
+    """
+    from domains.config.registry import registry
+
+    candidates: list[str] = []
+    reg_value = registry().get("vpn.gateway_hostname")
+    if isinstance(reg_value, str) and reg_value.strip():
+        candidates.append(reg_value.strip())
+    candidates.append(os.environ.get("MT_PUBLIC_HOST", ""))
+    candidates.append(os.environ.get("MT_DOMAIN", ""))
+    for value in candidates:
+        host = value.strip().lower().rstrip(".")
+        if host:
+            _validate_gateway_hostname(host)
+            return host
+    if getattr(settings, "ENV", "dev") != "production":
+        return _GATEWAY_DEV_FALLBACK
+    raise ApiError.conflict("gateway_hostname_unconfigured", "error.conflict")
 
 
 # ---------------------------------------------------------------------------
@@ -590,7 +756,7 @@ def complete_enrollment(token: str, wg_public_key: str) -> dict:
         raise ApiError.conflict()
 
     with tenant_scope(enrollment.tenant_id):
-        from django.db import transaction
+        from django.db import IntegrityError, transaction
 
         with transaction.atomic():
             enrollment.status = RouterEnrollment.Status.BOOTSTRAPPED
@@ -599,17 +765,24 @@ def complete_enrollment(token: str, wg_public_key: str) -> dict:
             enrollment.token_ref = ""  # plaintext terenkripsi dibersihkan (§2.7)
             enrollment.save(update_fields=["status", "wg_public_key", "consumed_at", "token_ref"])
             # Peer desired + host provisioning via reconciler (§2.7).
-            WireGuardPeer.objects.update_or_create(
-                tenant_id=enrollment.tenant_id,
-                router=None,
-                allowed_ip=enrollment.tunnel_ip,
-                defaults={
-                    "enrollment": enrollment,
-                    "public_key": wg_public_key,
-                    "desired_revision": 1,
-                    "state": WireGuardPeer.State.PENDING,
-                },
-            )
+            # Identitas kriptografis unik global (uq_wgpeer_pubkey_active):
+            # kunci publik yang sudah menjadi peer AKTIF — termasuk milik tenant
+            # lain — tidak dapat dipasangkan ulang diam-diam (isolasi §7:
+            # per-router unique credentials/keys).
+            try:
+                WireGuardPeer.objects.update_or_create(
+                    tenant_id=enrollment.tenant_id,
+                    router=None,
+                    allowed_ip=enrollment.tunnel_ip,
+                    defaults={
+                        "enrollment": enrollment,
+                        "public_key": wg_public_key,
+                        "desired_revision": 1,
+                        "state": WireGuardPeer.State.PENDING,
+                    },
+                )
+            except IntegrityError:
+                raise ApiError.conflict("wg_public_key_registered", "error.conflict") from None
     # Verifikasi API-SSL asinkron (job) — hasil tidak diklaim di sini.
     from domains.jobs import engine
 
@@ -621,47 +794,98 @@ def complete_enrollment(token: str, wg_public_key: str) -> dict:
     return {"status": "bootstrap_accepted", "router_id": None, "replay": False}
 
 
-def finalize_verification(enrollment: RouterEnrollment, *, simulator: bool = True) -> Router:
+def finalize_verification(enrollment: RouterEnrollment, *, source: str = "simulator") -> Router:
     """Selesaikan verifikasi → buat Router read-only + pasang peer.
 
-    BETA: bukti berasal dari simulator (tercatat pada capability evidence);
-    tidak ada klaim verified_lab.
+    Kejujuran bukti (ROUTEROS.md §2.8; master directive §10): `source` = nama
+    adapter AKTIF saat verifikasi — hasil simulator TIDAK PERNAH dipresentasikan
+    sebagai konektivitas perangkat nyata.
+    - simulator: tidak ada handshake/API-SSL nyata yang dilakukan →
+      capability.api_ssl/wireguard = False (bukan klaim terhubung).
+    - api_ssl: probe TCP+TLS NYATA ke tunnel IP dilakukan SEBELUM router dibuat;
+      bukti (fingerprint sertifikat teramati) dicatat; gagal → error (job
+      di-retry bounded — enrollment TIDAK diselesaikan palsu). Login API +
+      pembandingan pin menunggu skrip v2 + lab G1 (perangkat belum memiliki
+      akun API platform — celah terdokumentasi, bukan klaim).
     """
-    api_password = secrets.token_urlsafe(24)
-    fingerprint = hashlib.sha256(("api-ssl-cert:" + enrollment.token_hash[:32]).encode()).hexdigest()[:64]
-    # Pemanggil (job engine) sudah membuka tenant_scope — scope bersarang
-    # saling me-reset GUC (konvensi repo: caller provides scope).
-    if True:
-        from django.db import transaction
+    from adapters.routeros.base import RouterContext
 
-        with transaction.atomic():
-            router = Router.objects.create(
-                tenant_id=enrollment.tenant_id,
-                display_name=enrollment.display_name,
-                router_code=enrollment.router_code,
-                mode=Router.Mode.READ_ONLY,  # read-only default (§2.1)
-                tunnel_ip=enrollment.tunnel_ip,
-                credential_ref=SecretBox.encrypt(
-                    f"apiuser=rtrw-mgmt-{enrollment.router_code.lower()};password={api_password}"
-                ),
-                api_cert_fingerprint=fingerprint,
-                capability={
-                    "source": "simulator" if simulator else "device",
-                    "verified_lab": False,
-                    "api_ssl": True,
-                    "wireguard": True,
-                },
+    probe: dict | None = None
+    if source != "simulator":
+        from adapters.routeros.factory import active_routeros_adapter
+
+        adapter = active_routeros_adapter()
+        probe = adapter.probe_connectivity(
+            RouterContext(
+                router_id=str(enrollment.id),
+                tenant_id=str(enrollment.tenant_id),
+                tunnel_ip=str(enrollment.tunnel_ip),
+                api_port=enrollment.api_port,
+                routeros_version=enrollment.routeros_version or "7.15",
             )
-            RouterEnrollment.objects.filter(id=enrollment.id).update(
-                router=router,
-                status=RouterEnrollment.Status.COMPLETED,
-                api_cert_fingerprint=fingerprint,
-                device_identity={"wg_public_key": enrollment.wg_public_key, "simulator": simulator},
-                completed_at=timezone.now(),
-            )
-            WireGuardPeer.objects.filter(enrollment=enrollment).update(
-                router=router, state=WireGuardPeer.State.APPLIED, applied_revision=1
-            )
+        )
+        if not probe.get("ok"):
+            raise UnreachableError(f"api_ssl_probe:{probe.get('error', 'unknown')}")
+    api_password = secrets.token_urlsafe(24)
+    if source == "simulator":
+        # Pin sintetis deterministik (dev/test) — TIDAK diklaim sebagai
+        # sertifikat perangkat nyata.
+        fingerprint = hashlib.sha256(("api-ssl-cert:" + enrollment.token_hash[:32]).encode()).hexdigest()[:64]
+        capability = {
+            "source": source,
+            "verified_lab": False,
+            "api_ssl": False,
+            "wireguard": False,
+            "protocol": enrollment.protocol,
+            "note": "verifikasi perangkat nyata belum dilakukan (jalur simulator; lab G1 menunggu)",
+        }
+    else:
+        # Pin = fingerprint sertifikat TERAMATI saat probe TLS nyata — koneksi
+        # berikutnya dibandingkan terhadap nilai ini (pin nyata, bukan sintetis).
+        observed = str(probe.get("cert_sha256") or "")[:128]
+        fingerprint = observed or hashlib.sha256(
+            ("api-ssl-cert:" + enrollment.token_hash[:32]).encode()
+        ).hexdigest()[:64]
+        capability = {
+            "source": source,
+            "verified_lab": False,
+            "api_ssl": True,  # probe TLS nyata sukses ke tunnel IP
+            "wireguard": False,  # handshake host dibuktikan terpisah (probe ops §9.13)
+            "protocol": enrollment.protocol,
+            "probe": probe,
+            "note": "TLS API-SSL tercapai via tunnel; login API + pin menunggu skrip v2 lab G1",
+        }
+    from django.db import transaction
+
+    with transaction.atomic():
+        router = Router.objects.create(
+            tenant_id=enrollment.tenant_id,
+            display_name=enrollment.display_name,
+            router_code=enrollment.router_code,
+            mode=Router.Mode.READ_ONLY,  # read-only default (§2.1)
+            routeros_version=enrollment.routeros_version or "",
+            tunnel_ip=enrollment.tunnel_ip,
+            # Format credential = kode\0password — sesuai parser klien API-SSL
+            # (apiclient._credentials: username rtrw-ro-<kode>); akun ini dipasang
+            # pada router oleh skrip bootstrap v2 (menunggu lab G1).
+            credential_ref=SecretBox.encrypt(f"{enrollment.router_code.lower()}\x00{api_password}"),
+            api_cert_fingerprint=fingerprint,
+            capability=capability,
+        )
+        RouterEnrollment.objects.filter(id=enrollment.id).update(
+            router=router,
+            status=RouterEnrollment.Status.COMPLETED,
+            api_cert_fingerprint=fingerprint,
+            device_identity={
+                "wg_public_key": enrollment.wg_public_key,
+                "simulator": source == "simulator",
+                "probe": probe,
+            },
+            completed_at=timezone.now(),
+        )
+        WireGuardPeer.objects.filter(enrollment=enrollment).update(
+            router=router, state=WireGuardPeer.State.APPLIED, applied_revision=1
+        )
     return router
 
 

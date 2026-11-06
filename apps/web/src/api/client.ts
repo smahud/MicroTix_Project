@@ -119,6 +119,10 @@ export interface EnrollmentProgress {
   enrollment_id: string;
   state: 'bootstrap_pending' | 'tunnel_seen' | 'api_verified' | 'discovery_ready' | 'conflict' | 'expired';
   stage_detail: Array<{ code: string; state: 'pending' | 'ok' | 'failed' }>;
+  protocol?: string;
+  routeros_version?: string | null;
+  /** Sumber verifikasi jujur — null sebelum router dibuat (backend normalisasi capability). */
+  verification?: { source: string | null; verified_lab: boolean; api_ssl: boolean; wireguard: boolean };
 }
 
 export interface ApiClient {

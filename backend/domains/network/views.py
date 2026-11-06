@@ -76,10 +76,19 @@ class RouterDetailView(TenantApiView):
             raise ApiError.not_found()
         latest = router.health_samples.order_by("-observed_at").first()
         data = router_summary(router)
+        # Pelabelan jujur sumber verifikasi (master directive §10): simulator
+        # ≠ konektivitas perangkat nyata — dinormalisasi untuk UI.
+        capability = router.capability or {}
         data.update(
             {
                 "identity": router.identity or None,
-                "capability": router.capability or {},
+                "capability": capability,
+                "verification": {
+                    "source": capability.get("source"),
+                    "verified_lab": bool(capability.get("verified_lab", False)),
+                    "api_ssl": bool(capability.get("api_ssl", False)),
+                    "wireguard": bool(capability.get("wireguard", False)),
+                },
                 "uptime_s": latest.uptime_s if latest else None,
                 "serial": router.serial or None,
             }
@@ -103,6 +112,8 @@ class EnrollmentCreateView(TenantApiView):
                     "router_code": enrollment.router_code,
                     "location": body.get("location"),
                     "mode": enrollment.mode,
+                    "protocol": enrollment.protocol,
+                    "routeros_version": enrollment.routeros_version or None,
                 },
                 "state": "enrollment_issued",
             },
