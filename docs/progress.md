@@ -2,6 +2,35 @@
 
 Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-06 (Asia/Jakarta).
 
+## Checkpoint SESI-2026-11-06 (lanjutan 2) — setup_env.sh in-repo + fix harness T19 + push via PAT
+
+**Scope**: sesi lanjutan setelah konteks habis DAN sandbox terdaur ulang di
+tengah sesi (insiden: `/home/z/my-project` direset — commit lokal bagian-1
+`64ac004`/`18cf506` hilang sebelum ter-push karena PAT belum tersedia).
+Bagian-2: PAT diterima dari pengguna → lab dipulihkan dari `/tmp`, repo
+di-clone ulang (`main` @ `f284ce8` terverifikasi), kedua commit
+direkonstruksi byte-exact dari konteks + diverifikasi ulang penuh.
+
+**Perubahan**: (1) `docs/tools/setup_env.sh` in-repo (`1e326dc`) — bootstrap
+sandbox PG17+FreeRADIUS AGENT_HANDOFF §8; `MT_SANDBOX_BASE` overridable;
+rebuild BYTE-IDENTIK (sha256 postgres+initdb); idempoten fresh+no-op;
+shellcheck 0 findings; manifest `--refresh` 21→22 (docs PASS). (2)
+`backend/scripts/test_radius.sh` (`98ea90d`) — fix klasifikasi T19:
+no-reply radclient tidak lagi diklaim "KEBOCORAN TENANT" (konflasi terbukti
+dari kode; 1x FAIL run pertama sesi ini, reproduksi 4/4 PASS, akar tidak
+terbukti/bukti hilang — dugaan no-reply transient; lihat laporan sesi).
+(3) Laporan: `report/orchestrator/20261106T063225Z-setup-env-inrepo-push.md`
++ handoff ini.
+
+**Verifikasi ulang pasca-rekonstruksi**: backend **252/252** (2x), RADIUS
+nyata **15/15** (6/7 run; 1 FAIL-T19 terinvestigasi + difix), docs PASS
+(22 file), `instalasi.sh` bash -n OK (shellcheck 0 error, warning
+pre-existing). FE: bit-identik dengan `f575388` CI-hijau — dijalankan CI
+GitHub pada PR sesi ini.
+
+**Push**: via PAT (hanya di `.git/config` lokal, tidak pernah di-commit).
+Blokir beta tetap: Gate A/G, G1 lab MikroTik, lab GNS3 §7.
+
 ## Checkpoint SESI-2026-11-06 — WireGuard host adoption + harness E2E (audit truth → WG-1 → E2E-1)
 
 **Scope**: sesi pertama di bawah CONTRACT.md (report/). Mulai dari `main` @

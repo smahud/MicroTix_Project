@@ -115,6 +115,11 @@
       "path": "docs/tools/check_docs.py",
       "bytes": 11320,
       "sha256": "d4e00f963064d37526f192e31f9b47b2c616f2ecb7d28e78baec5257560d2b38"
+    },
+    {
+      "path": "docs/tools/setup_env.sh",
+      "bytes": 5150,
+      "sha256": "74445b1f2719526ce34c7bf8fb1c56cec06a439595dd2e895c1ecfedb1575c90"
     }
   ]
 }
