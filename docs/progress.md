@@ -1,6 +1,69 @@
 # MicroTix — checkpoint kemajuan
 
-Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-06 (Asia/Jakarta).
+Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-07 (Asia/Jakarta).
+
+## Checkpoint SESI-2026-11-07 — Onboarding router aman Phase-1 (master directive konektivitas)
+
+**Scope**: mulai dari `main` @ `7d60014` (handoff kanonis lanjutan 4; bersih).
+Prioritas: **master prompt user "MicroTix Secure Router Connectivity & Beta
+Continuation"** (P0 — mengesampingkan urutan TK-701/TK-602 dari handoff
+sebelumnya sebagai keputusan user eksplisit; bukan perubahan dokumen normatif —
+arsitektur multi-protokol shared-port dicatat PROPOSED di laporan sesi).
+
+Orkestrasi sub-agent per CONTRACT §5: 3 paralel read-only (backend-explorer
+audit enrollment; frontend-explorer audit UX wizard; researcher matriks
+kapabilitas VPN RouterOS bersumber vendor) + 1 reviewer independen
+(REQUEST_CHANGES 2 P1 → keduanya diselesaikan/didakumentasikan + verifikasi
+ulang hijau; disposition: report/reviewer/20261106T194638Z-*.md).
+
+**Hasil Phase-1 (WireGuard hardening — slice vertikal terkecil):**
+- **Perbaikan bug P0 skrip bootstrap**: endpoint peer kini hostname gateway
+  PUBLIK terkonfigurasi (rantai `vpn.gateway_hostname` baru di defaults.json
+  rev 2.3 → MT_PUBLIC_HOST → MT_DOMAIN; produksi tanpa nilai = 409 jujur;
+  dev/test = `microtix.invalid`) — menggantikan bug endpoint IP-tunnel-internal
+  `100.127.0.1` + fallback palsu `microtix.example`; artefak SCEP & baris
+  pembacaan private-key dihapus; port dari state host/enrollment (bukan
+  hardcode); body JSON callback dengan escape RouterOS benar; token tetap
+  hash-only + SecretBox + cleared-on-consume + di-body (§2.2).
+- **Kejujuran verifikasi (false-positive dimatikan)**: `capability.source` =
+  adapter AKTIF (bukan hardcode simulator); jalur simulator ⇒
+  `api_ssl/wireguard = False` + catatan (TIDAK mengklaim terhubung — sebelumnya
+  `True` tanpa bukti); jalur `MT_ROUTEROS_ADAPTER=api_ssl` melakukan probe
+  TCP+TLS NYATA sebelum router dibuat (pin = fingerprint TERAMATI), gagal →
+  JobError retryable dengan re-entry VERIFYING (bounded max_attempts) — plus
+  bug "retry terkunci" diperbaiki (temuan reviewer P1-1). Progress API +
+  detail router memaparkan `verification` ternormalisasi; UI wizard & detail
+  menampilkan banner/chip "Simulasi — perangkat nyata belum terverifikasi".
+- **Protokol + versi RouterOS (UX §9)**: field `protocol`+`routeros_version`
+  pada enrollment (migrasi 0010; default wireguard/"7" — API lama tetap sah);
+  WireGuard wajib v7.1+ (v7.0/v6 ditolak 422 dengan alasan); SSTP/L2TP/OpenVPN
+  tampil "direncanakan" di picker (ditolak jujur backend+mock paritas).
+- **Isolasi diperkuat**: `uq_wgpeer_pubkey_active` (kunci publik WG unik global
+  untuk peer AKTIF — 409 lintas tenant tanpa bocoran info) + perbaikan bug
+  alokasi IP tunnel buta-RLS (dua tenant bisa memilih /32 sama → IntegrityError
+  500; kini iterasi scope per tenant sesuai konvensi `_any_active_peer`).
+- **UX wizard**: pemilih versi+protokol jujur (disabled reason), baris endpoint
+  gateway di langkah Skrip (§2.2 "UI menunjukkan tujuan endpoint"), banner
+  simulasi di langkah Siap, chip sumber verifikasi di detail router.
+- **Installer**: `MT_DOMAIN` kini diteruskan ke env aplikasi (pembuatan +
+  append-if-missing idempoten) sebagai sumber hostname gateway.
+- **E2E**: `routers.spec.ts` (2 spec) mengendarai backend+worker NYATA penuh:
+  wizard→skrip→callback bridge (CSRF seperti SPA)→job verify diproses
+  worker→"Siap" berlabel Simulasi→detail router; plus v6 memblokir kelanjutan.
+  Harness run.sh kini menjalankan `runworker` proses terpisah.
+
+**Verifikasi aktual** (PG 17.11 nyata): backend **373/373** (+14 baru);
+makemigrations --check bersih; FreeRADIUS nyata **15/15**; FE tsc/eslint 0 +
+vitest **66/61+5** + i18n paritas **1062**; build live OK + mock DITOLAK;
+`make e2e` **12/10+2** (Chromium nyata); bash -n instalasi.sh OK.
+
+**Honest gap (lab G1 — jangan dianggap lulus)**: sintaks skrip RouterOS v7
+pada perangkat nyata; `check-certificate` callback fetch (gap MITM token
+terdokumentasi — dibatasi token sekali pakai/TTL/konsumsi atomik); skrip v2
+(akun API-SSL platform pada router — jalur login penuh); handshake WG nyata;
+dua tenant LAN tumpang tindih pada jaringan nyata. Multi-protokol (SSTP →
+L2TP → OpenVPN) = Phase 2-3 sesuai matriks kapabilitas bersumber vendor.
+Detail lengkap + keputusan: report/orchestrator/20261106T195642Z-phase1-wireguard-onboarding.md.
 
 ## Checkpoint SESI-2026-11-06 (lanjutan 4) — TK-604 UI billing U09/U10
 

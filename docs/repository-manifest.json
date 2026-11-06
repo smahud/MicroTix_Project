@@ -98,8 +98,8 @@
     },
     {
       "path": "docs/defaults.json",
-      "bytes": 58338,
-      "sha256": "ead7035d873a09e297111399116e16fded4846c23ef30ba2e86dabc54995be97"
+      "bytes": 58954,
+      "sha256": "a28774a47d29f06271f7254577a77d2e62e034ffb668891e4a6b64bffff42e6d"
     },
     {
       "path": "docs/tasks.json",

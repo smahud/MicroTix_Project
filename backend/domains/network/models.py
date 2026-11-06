@@ -104,6 +104,12 @@ class RouterEnrollment(models.Model):
     display_name = models.CharField(max_length=120)
     router_code = models.CharField(max_length=48)
     mode = models.CharField(max_length=12, default=Router.Mode.READ_ONLY)
+    # Transport manajemen (arsitektur gateway shared-port; Phase 1 = wireguard,
+    # validasi protokol lain ditolak jujur sampai diimplementasikan + lab).
+    protocol = models.CharField(max_length=16, default="wireguard")
+    # Versi RouterOS deklarasi pemilik saat draft — dasar kompatibilitas
+    # protokol (WireGuard butuh v7.1+; sumber riset: report/researcher/).
+    routeros_version = models.CharField(max_length=32, blank=True, default="")
     status = models.CharField(max_length=24, choices=Status.choices, default=Status.DRAFT)
     # /32 unik dari pool host (100.64.0.0/10 carve; cek overlap shared space).
     tunnel_ip = models.GenericIPAddressField(unique=True)
@@ -194,6 +200,17 @@ class WireGuardPeer(models.Model):
 
     class Meta:
         db_table = "network_wireguard_peer"
+        constraints = [
+            # Identitas kriptografis unik per router AKTIF (isolasi tenant §7:
+            # satu kunci publik tidak boleh menjadi peer aktif dua kali —
+            # termasuk lintas tenant). Peer REMOVED dibebaskan agar
+            # re-enroll/replace perangkat yang sama tetap sah.
+            models.UniqueConstraint(
+                fields=["public_key"],
+                condition=~models.Q(state="removed"),
+                name="uq_wgpeer_pubkey_active",
+            ),
+        ]
         indexes = [models.Index(fields=["state", "desired_revision"], name="ix_wgpeer_state_rev")]
 
 

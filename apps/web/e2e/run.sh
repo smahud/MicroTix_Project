@@ -57,7 +57,17 @@ echo "e2e: billing=$E2E_BILLING_TENANT_ID"
 : >"$LOG"
 "$BACKEND/.venv/bin/python" manage.py runserver "127.0.0.1:${API_PORT}" --noreload >>"$LOG" 2>&1 &
 SRV_PID=$!
-cleanup() { kill "$SRV_PID" >/dev/null 2>&1 || true; wait "$SRV_PID" 2>/dev/null || true; }
+# Worker job NYATA (proses terpisah dari API — boundary privilege berbeda):
+# spec onboarding router (routers.spec.ts) membutuhkan job verify_api_ssl
+# diproses asinkron seperti produksi, bukan di-claim manual dari UI.
+WORKER_LOG="${E2E_WORKER_LOG:-/tmp/mtx-e2e-worker.log}"
+: >"$WORKER_LOG"
+"$BACKEND/.venv/bin/python" manage.py runworker --loop --interval 1 >>"$WORKER_LOG" 2>&1 &
+WRK_PID=$!
+cleanup() {
+  kill "$WRK_PID" >/dev/null 2>&1 || true; wait "$WRK_PID" 2>/dev/null || true
+  kill "$SRV_PID" >/dev/null 2>&1 || true; wait "$SRV_PID" 2>/dev/null || true
+}
 trap cleanup EXIT INT TERM
 
 for _ in $(seq 1 40); do

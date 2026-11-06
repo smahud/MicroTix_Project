@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useT } from '../../i18n/useT';
 import { useApi } from '../../api';
+import type { EnrollmentProtocol } from '../../api/contracts';
 import { useToast } from '../../design-system/primitives/Toast';
 import { AppShell } from '../../design-system/components/AppShell';
 import { PageHeader } from '../../design-system/components/PageHeader';
@@ -13,8 +14,10 @@ import { useSession } from '../../state/session';
 import { PermissionNotice } from '../../design-system/components/Notices';
 
 /**
- * U05 — Enrollment router: Identitas → Prasyarat → Skrip → Menunggu → Siap
- * (UI_UX.md §7). Jangan menulis "Router terhubung" sebelum handshake DAN API terverifikasi.
+ * U05 — Enrollment router: Identitas (protokol+versi) → Prasyarat → Skrip →
+ * Menunggu → Siap (UI_UX.md §7). Jangan menulis "Router terhubung" sebelum
+ * handshake DAN API terverifikasi — dan sumber verifikasi (simulator vs
+ * perangkat nyata) selalu diperlihatkan jujur (master directive §10).
  */
 export default function RouterNewPage({ tenantId }: { tenantId: string }) {
   const t = useT();
@@ -32,7 +35,14 @@ export default function RouterNewPage({ tenantId }: { tenantId: string }) {
     router_code: '',
     location: '',
     mode: 'read_only' as 'read_only' | 'managed',
+    protocol: 'wireguard' as EnrollmentProtocol,
+    routeros_version: '7' as '7' | '6',
   });
+
+  // WireGuard hadir sejak RouterOS 7.1 (riset capability matrix) — pada v6
+  // tidak ada protokol yang didukung rilis ini (SSTP menyusul, fase berikutnya).
+  const wireguardAvailable = form.routeros_version === '7';
+  const protocolAvailable = wireguardAvailable && form.protocol === 'wireguard';
 
   const scriptQ = useQuery({
     queryKey: ['bootstrap-script', tenantId, enrollmentId],
@@ -74,6 +84,8 @@ export default function RouterNewPage({ tenantId }: { tenantId: string }) {
     const errs: Record<string, string | undefined> = {};
     if (!form.display_name.trim()) errs.display_name = t('validation.required');
     if (!/^[A-Z0-9-]{2,16}$/.test(form.router_code)) errs.router_code = t('validation.router_code');
+    if (!wireguardAvailable) errs.routeros_version = t('routers.protocol_v6_unsupported');
+    else if (form.protocol !== 'wireguard') errs.protocol = t('routers.protocol_planned');
     if (Object.keys(errs).length) {
       setErrors(errs);
       return;
@@ -85,6 +97,8 @@ export default function RouterNewPage({ tenantId }: { tenantId: string }) {
         router_code: form.router_code,
         location: form.location || null,
         mode: form.mode,
+        protocol: form.protocol,
+        routeros_version: form.routeros_version,
       });
       setEnrollmentId(res.id);
       await queryClient.invalidateQueries({ queryKey: ['routers', tenantId] });
@@ -187,8 +201,90 @@ export default function RouterNewPage({ tenantId }: { tenantId: string }) {
                   />
                 </div>
               </fieldset>
+              <fieldset style={{ border: 0, padding: 0, margin: 0 }} data-testid="fieldset-routeros-version">
+                <legend className="mt-label" style={{ marginBottom: 'var(--mt-space-2)' }}>
+                  {t('routers.f_routeros_version')}
+                </legend>
+                <div className="mt-stack-sm">
+                  <Checkbox
+                    type="radio"
+                    name="routeros_version"
+                    checked={form.routeros_version === '7'}
+                    onChange={() => setForm((f) => ({ ...f, routeros_version: '7' }))}
+                    label={t('routers.version_v7')}
+                    hint={t('routers.version_v7_hint')}
+                  />
+                  <Checkbox
+                    type="radio"
+                    name="routeros_version"
+                    checked={form.routeros_version === '6'}
+                    onChange={() => setForm((f) => ({ ...f, routeros_version: '6' }))}
+                    label={t('routers.version_v6')}
+                    hint={t('routers.version_v6_hint')}
+                  />
+                </div>
+                {errors.routeros_version ? (
+                  <p className="mt-banner mt-banner-warning mt-small" role="alert" style={{ marginBottom: 0 }}>
+                    <Icon name="alertTriangle" size={16} /> {errors.routeros_version}
+                  </p>
+                ) : null}
+              </fieldset>
+              <fieldset style={{ border: 0, padding: 0, margin: 0 }} data-testid="fieldset-protocol">
+                <legend className="mt-label" style={{ marginBottom: 'var(--mt-space-2)' }}>
+                  {t('routers.f_protocol')}
+                </legend>
+                <div className="mt-stack-sm">
+                  <Checkbox
+                    type="radio"
+                    name="protocol"
+                    checked={form.protocol === 'wireguard'}
+                    disabled={!wireguardAvailable}
+                    onChange={() => setForm((f) => ({ ...f, protocol: 'wireguard' }))}
+                    label={t('routers.protocol_wireguard')}
+                    hint={wireguardAvailable ? t('routers.protocol_wireguard_hint') : t('routers.protocol_v6_unsupported')}
+                  />
+                  <Checkbox
+                    type="radio"
+                    name="protocol"
+                    checked={form.protocol === 'sstp'}
+                    disabled
+                    onChange={() => setForm((f) => ({ ...f, protocol: 'sstp' }))}
+                    label={t('routers.protocol_sstp')}
+                    hint={t('routers.protocol_planned')}
+                  />
+                  <Checkbox
+                    type="radio"
+                    name="protocol"
+                    checked={form.protocol === 'l2tp_ipsec'}
+                    disabled
+                    onChange={() => setForm((f) => ({ ...f, protocol: 'l2tp_ipsec' }))}
+                    label={t('routers.protocol_l2tp')}
+                    hint={t('routers.protocol_planned')}
+                  />
+                  <Checkbox
+                    type="radio"
+                    name="protocol"
+                    checked={form.protocol === 'openvpn'}
+                    disabled
+                    onChange={() => setForm((f) => ({ ...f, protocol: 'openvpn' }))}
+                    label={t('routers.protocol_ovpn')}
+                    hint={t('routers.protocol_planned')}
+                  />
+                </div>
+                {errors.protocol ? (
+                  <p className="mt-banner mt-banner-warning mt-small" role="alert" style={{ marginBottom: 0 }}>
+                    <Icon name="alertTriangle" size={16} /> {errors.protocol}
+                  </p>
+                ) : null}
+              </fieldset>
               <div className="mt-row">
-                <Button variant="primary" onClick={submitIdentity} loading={creating}>
+                <Button
+                  variant="primary"
+                  onClick={submitIdentity}
+                  loading={creating}
+                  disabled={!protocolAvailable}
+                  disabledReason={protocolAvailable ? undefined : t('routers.protocol_v6_unsupported')}
+                >
                   {t('common.continue')}
                 </Button>
               </div>
@@ -199,6 +295,7 @@ export default function RouterNewPage({ tenantId }: { tenantId: string }) {
             <div className="mt-stack">
               <h2>{t('routers.prereq_title')}</h2>
               <ul className="mt-stack-sm mt-small mt-muted" style={{ paddingLeft: 20 }}>
+                <li>{t('routers.prereq_chosen', { protocol: t('routers.protocol_wireguard'), version: form.routeros_version === '7' ? t('routers.version_v7') : t('routers.version_v6') })}</li>
                 <li>{t('routers.prereq_v7')}</li>
                 <li>{t('routers.prereq_internet')}</li>
                 <li>{t('routers.prereq_terminal')}</li>
@@ -238,12 +335,23 @@ export default function RouterNewPage({ tenantId }: { tenantId: string }) {
               ) : scriptQ.data ? (
                 <>
                   <p className="mt-small mt-muted">{t('routers.script_purpose')}</p>
+                  {scriptQ.data.gateway ? (
+                    <p className="mt-small mt-mono" data-testid="gateway-line" style={{ margin: 0 }}>
+                      <Icon name="router" size={15} />{' '}
+                      {t('routers.script_gateway', {
+                        hostname: scriptQ.data.gateway.hostname,
+                        port: String(scriptQ.data.gateway.listen_port),
+                        server_ip: scriptQ.data.gateway.server_tunnel_ip,
+                        api_port: String(scriptQ.data.gateway.api_port),
+                      })}
+                    </p>
+                  ) : null}
                   <ul className="mt-small mt-muted" style={{ paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 4 }}>
                     {scriptQ.data.purpose_summary.map((p, i) => (
                       <li key={i}>{p}</li>
                     ))}
                   </ul>
-                  <pre className="mt-code">{scriptQ.data.script}</pre>
+                  <pre className="mt-code" data-testid="bootstrap-script">{scriptQ.data.script}</pre>
                   <p className="mt-xs mt-muted">
                     {t('routers.script_expires_note')} · {t('routers.script_confidential')}
                   </p>
@@ -295,6 +403,15 @@ export default function RouterNewPage({ tenantId }: { tenantId: string }) {
               <p className="mt-muted" style={{ maxWidth: 480 }}>
                 {t('routers.ready_desc')}
               </p>
+              {progressQ.data?.verification?.source === 'simulator' ? (
+                <p className="mt-banner mt-banner-warning mt-small" data-testid="simulated-verification-banner" style={{ maxWidth: 560 }}>
+                  <Icon name="alertTriangle" size={18} /> {t('routers.verification_simulated_note')}
+                </p>
+              ) : progressQ.data?.verification?.source === 'api_ssl' ? (
+                <p className="mt-banner mt-banner-info mt-small" style={{ maxWidth: 560 }}>
+                  <Icon name="shield" size={18} /> {t('routers.verification_api_ssl_note')}
+                </p>
+              ) : null}
               <div className="mt-row">
                 <Button variant="primary" icon="search" onClick={() => navigate(`/app/${tenantId}/imports/router`)}>
                   {t('routers.cta_scan_accounts')}

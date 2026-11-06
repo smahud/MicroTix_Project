@@ -16,8 +16,8 @@ DOC = json.loads((Path(__file__).resolve().parents[3] / "docs" / "defaults.json"
 
 def test_registry_loads_all_parameters():
     reg = ConfigRegistry(DOC)
-    assert len(reg.parameters) == 114
-    assert reg.revision == "2.2"
+    assert len(reg.parameters) == 115  # 2.3: +vpn.gateway_hostname (skrip bootstrap)
+    assert reg.revision == "2.3"
 
 
 def test_unknown_key_rejected():

@@ -5,6 +5,7 @@ from __future__ import annotations
 from django.utils import timezone
 from domains.jobs.engine import JobContext, JobError, JobHandler, register
 
+from adapters.routeros.base import RouterOsError
 from domains.network.models import Router, RouterEnrollment, WireGuardPeer
 
 
@@ -18,7 +19,13 @@ def _ctx_router(ctx: JobContext) -> Router:
 class VerifyApiSslHandler(JobHandler):
     """Verifikasi pasca-bootstrap: tunnel → API-SSL → buat router read-only.
 
-    BETA: jalur simulator — bukti dicatat; tanpa klaim verified_lab.
+    Sumber verifikasi = adapter AKTIF (MT_ROUTEROS_ADAPTER) — bukan klaim
+    statis. Jalur simulator menyelesaikan enrollment dengan bukti BERLABEL
+    jujur (capability.source=simulator, api_ssl/wireguard=False — tidak ada
+    koneksi nyata yang dilakukan). Jalur api_ssl melakukan probe TCP+TLS
+    nyata; kegagalan → JobError retryable (bounded max_attempts) dengan
+    re-entry status VERIFYING pada attempt berikutnya — enrollment TIDAK
+    diselesaikan palsu.
     """
 
     kind = "verify_api_ssl"
@@ -37,15 +44,31 @@ class VerifyApiSslHandler(JobHandler):
             raise JobError(code="enrollment_missing", retryable=False, message="enrollment tidak ditemukan")
         if enrollment.status == RouterEnrollment.Status.COMPLETED and enrollment.router_id:
             return {"status": "completed", "router_id": str(enrollment.router_id), "replay": True}
-        if enrollment.status != RouterEnrollment.Status.BOOTSTRAPPED:
+        # Re-entry sah: BOOTSTRAPPED (attempt pertama) maupun VERIFYING
+        # (attempt ulang setelah probe gagal — attempt sebelumnya mempersist
+        # VERIFYING; tanpa ini retry terkunci enrollment_state non-retryable).
+        if enrollment.status not in (
+            RouterEnrollment.Status.BOOTSTRAPPED,
+            RouterEnrollment.Status.VERIFYING,
+        ):
             raise JobError(
                 code="enrollment_state", retryable=False, message=f"status {enrollment.status} tidak sah"
             )
         # Engine sudah membuka tenant_scope — scope bersarang me-reset GUC.
         enrollment.status = RouterEnrollment.Status.VERIFYING
         enrollment.save(update_fields=["status"])
-        router = services.finalize_verification(enrollment, simulator=True)
-        return {"status": "completed", "router_id": str(router.id), "evidence": "simulator"}
+        from adapters.routeros.factory import active_adapter_name
+
+        source = active_adapter_name()
+        try:
+            router = services.finalize_verification(enrollment, source=source)
+        except RouterOsError as exc:
+            # Probe API-SSL nyata gagal (router belum bootstrap penuh / tunnel
+            # belum naik) — retry bounded (re-entry VERIFYING), tanpa penyelesaian palsu.
+            raise JobError(
+                code="api_ssl_unreachable", retryable=True, message=f"verifikasi API-SSL gagal: {exc.message}"
+            ) from exc
+        return {"status": "completed", "router_id": str(router.id), "evidence": source}
 
     def verify(self, ctx: JobContext) -> dict:
         # Engine sudah dalam tenant_scope — jangan buka scope bersarang.

@@ -41,6 +41,7 @@ INTEGRATION-1; bukti eksekusi: [BETA_TEST_EVIDENCE.md](BETA_TEST_EVIDENCE.md)).
 | **Dokumen terbit PDF (TK-109, sesi 2026-11-06 lanjutan 3)**: invoice internet & kwitansi — snapshot bahasa/zona/templat/nilai + sha256, reprint dari artifact tersimpan (T23-I18-02), renderer terbatas jaringan/file (xhtml2pdf invariant; tanpa fetch eksternal), immutable via trigger DB | `tests/unit/test_documents_render.py` (15) + `tests/integration/test_documents_api.py` (9) |
 | **Billing internet M6 core (TK-601, sesi 2026-11-06 lanjutan 3)**: paket penagihan BIL-02 (fixed_monthly/anniversary, prepaid/postpaid, due_day clamp, first_period_policy), invoice + snapshot harga + UNIQUE periode anti-scheduler-ganda (AC-BIL), penerimaan dua tahap submitted→verified/rejected + alokasi ≤ nilai/sisa + kredit + kwitansi bernomor + aging bucket; pembayaran tidak otomatis aktivasi; scheduler `issue_due_invoices` zona tenant (idempoten, dry-run) | `test_billing_calendar.py` (32 unit) + `test_billing_invoice_flow.py` (23) + `test_billing_payments.py` (21) + `test_billing_contract.py` (3); backend 355/355 |
 | **UI billing U09/U10 (TK-604, sesi 2026-11-06 lanjutan 4)**: U09 tiga tab (Invoice·Pengajuan·Terverifikasi) + periode filter + aging strip + catat penerimaan (bukti wajib transfer/e-wallet) + verifikasi dana dengan editor alokasi + tolak beralasan + PDF invoice/kwitansi same-origin; U10 kandidat suspended + kelayakan tagihan nyata (tanpa tertunggak + pernah lunas, >1 halaman) + snapshot massal + validasi kondisi terbaru per item (item asing/berubah blok item itu saja) + hasil per item + retry aman + label jujur router non-otoritatif; aktivasi SELALU manual terpisah (PRODUCT §13) | `test_billing_invoice_flow.py` (+2 kursor) + `test_billing_payments.py` (+2 kursor) + `test_customers_api.py`/`test_customers_contract.py` (field service) — backend **359/359**; FE vitest **61/61** (eligibility/adapter/halaman); e2e `billing.spec.ts` **3/3** (PDF nyata, blokir per item, verifikasi→aktivasi) — `make e2e` **10/10** |
+| **Onboarding router aman Phase-1 (sesi 2026-11-07, master directive konektivitas)**: pilih protokol (WireGuard aktif; SSTP/L2TP/OpenVPN tampil "direncanakan" — ditolak 422 jujur) + versi RouterOS (v7.1+ wajib utk WG; v6 diblokir dengan alasan); skrip bootstrap RouterOS v7 dibangkitkan BACKEND dari state tervalidasi — endpoint publik gateway terkonfigurasi (`vpn.gateway_hostname`/MT_PUBLIC_HOST/MT_DOMAIN; produksi tanpa nilai = DITOLAK, bukan fallback palsu; dev/test = `microtix.invalid`), port dari state host/enrollment, allowed-address hanya /32 server, tanpa artefak SCEP/pembacaan private-key, token di body callback; alokasi IP tunnel kini sadar-lintas-tenant (RLS); kunci publik WG unik global untuk peer AKTIF (409 lintas tenant); verifikasi jujur: `capability.source` = adapter aktif, simulator ⇒ api_ssl/wireguard **False** (bukan klaim terhubung); jalur api_ssl melakukan probe TCP+TLS NYATA (pin = fingerprint teramati) dengan retry re-entry VERIFYING | `test_enrollment_flow.py` **22 tes** (protokol/versi/gateway/kejujuran/konflik-pubkey/retry-probe) — backend **373/373**; FE vitest RouterNewPage **5 tes**; e2e `routers.spec.ts` **2/2** (alur penuh backend+worker NYATA: skrip→bridge→terverifikasi berlabel Simulasi; v6 memblokir) — `make e2e` **12/12** |
 
 ### Fitur TIDAK aktif (jujur — jangan diaktifkan tanpa gate)
 
@@ -66,15 +67,15 @@ INTEGRATION-1; bukti eksekusi: [BETA_TEST_EVIDENCE.md](BETA_TEST_EVIDENCE.md)).
 
 | Suite | Hasil |
 |---|---|
-| Backend unit+integrasi+kontrak (PostgreSQL nyata) | **359/359 PASS** (355 + 4 kursor billing, sesi 2026-11-06 lanjutan 4) |
-| Frontend (tsc/eslint/vitest/i18n) | **61/61 + 0 error + paritas 1042** |
+| Backend unit+integrasi+kontrak (PostgreSQL nyata) | **373/373 PASS** (359 + 14 onboarding Phase-1: protokol/versi/gateway/kejujuran/konflik-pubkey-lintas-tenant/retry-probe-api-ssl, sesi 2026-11-07) |
+| Frontend (tsc/eslint/vitest/i18n) | **66/66 + 0 error + paritas 1062** |
 | RADIUS nyata (FreeRADIUS+radclient) | **15/15 PASS** |
 | Smoke live API (runserver+curl, alur pendaftaran→enrollment→layanan) | **20/20 PASS** (basis be2) |
 | Docs static check | **PASS** (21 file, 85 task, 240 edge, 256 kasus) |
 | Installer: sintaks + shellcheck + dry-run | **PASS** (preflight menolak disk 8GB<10GB dengan benar) |
 | **verified_lab perangkat MikroTik fisik (G1)** | **BLOCKED** — tidak ada perangkat/lab CHR |
 | **Instalasi produksi nyata host root + domain (Gate A/G)** | **BLOCKED** — sandbox tanpa root/domain |
-| Browser E2E Playwright | **10/10 PASS** (sesi 2026-11-06 lanjutan 4: 7 baseline + 3 billing U09/U10 — login, guard, isolasi tenant, register→verifikasi, i18n, mobile, PDF nyata, blokir per item, verifikasi dana→kwitansi→aktivasi) |
+| Browser E2E Playwright | **12/12 PASS** (sesi 2026-11-07: 10 sebelumnya + 2 onboarding router — alur penuh backend+worker NYATA: skrip→bridge→terverifikasi berlabel Simulasi; v6 memblokir kelanjutan) |
 | CI GitHub Actions (backend/frontend/docs) | **HIJAU** pada `8da2c2d` (backend ✓ frontend ✓ docs ✓) |
 
 ## Known limitations
@@ -101,6 +102,16 @@ INTEGRATION-1; bukti eksekusi: [BETA_TEST_EVIDENCE.md](BETA_TEST_EVIDENCE.md)).
    pembayaran M6); hasil per item "Menunggu koneksi" menunggu bukti NAS
    (G1) — digantikan label jujur "belum dijamin pada router ini";
    kelayakan aktivasi menilai maksimum 10 halaman × 200 invoice/akun.
+7. Onboarding router Phase-1 (sesi 2026-11-07): sintaks skrip bootstrap
+   RouterOS v7 DAN validasi sertifikat callback `/tool/fetch`
+   (`check-certificate`) **belum terbukti pada perangkat nyata** — menunggu
+   lab G1 (gap MITM token dibatasi oleh token sekali pakai + TTL 15 menit
+   + konsumsi atomik; lihat laporan orkestrator sesi ini). Jalur
+   `MT_ROUTEROS_ADAPTER=api_ssl` melakukan probe TCP+TLS nyata namun
+   **login API penuh menunggu skrip v2** (akun API platform belum dibuat
+   oleh skrip pada router — celah terdokumentasi G1). Alokasi IP tunnel
+   kini sadar-lintas-tenant namun berbentuk iterasi scope per tenant
+   (biaya O(tenant) per enrollment — dicatat untuk fase kapasitas).
 
 ## Deployment readiness
 
@@ -115,7 +126,13 @@ INTEGRATION-1; bukti eksekusi: [BETA_TEST_EVIDENCE.md](BETA_TEST_EVIDENCE.md)).
 
 1. Gate A/G: instalasi produksi nyata + domain → INSTALL_SUCCESS penuh.
 2. Lab MikroTik CHR (G1) → aktifkan `MT_ROUTEROS_ADAPTER=api_ssl` →
-   cutover B3–B5 dengan NAS nyata.
-3. M6/M7 lanjutan: TK-701 ledger M7 atau TK-602/607/608/609 (lihat
+   cutover B3–B5 dengan NAS nyata. Termasuk bukti lab item onboarding
+   Phase-1: sintaks skrip v7 pada CHR, `check-certificate` fetch (+SNTP/CA),
+   skrip v2 (akun API-SSL platform pada router), handshake WG nyata.
+3. Master directive konektivitas: Phase-2 SSTP (server profil MSCHAPv2,
+   skrip v6/v7) → Phase-3 L2TP/IPsec + OpenVPN → Phase-4 hardening
+   (rotasi/cabut, Super-Admin config UI, demo) — matriks kapabilitas:
+   `report/researcher/20261106T183941Z-routeros-vpn-capability-matrix.md`.
+4. M6/M7 lanjutan: TK-701 ledger M7 atau TK-602/607/608/609 (lihat
    LATEST_HANDOFF urutan prioritas).
-4. Harness GNS3 API-driven (blokir infrastruktur + image CHR berlisensi).
+5. Harness GNS3 API-driven (blokir infrastruktur + image CHR berlisensi).

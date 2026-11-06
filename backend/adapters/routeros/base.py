@@ -89,6 +89,10 @@ class RevisionConflictError(RouterOsError):
 class RouterOsAdapter(Protocol):
     """Kontrak adapter — implementasi: simulator (dev) & klien API-SSL (M3)."""
 
+    def probe_connectivity(self, ctx: RouterContext) -> dict:
+        """Probe jangkauan TCP+TLS tanpa login — bukti terpisah dari read_health."""
+        ...
+
     def discover_capabilities(self, ctx: RouterContext) -> list[Capability]: ...
 
     def list_accounts(self, ctx: RouterContext, *, kind: str = "pppoe") -> list[dict]: ...
