@@ -43,9 +43,10 @@ jobs:
         working-directory: backend
         run: |
           python -m pip install --upgrade pip
-          pip install Django==5.2.19 djangorestframework==3.16.1 drf-spectacular==0.28.0 \
-            "psycopg[binary]==3.2.13" argon2-cffi==25.1.0 cryptography==50.0.2 \
-            gunicorn==26.2.0 pytest==8.4.2 pytest-django==4.14.0
+          # Dependensi dari pyproject.toml (satu sumber kebenaran; patch-exact)
+          # + alat uji. Instalasi daftar ganda pernah membuat CI gagal saat
+          # dependensi baru (xhtml2pdf TK-109) hanya ditambahkan ke pyproject.
+          pip install -e . pytest==8.4.2 pytest-django==4.14.0
       - name: Django system check
         working-directory: backend
         run: python manage.py check
