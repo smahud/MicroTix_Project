@@ -126,6 +126,12 @@ def radius_account_row(account: AccessAccount) -> dict:
         "kind": account.kind,
         "state": account.state,
         "credential_state": account.credential_state,
+        # Identitas layanan/pelanggan — diperlukan U10 (aktivasi massal TK-604):
+        # daftar akun suspended harus dapat dihubungkan ke layanan + pelanggan
+        # tanpa permintaan detail per baris.
+        "service_id": str(service.id),
+        "service_code": service.service_code,
+        "customer_name": service.customer.display_name,
         "package_name": service.package_name or None,
         "restricting_router_id": str(service.router_id) if service.router_id else None,
         "last_active_session_at": (
@@ -341,7 +347,9 @@ class AccessAccountListView(TenantApiView):
     @extend_schema(summary="Daftar akun akses RADIUS tenant")
     def get(self, request: Request, tenant_id: str) -> Response:
         params = request.query_params
-        qs = AccessAccount.objects.filter(tenant_id=tenant_id).select_related("service", "service__router")
+        qs = AccessAccount.objects.filter(tenant_id=tenant_id).select_related(
+            "service", "service__customer", "service__router"
+        )
         query = (params.get("query") or "").strip()
         if query:
             qs = qs.filter(username__icontains=query)

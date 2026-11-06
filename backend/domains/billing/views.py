@@ -31,7 +31,7 @@ from domains.billing import services
 from domains.billing.models import BillingPackage, InternetInvoice, InternetPayment, ServiceCharge
 from domains.common.envelope import ApiError
 from domains.common.idempotency import idempotent
-from domains.common.pagination import encode_cursor, page_response, parse_limit
+from domains.common.pagination import decode_cursor, encode_cursor, page_response, parse_limit
 from domains.common.views import TenantApiView
 from domains.customers.models import Service
 from domains.documents.models import IssuedDocument
@@ -146,15 +146,39 @@ def payment_info(payment, *, allocations=None) -> dict:
     return data
 
 
-def _paginate(request, qs):
-    """Paginasi kursor untuk urutan (-issued_at, -id)."""
+def _paginate_invoices(request, qs):
+    """Paginasi kursor untuk urutan (-issued_at, -id) — pola jobs view.
+
+    Kursor masuk diterapkan (TK-604: U09 memerlukan halaman kedua+);
+    sebelumnya next_cursor diterbitkan tapi parameter cursor diabaikan.
+    """
     limit = parse_limit(request.query_params.get("limit"))
+    cursor = request.query_params.get("cursor")
+    if cursor:
+        sort_key, last_id = decode_cursor(cursor)
+        qs = qs.filter(issued_at__lt=sort_key) | qs.filter(issued_at=sort_key, id__lt=last_id)
     items = list(qs[: limit + 1])
     next_cursor = None
     if len(items) > limit:
         items = items[:limit]
         last = items[-1]
         next_cursor = encode_cursor(last.issued_at.isoformat(), str(last.id))
+    return items, next_cursor
+
+
+def _paginate_payments(request, qs):
+    """Paginasi kursor untuk urutan (-submitted_at, -id) — pola jobs view."""
+    limit = parse_limit(request.query_params.get("limit"))
+    cursor = request.query_params.get("cursor")
+    if cursor:
+        sort_key, last_id = decode_cursor(cursor)
+        qs = qs.filter(submitted_at__lt=sort_key) | qs.filter(submitted_at=sort_key, id__lt=last_id)
+    items = list(qs[: limit + 1])
+    next_cursor = None
+    if len(items) > limit:
+        items = items[:limit]
+        last = items[-1]
+        next_cursor = encode_cursor(last.submitted_at.isoformat(), str(last.id))
     return items, next_cursor
 
 
@@ -307,7 +331,7 @@ class InternetInvoiceListView(TenantApiView):
         period_to = params.get("period_to")
         if period_to:
             qs = qs.filter(period_end__lte=period_to)
-        invoices, next_cursor = _paginate(request, qs)
+        invoices, next_cursor = _paginate_invoices(request, qs)
         return Response(page_response([invoice_info(inv) for inv in invoices], next_cursor))
 
 
@@ -371,13 +395,7 @@ class InternetPaymentCollectionView(TenantApiView):
             if method not in InternetPayment.Method.values:
                 raise ApiError.validation({"method": [{"code": "invalid", "message": "Metode tidak dikenal"}]})
             qs = qs.filter(method=method)
-        limit = parse_limit(params.get("limit"))
-        items = list(qs[: limit + 1])
-        next_cursor = None
-        if len(items) > limit:
-            items = items[:limit]
-            last = items[-1]
-            next_cursor = encode_cursor(last.submitted_at.isoformat(), str(last.id))
+        items, next_cursor = _paginate_payments(request, qs)
         return Response(page_response([payment_info(p) for p in items], next_cursor))
 
     @idempotent("internet_payment_record")

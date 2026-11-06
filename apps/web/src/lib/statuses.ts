@@ -183,3 +183,46 @@ export function freshnessTone(f: Freshness): Tone {
       return 'neutral';
   }
 }
+
+/* ---------- Billing internet M6 (U09 — TK-604) ---------- */
+
+export function invoiceStateTone(v: string): Tone {
+  switch (v) {
+    case 'paid':
+      return 'success';
+    case 'partial':
+      return 'warning';
+    case 'open':
+      return 'info';
+    case 'void':
+      return 'neutral';
+    default: // draft
+      return 'neutral';
+  }
+}
+
+export function paymentStateTone(v: string): Tone {
+  switch (v) {
+    case 'verified':
+      return 'success';
+    case 'submitted':
+      return 'info';
+    case 'rejected':
+      return 'danger';
+    default:
+      return 'neutral';
+  }
+}
+
+export function agingBucketTone(v: string): Tone {
+  switch (v) {
+    case 'not_due':
+      return 'neutral';
+    case 'current':
+      return 'info';
+    case 'd31_60':
+      return 'warning';
+    default: // d61_90, d90_plus
+      return 'danger';
+  }
+}

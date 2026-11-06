@@ -26,6 +26,8 @@ const SettingsPage = lazy(() => import('../features/settings/SettingsPage'));
 const RadiusPage = lazy(() => import('../features/radius/RadiusPage'));
 const AdminSubscriptionsPage = lazy(() => import('../features/admin/AdminSubscriptionsPage'));
 const PackagesPage = lazy(() => import('../features/settings/PackagesPage'));
+const BillingPage = lazy(() => import('../features/billing/BillingPage'));
+const ActivationPage = lazy(() => import('../features/activation/ActivationPage'));
 
 function PageFallback(): ReactNode {
   return (
@@ -185,6 +187,18 @@ export function App(): ReactNode {
                   path="packages"
                   element={
                     <TenantRoute>{(tid) => <PackagesPage tenantId={tid} />}</TenantRoute>
+                  }
+                />
+                <Route
+                  path="billing"
+                  element={
+                    <TenantRoute>{(tid) => <BillingPage tenantId={tid} />}</TenantRoute>
+                  }
+                />
+                <Route
+                  path="activation"
+                  element={
+                    <TenantRoute>{(tid) => <ActivationPage tenantId={tid} />}</TenantRoute>
                   }
                 />
                 <Route path="*" element={<Navigate to="overview" replace />} />

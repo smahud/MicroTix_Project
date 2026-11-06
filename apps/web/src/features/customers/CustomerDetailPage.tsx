@@ -14,8 +14,12 @@ import { Button, ButtonLink } from '../../design-system/primitives/Button';
 import { Icon } from '../../design-system/primitives/Icon';
 import { Dialog } from '../../design-system/primitives/Dialog';
 import { Skeleton } from '../../design-system/primitives/Misc';
-import { connectionTone, jobDimensionTone, lifecycleTone, accountStateTone } from '../../lib/statuses';
-import { formatDateTime } from '../../lib/format';
+import { connectionTone, jobDimensionTone, lifecycleTone, accountStateTone, invoiceStateTone } from '../../lib/statuses';
+import { formatDateTime, formatMoney, formatDateShort } from '../../lib/format';
+import { documentArtifactUrl } from '../../api/http';
+import { DataTable } from '../../design-system/components/DataTable';
+import type { Column } from '../../design-system/components/DataTable';
+import type { InternetInvoice } from '../../api/contracts';
 import { isReleased } from '../../permissions/release-flags';
 import { useToast } from '../../design-system/primitives/Toast';
 
@@ -47,6 +51,12 @@ export default function CustomerDetailPage({ tenantId }: { tenantId: string }) {
     queryKey: ['audit', tenantId, serviceId],
     queryFn: () => api.listAuditTimeline(tenantId, serviceId ?? null, { limit: 20 }),
     enabled: tab === 'history',
+  });
+  /** Tab Tagihan (R2/TK-604): invoice layanan ini (filter service_id). */
+  const serviceInvoicesQ = useQuery({
+    queryKey: ['billing-invoices', tenantId, 'service', serviceId],
+    queryFn: () => api.listInvoices(tenantId, { service_id: serviceId! }, { limit: 50 }),
+    enabled: tab === 'billing' && isReleased('billing') && !!serviceId,
   });
 
   const s = serviceQ.data;
@@ -161,6 +171,83 @@ export default function CustomerDetailPage({ tenantId }: { tenantId: string }) {
                     </ButtonLink>
                   </div>
                 </div>
+              </div>
+            ) : null}
+
+            {tab === 'billing' ? (
+              <div className="mt-card mt-card-pad mt-stack">
+                <h2 className="mt-section-title" style={{ fontSize: 'var(--mt-text-base)' }}>
+                  {t('customers.billing_title')}
+                </h2>
+                <DataTable
+                  rows={serviceInvoicesQ.data?.items ?? []}
+                  columns={[
+                    {
+                      key: 'doc',
+                      header: t('billing.col_invoice'),
+                      render: (inv: InternetInvoice) => (
+                        <div>
+                          <div className="mt-mono mt-small" style={{ fontWeight: 500 }}>{inv.doc_number}</div>
+                          {inv.document_id ? (
+                            <a
+                              className="mt-xs mt-small"
+                              href={documentArtifactUrl(tenantId, inv.document_id)}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <Icon name="fileText" size={13} style={{ verticalAlign: -2 }} /> {t('billing.view_pdf')}
+                            </a>
+                          ) : null}
+                        </div>
+                      ),
+                    },
+                    {
+                      key: 'period',
+                      header: t('billing.col_period'),
+                      render: (inv: InternetInvoice) =>
+                        `${formatDateShort(inv.period_start, locale)} \u2013 ${formatDateShort(inv.period_end, locale)}`,
+                      hideOnMobile: true,
+                    },
+                    {
+                      key: 'due',
+                      header: t('billing.col_due'),
+                      render: (inv: InternetInvoice) => formatDateShort(inv.due_date, locale),
+                      hideOnMobile: true,
+                    },
+                    {
+                      key: 'state',
+                      header: t('billing.col_state'),
+                      render: (inv: InternetInvoice) => (
+                        <EnumBadge group="invoice_state" value={inv.state} tone={invoiceStateTone(inv.state)} />
+                      ),
+                    },
+                    {
+                      key: 'total',
+                      header: t('billing.col_total'),
+                      align: 'right',
+                      render: (inv: InternetInvoice) => (
+                        <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatMoney(inv.total_amount, locale)}</span>
+                      ),
+                    },
+                    {
+                      key: 'outstanding',
+                      header: t('billing.col_outstanding'),
+                      align: 'right',
+                      render: (inv: InternetInvoice) => (
+                        <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatMoney(inv.outstanding, locale)}</span>
+                      ),
+                    },
+                  ] as Column<InternetInvoice>[]}
+                  rowKey={(inv: InternetInvoice) => inv.id}
+                  loading={serviceInvoicesQ.isLoading}
+                  emptyTitle={t('billing.empty_invoices')}
+                  emptyDescription={t('billing.empty_invoices_desc')}
+                  caption={t('customers.billing_title')}
+                />
+                <p className="mt-xs mt-muted mt-small" style={{ margin: 0 }}>
+                  {t('customers.billing_tab_note')}{' '}
+                  <Link to={`/app/${tenantId}/billing`}>{t('billing.title')}</Link>
+                </p>
               </div>
             ) : null}
 

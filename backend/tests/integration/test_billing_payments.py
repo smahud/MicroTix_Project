@@ -521,3 +521,39 @@ class TestPaymentIsolation:
             headers={"Idempotency-Key": "iso-3"},
         )
         assert verify.status_code == 404  # RLS: invoice asing tidak terlihat → 404 generik
+
+
+class TestPaymentCursorPagination:
+    """TK-604: kursor masuk diterapkan pada daftar pembayaran (pola jobs)."""
+
+    def test_second_page_via_next_cursor(self, payments_admin_client, tenant_a):
+        from django.utils import timezone as dj_timezone
+
+        with tenant_scope(tenant_a.id):
+            base = dj_timezone.now()
+            for i in range(3):
+                InternetPayment.objects.create(
+                    tenant=tenant_a,
+                    method=InternetPayment.Method.CASH,
+                    amount=Decimal("10000.00"),
+                    submitted_at=base.replace(microsecond=i * 1000),
+                )
+        page1 = payments_admin_client.get(
+            f"/api/v1/tenants/{tenant_a.id}/payments?limit=2"
+        ).json()
+        assert len(page1["items"]) == 2 and page1["next_cursor"]
+        page2 = payments_admin_client.get(
+            f"/api/v1/tenants/{tenant_a.id}/payments?limit=2&cursor={page1['next_cursor']}"
+        ).json()
+        ids1 = {row["id"] for row in page1["items"]}
+        ids2 = {row["id"] for row in page2["items"]}
+        # Halaman kedua membawa sisa item tanpa tumpang tindih halaman pertama.
+        assert len(page2["items"]) == 1
+        assert not (ids1 & ids2)
+        assert len(ids1 | ids2) == 3
+
+    def test_invalid_cursor_rejected_422(self, payments_admin_client, tenant_a):
+        resp = payments_admin_client.get(
+            f"/api/v1/tenants/{tenant_a.id}/payments?cursor=rusak"
+        )
+        assert resp.status_code == 422

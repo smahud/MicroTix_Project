@@ -15,8 +15,11 @@ import type {
   AuthContextShape,
   CsvImportDraft,
   EnrollmentProgress,
+  InvoiceListFilters,
   JobAccepted,
   MigrationDraftState,
+  PaymentListFilters,
+  RecordPaymentInput,
   RouterEnrollmentDraft,
   ServiceListFilters,
 } from '../client';
@@ -29,6 +32,12 @@ import type {
   CursorPage,
   DiscoveredAccount,
   IdentityConflictCandidate,
+  InternetInvoice,
+  InternetInvoiceDetail,
+  InternetPayment,
+  InternetPaymentDetail,
+  InvoiceAgingReport,
+  IssuedDocumentInfo,
   JobRecord,
   MonitorStatus,
   PlanInfo,
@@ -282,5 +291,57 @@ export class LiveApiClient implements ApiClient {
   /* ---- Audit timeline (backend aktif M1) ---- */
   async listAuditTimeline(tenantId: string, targetId: string | null, page: PageParams) {
     return http.get<CursorPage<AuditEntry>>(`/tenants/${tenantId}/audit-timeline`, { target_id: targetId ?? undefined, ...pageQuery(page) });
+  }
+
+  /* ---- Billing internet M6 — U09/U10 (TK-604) ---- */
+  async listInvoices(tenantId: string, filters: InvoiceListFilters, page: PageParams) {
+    const clean: Record<string, string | number | undefined> = { ...pageQuery(page) };
+    for (const [k, v] of Object.entries(filters)) {
+      if (v !== undefined && v !== '') clean[k] = v;
+    }
+    return http.get<CursorPage<InternetInvoice>>(`/tenants/${tenantId}/invoices`, clean);
+  }
+  async getInvoice(tenantId: string, invoiceId: string) {
+    return http.get<InternetInvoiceDetail>(`/tenants/${tenantId}/invoices/${invoiceId}`);
+  }
+  async getInvoiceAging(tenantId: string, asOf?: string) {
+    return http.get<InvoiceAgingReport>(`/tenants/${tenantId}/invoices/aging`, asOf ? { as_of: asOf } : undefined);
+  }
+  async listPayments(tenantId: string, filters: PaymentListFilters, page: PageParams) {
+    const clean: Record<string, string | number | undefined> = { ...pageQuery(page) };
+    for (const [k, v] of Object.entries(filters)) {
+      if (v !== undefined && v !== '') clean[k] = v;
+    }
+    return http.get<CursorPage<InternetPayment>>(`/tenants/${tenantId}/payments`, clean);
+  }
+  async getPayment(tenantId: string, paymentId: string) {
+    return http.get<InternetPaymentDetail>(`/tenants/${tenantId}/payments/${paymentId}`);
+  }
+  async recordInternetPayment(tenantId: string, input: RecordPaymentInput, o?: MutationOptions) {
+    return http.post<InternetPayment>(`/tenants/${tenantId}/payments`, input, withIdem(o));
+  }
+  async verifyInternetPayment(
+    tenantId: string,
+    paymentId: string,
+    input: { allocations: Array<{ invoice_id: string; amount: string }> },
+    o?: MutationOptions,
+  ) {
+    return http.post<InternetPaymentDetail>(`/tenants/${tenantId}/payments/${paymentId}/verify`, input, withIdem(o));
+  }
+  async rejectInternetPayment(tenantId: string, paymentId: string, reason: string, o?: MutationOptions) {
+    return http.post<InternetPayment>(`/tenants/${tenantId}/payments/${paymentId}/reject`, { reason }, withIdem(o));
+  }
+
+  /* ---- Dokumen terbit TK-109 ---- */
+  async listDocuments(
+    tenantId: string,
+    filters: { kind?: string; ref_type?: string; ref_id?: string },
+    page: PageParams,
+  ) {
+    const clean: Record<string, string | number | undefined> = { ...pageQuery(page) };
+    for (const [k, v] of Object.entries(filters)) {
+      if (v !== undefined && v !== '') clean[k] = v;
+    }
+    return http.get<CursorPage<IssuedDocumentInfo>>(`/tenants/${tenantId}/documents`, clean);
   }
 }

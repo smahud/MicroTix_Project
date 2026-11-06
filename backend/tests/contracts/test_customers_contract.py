@@ -14,8 +14,9 @@ SERVICE_ROW_KEYS = {
 SERVICE_DETAIL_EXTRA = {"start_date", "contact", "address", "access"}
 ACCESS_KEYS = {"username", "state", "credential_state", "session_limit", "mac_locked", "last_active_session_at", "restricting_router_id"}
 RADIUS_ACCOUNT_ROW_KEYS = {
-    "id", "username", "kind", "state", "credential_state", "package_name",
-    "restricting_router_id", "last_active_session_at",
+    "id", "username", "kind", "state", "credential_state",
+    "service_id", "service_code", "customer_name",
+    "package_name", "restricting_router_id", "last_active_session_at",
 }
 DISCOVERED_ACCOUNT_KEYS = {
     "id", "username", "kind", "profile", "service", "disabled_on_router", "comment", "state",

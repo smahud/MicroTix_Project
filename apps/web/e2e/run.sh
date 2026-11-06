@@ -41,6 +41,18 @@ export E2E_OWN_TENANT_ID="$(python3 -c "import json; rows=json.load(open('$E2E_T
 export E2E_FOREIGN_TENANT_ID="$(python3 -c "import json; rows=json.load(open('$E2E_TENANTS_JSON')); print(next(r['id'] for r in rows if 'Cemara' in r['name']))")"
 echo "e2e: own=$E2E_OWN_TENANT_ID foreign=$E2E_FOREIGN_TENANT_ID"
 
+# Seed tenant billing khusus E2E (TK-604): tenant ketiga terpisah agar asersi
+# empty-state spec lain (Nusantara) tidak terdampak. Idempoten.
+"$BACKEND/.venv/bin/python" manage.py seed_billing_e2e >/dev/null 2>&1 \
+  || { echo "e2e: gagal seed billing"; exit 1; }
+export E2E_BILLING_TENANT_ID="$("$BACKEND/.venv/bin/python" manage.py shell -c "
+from domains.tenancy.models import Tenant
+print(Tenant.objects.get(display_name='RT Net Billing Demo (e2e)').id)
+" 2>/dev/null | tail -1)"
+export E2E_BILLING_OWNER_EMAIL="owner-billing@dev.local"
+export E2E_BILLING_OWNER_PASSWORD="dev-seed-only-2026"
+echo "e2e: billing=$E2E_BILLING_TENANT_ID"
+
 # Backend nyata di foreground background-process dengan log berkas.
 : >"$LOG"
 "$BACKEND/.venv/bin/python" manage.py runserver "127.0.0.1:${API_PORT}" --noreload >>"$LOG" 2>&1 &

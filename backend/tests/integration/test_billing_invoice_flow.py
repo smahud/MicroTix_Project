@@ -423,3 +423,60 @@ class TestInvoiceApi:
         with tenant_scope(tenant_a.id):
             billed_service["service"].refresh_from_db()
             assert str(billed_service["service"].billing_package_id) == str(new_package.id)
+
+
+class TestInvoiceCursorPagination:
+    """TK-604: kursor masuk diterapkan (sebelumnya diabaikan — hanya halaman 1)."""
+
+    def _seed_invoices(self, tenant_a, billed_service, n: int) -> list[str]:
+        import uuid as _uuid
+        from django.utils import timezone as dj_timezone
+
+        service = billed_service["service"]
+        with tenant_scope(tenant_a.id):
+            ids = []
+            base = dj_timezone.now()
+            for i in range(n):
+                # Periode unik per invoice — UNIQUE(tenant, service, kind, periode).
+                p_start = date(2027, 1 + i, 1) if i < 11 else date(2028, 1, 1)
+                p_end = date(2027, 2 + i, 1) if i < 11 else date(2028, 2, 1)
+                invoice = InternetInvoice.objects.create(
+                    tenant=tenant_a,
+                    service=service,
+                    kind="prepaid",
+                    state=InternetInvoice.State.OPEN,
+                    period_index=100 + i,
+                    period_start=p_start,
+                    period_end=p_end,
+                    doc_number=f"INV-{tenant_a.namespace}-202701-{i + 1:04d}",
+                    total_amount=Decimal("100000.00"),
+                    due_date=p_start,
+                    issued_at=base.replace(microsecond=i * 1000),
+                )
+                ids.append(str(invoice.id))
+            return ids
+
+    def test_second_page_via_next_cursor(self, auth_client, tenant_a, billed_service):
+        all_ids = set(self._seed_invoices(tenant_a, billed_service, 5))
+        page1 = auth_client.get(f"/api/v1/tenants/{tenant_a.id}/invoices?limit=2").json()
+        assert len(page1["items"]) == 2
+        assert page1["next_cursor"]
+        seen = {row["id"] for row in page1["items"]}
+        cursor = page1["next_cursor"]
+        while cursor:
+            page = auth_client.get(
+                f"/api/v1/tenants/{tenant_a.id}/invoices?limit=2&cursor={cursor}"
+            ).json()
+            seen.update(row["id"] for row in page["items"])
+            cursor = page["next_cursor"]
+        # Semua invoice terlihat tepat sekali — tanpa duplikat/kehilangan.
+        assert seen == all_ids
+        assert len(seen) == 5
+
+    def test_invalid_cursor_rejected_422(self, auth_client, tenant_a, billed_service):
+        self._seed_invoices(tenant_a, billed_service, 1)
+        resp = auth_client.get(
+            f"/api/v1/tenants/{tenant_a.id}/invoices?limit=2&cursor=bukan-kursor"
+        )
+        assert resp.status_code == 422
+        assert resp.json()["code"] == "validation_error"

@@ -41,9 +41,13 @@ describe('release flags', () => {
     expect(isReleased('routers')).toBe(true);
     expect(isReleased('radius')).toBe(true);
   });
-  it('R2–R4 disembunyikan', () => {
-    expect(RELEASE_FLAGS.billing).toBe(false);
+  it('R2 billing/aktivasi aktif (TK-604; engine TK-601+TK-109 terverifikasi)', () => {
+    expect(RELEASE_FLAGS.billing).toBe(true);
+    expect(RELEASE_FLAGS.activation).toBe(true);
+  });
+  it('R2+ lain dan R3–R4 disembunyikan', () => {
     expect(RELEASE_FLAGS.finance).toBe(false);
+    expect(RELEASE_FLAGS.collectors).toBe(false);
     expect(RELEASE_FLAGS.devices).toBe(false);
     expect(RELEASE_FLAGS.vouchers).toBe(false);
     expect(RELEASE_FLAGS.configuration).toBe(false);

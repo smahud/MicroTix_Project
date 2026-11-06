@@ -208,9 +208,15 @@ class TestAccessAccountLifecycle:
         assert resp.status_code == 200
         account = resp.json()["items"][0]
         assert set(account.keys()) == {
-            "id", "username", "kind", "state", "credential_state", "package_name",
-            "restricting_router_id", "last_active_session_at",
+            "id", "username", "kind", "state", "credential_state",
+            "service_id", "service_code", "customer_name",
+            "package_name", "restricting_router_id", "last_active_session_at",
         }
+        # Identitas layanan/pelanggan (TK-604 U10): akun dapat dipetakan ke
+        # layanan + pelanggan tanpa permintaan detail per baris.
+        assert account["service_id"] == service_id
+        assert account["service_code"].startswith("SVC-")
+        assert account["customer_name"] == "Suspensi"
         account_id = account["id"]
 
         # Suspend → 204; dimensi isolation jadi isolated.
