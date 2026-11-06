@@ -116,4 +116,12 @@ export function pageQuery(p: PageParams): Record<string, string | number | undef
   };
 }
 
+/**
+ * URL artefak dokumen terbit (PDF — TK-109). Sesi same-origin dikirim
+ * otomatis oleh <a href>; dipakai untuk tautan invoice/kwitansi (U09).
+ */
+export function documentArtifactUrl(tenantId: string, documentId: string): string {
+  return `/api/v1/tenants/${tenantId}/documents/${documentId}`;
+}
+
 export type { CursorPage };

@@ -40,6 +40,7 @@ INTEGRATION-1; bukti eksekusi: [BETA_TEST_EVIDENCE.md](BETA_TEST_EVIDENCE.md)).
 | Installer `instalasi.sh`: install/status/doctor/repair/upgrade/dry-run; 17 langkah; WireGuard host; exit 1/3/0 | `bash -n` + shellcheck 0 error + dry-run + gerbang preflight terbukti menolak |
 | **Dokumen terbit PDF (TK-109, sesi 2026-11-06 lanjutan 3)**: invoice internet & kwitansi — snapshot bahasa/zona/templat/nilai + sha256, reprint dari artifact tersimpan (T23-I18-02), renderer terbatas jaringan/file (xhtml2pdf invariant; tanpa fetch eksternal), immutable via trigger DB | `tests/unit/test_documents_render.py` (15) + `tests/integration/test_documents_api.py` (9) |
 | **Billing internet M6 core (TK-601, sesi 2026-11-06 lanjutan 3)**: paket penagihan BIL-02 (fixed_monthly/anniversary, prepaid/postpaid, due_day clamp, first_period_policy), invoice + snapshot harga + UNIQUE periode anti-scheduler-ganda (AC-BIL), penerimaan dua tahap submitted→verified/rejected + alokasi ≤ nilai/sisa + kredit + kwitansi bernomor + aging bucket; pembayaran tidak otomatis aktivasi; scheduler `issue_due_invoices` zona tenant (idempoten, dry-run) | `test_billing_calendar.py` (32 unit) + `test_billing_invoice_flow.py` (23) + `test_billing_payments.py` (21) + `test_billing_contract.py` (3); backend 355/355 |
+| **UI billing U09/U10 (TK-604, sesi 2026-11-06 lanjutan 4)**: U09 tiga tab (Invoice·Pengajuan·Terverifikasi) + periode filter + aging strip + catat penerimaan (bukti wajib transfer/e-wallet) + verifikasi dana dengan editor alokasi + tolak beralasan + PDF invoice/kwitansi same-origin; U10 kandidat suspended + kelayakan tagihan nyata (tanpa tertunggak + pernah lunas, >1 halaman) + snapshot massal + validasi kondisi terbaru per item (item asing/berubah blok item itu saja) + hasil per item + retry aman + label jujur router non-otoritatif; aktivasi SELALU manual terpisah (PRODUCT §13) | `test_billing_invoice_flow.py` (+2 kursor) + `test_billing_payments.py` (+2 kursor) + `test_customers_api.py`/`test_customers_contract.py` (field service) — backend **359/359**; FE vitest **61/61** (eligibility/adapter/halaman); e2e `billing.spec.ts` **3/3** (PDF nyata, blokir per item, verifikasi→aktivasi) — `make e2e` **10/10** |
 
 ### Fitur TIDAK aktif (jujur — jangan diaktifkan tanpa gate)
 
@@ -48,7 +49,7 @@ INTEGRATION-1; bukti eksekusi: [BETA_TEST_EVIDENCE.md](BETA_TEST_EVIDENCE.md)).
 | `MT_ROUTEROS_ADAPTER=api_ssl` sebagai default | Tanpa bukti perangkat lab | **G1**: T01/T16–T18/T20–T21 pada CHR/fisik |
 | Mutasi konfigurasi router (apply/cutover/backup via API-SSL) | Adapter menolak `*_pending_lab` | G1 + pilot G3 |
 | Cutover authoritative pada NAS produksi | B3/B4 butuh jendela observasi nyata | G1/G3 |
-| R2 sisa M6/M7 (UI U09/U10 TK-604, isolir otomatis TK-602+, saldo pembuka TK-607, dokumen koreksi TK-608, kolektor TK-609, ledger M7 TK-701+) | M6 core engine (TK-601) + dokumen (TK-109) sudah aktif sesi 2026-11-06 lanjutan 3; sisanya backlog | Roadmap M6/M7 lanjutan |
+| R2 sisa M6/M7 (isolir otomatis TK-602, saldo pembuka TK-607, dokumen koreksi TK-608, kolektor TK-609, ledger M7 TK-701+) | M6 core + dokumen + **UI U09/U10 (TK-604) sudah aktif sesi 2026-11-06 lanjutan 4**; sisanya backlog | Roadmap M6/M7 lanjutan |
 | R3 ACS, R4 OLT/WAN advanced | Deferred (master prompt §7 P3) | Roadmap R3/R4 |
 | Auto-isolir pelanggan | Tanpa bukti keamanan + pilot | G2/G3 |
 
@@ -65,15 +66,15 @@ INTEGRATION-1; bukti eksekusi: [BETA_TEST_EVIDENCE.md](BETA_TEST_EVIDENCE.md)).
 
 | Suite | Hasil |
 |---|---|
-| Backend unit+integrasi+kontrak (PostgreSQL nyata) | **252/252 PASS** (222 konsolidasi + 23 WG-1 + 7 hardening post-review; sesi 2026-11-06) |
-| Frontend (tsc/eslint/vitest/i18n) | **42/42 + 0 error + parity 908** |
+| Backend unit+integrasi+kontrak (PostgreSQL nyata) | **359/359 PASS** (355 + 4 kursor billing, sesi 2026-11-06 lanjutan 4) |
+| Frontend (tsc/eslint/vitest/i18n) | **61/61 + 0 error + paritas 1042** |
 | RADIUS nyata (FreeRADIUS+radclient) | **15/15 PASS** |
 | Smoke live API (runserver+curl, alur pendaftaran→enrollment→layanan) | **20/20 PASS** (basis be2) |
 | Docs static check | **PASS** (21 file, 85 task, 240 edge, 256 kasus) |
 | Installer: sintaks + shellcheck + dry-run | **PASS** (preflight menolak disk 8GB<10GB dengan benar) |
 | **verified_lab perangkat MikroTik fisik (G1)** | **BLOCKED** — tidak ada perangkat/lab CHR |
 | **Instalasi produksi nyata host root + domain (Gate A/G)** | **BLOCKED** — sandbox tanpa root/domain |
-| Browser E2E Playwright | **7/7 PASS** (sesi 2026-11-06: `make e2e` — Chromium nyata ↔ backend nyata; login happy/error, guard, isolasi tenant 404, register→verifikasi email→login tenant baru, i18n, mobile 360px) |
+| Browser E2E Playwright | **10/10 PASS** (sesi 2026-11-06 lanjutan 4: 7 baseline + 3 billing U09/U10 — login, guard, isolasi tenant, register→verifikasi, i18n, mobile, PDF nyata, blokir per item, verifikasi dana→kwitansi→aktivasi) |
 | CI GitHub Actions (backend/frontend/docs) | **HIJAU** pada `8da2c2d` (backend ✓ frontend ✓ docs ✓) |
 
 ## Known limitations
@@ -94,6 +95,12 @@ INTEGRATION-1; bukti eksekusi: [BETA_TEST_EVIDENCE.md](BETA_TEST_EVIDENCE.md)).
    env kosong — dev/test, berlabel `key_source=generated_dev`). Probe handshake
    pada interface host NYATA menunggu host root (bukan sandbox).
 5. Email dev via konsol; SMTP produksi dikonfigurasi lewat env.
+6. UI billing U09/U10 (TK-604): bukti transfer belum dapat diperbesar
+   (backend belum menyediakan endpoint ambil bukti — hanya `has_proof`);
+   dialog verifikasi belum menyebut rekening tujuan (tak ada di kontrak
+   pembayaran M6); hasil per item "Menunggu koneksi" menunggu bukti NAS
+   (G1) — digantikan label jujur "belum dijamin pada router ini";
+   kelayakan aktivasi menilai maksimum 10 halaman × 200 invoice/akun.
 
 ## Deployment readiness
 
@@ -109,6 +116,6 @@ INTEGRATION-1; bukti eksekusi: [BETA_TEST_EVIDENCE.md](BETA_TEST_EVIDENCE.md)).
 1. Gate A/G: instalasi produksi nyata + domain → INSTALL_SUCCESS penuh.
 2. Lab MikroTik CHR (G1) → aktifkan `MT_ROUTEROS_ADAPTER=api_ssl` →
    cutover B3–B5 dengan NAS nyata.
-3. Playwright E2E harness (`make e2e`).
-4. M6/M7: billing/ledger R2 (invoice, pembayaran, buku besar).
-5. Adopsi keypair WG installer oleh backend + probe handshake.
+3. M6/M7 lanjutan: TK-701 ledger M7 atau TK-602/607/608/609 (lihat
+   LATEST_HANDOFF urutan prioritas).
+4. Harness GNS3 API-driven (blokir infrastruktur + image CHR berlisensi).

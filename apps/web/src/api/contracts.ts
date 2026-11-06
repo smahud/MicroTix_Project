@@ -355,6 +355,10 @@ export interface RadiusAccountRow {
   kind: 'pppoe' | 'hotspot';
   state: 'active' | 'suspended' | 'disabled' | 'expired';
   credential_state: 'unknown' | 'ready' | 'rotation_pending';
+  /** Identitas layanan/pelanggan (TK-604 U10) — akun dapat dipetakan tanpa detail per baris. */
+  service_id: string;
+  service_code: string;
+  customer_name: string;
   package_name: string | null;
   restricting_router_id: string | null;
   last_active_session_at: string | null;
@@ -442,4 +446,105 @@ export interface RevealCredentialResult {
   password: string;
   /** Auto-sembunyi 30 detik (UI_UX.md §3). */
   display_for_s: 30;
+}
+
+/* ---------- Billing internet M6 (U09/U10 — TK-604) ---------- */
+
+export type InvoiceState = 'draft' | 'open' | 'partial' | 'paid' | 'void';
+export type InvoiceKind = 'prepaid' | 'postpaid';
+export type PaymentState = 'submitted' | 'verified' | 'rejected';
+export type PaymentMethod = 'cash' | 'bank_transfer' | 'ewallet' | 'collector_cash';
+export type AgingBucket = 'not_due' | 'current' | 'd31_60' | 'd61_90' | 'd90_plus';
+
+export interface InternetInvoice {
+  id: string;
+  doc_number: string;
+  service_id: string;
+  service_code: string;
+  customer_name: string;
+  kind: InvoiceKind;
+  state: InvoiceState;
+  period_index: number;
+  /** Tanggal bisnis 'YYYY-MM-DD'. */
+  period_start: string;
+  period_end: string;
+  due_date: string;
+  /** Kejadian UTC ISO 8601. */
+  issued_at: string;
+  total_amount: string;
+  paid_amount: string;
+  outstanding: string;
+  first_period_policy: string;
+  locale: string;
+  timezone: string;
+  /** Dokumen PDF invoice (TK-109) — null bila belum terbit. */
+  document_id: string | null;
+}
+
+export interface InternetInvoiceLine {
+  line_kind: string;
+  name: string;
+  amount: string;
+  ordinal: number;
+}
+
+export interface InternetInvoiceDetail extends InternetInvoice {
+  lines: InternetInvoiceLine[];
+}
+
+export interface InvoiceAgingReport {
+  as_of: string;
+  totals: Record<AgingBucket, { count: number; outstanding: string }>;
+  items: Array<{
+    invoice_id: string;
+    doc_number: string;
+    service_code: string;
+    customer_name: string;
+    due_date: string;
+    days_overdue: number;
+    overdue: boolean;
+    bucket: AgingBucket;
+    outstanding: string;
+  }>;
+}
+
+export interface PaymentAllocation {
+  invoice_id: string;
+  invoice_number: string;
+  amount: string;
+  allocated_at: string;
+}
+
+export interface InternetPayment {
+  id: string;
+  method: PaymentMethod;
+  state: PaymentState;
+  amount: string;
+  allocated_amount: string;
+  /** Sisa payment belum dialokasikan — "saldo kredit belum dialokasikan" (UI_UX §8), bukan laba. */
+  credit: string;
+  external_ref: string | null;
+  has_proof: boolean;
+  collector_display: string | null;
+  submitted_at: string;
+  verified_at: string | null;
+  rejected_reason: string | null;
+}
+
+export interface InternetPaymentDetail extends InternetPayment {
+  allocations: PaymentAllocation[];
+}
+
+export interface IssuedDocumentInfo {
+  id: string;
+  kind: 'internet_invoice' | 'receipt' | 'saas_invoice' | 'report';
+  doc_number: string;
+  ref_type: string;
+  ref_id: string;
+  locale: string;
+  timezone: string;
+  template_version: string;
+  sha256: string;
+  size_bytes: number;
+  issued_at: string;
 }

@@ -16,9 +16,9 @@ export const RELEASE_FLAGS = {
   settings: true,
   radius: true,
   admin: true,
-  // R2 — belum release
-  billing: false,
-  activation: false,
+  // R2 — M6 billing/aktivasi aktif (TK-604; engine TK-601+TK-109 terverifikasi)
+  billing: true,
+  activation: true,
   finance: false,
   collectors: false,
   // R3 — belum release

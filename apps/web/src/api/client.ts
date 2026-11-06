@@ -8,6 +8,12 @@ import type {
   CursorPage,
   DiscoveredAccount,
   IdentityConflictCandidate,
+  InternetInvoice,
+  InternetInvoiceDetail,
+  InternetPayment,
+  InternetPaymentDetail,
+  InvoiceAgingReport,
+  IssuedDocumentInfo,
   JobRecord,
   MigrationSummaryCounts,
   MonitorStatus,
@@ -44,6 +50,30 @@ export interface ServiceListFilters {
   job?: 'none' | 'queued' | 'running' | 'needs_review';
   incomplete_mapping?: boolean;
   quick_tab?: 'all' | 'unpaid' | 'paid_awaiting_activation' | 'isolated' | 'incomplete';
+}
+
+export interface InvoiceListFilters {
+  state?: 'draft' | 'open' | 'partial' | 'paid' | 'void';
+  kind?: 'prepaid' | 'postpaid';
+  service_id?: string;
+  /** Tanggal bisnis 'YYYY-MM-DD' — period_start >= dari, period_end <= sampai. */
+  period_from?: string;
+  period_to?: string;
+}
+
+export interface PaymentListFilters {
+  state?: 'submitted' | 'verified' | 'rejected';
+  method?: 'cash' | 'bank_transfer' | 'ewallet' | 'collector_cash';
+}
+
+export interface RecordPaymentInput {
+  method: 'cash' | 'bank_transfer' | 'ewallet' | 'collector_cash';
+  amount: string;
+  external_ref?: string;
+  collector_display?: string;
+  /** Bukti transfer/e-wallet (wajib untuk metode tsb): base64 tanpa prefiks data-URI. */
+  file_b64?: string;
+  mime?: string;
 }
 
 export interface RouterEnrollmentDraft {
@@ -248,6 +278,45 @@ export interface ApiClient {
 
   /* ---- Audit timeline ---- */
   listAuditTimeline(tenantId: string, targetId: string | null, page: PageParams): Promise<CursorPage<AuditEntry>>;
+
+  /* ---- Billing internet M6 — U09 (dok: GET /tenants/{t}/invoices|payments) ---- */
+  listInvoices(
+    tenantId: string,
+    filters: InvoiceListFilters,
+    page: PageParams,
+  ): Promise<CursorPage<InternetInvoice>>;
+  getInvoice(tenantId: string, invoiceId: string): Promise<InternetInvoiceDetail>;
+  getInvoiceAging(tenantId: string, asOf?: string): Promise<InvoiceAgingReport>;
+  listPayments(
+    tenantId: string,
+    filters: PaymentListFilters,
+    page: PageParams,
+  ): Promise<CursorPage<InternetPayment>>;
+  getPayment(tenantId: string, paymentId: string): Promise<InternetPaymentDetail>;
+  recordInternetPayment(
+    tenantId: string,
+    input: RecordPaymentInput,
+    opts?: MutationOptions,
+  ): Promise<InternetPayment>;
+  verifyInternetPayment(
+    tenantId: string,
+    paymentId: string,
+    input: { allocations: Array<{ invoice_id: string; amount: string }> },
+    opts?: MutationOptions,
+  ): Promise<InternetPaymentDetail>;
+  rejectInternetPayment(
+    tenantId: string,
+    paymentId: string,
+    reason: string,
+    opts?: MutationOptions,
+  ): Promise<InternetPayment>;
+
+  /* ---- Dokumen terbit TK-109 (kwitansi lookup per payment) ---- */
+  listDocuments(
+    tenantId: string,
+    filters: { kind?: 'internet_invoice' | 'receipt' | 'saas_invoice' | 'report'; ref_type?: string; ref_id?: string },
+    page: PageParams,
+  ): Promise<CursorPage<IssuedDocumentInfo>>;
 }
 
 export type ApiMode = 'mock' | 'live';

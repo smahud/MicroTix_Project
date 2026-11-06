@@ -12,7 +12,7 @@ import { EnumBadge } from '../../design-system/components/StatusBadge';
 import { Button } from '../../design-system/primitives/Button';
 import { SelectInput } from '../../design-system/primitives/Input';
 import { Segmented, CursorPagination } from '../../design-system/primitives/Misc';
-import { connectionTone, jobDimensionTone, lifecycleTone } from '../../lib/statuses';
+import { connectionTone, jobDimensionTone, paymentTone, isolationTone } from '../../lib/statuses';
 import { isReleased } from '../../permissions/release-flags';
 import { useSession } from '../../state/session';
 import type { ServiceRow } from '../../api/contracts';
@@ -138,12 +138,12 @@ export default function CustomersPage({ tenantId }: { tenantId: string }) {
       cols.splice(5, 0, {
         key: 'payment',
         header: t('customers.col.payment'),
-        render: (r) => <EnumBadge group="payment" value={r.payment} tone={lifecycleTone(r.payment)} />,
+        render: (r) => <EnumBadge group="payment" value={r.payment} tone={paymentTone(r.payment)} />,
       });
       cols.splice(6, 0, {
         key: 'isolation',
         header: t('customers.col.isolation'),
-        render: (r) => <EnumBadge group="isolation" value={r.isolation} tone={lifecycleTone(r.isolation)} />,
+        render: (r) => <EnumBadge group="isolation" value={r.isolation} tone={isolationTone(r.isolation)} />,
       });
     }
     return cols;

@@ -3,8 +3,11 @@ import type {
   AuthContextShape,
   CsvImportDraft,
   EnrollmentProgress,
+  InvoiceListFilters,
   JobAccepted,
   MigrationDraftState,
+  PaymentListFilters,
+  RecordPaymentInput,
   RouterEnrollmentDraft,
   ServiceListFilters,
 } from '../client';
@@ -18,6 +21,12 @@ import type {
   CursorPage,
   DiscoveredAccount,
   IdentityConflictCandidate,
+  InternetInvoice,
+  InternetInvoiceDetail,
+  InternetPayment,
+  InternetPaymentDetail,
+  InvoiceAgingReport,
+  IssuedDocumentInfo,
   JobRecord,
   MonitorStatus,
   PlanInfo,
@@ -42,6 +51,11 @@ import {
   AUDIT,
   BACKUP_ARTIFACTS,
   BACKUP_SCHEDULES,
+  BILLING_AGING,
+  BILLING_DOCUMENTS,
+  BILLING_INVOICES,
+  BILLING_PAYMENT_ALLOCATIONS,
+  BILLING_PAYMENTS,
   DISCOVERED,
   IDENTITY_CONFLICTS,
   JOBS_SEED,
@@ -108,6 +122,18 @@ export class MockApiClient implements ApiClient {
   private activeTenantId: string | null = null;
   private jobs: JobRecord[] = [...JOBS_SEED];
   private jobPlans = new Map<string, MockJobState>();
+  /* Billing M6 (TK-604): salinan muat state per-instance — mutasi verify/reject
+     mengubah salinan, bukan fixture modul (isolasi antar sesi dev). */
+  private billingInvoices: Record<string, InternetInvoice[]> = Object.fromEntries(
+    Object.entries(BILLING_INVOICES).map(([k, v]) => [k, v.map((i) => ({ ...i }))]),
+  );
+  private billingPayments: Record<string, InternetPayment[]> = Object.fromEntries(
+    Object.entries(BILLING_PAYMENTS).map(([k, v]) => [k, v.map((p) => ({ ...p }))]),
+  );
+  private billingDocuments: Record<string, IssuedDocumentInfo[]> = Object.fromEntries(
+    Object.entries(BILLING_DOCUMENTS).map(([k, v]) => [k, v.map((d) => ({ ...d }))]),
+  );
+  private billingSeq = 100;
   private enrollments = new Map<string, RouterEnrollmentDraft>();
   private enrollmentStage = new Map<string, number>();
   private enrollmentIssuedAt = new Map<string, number>();
@@ -929,17 +955,24 @@ export class MockApiClient implements ApiClient {
   }
 
   async suspendRadiusAccount(tenantId: string, accountId: string, _opts?: MutationOptions): Promise<void> {
-    this.permissionOr403(tenantId, 'services.provision');
+    this.permissionOr403(tenantId, 'services.activate');
     const acc = (RADIUS_ACCOUNTS[tenantId] ?? []).find((a) => a.id === accountId);
     if (!acc) fail('not_found', 'Data tidak ditemukan');
+    if (acc.state !== 'active') fail('conflict', 'Transisi state tidak diizinkan');
+    acc.state = 'suspended';
     this.newJob('suspend_service', acc.restricting_router_id, 'Pengguna Dev', [['disconnect', 700], ['verify', 600]], 'succeeded', { total: 1, done: 0 });
     return delay(undefined, 200);
   }
 
   async activateRadiusAccount(tenantId: string, accountId: string, _opts?: MutationOptions): Promise<void> {
-    this.permissionOr403(tenantId, 'services.provision');
+    this.permissionOr403(tenantId, 'services.activate');
     const acc = (RADIUS_ACCOUNTS[tenantId] ?? []).find((a) => a.id === accountId);
     if (!acc) fail('not_found', 'Data tidak ditemukan');
+    // Paritas backend: state sama → idempoten (204 tanpa perubahan).
+    if (acc.state === 'suspended') {
+      acc.state = 'active';
+      this.newJob('apply_account_attributes', acc.restricting_router_id, 'Pengguna Dev', [['apply', 800], ['verify', 600]], 'succeeded', { total: 1, done: 0 });
+    }
     this.newJob('apply_account_attributes', acc.restricting_router_id, 'Pengguna Dev', [['apply', 800], ['verify', 600]], 'succeeded', { total: 1, done: 0 });
     return delay(undefined, 200);
   }
@@ -1045,6 +1078,156 @@ export class MockApiClient implements ApiClient {
   listAuditTimeline(tenantId: string, targetId: string | null, page: PageParams): Promise<CursorPage<AuditEntry>> {
     let items = AUDIT[tenantId] ?? [];
     if (targetId) items = items.filter((a) => a.target_display === targetId);
+    return delay(paginate(items, page));
+  }
+
+  /* ---------- Billing internet M6 — U09/U10 (TK-604) ---------- */
+
+  async listInvoices(tenantId: string, filters: InvoiceListFilters, page: PageParams): Promise<CursorPage<InternetInvoice>> {
+    this.permissionOr403(tenantId, 'customers.read');
+    let items = [...(this.billingInvoices[tenantId] ?? [])].sort((a, b) => b.issued_at.localeCompare(a.issued_at));
+    if (filters.state) items = items.filter((i) => i.state === filters.state);
+    if (filters.kind) items = items.filter((i) => i.kind === filters.kind);
+    if (filters.service_id) items = items.filter((i) => i.service_id === filters.service_id);
+    if (filters.period_from) items = items.filter((i) => i.period_start >= filters.period_from!);
+    if (filters.period_to) items = items.filter((i) => i.period_end <= filters.period_to!);
+    return delay(paginate(items, page));
+  }
+
+  async getInvoice(tenantId: string, invoiceId: string): Promise<InternetInvoiceDetail> {
+    this.permissionOr403(tenantId, 'customers.read');
+    const inv = (this.billingInvoices[tenantId] ?? []).find((i) => i.id === invoiceId);
+    if (!inv) fail('not_found', 'Data tidak ditemukan');
+    return delay({
+      ...inv,
+      lines: [{ line_kind: 'subscription', name: 'Langganan internet', amount: inv.total_amount, ordinal: 0 }],
+    });
+  }
+
+  async getInvoiceAging(tenantId: string): Promise<InvoiceAgingReport> {
+    this.permissionOr403(tenantId, 'customers.read');
+    const report = BILLING_AGING[tenantId];
+    if (!report) {
+      return delay({ as_of: MOCK_NOW.toISOString().slice(0, 10), totals: { not_due: { count: 0, outstanding: '0.00' }, current: { count: 0, outstanding: '0.00' }, d31_60: { count: 0, outstanding: '0.00' }, d61_90: { count: 0, outstanding: '0.00' }, d90_plus: { count: 0, outstanding: '0.00' } }, items: [] });
+    }
+    return delay(report as InvoiceAgingReport);
+  }
+
+  async listPayments(tenantId: string, filters: PaymentListFilters, page: PageParams): Promise<CursorPage<InternetPayment>> {
+    this.permissionOr403(tenantId, 'customers.read');
+    let items = [...(this.billingPayments[tenantId] ?? [])].sort((a, b) => b.submitted_at.localeCompare(a.submitted_at));
+    if (filters.state) items = items.filter((p) => p.state === filters.state);
+    if (filters.method) items = items.filter((p) => p.method === filters.method);
+    return delay(paginate(items, page));
+  }
+
+  async getPayment(tenantId: string, paymentId: string): Promise<InternetPaymentDetail> {
+    this.permissionOr403(tenantId, 'customers.read');
+    const pay = (this.billingPayments[tenantId] ?? []).find((p) => p.id === paymentId);
+    if (!pay) fail('not_found', 'Data tidak ditemukan');
+    return delay({ ...pay, allocations: BILLING_PAYMENT_ALLOCATIONS[paymentId] ?? [] });
+  }
+
+  async recordInternetPayment(tenantId: string, input: RecordPaymentInput): Promise<InternetPayment> {
+    this.permissionOr403(tenantId, 'payments.verify');
+    const amount = Number(input.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      fail('validation_error', 'Nominal tidak valid', { amount: [{ code: 'invalid', message: 'Nominal harus > 0' }] });
+    }
+    if ((input.method === 'bank_transfer' || input.method === 'ewallet') && !input.file_b64) {
+      fail('validation_error', 'Bukti wajib diunggah', { file_b64: [{ code: 'required', message: 'Bukti transfer/e-wallet wajib diunggah' }] });
+    }
+    const payment: InternetPayment = {
+      id: `pay-mock-${++this.billingSeq}`,
+      method: input.method,
+      state: 'submitted',
+      amount: amount.toFixed(2),
+      allocated_amount: '0.00',
+      credit: '0.00',
+      external_ref: input.external_ref ?? null,
+      has_proof: Boolean(input.file_b64),
+      collector_display: input.collector_display ?? null,
+      submitted_at: MOCK_NOW.toISOString(),
+      verified_at: null,
+      rejected_reason: null,
+    };
+    (this.billingPayments[tenantId] ??= []).unshift(payment);
+    return delay(payment);
+  }
+
+  async verifyInternetPayment(
+    tenantId: string,
+    paymentId: string,
+    input: { allocations: Array<{ invoice_id: string; amount: string }> },
+  ): Promise<InternetPaymentDetail> {
+    this.permissionOr403(tenantId, 'payments.verify');
+    const pay = (this.billingPayments[tenantId] ?? []).find((p) => p.id === paymentId);
+    if (!pay) fail('not_found', 'Data tidak ditemukan');
+    if (pay.state !== 'submitted') fail('conflict', 'Keputusan sudah diambil untuk pembayaran ini');
+    const merged = new Map<string, number>();
+    let total = 0;
+    for (const a of input.allocations) {
+      const amt = Number(a.amount);
+      if (!Number.isFinite(amt) || amt <= 0) fail('validation_error', 'Alokasi tidak sah', { allocations: [{ code: 'invalid', message: 'Nominal alokasi harus > 0' }] });
+      merged.set(a.invoice_id, (merged.get(a.invoice_id) ?? 0) + amt);
+      total += amt;
+    }
+    if (total > Number(pay.amount)) fail('conflict', 'Alokasi melebihi nilai pembayaran');
+    const applied: Array<{ invoice_id: string; invoice_number: string; amount: string; allocated_at: string }> = [];
+    for (const [invoiceId, amt] of merged) {
+      const inv = (this.billingInvoices[tenantId] ?? []).find((i) => i.id === invoiceId);
+      if (!inv) fail('not_found', 'Data tidak ditemukan');
+      if (inv.state !== 'open' && inv.state !== 'partial') fail('conflict', 'Invoice tidak dapat dibayar');
+      if (amt > Number(inv.outstanding)) fail('conflict', 'Alokasi melebihi sisa tagihan');
+      const paid = Number(inv.paid_amount) + amt;
+      inv.paid_amount = paid.toFixed(2);
+      inv.outstanding = (Number(inv.total_amount) - paid).toFixed(2);
+      inv.state = inv.outstanding === '0.00' ? 'paid' : 'partial';
+      applied.push({ invoice_id: invoiceId, invoice_number: inv.doc_number, amount: amt.toFixed(2), allocated_at: MOCK_NOW.toISOString() });
+    }
+    pay.state = 'verified';
+    pay.allocated_amount = total.toFixed(2);
+    pay.credit = (Number(pay.amount) - total).toFixed(2);
+    pay.verified_at = MOCK_NOW.toISOString();
+    BILLING_PAYMENT_ALLOCATIONS[paymentId] = applied;
+    // Kwitansi terbit saat verify (BIL-08 paritas).
+    (this.billingDocuments[tenantId] ??= []).unshift({
+      id: `doc-rcp-mock-${++this.billingSeq}`,
+      kind: 'receipt',
+      doc_number: `RCP-ns01-202611-${String(this.billingSeq).padStart(4, '0')}`,
+      ref_type: 'billing_payment',
+      ref_id: paymentId,
+      locale: 'id',
+      timezone: 'Asia/Jakarta',
+      template_version: '1',
+      sha256: 'f'.repeat(64),
+      size_bytes: 38220,
+      issued_at: MOCK_NOW.toISOString(),
+    });
+    return delay({ ...pay, allocations: applied });
+  }
+
+  async rejectInternetPayment(tenantId: string, paymentId: string, reason: string): Promise<InternetPayment> {
+    this.permissionOr403(tenantId, 'payments.verify');
+    const pay = (this.billingPayments[tenantId] ?? []).find((p) => p.id === paymentId);
+    if (!pay) fail('not_found', 'Data tidak ditemukan');
+    if (pay.state !== 'submitted') fail('conflict', 'Keputusan sudah diambil untuk pembayaran ini');
+    if (!reason.trim()) fail('validation_error', 'Alasan wajib diisi', { reason: [{ code: 'required', message: 'Alasan penolakan wajib diisi' }] });
+    pay.state = 'rejected';
+    pay.rejected_reason = reason.trim();
+    return delay(pay);
+  }
+
+  async listDocuments(
+    tenantId: string,
+    filters: { kind?: string; ref_type?: string; ref_id?: string },
+    page: PageParams,
+  ): Promise<CursorPage<IssuedDocumentInfo>> {
+    this.permissionOr403(tenantId, 'customers.read');
+    let items = [...(this.billingDocuments[tenantId] ?? [])].sort((a, b) => b.issued_at.localeCompare(a.issued_at));
+    if (filters.kind) items = items.filter((d) => d.kind === filters.kind);
+    if (filters.ref_type) items = items.filter((d) => d.ref_type === filters.ref_type);
+    if (filters.ref_id) items = items.filter((d) => d.ref_id === filters.ref_id);
     return delay(paginate(items, page));
   }
 }

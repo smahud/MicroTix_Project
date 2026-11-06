@@ -2,6 +2,61 @@
 
 Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-06 (Asia/Jakarta).
 
+## Checkpoint SESI-2026-11-06 (lanjutan 4) — TK-604 UI billing U09/U10
+
+**Scope**: mulai dari `main` @ `62595f4` (handoff lanjutan 3; CI hijau
+diverifikasi via API; 0 PR terbuka). Prioritas handoff §5 urutan 1: **TK-604**
+(konsumsi API billing nyata TK-601/TK-109 oleh UI). Orkestrasi sub-agent per
+CONTRACT §5: 2 explorer read-only (laporan API-contract + pola FE di
+report/backend-explorer|frontend-explorer/) + 1 reviewer independen
+(REQUEST_CHANGES → P0/P1 + P2 layak-perbaiki diselesaikan; lihat
+report/reviewer/20261106T173900Z-tk604-independent-review.md).
+
+**TK-604 — U09 Tagihan dan Pembayaran + U10 Aktivasi (R2 aktif)**:
+- **U09** `features/billing/BillingPage.tsx`: tiga tab Invoice·Pengajuan
+  (submitted/ditolak)·Terverifikasi; periode filter selalu terlihat;
+  strip aging 5 bucket (BIL-05); catat penerimaan (bukti wajib
+  transfer/e-wallet, base64 ≤5 MiB); verifikasi dana dua tahap dengan editor
+  alokasi (≤ payment, ≤ sisa tagihan; sisa=kredit "belum dialokasikan");
+  tolak + alasan wajib; PDF invoice/kwitansi via tautan same-origin (sesi
+  cookie); pasca-verifikasi banner "N menunggu aktivasi" → CTA U10.
+- **U10** `features/activation/ActivationPage.tsx`: kandidat akun suspended
+  (`access-accounts?state=`) + kelayakan dari invoice nyata
+  (`lib/billing-eligibility.ts`: tanpa tertunggak + pernah lunas;
+  `fetchAllPages` menilai >1 halaman, maks 10×200); snapshot konfirmasi
+  (N layak/M tidak) → validasi kondisi TERBARU per item (refetch akun+invoice)
+  → PATCH per item; item asing/berubah blok item itu saja (keberhasilan
+  tidak diurungkan — done_when teruji e2e "1 berhasil, 1 diblokir"); hasil
+  per item + retry item belum berhasil; label jujur router non-otoritatif
+  "Belum dijamin di router ini" (router tak dikenal ≠ dijamin).
+- **Backend additif**: `radius_account_row` + service_id/service_code/
+  customer_name (identitas U10; kontrak uji diperbarui); kursor masuk
+  DITERAPKAN pada /invoices + /payments (pra-ada: next_cursor diterbitkan
+  tapi cursor diabaikan — +4 tes); BARU `seed_billing_e2e` (tenant ketiga
+  terpisah; jalur services nyata; reset state-mutabel antar-run, bukti
+  immutable tak disentuh — proteksi DB terbukti saat percobaan delete).
+- **Integrasi FE**: contracts.ts + 9 metode ApiClient (live+mock paritas;
+  mock activate/suspend permission diselaraskan ke `services.activate` +
+  idempoten paritas 204); rute + release-flag billing/activation → true
+  (uji flag diperbarui); tab Tagihan CustomerDetail diisi (invoice per
+  layanan); kolom payment/isolation CustomersPage kini tone benar
+  (`paymentTone`/`isolationTone` — latent terekspos flag); i18n +134 kunci
+  (1042 total, paritas penuh) + grup enum baru di check_i18n.
+- **E2E**: `e2e/specs/billing.spec.ts` (3 spec: PDF nyata %PDF; blokir per
+  item; verifikasi+kwitansi→aktivasi→kosong) + run.sh seed/ekspor tenant.
+
+**Verifikasi aktual** (PG 17.11 nyata; sandbox Debian 13 non-root):
+backend **359/355+4 PASS**; makemigrations --check bersih; FreeRADIUS nyata
+**15/15**; FE tsc/eslint 0 + vitest **61/42+19** + i18n paritas; build live
+OK + build mock DITOLAK; `make e2e` **10/7+3** (Chromium nyata); docs check
+PASS; bash -n instalasi.sh OK.
+
+**Honest gap**: bukti transfer belum dapat diperbesar (backend tanpa endpoint
+bukti — hanya `has_proof`); verifikasi belum menyebut rekening (tak ada di
+kontrak M6); "Menunggu koneksi" butuh bukti NAS (G1) — digantikan label
+jujur; kelayakan dibatasi 10 halaman×200; spec e2e billing bergantung
+urutan (workers:1). Detail: report/orchestrator/20261106T174500Z-tk604-billing-ui.md.
+
 ## Checkpoint SESI-2026-11-06 (lanjutan 3) — M6 billing engine (TK-601) + dokumen PDF (TK-109)
 
 **Scope**: mulai dari `main` @ `79c42ec` (CI hijau diverifikasi via API;
