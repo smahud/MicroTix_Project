@@ -10,8 +10,8 @@ jangan duplikasi laporan penuh).
 | Item | Nilai |
 |---|---|
 | **Branch kanonis** | `main` |
-| **Commit remote terverifikasi** | **`62595f4eb5eeca5e0306c7667ff0dc7797b2b0e2`** (handoff lanjutan 3; diverifikasi `git ls-remote` + API sesi ini; CI hijau; 0 PR terbuka saat mulai) |
-| **PR sesi ini** | `session/2026-11-06-tk604-billing-ui` → PR (lihat §5 untuk SHA merge setelah diverifikasi) — TK-604 UI U09/U10 + kursor billing + field service akun + seed_billing_e2e |
+| **Commit remote terverifikasi** | **`1e64e328f28af86a51c15ccc327cf7fb8efc399a`** (merge PR #5; diverifikasi `git ls-remote` + API 2026-11-06; CI pada head PR `5d902e3` **HIJAU**: backend/frontend/docs semua success — diverifikasi via check-runs) |
+| **PR sesi ini** | **#5 SUDAH MERGED** (`session/2026-11-06-tk604-billing-ui`: TK-604 UI U09/U10 + kursor billing + field service akun + seed_billing_e2e) |
 | Rilis kandidat | `v0.1.0-beta.1` tetap **NOT_READY** — penahan tunggal tetap Gate A/G (instalasi host Debian 13 nyata root+domain), BUKAN pekerjaan kode |
 | CONTRACT.md | Versi `1fff190` (tidak diubah sesi ini; tidak ada amendment) |
 
