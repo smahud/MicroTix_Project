@@ -11,7 +11,7 @@ jangan duplikasi laporan penuh).
 |---|---|
 | **Branch kanonis** | `main` |
 | **Commit remote main terverifikasi** | **`16085f8`** (docs handoff pasca-PR #6; diverifikasi `git fetch` awal sesi) |
-| **Pekerjaan sesi ini** | branch **`session/2026-11-07-sstp-phase2`** — **PUSHED**; head sesi: **`8f10b909882dc2b0d0921ba1d9c5059a7e889c5e`** (feat Phase-2 SSTP + handoff ini; diverifikasi `git ls-remote` setelah push; PR dibuka untuk review — MERGE menunggu persetujuan reviewer, CONTRACT §11) |
+| **Pekerjaan sesi ini** | branch **`session/2026-11-07-sstp-phase2`** — **PUSHED**; head sesi: **`8f10b909882dc2b0d0921ba1d9c5059a7e889c5e`** (feat Phase-2 SSTP + handoff ini; diverifikasi `git ls-remote` setelah push; **PR #7** dibuka untuk review — MERGE menunggu persetujuan reviewer, CONTRACT §11) |
 | Rilis kandidat | `v0.1.0-beta.1` tetap **NOT_READY** — penahan tunggal tetap Gate A/G (instalasi host Debian 13 nyata root+domain), BUKAN pekerjaan kode |
 | CONTRACT.md | Versi `1fff190` (tidak diubah) |
 | defaults.json | **rev 2.4** (param ke-116: `vpn.sstp_listen_port`) — amendemen ROUTEROS.md §2.3 status APPROVED (basis: master directive user Phase-2; catatan keputusan: report/orchestrator/20261107T154532Z-*.md) |
