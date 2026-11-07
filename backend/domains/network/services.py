@@ -4,6 +4,13 @@ Alur: draft → token CSPRNG (hash-only, TTL) → bootstrap skrip aman →
 bridge enroll-complete (konsumsi token atomik) → verifikasi API-SSL
 (simulator di beta) → router read-only aktif + peer WireGuard desired.
 
+Phase-2 (master directive konektivitas): SSTP sebagai transport KOMPLEMENTER
+WireGuard — bukan pengganti. Kredensial per-router (username unik global +
+password CSPRNG SecretBox), MSCHAPv2 saja, verifikasi sertifikat server
+WAJIB nyala (tidak ada PAP/CHAP/MSCHAPv1, tidak ada verify=no), listener
+shared-port tunggal untuk semua tenant. Sumber kapabilitas klien:
+report/researcher/20261106T183941Z-routeros-vpn-capability-matrix.md.
+
 Jaminan:
 - Token 256-bit tidak pernah disimpan plaintext; replay nonce sama =
   hasil logis sama, identitas berbeda → ditolak (§2.7).
@@ -38,6 +45,7 @@ from domains.network.models import (
     DiscoverySnapshot,
     Router,
     RouterEnrollment,
+    SstpAccount,
     WireGuardHost,
     WireGuardPeer,
 )
@@ -50,8 +58,30 @@ BOOTSTRAP_TTL_S = 900           # skrip bootstrap 15 menit (enroll.token_ttl_s)
 # arsitektur shared-port multi-protokol; Phase 1 = WireGuard saja — protokol
 # lain ditolak jujur, bukan diterima diam-diam. Dasar kompatibilitas versi:
 # report/researcher/20261106T183941Z-routeros-vpn-capability-matrix.md).
-SUPPORTED_ENROLLMENT_PROTOCOLS = ("wireguard",)
+SUPPORTED_ENROLLMENT_PROTOCOLS = ("wireguard", "sstp")
 _WIREGUARD_MIN_ROS_MAJOR = 7  # WireGuard hadir sejak RouterOS 7.1 (sumber riset)
+# SSTP klien tersedia pada jalur v6.49.x DAN v7.x (matriks kapabilitas §2 —
+# inilah alasan komplementer: router v6 yang tidak memuat WireGuard tetap
+# dapat di-onboard read-only via SSTP). v5 dan lebih lama ditolak jujur.
+_SSTP_MIN_ROS_MAJOR = 6
+# Panjang password SSTP: token_urlsafe(24) = 32 karakter (192-bit entropi);
+# alfabet [A-Za-z0-9_-] aman untuk kutip RouterOS + pemisah chap-secrets.
+_SSTP_PASSWORD_NBYTES = 24
+# Nama sertifikat CA platform pada penyimpanan sertifikat router.
+_SSTP_CA_CERT_NAME = "MicroTix-CA"
+
+
+def _sstp_gw_address(host: WireGuardHost) -> str:
+    """Alamat PPP gateway SSTP — host KEDUA carve (pertama = WireGuard).
+
+    Satu carve 100.127.0.0/16 dipakai bersama lintas protokol; alamat
+    .1 = interface WireGuard host, .2 = alamat PPP server SSTP (akun
+    chap-secrets meneruskan gw-ip-address ini ke router). Keduanya
+    dikecualikan dari alokasi /32 oleh allocate_tunnel_ip.
+    """
+    hosts = ipaddress.ip_network(host.subnet_cidr).hosts()
+    next(hosts)  # .1 — WireGuard
+    return str(next(hosts))  # .2 — SSTP
 
 _STAGE_CODES = ["vpn_handshake", "api_verify", "auth_permission", "compatibility"]
 
@@ -210,7 +240,9 @@ def allocate_tunnel_ip() -> str:
             used.update(RouterEnrollment.objects.values_list("tunnel_ip", flat=True))
     for candidate in network.hosts():
         if str(candidate) == "100.127.0.1":
-            continue  # alamat host interface
+            continue  # alamat interface WireGuard host
+        if str(candidate) == "100.127.0.2":
+            continue  # alamat PPP gateway SSTP host (Phase-2)
         if str(candidate) not in used:
             return str(candidate)
     raise ApiError.conflict("no_tunnel_ip", "error.conflict")
@@ -258,6 +290,16 @@ def create_enrollment(tenant_id: str, payload: dict, *, actor=None) -> RouterEnr
         errors["routeros_version"] = [
             {"code": "invalid", "message": "Format versi RouterOS tidak valid (contoh: 7.15.3)"}
         ]
+    elif protocol == "sstp":
+        # SSTP hadir sejak era v4/v5 dan stabil di v6.49.x + v7.x (matriks
+        # kapabilitas §2); v6 = jalur utama SSTP (WireGuard tidak tersedia).
+        if int(routeros_version.split(".")[0]) < _SSTP_MIN_ROS_MAJOR:
+            errors["routeros_version"] = [
+                {
+                    "code": "sstp_requires_v6",
+                    "message": "SSTP membutuhkan RouterOS v6+ — versi lebih lama tidak didukung",
+                }
+            ]
     elif protocol == "wireguard":
         parts = routeros_version.split(".")
         major = int(parts[0])
@@ -305,7 +347,35 @@ def create_enrollment(tenant_id: str, payload: dict, *, actor=None) -> RouterEnr
         token_expires_at=timezone.now() + timedelta(seconds=ENROLL_TOKEN_TTL_S),
         created_by=actor,
     )
+    if protocol == "sstp":
+        _issue_sstp_credentials(enrollment)
     return enrollment
+
+
+def _issue_sstp_credentials(enrollment: RouterEnrollment) -> SstpAccount:
+    """Terbitkan kredensial SSTP per-router pada draft (master directive §8).
+
+    Username unik GLOBAL (kredensial tidak pernah dibagi lintas tenant):
+    mtx-<kode-router-diskalahkan>-<suffix>. Password CSPRNG 192-bit disimpan
+    hanya sebagai SecretBox; plaintext keluar TIDAK PERNAH dari sini — hanya
+    saat render skrip bootstrap (pemilik, TTL 15 menit) dan chap-secrets
+    (ops host). Tumbukan username (prefix 32-bit) ditangani retry bounded.
+    """
+    from django.db import IntegrityError
+
+    code = enrollment.router_code.lower()[:16]
+    for suffix in (enrollment.id.hex[:8], secrets.token_hex(5), secrets.token_hex(8)):
+        try:
+            return SstpAccount.objects.create(
+                tenant_id=enrollment.tenant_id,
+                enrollment=enrollment,
+                username=f"mtx-{code}-{suffix}",
+                password_ref=SecretBox.encrypt(secrets.token_urlsafe(_SSTP_PASSWORD_NBYTES)),
+                tunnel_ip=enrollment.tunnel_ip,
+            )
+        except IntegrityError:
+            continue
+    raise ApiError.conflict("sstp_username_exhausted", "error.conflict")
 
 
 def enrollment_progress(enrollment: RouterEnrollment) -> dict:
@@ -350,6 +420,7 @@ def enrollment_progress(enrollment: RouterEnrollment) -> dict:
         "verified_lab": bool(capability.get("verified_lab", False)),
         "api_ssl": bool(capability.get("api_ssl", False)),
         "wireguard": bool(capability.get("wireguard", False)),
+        "sstp": bool(capability.get("sstp", False)),
     }
     return {
         "enrollment_id": str(enrollment.id),
@@ -362,22 +433,22 @@ def enrollment_progress(enrollment: RouterEnrollment) -> dict:
 
 
 def bootstrap_script(enrollment: RouterEnrollment) -> dict:
-    """Skrip bootstrap RouterOS v7 (WireGuard) — idempoten, tanpa reset.
+    """Skrip bootstrap RouterOS — idempoten, tanpa reset (WG v7; SSTP v6/v7).
 
     Token berada di BODY callback (bukan URL/analytics §2.2). Skrip hanya
     berlaku 15 menit (enroll.token_ttl_s). Endpoint peer = hostname publik
     gateway dari konfigurasi (vpn.gateway_hostname / MT_PUBLIC_HOST /
     MT_DOMAIN) — TIDAK PERNAH IP tunnel internal. Private key WireGuard
-    dibangkitkan router sendiri (§2.3) — skrip tidak pernah memuat/membaca
-    kunci privat. Port listener dari state host; port API dari enrollment.
-    Kejujuran beta: sintaks teruji terhadap simulator; perangkat produksi
-    menunggu lab G1 (purpose_summary).
+    dibangkitkan router sendiri (§2.3); kredensial SSTP per-router diterbitkan
+    platform (CSPRNG; §2.5 jalur injeksi kanal sah). Port listener dari state
+    host/registri; port API dari enrollment. Kejujuran beta: sintaks teruji
+    terhadap simulator; perangkat produksi menunggu lab G1.
     """
     if enrollment.status not in (RouterEnrollment.Status.DRAFT, RouterEnrollment.Status.AWAITING_BOOTSTRAP):
         raise ApiError.conflict()
     if enrollment.token_expires_at < timezone.now():
         raise ApiError.conflict("expired", "error.conflict")
-    if enrollment.protocol != "wireguard":  # defense-in-depth: state tersimpan
+    if enrollment.protocol not in SUPPORTED_ENROLLMENT_PROTOCOLS:  # defense-in-depth
         raise ApiError.conflict("protocol_unsupported", "error.conflict")
     host = _wg_host()
     if not enrollment.token_ref:
@@ -389,8 +460,10 @@ def bootstrap_script(enrollment: RouterEnrollment) -> dict:
         raise ApiError.conflict("token_unreadable", "error.conflict") from None
     from domains.config.registry import registry
 
-    keepalive = registry().get_int("vpn.keepalive_s")
     gateway = gateway_hostname()
+    if enrollment.protocol == "sstp":
+        return _render_sstp_bootstrap(enrollment, host=host, gateway=gateway, token=token, registry=registry)
+    keepalive = registry().get_int("vpn.keepalive_s")
     wg_addr = str(next(ipaddress.ip_network(host.subnet_cidr).hosts()))
     script = _ROUTEROS_WG_TEMPLATE
     for placeholder, value in (
@@ -424,6 +497,65 @@ def bootstrap_script(enrollment: RouterEnrollment) -> dict:
             "Rule input sempit API-SSL hanya dari /32 server (API tidak dibuka publik).",
             "Tanpa reset/reboot/perubahan route default/DNS/DHCP/NAT/bridge/akun existing.",
             "Beta: sintaks skrip diverifikasi pada simulator; perangkat fisik menunggu lab G1.",
+        ],
+    }
+
+
+def _render_sstp_bootstrap(
+    enrollment: RouterEnrollment, *, host: WireGuardHost, gateway: str, token: str, registry
+) -> dict:
+    """Skrip bootstrap SSTP (v6/v7) — render dari state tervalidasi saja.
+
+    Keamanan wajib (master directive §8): authentication=mschap2 SAJA (klien
+    SSTP RouterOS tanpa EAP — matriks kapabilitas §2), verifikasi sertifikat
+    server NYALA (verify-server-certificate + verifikasi alamat dari
+    sertifikat; CA platform diimpor lebih dulu), TANPA add-default-route.
+    Kredensial per-router (username+password) disematkan pada skrip — skrip
+    sensitif TTL 15 menit (§2.2); password tetap dipakai router untuk
+    koneksi ulang (disimpan perangkat sebagai konfigurasi sstp-client).
+    """
+    account = SstpAccount.objects.filter(enrollment=enrollment).first()
+    if account is None:
+        # State tak konsisten (akun hilang) — gagal jujur, jangan render skrip.
+        raise ApiError.conflict("sstp_account_missing", "error.conflict")
+    try:
+        password = SecretBox.decrypt(account.password_ref).decode()
+    except Exception:
+        raise ApiError.conflict("sstp_password_unreadable", "error.conflict") from None
+    sstp_port = registry().get_int("vpn.sstp_listen_port")
+    gw_addr = _sstp_gw_address(host)
+    script = _ROUTEROS_SSTP_TEMPLATE
+    for placeholder, value in (
+        ("{GATEWAY}", gateway),
+        ("{SSTP_PORT}", str(sstp_port)),
+        ("{GW_ADDR}", gw_addr),
+        ("{API_PORT}", str(enrollment.api_port)),
+        ("{SSTP_USER}", account.username),
+        ("{SSTP_PASS}", password),
+        ("{CA_NAME}", _SSTP_CA_CERT_NAME),
+        ("{TOKEN}", token),
+    ):
+        script = script.replace(placeholder, value)
+    return {
+        "enrollment_id": str(enrollment.id),
+        "protocol": "sstp",
+        "routeros_version": enrollment.routeros_version or "7",
+        "script": script,
+        "expires_at": (timezone.now() + timedelta(seconds=BOOTSTRAP_TTL_S)).isoformat(),
+        "gateway": {
+            "hostname": gateway,
+            "listen_port": sstp_port,
+            "api_port": enrollment.api_port,
+            "server_tunnel_ip": gw_addr,
+        },
+        "purpose_summary": [
+            "Membuat klien SSTP + route API manajemen via tunnel TLS (objek rtrw milik platform; idempoten).",
+            f"Endpoint gateway: {gateway}:{sstp_port}/TCP (TLS 1.2, MSCHAPv2) — listener shared-port seluruh router.",
+            "CA platform diunduh + diimpor; verifikasi sertifikat server WAJIB nyala (tidak dapat dimatikan skrip ini).",
+            "Rule input sempit API-SSL hanya dari alamat PPP server (API tidak dibuka publik).",
+            "Tanpa reset/reboot/add-default-route/DNS/DHCP/NAT/bridge/akun existing.",
+            "Skrip memuat kredensial SSTP per-router (sensitif — TTL 15 menit; jangan disimpan di tempat lain).",
+            "Beta: sintaks skrip diverifikasi pada simulator; perangkat v6/v7 fisik menunggu lab G1.",
         ],
     }
 
@@ -473,6 +605,53 @@ _ROUTEROS_WG_TEMPLATE = """# MicroTix bootstrap enrollment — RouterOS v7 · Wi
 """
 
 _GATEWAY_DEV_FALLBACK = "microtix.invalid"  # TLD .invalid (RFC 2606) — placeholder dev/test jujur
+
+# Skrip RouterOS v6/v7 (SSTP) — sintaks klasik berjarak (didokumentasikan
+# pada halaman SSTP help/manual untuk kedua jalur utama; matriks kapabilitas
+# §2). Placeholder diisi render-time dari state tervalidasi — kredensial
+# per-router TIDAK pernah berasal dari string bebas frontend. Baris "\" =
+# lanjutan baris RouterOS. GAP TERDOKUMENTASI (lab G1): paritas field v6
+# (verify-server-address-from-certificate) + sintaks pada perangkat nyata
+# menunggu bukti lab; skrip memakai field inti yang didokumentasikan lintas
+# versi (connect-to/port/user/password/authentication/
+# verify-server-certificate).
+_ROUTEROS_SSTP_TEMPLATE = """# MicroTix bootstrap enrollment — RouterOS v6/v7 · SSTP — idempoten
+# Gateway: {GATEWAY}:{SSTP_PORT}/TCP (TLS 1.2 + MSCHAPv2) · API manajemen: {GW_ADDR}:{API_PORT}/TCP via tunnel
+# TIDAK ada reset/reboot/perubahan route default/DNS/DHCP/NAT/bridge/akun existing.
+:local iface "mtx-sstp"
+:local user "{SSTP_USER}"
+:local pass "{SSTP_PASS}"
+:local gwaddr "{GW_ADDR}"
+:local token "{TOKEN}"
+# 1) CA platform (materi PUBLIK) diunduh + diimpor — syarat verifikasi
+#    sertifikat server oleh klien SSTP. GAP G1: fetch tanpa check-certificate
+#    (idem callback Phase-1); dampak dibatasi CA-publik + kredensial CSPRNG.
+/tool/fetch url="https://{GATEWAY}/api/v1/bridge/enroll-ca" dst-path=microtix-ca.crt
+:if ([:len [/certificate/find where name="{CA_NAME}"]] = 0) do={ \\
+    /certificate/import file-name=microtix-ca.crt passphrase="" name="{CA_NAME}"; \\
+}
+# 2) Klien SSTP milik platform — kredensial per-router; MSCHAPv2 SAJA;
+#    verifikasi sertifikat server + alamat dari sertifikat WAJIB nyala;
+#    TANPA add-default-route (route manajemen via interface tunnel).
+#    Idempoten: objek lama milik platform diganti (re-enroll/replace).
+/interface/sstp-client/remove [find name=$iface]
+/interface/sstp-client/add name=$iface connect-to={GATEWAY} port={SSTP_PORT} \\
+    user=$user password=$pass authentication=mschap2 \\
+    verify-server-certificate=yes verify-server-address-from-certificate=yes \\
+    disabled=no
+# 3) Rule input sempit: API-SSL hanya dari alamat PPP server platform pada
+#    interface manajemen (API tidak dibuka publik).
+:if ([:len [/ip/firewall/filter/find where comment="rtrw-mgmt-api"]] = 0) do={ \\
+    /ip/firewall/filter/add chain=input action=accept protocol=tcp dst-port={API_PORT} \\
+        src-address=($gwaddr . "/32") in-interface=$iface comment="rtrw-mgmt-api" place-before=0; \\
+}
+# 4) Callback platform — token + identitas kredensial di BODY HTTPS (§2.2).
+#    Identitas SSTP = username per-router (tidak ada kunci publik klien).
+:local cb ("{\\"token\\":\\"" . $token . "\\",\\"protocol\\":\\"sstp\\",\\"sstp_username\\":\\"" . $user . "\\"}")
+/tool/fetch url="https://{GATEWAY}/api/v1/bridge/enroll-complete" \\
+    http-method=post http-data=$cb http-header-field="Content-Type: application/json"
+:put "MicroTix bootstrap SSTP selesai — pantau status verifikasi di dasbor platform."
+"""
 
 
 def _validate_gateway_hostname(host: str) -> None:
@@ -717,13 +896,175 @@ def probe_handshakes(*, interface: str | None = None, wg_bin: str | None = None)
     }
 
 
-def complete_enrollment(token: str, wg_public_key: str) -> dict:
+def enroll_ca_bundle() -> str:
+    """Baca bundel CA platform untuk endpoint enroll-ca (materi PUBLIK).
+
+    Sumber: env MT_SSTP_CA_PATH (dipasang installer §setup_sstp — CA milik
+    SSTP listener, bukan sertifikat platform HTTPS). Tanpa env / berkas
+    hilang / bukan PEM → error jujur (TIDAK ada fallback palsu). CA adalah
+    materi publik; hanya sertifikat CA yang disajikan — kunci privat tidak
+    pernah melewati endpoint ini.
+    """
+    path = os.environ.get("MT_SSTP_CA_PATH", "")
+    if not path:
+        raise ApiError.conflict("enroll_ca_unconfigured", "error.conflict")
+    if not os.path.isfile(path) or os.path.getsize(path) > 256 * 1024:
+        raise ApiError.conflict("enroll_ca_unavailable", "error.conflict")
+    with open(path, "r", encoding="utf-8", errors="strict") as fh:
+        bundle = fh.read()
+    if "BEGIN CERTIFICATE" not in bundle:
+        raise ApiError.conflict("enroll_ca_invalid", "error.conflict")
+    return bundle
+
+
+# Konfigurasi server accel-ppp 1.15.0 (Phase-2) — kunci/nilai diverifikasi
+# dari accel-ppp.conf sampel rilis 1.15.0 + man page accel-ppp.conf(5):
+# [sstp] port/ssl-protocol/ssl-ciphers/ssl-pemfile/ssl-keyfile/ifname/
+# ppp-max-mtu; [chap-secrets] chap-secrets=/gw-ip-address= (format berkas
+# per-baris: username password ip [rate] — sumber: chap-secrets.c rilis).
+# Ciphers = AES256-SHA + AES256-GCM-SHA384 — dua suite yang DOKUMENTASIKAN
+# dapat dipilih klien SSTP RouterOS (matriks kapabilitas §2); TLS dibatasi
+# 1.2 (klien RouterOS tanpa opsi TLS 1.3).
+_SSTP_ACCEL_CONF_TEMPLATE = """# MicroTix — server SSTP manajemen router (Phase-2) — dirender dari state
+# akun aktif (SstpAccount); diterapkan ops host: /etc/microtix/sstp/accel-ppp.conf
+# Listener SHARED-PORT untuk seluruh router tenant (bukan per-tenant).
+# TLS 1.2 + MSCHAPv2 saja (klien SSTP RouterOS tanpa EAP); verifikasi
+# sertifikat server di sisi router WAJIB nyala (skrip bootstrap).
+# Aktifkan (root): systemctl enable --now microtix-sstp
+[modules]
+log_file
+sstp
+auth_mschap_v2
+chap-secrets
+
+[core]
+log-error=/var/log/accel-ppp/core.log
+
+[common]
+# Router boleh tersambung ulang (reboot) — sesi lama digantikan, bukan
+# memblokir kredensial yang sama milik router tersebut.
+single-session=replace
+
+[ppp]
+# Tanpa MPPE — TLS SSTP sudah mengenkripsi transport; menolak negosiasi
+# ganda mencegah confusi kripto.
+mppe=deny
+
+[sstp]
+port={SSTP_PORT}
+# Bind eksplisit semua antarmuka; akses dibatasi nftables host (ops).
+ssl-protocol=tls1.2
+ssl-ciphers=AES256-SHA:AES256-GCM-SHA384
+ssl-pemfile=/etc/microtix/sstp/gateway.pem
+ssl-keyfile=/etc/microtix/sstp/gateway.key
+ifname=mtx-sstp%d
+# Samakan MTU maksimum dengan default klien SSTP RouterOS (1460).
+ppp-max-mtu=1460
+
+[chap-secrets]
+chap-secrets=/etc/microtix/sstp/chap-secrets
+# Alamat PPP gateway (host kedua carve 100.127.0.0/16; .1 = WireGuard).
+gw-ip-address={GW_ADDR}
+
+[log]
+log-file=/var/log/accel-ppp/accel-ppp.log
+log-emerg=/var/log/accel-ppp/emerg.log
+log-fail-file=/var/log/accel-ppp/auth-fail.log
+copy=1
+# level 3 = sesi + kegagalan auth (audit koneksi; tanpa password di log).
+level=3
+
+[cli]
+# CLI lokal ops (accel-cmd) — audit sesi; TIDAK diexpose jaringan.
+verbose=1
+telnet=127.0.0.1:2000
+tcp=127.0.0.1:2001
+"""
+
+
+def render_sstp_config(target_dir: str) -> dict:
+    """Render accel-ppp.conf + chap-secrets dari akun SSTP aktif (ops host).
+
+    TIDAK menyentuh proses/listener aktif; idempoten; berkas 0600 (berkas
+    memuat password kredensial per-router — sensitif, milik root host).
+    Akun REMOVED tidak dirender; PENDING/APPLIED/DRIFT dirender (desired).
+    chap-secrets per-baris (format accel-ppp 1.15.0): username password ip.
+    """
+    from domains.config.registry import registry
+
+    host = _wg_host()
+    sstp_port = registry().get_int("vpn.sstp_listen_port")
+    gw_addr = _sstp_gw_address(host)
+
+    lines = [
+        f"# MicroTix chap-secrets SSTP — dirender {timezone.now().isoformat()}",
+        "# Format accel-ppp: username password <ip-statis-per-router>",
+        "# IP statis = /32 tunnel enrollment (unik global lintas tenant).",
+        "# BERKAS SENSITIF (password) — root:600; dirender ulang reconciler.",
+    ]
+    account_count = 0
+    tenants_touched = 0
+    from domains.tenancy.models import Tenant
+
+    for tenant in Tenant.objects.order_by("id"):
+        rendered_for_tenant = 0
+        with tenant_scope(tenant.id):
+            accounts = (
+                SstpAccount.objects.exclude(state=SstpAccount.State.REMOVED)
+                .select_related("router", "enrollment")
+                .order_by("tunnel_ip")
+            )
+            for account in accounts:
+                try:
+                    password = SecretBox.decrypt_str(account.password_ref)
+                except Exception:
+                    # Kredensial tidak terbaca — jangan render baris rusak;
+                    # laporkan sebagai akun gagal (ops menyelidiki).
+                    password = ""
+                router_code = account.router.router_code if account.router else "-"
+                lines.append(
+                    f"# tenant={account.tenant_id} router={router_code} state={account.state}"
+                    + ("" if password else " GAGAL-DEKRIP")
+                )
+                if password:
+                    lines.append(f"{account.username} {password} {account.tunnel_ip}")
+                    rendered_for_tenant += 1
+        if rendered_for_tenant:
+            tenants_touched += 1
+        account_count += rendered_for_tenant
+
+    os.makedirs(target_dir, exist_ok=True)
+    conf_path = os.path.join(target_dir, "accel-ppp.conf")
+    secrets_path = os.path.join(target_dir, "chap-secrets")
+    conf_body = _SSTP_ACCEL_CONF_TEMPLATE.replace("{SSTP_PORT}", str(sstp_port)).replace("{GW_ADDR}", gw_addr)
+    secrets_body = "\n".join(lines) + "\n"
+    for path, body in ((conf_path, conf_body), (secrets_path, secrets_body)):
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(body)
+        os.chmod(path, 0o600)
+    return {
+        "status": "ok",
+        "config_file": conf_path,
+        "secrets_file": secrets_path,
+        "accounts": account_count,
+        "tenants": tenants_touched,
+        "listen_port": sstp_port,
+        "gateway_ppp_address": gw_addr,
+        "note": "terapkan (root): pasang ke /etc/microtix/sstp/ lalu restart microtix-sstp",
+    }
+
+
+def complete_enrollment(token: str, wg_public_key: str = "", sstp_username: str = "") -> dict:
     """Bridge enroll-complete: konsumsi token atomik (§2.7).
 
     Token di body; hash lookup; replay nonce+key sama = hasil logis sama;
-    identitas berbeda = 409. Mengembalikan status untuk callback router.
+    identitas berbeda = 409. Identitas per protokol: WireGuard = kunci
+    publik WG; SSTP = username kredensial per-router (dicocokkan dengan
+    SstpAccount enrollment ini — sumber kebenaran yang tidak dapat dipalsukan
+    tanpa memegang skrip/token). Mengembalikan status untuk callback router.
     """
-    if not token or len(token) > 200 or not wg_public_key or len(wg_public_key) > 64:
+    if not token or len(token) > 200:
         raise ApiError.validation()
     token_hash = _hash_token(token)
     # Lookup token lintas tenant via policy enroll_bridge (GUC khusus,
@@ -741,6 +1082,29 @@ def complete_enrollment(token: str, wg_public_key: str) -> dict:
             enrollment.status = RouterEnrollment.Status.EXPIRED
             enrollment.save(update_fields=["status"])
         raise ApiError.conflict("expired", "error.conflict")
+    # Validasi identitas per protokol SEBELUM transisi (protokol enrollment
+    # menentukan bentuk identitas; bentuk lain ditolak jujur).
+    account: SstpAccount | None = None
+    if enrollment.protocol == "sstp":
+        if wg_public_key:
+            raise ApiError.validation(
+                {"protocol": [{"code": "mismatch", "message": "Enrollment SSTP tidak memakai kunci publik WireGuard"}]}
+            )
+        if not sstp_username or len(sstp_username) > 64:
+            raise ApiError.validation()
+        with tenant_scope(enrollment.tenant_id):
+            account = SstpAccount.objects.filter(enrollment=enrollment).first()
+        if account is None or account.username != sstp_username:
+            # Token benar tetapi identitas kredensial tidak cocok — 409,
+            # bukan 404 (token diketahui; kredensial salah).
+            raise ApiError.conflict("sstp_identity_mismatch", "error.conflict")
+    else:
+        if not wg_public_key or len(wg_public_key) > 64:
+            raise ApiError.validation()
+        if sstp_username:
+            raise ApiError.validation(
+                {"protocol": [{"code": "mismatch", "message": "Enrollment WireGuard tidak memakai username SSTP"}]}
+            )
     # Replay/retransmit: token terkonsumsi dengan identitas SAMA → hasil
     # logis sama tanpa mengulang efek (§2.7); identitas berbeda → 409.
     if enrollment.status in (
@@ -748,7 +1112,12 @@ def complete_enrollment(token: str, wg_public_key: str) -> dict:
         RouterEnrollment.Status.VERIFYING,
         RouterEnrollment.Status.COMPLETED,
     ):
-        if enrollment.wg_public_key == wg_public_key:
+        same_identity = (
+            (account is not None and account.username == sstp_username)
+            if enrollment.protocol == "sstp"
+            else (enrollment.wg_public_key == wg_public_key)
+        )
+        if same_identity:
             status = "completed" if enrollment.status == RouterEnrollment.Status.COMPLETED else "bootstrap_accepted"
             return {"status": status, "router_id": str(enrollment.router_id or ""), "replay": True}
         raise ApiError.conflict()  # identitas berbeda pada token terpakai
@@ -760,29 +1129,34 @@ def complete_enrollment(token: str, wg_public_key: str) -> dict:
 
         with transaction.atomic():
             enrollment.status = RouterEnrollment.Status.BOOTSTRAPPED
-            enrollment.wg_public_key = wg_public_key
             enrollment.consumed_at = timezone.now()
             enrollment.token_ref = ""  # plaintext terenkripsi dibersihkan (§2.7)
-            enrollment.save(update_fields=["status", "wg_public_key", "consumed_at", "token_ref"])
-            # Peer desired + host provisioning via reconciler (§2.7).
-            # Identitas kriptografis unik global (uq_wgpeer_pubkey_active):
-            # kunci publik yang sudah menjadi peer AKTIF — termasuk milik tenant
-            # lain — tidak dapat dipasangkan ulang diam-diam (isolasi §7:
-            # per-router unique credentials/keys).
-            try:
-                WireGuardPeer.objects.update_or_create(
-                    tenant_id=enrollment.tenant_id,
-                    router=None,
-                    allowed_ip=enrollment.tunnel_ip,
-                    defaults={
-                        "enrollment": enrollment,
-                        "public_key": wg_public_key,
-                        "desired_revision": 1,
-                        "state": WireGuardPeer.State.PENDING,
-                    },
-                )
-            except IntegrityError:
-                raise ApiError.conflict("wg_public_key_registered", "error.conflict") from None
+            if enrollment.protocol == "wireguard":
+                enrollment.wg_public_key = wg_public_key
+                enrollment.save(update_fields=["status", "wg_public_key", "consumed_at", "token_ref"])
+                # Peer desired + host provisioning via reconciler (§2.7).
+                # Identitas kriptografis unik global (uq_wgpeer_pubkey_active):
+                # kunci publik yang sudah menjadi peer AKTIF — termasuk milik tenant
+                # lain — tidak dapat dipasangkan ulang diam-diam (isolasi §7:
+                # per-router unique credentials/keys).
+                try:
+                    WireGuardPeer.objects.update_or_create(
+                        tenant_id=enrollment.tenant_id,
+                        router=None,
+                        allowed_ip=enrollment.tunnel_ip,
+                        defaults={
+                            "enrollment": enrollment,
+                            "public_key": wg_public_key,
+                            "desired_revision": 1,
+                            "state": WireGuardPeer.State.PENDING,
+                        },
+                    )
+                except IntegrityError:
+                    raise ApiError.conflict("wg_public_key_registered", "error.conflict") from None
+            else:
+                # SSTP: akun kredensial sudah dibuat saat draft; tidak ada
+                # peer kriptografis — kredensial = identitas (di atas).
+                enrollment.save(update_fields=["status", "consumed_at", "token_ref"])
     # Verifikasi API-SSL asinkron (job) — hasil tidak diklaim di sini.
     from domains.jobs import engine
 
@@ -836,6 +1210,7 @@ def finalize_verification(enrollment: RouterEnrollment, *, source: str = "simula
             "verified_lab": False,
             "api_ssl": False,
             "wireguard": False,
+            "sstp": False,
             "protocol": enrollment.protocol,
             "note": "verifikasi perangkat nyata belum dilakukan (jalur simulator; lab G1 menunggu)",
         }
@@ -851,9 +1226,14 @@ def finalize_verification(enrollment: RouterEnrollment, *, source: str = "simula
             "verified_lab": False,
             "api_ssl": True,  # probe TLS nyata sukses ke tunnel IP
             "wireguard": False,  # handshake host dibuktikan terpisah (probe ops §9.13)
+            "sstp": enrollment.protocol == "sstp",  # tunnel SSTP nyata teramati via probe
             "protocol": enrollment.protocol,
             "probe": probe,
-            "note": "TLS API-SSL tercapai via tunnel; login API + pin menunggu skrip v2 lab G1",
+            "note": (
+                "TLS API-SSL tercapai via tunnel; login API + pin menunggu skrip v2 lab G1"
+                if enrollment.protocol != "sstp"
+                else "TLS API-SSL tercapai via tunnel SSTP (sesi PPP nyata); login API + pin menunggu skrip v2 lab G1"
+            ),
         }
     from django.db import transaction
 
@@ -876,16 +1256,31 @@ def finalize_verification(enrollment: RouterEnrollment, *, source: str = "simula
             router=router,
             status=RouterEnrollment.Status.COMPLETED,
             api_cert_fingerprint=fingerprint,
-            device_identity={
-                "wg_public_key": enrollment.wg_public_key,
-                "simulator": source == "simulator",
-                "probe": probe,
-            },
+            device_identity=(
+                {
+                    "sstp_username": (SstpAccount.objects.filter(enrollment=enrollment).values_list("username", flat=True).first() or ""),
+                    "simulator": source == "simulator",
+                    "probe": probe,
+                }
+                if enrollment.protocol == "sstp"
+                else {
+                    "wg_public_key": enrollment.wg_public_key,
+                    "simulator": source == "simulator",
+                    "probe": probe,
+                }
+            ),
             completed_at=timezone.now(),
         )
-        WireGuardPeer.objects.filter(enrollment=enrollment).update(
-            router=router, state=WireGuardPeer.State.APPLIED, applied_revision=1
-        )
+        if enrollment.protocol == "sstp":
+            # Kredensial aktif + terpasang pada router (pola peer WG §2.7):
+            # reconciler merender akun pada chap-secrets host.
+            SstpAccount.objects.filter(enrollment=enrollment).update(
+                router=router, state=SstpAccount.State.APPLIED, applied_revision=1
+            )
+        else:
+            WireGuardPeer.objects.filter(enrollment=enrollment).update(
+                router=router, state=WireGuardPeer.State.APPLIED, applied_revision=1
+            )
     return router
 
 

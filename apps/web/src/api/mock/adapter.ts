@@ -42,6 +42,7 @@ import type {
   SessionUser,
   SubscriptionInfo,
   TenantSummary,
+  EnrollmentProtocol,
 } from '../contracts';
 import type { MutationOptions, PageParams } from '../http';
 import type { Permission } from '../../permissions/permissions';
@@ -578,10 +579,11 @@ export class MockApiClient implements ApiClient {
     const fe: Record<string, { code: string; message: string }[]> = {};
     if (!input.display_name.trim()) fe.display_name = [{ code: 'required', message: 'Nama tampilan wajib diisi' }];
     if (!/^[A-Z0-9-]{2,16}$/.test(input.router_code)) fe.router_code = [{ code: 'pattern', message: 'Kode router 2–16 karakter: huruf besar, angka, tanda hubung' }];
-    // Paritas backend: hanya wireguard (Phase 1) dan WireGuard butuh v7.1+.
-    const protocol = (input.protocol ?? 'wireguard') as string;
-    if (protocol !== 'wireguard') {
-      fe.protocol = [{ code: 'unsupported', message: 'Protokol belum didukung rilis ini — hanya WireGuard (SSTP/L2TP/IPsec/OpenVPN menyusul per fase)' }];
+    // Paritas backend Phase-2: wireguard (v7.1+) DAN sstp (v6.49.x + v7.x)
+    // aktif; l2tp/openvpn ditolak jujur (menyusul per fase).
+    const protocol = (input.protocol ?? 'wireguard') as EnrollmentProtocol;
+    if (protocol !== 'wireguard' && protocol !== 'sstp') {
+      fe.protocol = [{ code: 'unsupported', message: 'Protokol belum didukung rilis ini — WireGuard dan SSTP aktif (L2TP/IPsec/OpenVPN menyusul per fase)' }];
     }
     const rosVersion = (input.routeros_version ?? '7').replace(/^[vV]+/, '');
     if (!/^\d+(?:\.\d+){0,3}$/.test(rosVersion)) {
@@ -589,16 +591,21 @@ export class MockApiClient implements ApiClient {
     } else if (protocol === 'wireguard') {
       const parts = rosVersion.split('.').map(Number);
       if (parts[0]! < 7) {
-        fe.routeros_version = [{ code: 'wireguard_requires_v7', message: 'WireGuard membutuhkan RouterOS v7.1+ — RouterOS v6 akan didukung melalui SSTP (belum tersedia di rilis ini)' }];
+        fe.routeros_version = [{ code: 'wireguard_requires_v7', message: 'WireGuard membutuhkan RouterOS v7.1+ — untuk RouterOS v6 pilih SSTP' }];
       } else if (parts[0]! === 7 && parts.length > 1 && parts[1]! < 1) {
         fe.routeros_version = [{ code: 'wireguard_requires_v7_1', message: 'WireGuard hadir sejak RouterOS v7.1 — versi 7.0 belum memuat WireGuard' }];
+      }
+    } else if (protocol === 'sstp') {
+      const parts = rosVersion.split('.').map(Number);
+      if (parts[0]! < 6) {
+        fe.routeros_version = [{ code: 'sstp_requires_v6', message: 'SSTP membutuhkan RouterOS v6+ — versi lebih lama tidak didukung' }];
       }
     }
     if (Object.keys(fe).length) fail('validation_error', 'Periksa kembali isian Anda', fe);
     const id = `enr-${Math.random().toString(36).slice(2, 7)}`;
     const draft: RouterEnrollmentDraft = {
       id,
-      request: { ...input, protocol: 'wireguard', routeros_version: rosVersion },
+      request: { ...input, protocol, routeros_version: rosVersion },
       state: 'enrollment_issued',
     };
     this.enrollments.set(id, draft);
@@ -647,6 +654,39 @@ export class MockApiClient implements ApiClient {
     // Kedaluwarsa 15 menit (enroll.token_ttl_s = 900).
     if (Date.now() - issuedAt > 900_000) fail('expired', 'Skrip kedaluwarsa. Buat ulang; token lama dicabut');
     const mode = draft.request.mode === 'managed' ? 'read+write' : 'read-only';
+    // Paritas backend Phase-2: skrip SSTP (v6/v7) — MSCHAPv2 saja + verifikasi
+    // sertifikat server wajib nyala; port 4443; CA via endpoint enroll-ca.
+    if (draft.request.protocol === 'sstp') {
+      return delay({
+        enrollment_id: enrollmentId,
+        protocol: 'sstp',
+        routeros_version: draft.request.routeros_version ?? '6',
+        script: [
+          '# MicroTix bootstrap — DEV FIXTURE (mock), jangan dijalankan pada perangkat nyata',
+          `# Protokol: sstp · mode=${mode} · RouterOS: ${draft.request.routeros_version ?? '6'}`,
+          ':local iface "mtx-sstp"',
+          '/tool/fetch url="https://microtix.invalid/api/v1/bridge/enroll-ca" dst-path=microtix-ca.crt',
+          '/interface/sstp-client/add name=$iface connect-to=microtix.invalid port=4443 \\',
+          '    user=$user password=$pass authentication=mschap2 \\',
+          '    verify-server-certificate=yes verify-server-address-from-certificate=yes disabled=no',
+          '/tool/fetch url="https://microtix.invalid/api/v1/bridge/enroll-complete" http-method=post \\',
+          '    http-data="{\\"token\\":\\"<dev-fixture-token>\\",\\"protocol\\":\\"sstp\\",\\"sstp_username\\":\\"<dev-fixture-user>\\"}" http-header-field="Content-Type: application/json"',
+        ].join('\n'),
+        expires_at: new Date(issuedAt + 900_000).toISOString(),
+        gateway: {
+          hostname: 'microtix.invalid',
+          listen_port: 4443,
+          api_port: 8729,
+          server_tunnel_ip: '100.127.0.2',
+        },
+        purpose_summary: [
+          'Membuat klien SSTP ke gateway publik via TLS (DEV FIXTURE — mock).',
+          'Endpoint gateway: microtix.invalid:4443/TCP — kredensial per-router, MSCHAPv2, verifikasi sertifikat server wajib.',
+          'Tanpa reset/reboot/add-default-route/perubahan DNS/DHCP/NAT/bridge/akun existing.',
+          'Mock: skrip ini simulasi tampilan; verifikasi perangkat nyata menunggu lab G1.',
+        ],
+      });
+    }
     return delay({
       enrollment_id: enrollmentId,
       protocol: 'wireguard',
@@ -693,7 +733,7 @@ export class MockApiClient implements ApiClient {
       ...r,
       identity: `rtrw-${routerId}-node`,
       capability: { pppoe: true, hotspot: true, radius_client: true, fasttrack_detect: true },
-      verification: { source: 'simulator', verified_lab: false, api_ssl: false, wireguard: false },
+      verification: { source: 'simulator', verified_lab: false, api_ssl: false, wireguard: false, sstp: false },
       uptime_s: 86400 * 12,
       serial: 'ABCD1234567',
     });

@@ -57,7 +57,7 @@ export interface SessionUser {
 
 export type EnrollmentMode = 'read_only' | 'managed';
 
-/** Transport enrollment (arsitektur shared-port; Phase 1: hanya wireguard aktif). */
+/** Transport enrollment (arsitektur shared-port; Phase-2: wireguard + sstp aktif). */
 export type EnrollmentProtocol = 'wireguard' | 'sstp' | 'l2tp_ipsec' | 'openvpn';
 
 export type EnrollmentState =
@@ -140,6 +140,8 @@ export interface RouterVerification {
   verified_lab: boolean;
   api_ssl: boolean;
   wireguard: boolean;
+  /** Phase-2: tunnel SSTP nyata (hanya True bila probe nyata via sesi PPP). */
+  sstp: boolean;
 }
 
 /* ---------- Discovery/adopsi (U07) ---------- */

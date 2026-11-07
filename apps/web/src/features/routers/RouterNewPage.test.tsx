@@ -39,15 +39,17 @@ function renderNew() {
 }
 
 /**
- * U05 Phase-1 (master directive §9): pemilih protokol + versi RouterOS yang
- * jujur — hanya WireGuard aktif (RouterOS v7.1+); SSTP/L2TP/OpenVPN tampil
- * sebagai "direncanakan", dan RouterOS v6 memblokir kelanjutan dengan alasan.
+ * U05 Phase-2 (master directive konektivitas): pemilih protokol + versi
+ * RouterOS yang jujur — WireGuard aktif (v7.1+), SSTP aktif (v6.49.x + v7.x,
+ * komplementer); L2TP/OpenVPN tampil "direncanakan". RouterOS v6 + WireGuard
+ * memblokir kelanjutan dengan alasan; v6 + SSTP dapat dilanjutkan.
  */
 describe('RouterNewPage (U05 — protokol & versi RouterOS)', () => {
-  it('menampilkan pilihan versi + protokol; WireGuard aktif, lainnya direncanakan', () => {
+  it('menampilkan pilihan versi + protokol; WireGuard & SSTP aktif, L2TP/OpenVPN direncanakan', () => {
     renderNew();
     expect(screen.getByText('WireGuard (disarankan)')).toBeTruthy();
-    expect(screen.getAllByText('Direncanakan — belum tersedia di rilis ini.').length).toBe(3);
+    expect(screen.getByText(/TLS 1.2 \+ MSCHAPv2; RouterOS v6 dan v7/)).toBeTruthy();
+    expect(screen.getAllByText('Direncanakan — belum tersedia di rilis ini.').length).toBe(2);
     expect(screen.getByText('RouterOS v7 (7.1+)')).toBeTruthy();
     expect(screen.getByText('RouterOS v6 atau lebih lama')).toBeTruthy();
   });
@@ -59,6 +61,19 @@ describe('RouterNewPage (U05 — protokol & versi RouterOS)', () => {
     expect(screen.getAllByText(/WireGuard membutuhkan RouterOS v7\.1\+/).length).toBeGreaterThan(0);
     const btn = screen.getByRole('button', { name: /Lanjutkan/ });
     expect((btn as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('RouterOS v6 + SSTP dapat dilanjutkan (Phase-2: v6 via SSTP)', async () => {
+    renderNew();
+    fireEvent.click(screen.getByText('RouterOS v6 atau lebih lama'));
+    fireEvent.click(screen.getByText('SSTP', { exact: true }));
+    fireEvent.change(screen.getByLabelText(/Nama tampilan/), { target: { value: 'Router V6 SSTP' } });
+    fireEvent.change(screen.getByLabelText(/Kode router/), { target: { value: 'RTR-V6-01' } });
+    const btn = screen.getByRole('button', { name: /Lanjutkan/ });
+    expect((btn as HTMLButtonElement).disabled).toBe(false);
+    fireEvent.click(btn);
+    expect(await screen.findByText('Prasyarat perangkat')).toBeTruthy();
+    expect(screen.getByText(/Protokol terpilih: SSTP/)).toBeTruthy();
   });
 
   it('submit v7 + WireGuard valid → lanjut ke Prasyarat dengan ringkasan terpilih', async () => {

@@ -2,6 +2,68 @@
 
 Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-07 (Asia/Jakarta).
 
+## Checkpoint SESI-2026-11-07-lanjutan — Phase-2 SSTP (master directive konektivitas)
+
+**Scope**: mulai dari `main` @ `16085f8` (handoff kanonis Phase-1; bersih).
+Prioritas: kelanjutan direktif user "Secure Router Connectivity" — **Phase-2
+SSTP** yang pada handoff sebelumnya berstatus PROPOSED menunggu keputusan
+user (kelanjutan diberikan pada sesi ini + PAT untuk commit/push).
+
+**Hasil Phase-2 (SSTP — kanal manajemen KOMPLEMENTER WireGuard):**
+- **Protokol aktif untuk v6+v7**: `protocol=sstp` diterima (SSTP klien hadir
+  di jalur v6.49.x DAN v7 — matriks kapabilitas); v5- ditolak 422 jujur;
+  WireGuard tetap wajib v7.1+. RouterOS v6 kini dapat onboarding read-only.
+- **Kredensial per-router (SstpAccount, migrasi 0011 + RLS + FK komposit)**:
+  username unik GLOBAL lintas tenant (`mtx-<kode>-<suffix>`; tumbukan
+  ditangani retry bounded) + password CSPRNG 192-bit SecretBox. Plaintext
+  keluar hanya ke skrip bootstrap (pemilik, TTL 15 menit) dan chap-secrets
+  ops host (0600). Revoke: release/replace ⇒ state REMOVED (tak dirender).
+- **Skrip bootstrap v6/v7** (sintaks berjarak, didokumentasikan lintas versi):
+  `authentication=mschap2` SAJA, `verify-server-certificate=yes` +
+  `verify-server-address-from-certificate=yes` WAJIB (tidak ada opsi
+  mematikan), CA platform diunduh dari endpoint publik
+  `/api/v1/bridge/enroll-ca` lalu diimpor, rule API-SSL hanya dari alamat
+  PPP server (.2), TANPA add-default-route, /32 dialokasikan server-side
+  (bukan diketik di router), callback body token+username (§2.2).
+- **Bridge sadar-protokol**: identitas SSTP = username kredensial (dicocokkan
+  dengan SstpAccount — mismatch 409 `sstp_identity_mismatch`); replay
+  identitas sama = hasil logis sama; kunci WG pada enrollment SSTP = 422
+  (dan sebaliknya).
+- **Kejujuran verifikasi diperluas**: `verification.sstp` (simulator ⇒ False;
+  jalur api_ssl probe NYATA via sesi PPP ⇒ True; wireguard tetap False
+  untuk enrollment SSTP — tidak ada klaim silang).
+- **Server SSTP = accel-ppp 1.15.0** (build dari sumber dipin SHA-256 —
+  `backend/scripts/build_accel_ppp.sh`; tidak ada paket resmi Debian):
+  TLS 1.2 + `AES256-SHA:AES256-GCM-SHA384` (dua suite terdokumentasi klien
+  RouterOS), shared-port `vpn.sstp_listen_port` (defaults rev **2.4**, param
+  ke-116; default 4443 — 443 dipakai Caddy), `single-session=replace`,
+  `mppe=deny`; render `manage.py render_sstp_config` (accel-ppp.conf +
+  chap-secrets; format baris `username password <ip-statis>` diverifikasi
+  dari chap-secrets.c 1.15.0). Installer `setup_sstp` fase-aware
+  `MT_ENABLE_SSTP=1` (pola MT_ENABLE_RADIUS): CA privat 10 th + sertifikat
+  gateway SAN=MT_DOMAIN (auto-regen saat SAN berubah), unit
+  `microtix-sstp.service`, health gate + doctor + repair/upgrade idempoten.
+- **Amendemen normatif ROUTEROS.md §2.3** (SSTP komplementer; keputusan user
+  master directive = persetujuan eksplisit; catatan keputusan pada laporan
+  sesi report/orchestrator/).
+- **Lab GNS3 profil minimal Phase-2** (`lab/`): topologi deklaratif 2 tahap
+  (A: gw+CHR+1 klien; B: + tenant kedua **LAN sama 192.168.88.0/24** — bukti
+  isolasi), provisioner API-driven stdlib (deteksi family API dari
+  /version per OPERATIONS.md), checklist bukti G1 (termasuk uji NEGATIF
+  verifikasi sertifikat). Status: IMPLEMENTED, **BELUM VERIFIED_LAB**
+  (aset CHR/controller belum tersedia — jujur, bukan klaim).
+
+**Verifikasi (nyata, PG 17.11)**: backend **391/391** (+18 SSTP:
+test_sstp_flow.py) + makemigrations --check bersih + `manage.py check` OK +
+FreeRADIUS nyata **15/15**; FE tsc/eslint 0 + vitest **67/67** + i18n paritas
+**1063** + build live OK (mock DITOLAK); `make e2e` **12/12** (Chromium +
+backend + worker nyata); docs check PASS; `bash -n` installer + build script
+OK (shellcheck tidak tersedia di sandbox — dicatat jujur).
+
+**Blok tetap**: Gate A/G host Debian 13 nyata (penahan tag beta tunggal);
+lab G1 (CHR/controller) untuk bukti perangkat nyata — simulator tetap tidak
+pernah diklaim sebagai konektivitas nyata.
+
 ## Checkpoint SESI-2026-11-07 — Onboarding router aman Phase-1 (master directive konektivitas)
 
 **Scope**: mulai dari `main` @ `7d60014` (handoff kanonis lanjutan 4; bersih).
