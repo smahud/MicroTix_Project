@@ -39,10 +39,14 @@ export default function RouterNewPage({ tenantId }: { tenantId: string }) {
     routeros_version: '7' as '7' | '6',
   });
 
-  // WireGuard hadir sejak RouterOS 7.1 (riset capability matrix) — pada v6
-  // tidak ada protokol yang didukung rilis ini (SSTP menyusul, fase berikutnya).
+  // WireGuard hadir sejak RouterOS 7.1; SSTP hadir pada jalur v6.49.x DAN
+  // v7.x (matriks kapabilitas) — Phase-2: SSTP aktif untuk kedua versi
+  // (komplementer, bukan pengganti WireGuard).
   const wireguardAvailable = form.routeros_version === '7';
-  const protocolAvailable = wireguardAvailable && form.protocol === 'wireguard';
+  const sstpAvailable = true;
+  const protocolAvailable =
+    (form.protocol === 'wireguard' && wireguardAvailable) ||
+    (form.protocol === 'sstp' && sstpAvailable);
 
   const scriptQ = useQuery({
     queryKey: ['bootstrap-script', tenantId, enrollmentId],
@@ -84,8 +88,8 @@ export default function RouterNewPage({ tenantId }: { tenantId: string }) {
     const errs: Record<string, string | undefined> = {};
     if (!form.display_name.trim()) errs.display_name = t('validation.required');
     if (!/^[A-Z0-9-]{2,16}$/.test(form.router_code)) errs.router_code = t('validation.router_code');
-    if (!wireguardAvailable) errs.routeros_version = t('routers.protocol_v6_unsupported');
-    else if (form.protocol !== 'wireguard') errs.protocol = t('routers.protocol_planned');
+    if (form.protocol === 'wireguard' && !wireguardAvailable) errs.routeros_version = t('routers.protocol_v6_unsupported');
+    else if (form.protocol !== 'wireguard' && form.protocol !== 'sstp') errs.protocol = t('routers.protocol_planned');
     if (Object.keys(errs).length) {
       setErrors(errs);
       return;
@@ -247,10 +251,10 @@ export default function RouterNewPage({ tenantId }: { tenantId: string }) {
                     type="radio"
                     name="protocol"
                     checked={form.protocol === 'sstp'}
-                    disabled
+                    disabled={!sstpAvailable}
                     onChange={() => setForm((f) => ({ ...f, protocol: 'sstp' }))}
                     label={t('routers.protocol_sstp')}
-                    hint={t('routers.protocol_planned')}
+                    hint={sstpAvailable ? t('routers.protocol_sstp_hint') : t('routers.protocol_planned')}
                   />
                   <Checkbox
                     type="radio"
@@ -295,7 +299,7 @@ export default function RouterNewPage({ tenantId }: { tenantId: string }) {
             <div className="mt-stack">
               <h2>{t('routers.prereq_title')}</h2>
               <ul className="mt-stack-sm mt-small mt-muted" style={{ paddingLeft: 20 }}>
-                <li>{t('routers.prereq_chosen', { protocol: t('routers.protocol_wireguard'), version: form.routeros_version === '7' ? t('routers.version_v7') : t('routers.version_v6') })}</li>
+                <li>{t('routers.prereq_chosen', { protocol: form.protocol === 'sstp' ? t('routers.protocol_sstp') : t('routers.protocol_wireguard'), version: form.routeros_version === '7' ? t('routers.version_v7') : t('routers.version_v6') })}</li>
                 <li>{t('routers.prereq_v7')}</li>
                 <li>{t('routers.prereq_internet')}</li>
                 <li>{t('routers.prereq_terminal')}</li>

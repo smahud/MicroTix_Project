@@ -6,7 +6,7 @@ from django.utils import timezone
 from domains.jobs.engine import JobContext, JobError, JobHandler, register
 
 from adapters.routeros.base import RouterOsError
-from domains.network.models import Router, RouterEnrollment, WireGuardPeer
+from domains.network.models import Router, RouterEnrollment, SstpAccount, WireGuardPeer
 
 
 def _ctx_router(ctx: JobContext) -> Router:
@@ -77,6 +77,10 @@ class VerifyApiSslHandler(JobHandler):
             return {"ok": False, "reason": "router_not_created"}
         router = Router.objects.filter(id=enrollment.router_id).first()
         ok = router is not None and router.tunnel_ip == enrollment.tunnel_ip and bool(router.credential_ref)
+        if enrollment.protocol == "sstp":
+            # SSTP: bukti pemasangan = akun kredensial APPLIED (pola peer WG).
+            account = SstpAccount.objects.filter(router=router).first()
+            return {"ok": bool(ok and account and account.state == SstpAccount.State.APPLIED)}
         peer = WireGuardPeer.objects.filter(router=router).first()
         return {"ok": bool(ok and peer and peer.state == WireGuardPeer.State.APPLIED)}
 
@@ -127,6 +131,9 @@ class RouterReleaseHandler(JobHandler):
         router.released_at = timezone.now()
         router.save(update_fields=["released_at"])
         WireGuardPeer.objects.filter(router=router).update(state=WireGuardPeer.State.REMOVED)
+        # Revoke kredensial SSTP (master directive §8: audit revoke — akun
+        # dikecualikan dari render chap-secrets berikutnya).
+        SstpAccount.objects.filter(router=router).update(state=SstpAccount.State.REMOVED)
         try:
             deproject_nas(router)
             nas_removed = True
@@ -157,6 +164,7 @@ class RouterReplaceHandler(JobHandler):
         router.released_at = timezone.now()
         router.save(update_fields=["released_at"])
         WireGuardPeer.objects.filter(router=router).update(state=WireGuardPeer.State.REMOVED)
+        SstpAccount.objects.filter(router=router).update(state=SstpAccount.State.REMOVED)
         # create_enrollment kini mengikuti konvensi caller-provides-scope.
         enrollment = services.create_enrollment(
             str(router.tenant_id),

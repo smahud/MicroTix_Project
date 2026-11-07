@@ -265,7 +265,9 @@ class TestProtocolGatewayAndHonesty:
     # --- protokol & versi RouterOS ---
 
     def test_unsupported_protocol_rejected_422(self, api_client, owner, tenant_a):
-        resp = self._create(api_client, owner, tenant_a, router_code="RTR-PROTO-1", extra={"protocol": "sstp"})
+        # Phase-2: sstp kini DIDUKUNG — protokol yang masih ditolak jujur
+        # adalah l2tp/openvpn (menyusul per fase; matriks kapabilitas tersedia).
+        resp = self._create(api_client, owner, tenant_a, router_code="RTR-PROTO-1", extra={"protocol": "openvpn"})
         assert resp.status_code == 422
         fe = resp.json()["field_errors"]
         assert fe["protocol"][0]["code"] == "unsupported"

@@ -1,5 +1,5 @@
 {
-  "revision": "2.3",
+  "revision": "2.4",
   "owner": "Runtime technical defaults; commercial values PRODUCT.md; display values branding.json",
   "rules": [
     "Unknown keys and duplicate JSON keys rejected.",
@@ -133,6 +133,21 @@
       "scope": "deployment",
       "bounds": null,
       "change_rule": "Hostname publik gateway VPN (tanpa scheme/port) yang disematkan pada skrip bootstrap router. Rantai resolusi: kunci ini (env MT_OVERRIDE_VPN__GATEWAY_HOSTNAME, nilai JSON string) → MT_PUBLIC_HOST → MT_DOMAIN. Produksi tanpa nilai = skrip DITOLAK (gateway_hostname_unconfigured) — bukan fallback palsu. Format divalidasi hostname/IPv4 saat penggunaan.",
+      "basis": "engineering_default"
+    },
+    {
+      "key": "vpn.sstp_listen_port",
+      "type": "integer",
+      "unit": "tcp_port",
+      "default": 4443,
+      "nullable": false,
+      "scope": "deployment",
+      "bounds": {
+        "mode": "range",
+        "minimum": 1024,
+        "maximum": 65535
+      },
+      "change_rule": "Port TCP listener SSTP manajemen — SHARED-PORT tunggal untuk seluruh router seluruh tenant (arsitektur gateway Phase-2; bukan per-tenant). Default 4443 karena 443 umumnya dipakai HTTPS platform (Caddy) dan SSTP tidak dapat berbaginya tanpa SNI (klien v6 tanpa add-sni). Ubah hanya sebelum router pertama di-enroll; perubahan setelahnya memerlukan render ulang skrip aktif + accel-ppp.conf (ops host).",
       "basis": "engineering_default"
     },
     {

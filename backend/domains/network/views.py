@@ -88,6 +88,7 @@ class RouterDetailView(TenantApiView):
                     "verified_lab": bool(capability.get("verified_lab", False)),
                     "api_ssl": bool(capability.get("api_ssl", False)),
                     "wireguard": bool(capability.get("wireguard", False)),
+                    "sstp": bool(capability.get("sstp", False)),
                 },
                 "uptime_s": latest.uptime_s if latest else None,
                 "serial": router.serial or None,
@@ -224,14 +225,35 @@ class BridgeEnrollCompleteView(APIView):
 
     Rate limiting brute-force tidak diperlukan pada 256-bit CSPRNG; token
     kedaluwarsa + konsumsi atomik + hash-only storage (§2.2/§2.7).
+    Identitas per protokol: WireGuard = wg_public_key; SSTP = sstp_username
+    (dicocokkan dengan kredensial enrollment oleh service layer).
     """
 
     permission_classes: list = []
 
-    @extend_schema(summary="Bridge enrollment: konsumsi token + kunci publik WG")
+    @extend_schema(summary="Bridge enrollment: konsumsi token + identitas tunnel")
     def post(self, request: Request) -> Response:
         body = request.data if isinstance(request.data, dict) else {}
         result = services.complete_enrollment(
-            str(body.get("token", "")), str(body.get("wg_public_key", ""))
+            str(body.get("token", "")),
+            str(body.get("wg_public_key", "") or ""),
+            str(body.get("sstp_username", "") or ""),
         )
         return Response(result)
+
+
+class BridgeEnrollCaView(APIView):
+    """CA platform untuk skrip bootstrap SSTP (materi PUBLIK; tanpa sesi).
+
+    Router mengunduh + mengimpor CA ini agar klien SSTP dapat memverifikasi
+    sertifikat server (verify-server-certificate=yes — WAJIB, tidak boleh
+    dimatikan). Tanpa CA terkonfigurasi: error jujur, bukan CA palsu.
+    Hanya sertifikat CA (publik) yang disajikan — tanpa kunci privat.
+    """
+
+    permission_classes: list = []
+
+    @extend_schema(summary="Bridge enrollment: bundel CA platform (SSTP)")
+    def get(self, request: Request) -> Response:
+        bundle = services.enroll_ca_bundle()
+        return Response(bundle, content_type="application/x-pem-file")
