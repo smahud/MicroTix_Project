@@ -7,7 +7,7 @@ Tanggal: 10 November 2026 WIB. Sesi dokumentasi saja, bukan development/deployme
 - Repository: smahud/MicroTix_Project; default `main`.
 - Canonical code SHA audited/verified via clone + GitHub API: **16085f825fef25ee4112d74b729c57e623b0bb05**.
 - Historical main CI: [run42285141174](https://github.com/smahud/MicroTix_Project/actions/runs/42285141174), backend/frontend/docs completed success. Tidak diulang dalam audit ini.
-- Documentation branch: `docs/planning-audit-20261110`; integration/remote status final dicatat pada laporan sesi dan PR. **Main tidak diubah oleh sesi ini.**
+- Documentation branch: `docs/planning-audit-20261110`; [draft PR8](https://github.com/smahud/MicroTix_Project/pull/8), audit payload commit **a3649cdb749877cb17421cfc48025beb54545f42** terverifikasi remote. Report-only metadata menyusul payload; current head lihat PR. **Main tidak diubah oleh sesi ini.**
 - Open SSTP [PR7](https://github.com/smahud/MicroTix_Project/pull/7), head `d7fa35e5583bc36848e3b45497d2511739298c8a`, belum merged saat discovery/final review. Artefak SSTP/lab PR7 bukan main; audit delta terpisah diperlukan.
 - Branch historis/unmerged lain dipertahankan, khususnya `parallel/beta-be2` dan `integration/beta-0.1`; jangan dihapus/ditimpa otomatis.
 
@@ -49,4 +49,8 @@ Tidak ada bug yang dipatch. Runtime suite/DB migration/host/FreeRADIUS/CHR/GNS3/
 
 ## 6. Integrasi sesi ini
 
-PENDING documentation-only commit/PR and final remote verification; lihat bagian integrasi laporan audit untuk status final. Handoff ini tidak menyatakan seluruh main siap atau hasil runtime baru.
+[Draft PR8](https://github.com/smahud/MicroTix_Project/pull/8) open, belum merged. Payload tree sama persis dengan hasil lokal;13 changed files semuanya di planning_audit/report. Canonical main diverifikasi ulang tetap16085f825fef25ee4112d74b729c57e623b0bb05. [CI payload run42702564301](https://github.com/smahud/MicroTix_Project/actions/runs/42702564301): backend/frontendSUCCESS, docsFAILURE karena manifest mismatch (log/exit1 diverifikasi). CI otomatis ini terpisah dari audit statis lokal; bukan bukti install/restore/CHR atau penutupan defect concurrency.
+
+Original docs manifest tidak diubah. Temporary-copy-only refresh PASS27files/105links, scoped links/structure dan gitdiffcheck PASS, protected363 baseline files unchanged. Tiga documentation-review corrections CLOSED sesudah independent focused recheck. Main, production, keys dan DB tidak disentuh.
+
+Laporan/handoff ini menambahkan metadata publication dalam commit report-only setelah payload yang sudah terverifikasi. Current branch head/CI dapat dilihat langsung pada PR tanpa hash self-referential dalam file. Tidak ada klaim seluruh main sudah siap; keputusan DEC-01/02 dan implementasi temuan tetap terbuka.
