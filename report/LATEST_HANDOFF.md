@@ -1,147 +1,56 @@
-# LATEST_HANDOFF — Kanonis (sesi 2026-11-07: Phase-1 onboarding router aman)
+# LATEST_HANDOFF — planning audit finalization
 
-Diperbarui atomik SETELAH verifikasi sesi. Dokumen ini adalah titik masuk
-WAJIB agent berikutnya (CONTRACT.md §10; dokumen handoff lain di
-docs/AGENT_HANDOFF.md tetap sebagai panduan alur — perbarui statusnya,
-jangan duplikasi laporan penuh).
+Tanggal: 10 November 2026 WIB. Sesi dokumentasi saja, bukan development/deployment. Handoff ini menggantikan titik masuk historis pada baseline; evidence lama tetap di Git.
 
-## 1. Status kanonis SAAT INI
+## 1. Canonical remote reality
 
-| Item | Nilai |
-|---|---|
-| **Branch kanonis** | `main` |
-| **Commit remote terverifikasi** | **`8bb20c33d3bab15a469ade01bb4c665f56a8738a`** (merge PR #6; diverifikasi `git ls-remote` + API 2026-11-07; CI pada head PR `4ed2145` **HIJAU**: backend/frontend/docs semua success — diverifikasi via check-runs) |
-| **PR sesi ini** | **#6 SUDAH MERGED** (`session/2026-11-07-wg-onboarding`: Phase-1 onboarding router aman WireGuard — lihat §2) |
-| Rilis kandidat | `v0.1.0-beta.1` tetap **NOT_READY** — penahan tunggal tetap Gate A/G (instalasi host Debian 13 nyata root+domain), BUKAN pekerjaan kode |
-| CONTRACT.md | Versi `1fff190` (tidak diubah; amendment teknis dicatat PROPOSED di report/orchestrator/20261106T195642Z-*.md §3) |
-| Prioritas aktif | **Master directive user "Secure Router Connectivity"** (P0) — Phase-1 SELESAI & TERINTEGRASI; Phase-2 SSTP menunggu keputusan/lanjutan direktif; Gate A/G tetap penahan beta |
+- Repository: smahud/MicroTix_Project; default `main`.
+- Canonical code SHA audited/verified via clone + GitHub API: **16085f825fef25ee4112d74b729c57e623b0bb05**.
+- Historical main CI: [run42285141174](https://github.com/smahud/MicroTix_Project/actions/runs/42285141174), backend/frontend/docs completed success. Tidak diulang dalam audit ini.
+- Documentation branch: `docs/planning-audit-20261110`; [draft PR8](https://github.com/smahud/MicroTix_Project/pull/8), audit payload commit **a3649cdb749877cb17421cfc48025beb54545f42** terverifikasi remote. Report-only metadata menyusul payload; current head lihat PR. **Main tidak diubah oleh sesi ini.**
+- Open SSTP [PR7](https://github.com/smahud/MicroTix_Project/pull/7), head `d7fa35e5583bc36848e3b45497d2511739298c8a`, belum merged saat discovery/final review. Artefak SSTP/lab PR7 bukan main; audit delta terpisah diperlukan.
+- Branch historis/unmerged lain dipertahankan, khususnya `parallel/beta-be2` dan `integration/beta-0.1`; jangan dihapus/ditimpa otomatis.
 
-## 2. Yang diselesaikan + diverifikasi sesi ini (bukti nyata)
+## 2. Pekerjaan selesai dan sumber review
 
-1. **Perbaikan bug P0 skrip bootstrap** (`services.bootstrap_script`):
-   endpoint peer = hostname gateway PUBLIK terkonfigurasi — rantai
-   `vpn.gateway_hostname` (defaults.json **rev 2.3**, param ke-115) →
-   `MT_PUBLIC_HOST` → `MT_DOMAIN`; produksi tanpa nilai = **409 jujur**
-   (`gateway_hostname_unconfigured`); dev/test = `microtix.invalid`
-   (TLD .invalid — tidak dapat diresolve). Menggantikan bug lama:
-   endpoint IP tunnel internal `100.127.0.1` + fallback palsu
-   `microtix.example`. Artefak SCEP + baris `:local privkey` (tanpa kurung,
-   membaca private key) DIHAPUS; port dari state host/enrollment; JSON body
-   callback dengan escape RouterOS benar; token tetap hash-only+SecretBox+
-   cleared-on-consume+di-body (§2.2). Komentar gap G1 pada callback fetch.
-2. **Kejujuran verifikasi (false-positive dimatikan)**: `capability.source`
-   = adapter AKTIF (`MT_ROUTEROS_ADAPTER`), simulator ⇒ `api_ssl/wireguard
-   = False` + catatan (sebelumnya `True` tanpa bukti apa pun). Jalur
-   `api_ssl`: **probe TCP+TLS NYATA** (`probe_connectivity`) sebelum Router
-   dibuat; pin = **fingerprint TERAMATI**; gagal → JobError retryable
-   (bounded `max_attempts=5`, re-entry VERIFYING — bug "retry terkunci"
-   diperbaiki). `verification` ternormalisasi di progress + detail router.
-3. **Protokol + versi RouterOS**: `RouterEnrollment.protocol`+
-   `routeros_version` (migrasi **0010**; default `wireguard`/`"7"` — API lama
-   tetap sah, additive-only). WireGuard wajib **v7.1+** (v6/v7.0 ditolak 422
-   beralasan); SSTP/L2TP/OpenVPN ditolak jujur `unsupported` (tampil
-   "direncanakan" di UI). UI wizard: pemilih versi+protokol, baris endpoint
-   gateway (§2.2), banner "Simulasi" di langkah Siap, chip sumber verifikasi
-   di detail router; mock adapter paritas penuh (bug regex vV diperbaiki).
-4. **Isolasi diperkuat**: constraint `uq_wgpeer_pubkey_active` (kunci publik
-   WG unik global utk peer AKTIF; 409 `wg_public_key_registered` lintas
-   tenant tanpa bocoran info) + **perbaikan bug alokasi IP tunnel buta-RLS**
-   (dua tenant bisa memilih /32 sama → IntegrityError; kini iterasi scope
-   per tenant, konvensi `_any_active_peer`).
-5. **Installer**: `MT_DOMAIN` diteruskan ke env aplikasi (pembuatan +
-   append-if-missing idempoten) — sumber hostname gateway di produksi.
-6. **E2E harness**: `e2e/run.sh` kini menjalankan **runworker** proses
-   terpisah; spec baru `routers.spec.ts` (2): alur PENUH backend+worker
-   nyata (wizard→skrip→bridge CSRF→job verify→"Siap" berlabel Simulasi→
-   detail router) + v6 memblokir kelanjutan.
-7. **Riset kapabilitas multi-protokol bersumber vendor** (WireGuard 7.1+;
-   SSTP klien tanpa EAP → server wajib MSCHAPv2; OpenVPN klien v6 TCP-only
-   tanpa NCP; L2TP auto-IKEv1; lisensi CHR):
-   `report/researcher/20261106T183941Z-routeros-vpn-capability-matrix.md`.
-8. **Review independen**: REQUEST_CHANGES (2 P1) → P1-1 retry re-entry
-   DIPERBAIKI (+tes); P1-2 `check-certificate` DIDOKUMENTASIKAN gap G1 +
-   PROPOSED (mengaktifkan tanpa bukti lab berisiko mematikan onboarding);
-   P2 layak-perbaiki (pin teramati, regex mock, oktet IPv4, gate 7.0)
-   diperbaiki. Disposisi: `report/reviewer/20261106T194638Z-*.md`.
-9. **Verifikasi penuh** (PG 17.11 nyata): backend **373/373** (+14),
-   makemigrations --check bersih, FreeRADIUS nyata **15/15**, FE
-   tsc/eslint 0 + vitest **66/66** + i18n paritas **1062**, build live OK +
-   mock DITOLAK, `make e2e` **12/12** (Chromium+backend+worker nyata),
-   bash -n instalasi.sh OK, docs check di-refresh.
+Lima dokumen final untuk owner review: [planning_audit README](../docs/planning_audit/README.md), 01 audit, 02 module contracts, 03 upgrade/patch safety dan 04 gates. Semua berdasarkan main SHA di atas; backend/frontend/migration/config/installer/CONTRACT/planning_mvp tidak berubah.
 
-## 3. Bloker beta tetap (jujur — prasyarat eksternal, bukan kode)
+[Laporan lengkap](planning-audit/20261109T210133Z-finalization.md) menautkan empat full specialist reports, documentation review, inventory379 file/225 backend AST/39 numbered migrations, sources dan validations. Source scan bukan klaim seluruh histori/file dibaca manual atau runtime test lulus.
 
-| Bloker | Butuh |
-|---|---|
-| **Gate A/G** (penahan tunggal tag `v0.1.0-beta.1`) | Host Debian 13 nyata + root + `MT_DOMAIN` + DNS → `sudo bash instalasi.sh install` → `INSTALL_SUCCESS`; termasuk timer host `issue_due_invoices` (01:00) |
-| **G1 lab MikroTik** (CHR/fisik) | Lab untuk T01/T16–T18/T20–T21 + bukti lab onboarding Phase-1: sintaks skrip v7, `check-certificate` fetch (+SNTP/CA), **skrip v2** (akun API-SSL platform pada router — jalur login penuh), handshake WG, dua tenant LAN sama → aktifkan `MT_ROUTEROS_ADAPTER=api_ssl`, cutover B3–B5 |
-| **Lab GNS3 API-driven** (CONTRACT §7) | Infrastruktur GNS3 + image CHR berlisensi; harness reproducible + profil topologi |
+Status dokumen **FINAL FOR OWNER REVIEW**. Status kesiapan memasuki implementasi berdasarkan paket tanpa keputusan tambahan **NOT READY**, sebab DEC-01 deployment baseline dan DEC-02 manifest belum disposed. Status release **NOT READY**; temuan kode P0/P1 masih terbuka.
 
-## 4. Cabang kerja
+## 3. Koreksi terhadap asumsi handoff historis
 
-- `session/2026-11-07-wg-onboarding` — sesi ini (PR #6 **SUDAH MERGED**; SHA remote
-  terverifikasi §1).
-- Arsip riwayat (remote, tidak diubah): `parallel/beta-be2` (masih unmerged —
-  jangan ditimpa), `integration/beta-0.1`, `session/2026-11-06-*`.
+Handoff lama menunjuk8bb20c3 dan menyebut GateA/G host sebagai penahan tunggal beta. HEAD aktual16085f8 dan audit statis menemukan blocker kode/installer tambahan. Jangan melakukan deploy hanya dengan menganggap host/domain satu-satunya yang kurang.
 
-## 5. Prioritas eksekusi berikutnya (urut)
+- **PA-001 P0:** distinct payment allocation race pada invoice yang sama; konsekuensi berasal dari static interleaving, runtime reproduction belum dilakukan.
+- **PA-002/003/005/006 P1:** worker fencing/recovery/permission, token completion atomisitas/bypass context, principal idempotency.
+- **PA-004/007/008/011/012:** platform MFA/factor concurrency, quota, migration selected set, projection FK/privilege dan scanner policy.
+- **OPS-01–07:** argv installer, missing dependency/runtime assets, RADIUS setup, live in-place upgrade, incomplete recovery, false success health dan runtime exposure migrator credential.
+- **PA-009/010/013, OPS-08/09:** outbox delivery belum consumer-ready, targeted ownership/storage, exact backup artifact, topology/wiring/test coverage.
 
-1. **Ops host Gate A/G saat host tersedia** (penahan beta tunggal; termasuk
-   timer `issue_due_invoices`).
-2. **Lab G1 (CHR)**: item bukti onboarding Phase-1 (lihat §3) → aktifkan
-   `MT_ROUTEROS_ADAPTER=api_ssl` + skrip v2.
-3. **Phase-2 SSTP** (master directive; matriks kapabilitas sudah tersedia):
-   server SSTP Debian (MSCHAPv2, aes256-sha/gcm-sha384, TLS 1.2), listener
-   shared-port, model protokol → skrip v6/v7, verifikasi TLS+identitas.
-   PROPOSED menunggu lanjutan direktif user.
-4. Alternatif paralel aman (handoff lama tetap sah): TK-701 ledger M7 ATAU
-   TK-602/607/608/609.
-5. Follow-up minor: endpoint ambil bukti transfer (keputusan dokumen §8);
-   enrollment cancel endpoint (state `cancelled` masih dead); GUC
-   `enroll_bridge` try/finally (pre-existing, direviu reviewer).
+Tidak ada bug yang dipatch. Runtime suite/DB migration/host/FreeRADIUS/CHR/GNS3/restore/benchmark **NOT_RUN dalam sesi ini**. Historical test counts tetap historis.
 
-## 6. Titik mulai EKSAK agent berikutnya
+## 4. Keputusan konkret pemilik
 
-```bash
-git fetch origin --prune
-git switch main && git pull --ff-only        # main @ merge PR Phase-1 (lihat §1)
-git log --oneline -5
-bash docs/tools/setup_env.sh                 # sandbox baru (PG17+FreeRADIUS deb-extract)
-cd backend && MT_PG_BIN=/home/z/my-project/pgbin/pg17 bash scripts/dev_bootstrap.sh
-MT_ENV=test .venv/bin/python -m pytest tests -q          # 373 tes (PostgreSQL nyata)
-bash scripts/test_radius.sh                               # 15/15 FreeRADIUS nyata
-cd ../apps/web && pnpm install --frozen-lockfile
-pnpm exec tsc -b --pretty false && pnpm exec eslint src --ext ts,tsx
-pnpm exec vitest run && cd ../.. && make e2e              # 12/12 browser+backend+worker nyata
-python3 docs/tools/check_docs.py && bash -n instalasi.sh
-```
+1. **DEC-01:** ARCHITECTURE/OPERATIONS menyatakan appCompose; installer native systemd. Pilih mempertahankan kontrak Compose dan menyesuaikan implementasi, atau setujui proposal native pilot dengan equivalent privilege/recovery evidence. Sebelum persetujuan, kontrak Compose tetap berlaku.
+2. **DEC-02:** Izinkan edit terbatas `docs/repository-manifest.json` agar lima file planning_audit masuk inventory/hash. File itu di luar izin edit sesi ini. Existing docs validator pada diff sekarang gagal manifest mismatch; scoped checks tidak menggantikan greenCI.
+3. **DEC-03:** Rekomendasi mengikuti terminal-state contract existing, bukan mengubahnya. Code implementation diperlukan di sesi yang berwenang.
+4. **DEC-04:** Tenant/legal entity/book Tax mapping diputuskan saat scope Tax aktif; tidak membuat synthetic platform tenant atau null-tenant bypass. planning_mvp absent di main dan tidak diubah; empat draft eksternal hanya conceptual inputs.
 
-Lingkungan sandbox baru: venv via `uv venv .venv --python /usr/bin/python3.13
---seed` (python3.13-venv tidak terpasang); pnpm wrapper `corepack pnpm@12.16.1`
-(shim `~/.local/bin/pnpm`); Playwright Chromium ter-cache. CATATAN proses
-background di sandbox: unduhan nohup bisa MANDek — jalankan setup_env.sh
-FOREGROUND; .deb terpotong (lzma error) → hapus *.deb lalu unduh ulang
-(idempoten).
+## 5. Exact next session
 
-Baca: CONTRACT.md (versi `1fff190`), docs/AGENT_HANDOFF.md §5, docs/progress.md
-checkpoint teratas (SESI-2026-11-07), report/orchestrator/20261106T195642Z-*
-(keputusan + PROPOSED), docs/BETA_RELEASE_STATUS.md (fitur aktif + batasan 7).
+1. Fetch remote, pin current HEAD, periksa dirty tree/PRs/CI. Audit delta bila main atau PR7 berubah sejak16085f8. Baca CONTRACT, lima dokumen dan laporan sesi.
+2. Disposisi DEC-01/02 pada docsPR; update manifest hanya setelah scope edit diotorisasi, lalu docsCI harusPASS. Tidak merge/main push tanpa approvals.
+3. Setelah implementasi diotorisasi: mulai PA-001 dengan PostgreSQL two-connection failing regression dan minimum locking fix. PA-002/003/005/006 serta OPS-01/02/06/07 dapat disiapkan pada worktree/branch terisolasi sesuai dependensi.
+4. Independent review dan report setiap task; real Debian13 clean/repeat install, staged upgrade failure/recovery, complete backup restore. Preserve keys/blobs/VPN/NAS identities dan acknowledged writes.
+5. Lanjut labG1 dengan controller/CHR licensed image/target/budget yang sah; dua tenant LAN sama, real WG/API-SSL, PPPoE/Hotspot/RADIUS dan router preservation. Simulator bukan bukti perangkat.
+6. Finance ledger/Tax/ACS/OLT tetap sesuai phase produk. Tidak menambah broker, microservices atau abstraksi generik untuk menutup defect lokal.
 
-## 7. Risiko & keterbatasan yang diketahui
+## 6. Integrasi sesi ini
 
-- **Daur ulang sandbox platform menghapus `/home/z/my-project`** — push
-  sesegera mungkin; lab dibangun ulang via `docs/tools/setup_env.sh`.
-- Mutasi router tetap jalur simulator (capability.source=simulator,
-  verified_lab=false) — TIDAK ADA klaim perangkat nyata (G1). Kini dengan
-  pelabelan jujur API+UI (`verification`) — simulator tidak pernah
-  dipresentasikan sebagai konektivitas nyata.
-- **Gap terdokumentasi G1** (lihat §3): `check-certificate` fetch (MITM token
-  dibatasi sekali-pakai/TTL/atomik), skrip v2 akun API-SSL (login penuh),
-  sintaks pada perangkat nyata, handshake WG.
-- Alokasi IP tunnel = iterasi scope per tenant (O(tenant) per enrollment) —
-  dicatat untuk fase kapasitas 1.000 tenant.
-- e2e spec onboarding bergantung worker interval 1 s + urutan (workers:1).
-- xhtml2pdf 0.2.28 dipin — pantau advisori keamanan.
-- PAT hanya di `.secrets/` sandbox (tidak pernah di-commit; scan bersih);
-  PAT kedaluwarsa = push berikutnya BLOCKED (minta PAT baru). **Rotasi PAT
-  disarankan** karena pernah melewati kanal chat.
+[Draft PR8](https://github.com/smahud/MicroTix_Project/pull/8) open, belum merged. Payload tree sama persis dengan hasil lokal;13 changed files semuanya di planning_audit/report. Canonical main diverifikasi ulang tetap16085f825fef25ee4112d74b729c57e623b0bb05. [CI payload run42702564301](https://github.com/smahud/MicroTix_Project/actions/runs/42702564301): backend/frontendSUCCESS, docsFAILURE karena manifest mismatch (log/exit1 diverifikasi). CI otomatis ini terpisah dari audit statis lokal; bukan bukti install/restore/CHR atau penutupan defect concurrency.
+
+Original docs manifest tidak diubah. Temporary-copy-only refresh PASS27files/105links, scoped links/structure dan gitdiffcheck PASS, protected363 baseline files unchanged. Tiga documentation-review corrections CLOSED sesudah independent focused recheck. Main, production, keys dan DB tidak disentuh.
+
+Laporan/handoff ini menambahkan metadata publication dalam commit report-only setelah payload yang sudah terverifikasi. Current branch head/CI dapat dilihat langsung pada PR tanpa hash self-referential dalam file. Tidak ada klaim seluruh main sudah siap; keputusan DEC-01/02 dan implementasi temuan tetap terbuka.
