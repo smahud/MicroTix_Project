@@ -137,9 +137,13 @@ REV-1111-04–09/11/12 TETAP TERBUKA dan kini menjadi bloker utama rilis (bukan 
 - Merge diverifikasi: remote `main` @ `8ce94d468232eda77cd675f6d18e5fcb41f3d708`
   (fetch ulang pasca-merge; log menampilkan `Merge pull request #9 from
   smahud/session/2026-11-11-pa001-payment-concurrency`).
-- Commit docs post-merge ini: SHA dicatat pada §8 setelah push + verifikasi remote
-  (kontrak: tidak mengklaim push tanpa bukti remote).
-- CI pada main pasca-merge: diverifikasi via API setelah push; hasil aktual pada §8.
+- Commit docs post-merge (laporan ini + handoff + progress):
+  `6bd7be9c7a6979fd0d522a6f6250c928e157396f` + koreksi §7 ini — remote diverifikasi
+  via fetch ulang setelah push (kontrak: tidak mengklaim push tanpa bukti remote).
+- CI pada main pasca-merge diverifikasi via API check-runs:
+  `6bd7be9` → **backend success, frontend success, docs success** (run lengkap
+  termasuk suite 382 tes PostgreSQL + peran runtime non-privilege).
+- Tidak ada tag rilis dibuat; `v0.1.0-beta.1` tetap NOT_READY.
 
 ## 8. Next step eksak
 
