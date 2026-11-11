@@ -2,6 +2,32 @@
 
 Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-11 (Asia/Jakarta).
 
+## Checkpoint SESI-2026-11-11 (final) — Verifikasi independen & MERGE PR #9: PA-001 tuntas di main
+
+**Scope**: verifikasi independen kandidat kedua PR #9 (`482602e`) di sandbox segar
+(dibangun ulang dari nol — platform didaur ulang), lalu integrasi merge ke main atas
+wewenang eksplisit pemilik repo. Delta sejak SHA review (`3b20b56`→`482602e`, 2 commit
+koreksi executor sebelumnya) direview terlebih dahulu sesuai instruksi packet §8.1.
+Executor tunggal, tanpa sub-agent. Laporan:
+`report/orchestrator/20261111T145417Z-pr9-merge-integration.md`.
+
+**Verifikasi independen (PostgreSQL 17.11 nyata, peran RLS paritas CI, FreeRADIUS 3.2.7)**:
+file konkurensi **10 passed stabil 3×**; **sensitivitas dikonfirmasi** — 5/6 tes baru GAGAL
+pada kode kandidat pertama `3b20b56`, termasuk **deadlock nyata PostgreSQL** (persis prediksi
+REV-1111-01); suite penuh **383 passed** (382 + radius real-binary); `manage.py check` 0
+issue; docs check PASS (22 file/67 tautan); CI remote `482602e` 3 job success; scan
+credential diff `16085f8..482602e` bersih (hanya fixture sintetis).
+
+**Merge**: PR #9 MERGED (merge commit `8ce94d4`, metode merge-commit sesuai konvensi;
+SHA target dikunci saat merge; remote diverifikasi pasca-merge). Justifikasi: wewenang
+pemilik (PAT "commit, merge, atau push" via kanal chat — CONTRACT §12), acceptance
+Lampiran A terpenuhi seluruhnya + tes sensitif defect, CI hijau, tanpa perubahan
+migrasi/kontrak API, dan tanpa merge main tetap memuat bug P0 lost-update. **Merge ≠
+deploy**: `v0.1.0-beta.1` tetap NOT_READY — code blockers REV-1111-04–09/11/12 tetap
+terbuka (LATEST_HANDOFF §3). Next packet: **PA-006** (principal-scoped idempotency +
+HTTP replay/race), lalu **PA-002+PA-003** (job lifecycle fencing/drain); DEC-01 wajib
+sebelum rehearsal S4.
+
 ## Checkpoint SESI-2026-11-11 (lanjutan) — Koreksi PR #9 sesuai review controller REV-1111
 
 **Scope**: packet koreksi kandidat PR #9 (verdict review **REQUEST CHANGES** pada `3b20b56`).
