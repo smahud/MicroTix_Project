@@ -1,6 +1,37 @@
 # MicroTix — checkpoint kemajuan
 
-Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-07 (Asia/Jakarta).
+Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-11 (Asia/Jakarta).
+
+## Checkpoint SESI-2026-11-11 — PA-001 P0 integritas alokasi pembayaran (mandat sandbox-first)
+
+**Scope**: mulai dari `main` @ `16085f8` (clean; CI main hijau diverifikasi via API).
+Prioritas: **PA-001 (P0) dari planning audit 2026-11-10** sesuai mandat master prompt
+user revisi 2026-11-10 (semua pekerjaan sandbox executor terlebih dahulu; tidak ada
+akses/aksi target produksi). Executor tunggal, tanpa sub-agent (slice kecil kohesif).
+
+**Root cause terverifikasi pada SHA aktual** (bukan narasi audit): `_parse_allocations`
+membaca `paid_amount` tanpa kunci baris + `verify_payment` read-modify-write dari
+snapshot basi; kunci hanya di baris payment → dua payment BERBEDA pada invoice sama
+bisa lost update + over-allocation. Reproduksi dua koneksi PostgreSQL nyata (PID
+backend berbeda): paid=200.000, SUM alokasi=400.000 pada invoice 300.000, kedua
+verifikasi "ok".
+
+**Perbaikan (PR #9, `session/2026-11-11-pa001-payment-concurrency`)**:
+- `select_for_update()` baris invoice dalam urutan id deterministik (+17/−4, satu
+  fungsi, tanpa migrasi skema); urutan kunci payment → invoice terurut → tenant tanpa
+  inversi dengan jalur penerbitan; alternatif ditolak tercatat (CHECK constraint
+  ditunda ke packet hardening skema; F() redundan; nowait+retry mengubah semantik).
+- Tes regresi permanen `test_billing_payment_concurrency.py` (4) — dua koneksi PG
+  nyata per thread: over-allocation ditolak 409 bersih (pemenang lengkap, yang kalah
+  nihil efek); 100rb+200rb penuh tanpa lost update; urutan body dibalik tanpa
+  deadlock + kwitansi unik; kegagalan alokasi rollback penuh. Sensitivitas: 3/4
+  gagal pada kode lama.
+- Verifikasi sandbox (PG 17 nyata): backend **376/376** (baseline 372/372),
+  `manage.py check` 0 issue, docs check PASS. NOT_RUN jujur: FreeRADIUS daemon,
+  frontend jobs (diff bersih dari `apps/web`; CI PR memverifikasi), Playwright,
+  rehearsal installer (sandbox tanpa systemd; di luar scope).
+- PR #9 OPEN menunggu review controller; SHA head diverifikasi via API setelah push.
+  Detail lengkap: report/orchestrator/20261111T060010Z-pa001-payment-allocation-concurrency.md.
 
 ## Checkpoint SESI-2026-11-07 — Onboarding router aman Phase-1 (master directive konektivitas)
 
