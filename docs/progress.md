@@ -2,6 +2,45 @@
 
 Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-11 (Asia/Jakarta).
 
+## Checkpoint SESI-2026-11-11 (lanjutan) — Koreksi PR #9 sesuai review controller REV-1111
+
+**Scope**: packet koreksi kandidat PR #9 (verdict review **REQUEST CHANGES** pada `3b20b56`).
+Base: branch PR #9 `session/2026-11-11-pa001-payment-concurrency` @ `3b20b56`; SHA
+main/PR7/PR8 diverifikasi TIDAK berubah sejak snapshot review controller. Executor
+tunggal, tanpa sub-agent. Register review + dua lampiran reviewer dipersist di
+`report/controller/20261111T074225Z-repo-handoff-review.md`,
+`report/reviewer/20261111T073744Z-pr9-independent-review.md`,
+`report/reviewer/20261111T073747Z-ops-readiness.md` (CONTRACT §10).
+
+**Koreksi kode (REV-1111-01/02, smallest change, tanpa migrasi skema)**:
+- `_parse_allocations` kini menggabungkan + mengurutkan kunci pada IDENTITAS UUID
+  kanonik (`uuid.UUID`); `invoice_id` salah bentuk → 422 `ApiError.validation` (pola
+  `billing/views._parse_uuid`); ejaan alias satu invoice (besar/kecil, hyphen/compact)
+  tergabung satu alokasi; hasil dikembalikan dalam urutan permintaan teragregasi semula
+  sehingga customer/bahasa kwitansi (I18N-01) tetap mengikuti invoice pertama-diminta.
+- +6 tes regresi (total file 10): alias merge; malformed 422 + UUID-valid-tak-dikenal
+  tetap 404; kwitansi multi-customer beda bahasa; **rollback pasca-tulis** (bloker
+  dedup outbox, error ditangkap di luar tenant_scope, file yatim dihitung terpisah);
+  **kontensi terkontrol** (kunci ditahan + pg_stat_activity + probe NOWAIT membuktikan
+  urutan akuisisi canonical); konkurensi campuran ejaan tanpa deadlock. Tes lama klaim
+  "rollback penuh" direname/disempitkan: bukti saat itu = validasi-di-muka.
+- **Koreksi klaim (REV-1111-10)**: handoff lama "penahan beta tunggal Gate A/G, BUKAN
+  pekerjaan kode" DICABUT — code blockers terbuka kini tercantum eksplisit (installer
+  REV-1111-04, upgrade/repair gates 05, worker fencing 06, restore/DR 07, topology
+  DEC-01 08, scheduler 09, security/idempotency 11, kapasitas 12); klaim timer
+  `issue_due_invoices` dipasang installer dicabut (scheduler belum diimplementasikan);
+  docs CI PR #7/#8 = manifest mismatch (bukan bukti SSTP runtime).
+
+**Verifikasi sandbox (PostgreSQL 17.5 nyata)**: file konkurensi **10 passed** (stabil
+4 run); **sensitivitas: 5/6 tes baru GAGAL pada kode kandidat pertama** — termasuk
+deadlock nyata terdeteksi PostgreSQL pada konkurensi alias (persis prediksi
+REV-1111-01); suite penuh **382 passed, 1 skipped** (376 baseline + 6 baru);
+`manage.py check` 0 issue; docs check PASS. NOT_RUN jujur: FreeRADIUS daemon, frontend
+jobs (CI PR memverifikasi; diff tidak menyentuh `apps/web`), Playwright, HTTP
+idempotency (PA-006), rehearsal installer (sandbox tanpa systemd/root), restore/DR.
+PA-001 tetap **menunggu review ulang controller** pada SHA kandidat kedua — bukan
+accepted/closed. Detail: report/orchestrator/20261111T092854Z-pa001-canonical-identity-corrections.md.
+
 ## Checkpoint SESI-2026-11-11 — PA-001 P0 integritas alokasi pembayaran (mandat sandbox-first)
 
 **Scope**: mulai dari `main` @ `16085f8` (clean; CI main hijau diverifikasi via API).
