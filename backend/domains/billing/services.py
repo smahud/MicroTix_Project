@@ -534,6 +534,24 @@ def record_payment(tenant_id, body: dict, *, actor) -> InternetPayment:
     return payment
 
 
+def _canonical_invoice_id(raw) -> str:
+    """Normalisasi identitas invoice ke UUID kanonik (REV-1111-01).
+
+    Representasi berbeda dari SATU UUID yang sama (huruf besar/kecil,
+    dengan/tanpa tanda hubung) dinormalkan sebelum digabung/diurutkan;
+    input tidak sah ditolak 422 error.validation — pola yang sama dengan
+    ``billing.views._parse_uuid`` dan ``common.tenant_context`` (sebelumnya
+    id salah bentuk lolos validasi dan mati sebagai 404 "invoice tidak ada",
+    bukan kesalahan input).
+    """
+    try:
+        return str(uuid.UUID(str(raw)))
+    except (ValueError, AttributeError, TypeError):
+        raise ApiError.validation(
+            {"allocations": [{"code": "invalid", "message": "invoice_id bukan UUID valid"}]}
+        ) from None
+
+
 def _parse_allocations(raw_allocations, payment: InternetPayment) -> list[tuple[InternetInvoice, Decimal]]:
     """Validasi & gabung alokasi per invoice (duplikat id digabung nilainya).
 
@@ -548,22 +566,42 @@ def _parse_allocations(raw_allocations, payment: InternetPayment) -> list[tuple[
     pasangan invoice yang tumpang tindih. Pemanggil wajib berjalan dalam
     transaksi aktif (tenant_scope) — kontrak yang sudah dipenuhi seluruh
     jalur panggilan existing (view API + seed dev).
+
+    REV-1111-01: urutan kunci deterministik hanya benar bila dihitung pada
+    IDENTITAS kanonik, bukan teks mentah penelepon. Setiap invoice_id
+    dinormalkan lewat uuid.UUID SEBELUM penggabungan dan pengurutan:
+    (a) alias satu invoice (besar/kecil, hyphen/compact) tergabung jadi satu
+    alokasi (tidak menabrak uq_bilalloc_pair), (b) semua pemanggil dengan
+    pasangan invoice sama mengunci urutan identitas database yang SAMA —
+    teks mentah yang berbeda tidak lagi bisa membalik urutan kunci dan
+    menghasilkan deadlock, (c) id salah bentuk → 422.
+
+    REV-1111-02: kunci diambil urut canonical, tetapi hasil dikembalikan
+    dalam URUTAN PERMINTAAN TERAGREGASI SEMULA. Dengan demikian
+    ``allocations[0]`` tetap invoice yang PERTAMA DIMINTA — customer/bahasa
+    kwitansi (I18N-01) dan urutan baris dokumen kompatibel dengan perilaku
+    pra-PA-001; pengurutan hanyalah urutan akuisisi kunci, bukan semantik
+    produk baru.
     """
     if not isinstance(raw_allocations, list):
         raise ApiError.validation({"allocations": [{"code": "required", "message": "Alokasi wajib berupa list"}]})
     merged: dict[str, Decimal] = {}
+    request_order: list[str] = []
     for entry in raw_allocations:
         if not isinstance(entry, dict):
             raise ApiError.validation({"allocations": [{"code": "invalid", "message": "Alokasi tidak sah"}]})
-        invoice_id = str(entry.get("invoice_id", ""))
+        invoice_id = _canonical_invoice_id(entry.get("invoice_id", ""))
         amount = _parse_amount(entry.get("amount"), allow_zero=False)
+        if invoice_id not in merged:
+            request_order.append(invoice_id)
         merged[invoice_id] = merged.get(invoice_id, ZERO) + amount
 
     total_alloc = sum(merged.values(), ZERO)
     if total_alloc > payment.amount:
         raise ApiError.conflict(code="billing.allocation_exceeds_payment")
 
-    resolved: list[tuple[InternetInvoice, Decimal]] = []
+    # Kunci dalam urutan identitas canonical (anti-deadlock); simpan per id.
+    locked: dict[str, tuple[InternetInvoice, Decimal]] = {}
     for invoice_id in sorted(merged):
         invoice = (
             InternetInvoice.objects.select_for_update()
@@ -577,8 +615,9 @@ def _parse_allocations(raw_allocations, payment: InternetPayment) -> list[tuple[
         outstanding = invoice.total_amount - invoice.paid_amount
         if merged[invoice_id] > outstanding:
             raise ApiError.conflict(code="billing.allocation_exceeds_outstanding")
-        resolved.append((invoice, merged[invoice_id]))
-    return resolved
+        locked[invoice_id] = (invoice, merged[invoice_id])
+    # Kembalikan dalam urutan permintaan teragregasi semula (REV-1111-02).
+    return [locked[invoice_id] for invoice_id in request_order]
 
 
 def verify_payment(
@@ -631,7 +670,9 @@ def verify_payment(
     payment.save(update_fields=["allocated_amount", "state", "verified_by", "verified_at"])
 
     # Kwitansi (BIL-08): nomor unik RCP per tenant; bahasa pelanggan invoice
-    # pertama (rantai I18N-01); tanpa alokasi → kwitansi kredit penuh.
+    # pertama yang DIMINTA (rantai I18N-01; REV-1111-02 — _parse_allocations
+    # mengembalikan urutan permintaan, bukan urutan kunci); tanpa alokasi →
+    # kwitansi kredit penuh.
     first_invoice = allocations[0][0] if allocations else None
     tenant = _lock_tenant(tenant_id)
     locale = "id"
