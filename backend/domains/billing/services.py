@@ -539,6 +539,15 @@ def _parse_allocations(raw_allocations, payment: InternetPayment) -> list[tuple[
 
     Alokasi tidak boleh melebihi nilai payment (kredit = sisa) maupun sisa
     tagihan tiap invoice (BIL-03/AC-BIL).
+
+    PA-001: baris invoice dikunci FOR UPDATE dalam urutan id deterministik.
+    Verifikasi dua payment BERBEDA terhadap invoice yang sama terserialisasi
+    pada level baris PostgreSQL: sisa tagihan dibaca dari baris terkunci
+    (bukan snapshot basi) sehingga tidak ada over-allocation/lost update;
+    urutan kunci yang selalu sama mencegah deadlock antar verifikasi dengan
+    pasangan invoice yang tumpang tindih. Pemanggil wajib berjalan dalam
+    transaksi aktif (tenant_scope) — kontrak yang sudah dipenuhi seluruh
+    jalur panggilan existing (view API + seed dev).
     """
     if not isinstance(raw_allocations, list):
         raise ApiError.validation({"allocations": [{"code": "required", "message": "Alokasi wajib berupa list"}]})
@@ -555,16 +564,20 @@ def _parse_allocations(raw_allocations, payment: InternetPayment) -> list[tuple[
         raise ApiError.conflict(code="billing.allocation_exceeds_payment")
 
     resolved: list[tuple[InternetInvoice, Decimal]] = []
-    for invoice_id, amount in merged.items():
-        invoice = InternetInvoice.objects.filter(id=invoice_id, tenant_id=payment.tenant_id).first()
+    for invoice_id in sorted(merged):
+        invoice = (
+            InternetInvoice.objects.select_for_update()
+            .filter(id=invoice_id, tenant_id=payment.tenant_id)
+            .first()
+        )
         if invoice is None:
             raise ApiError.not_found()
         if invoice.state not in PAYABLE_STATES:
             raise ApiError.conflict(code="billing.invoice_not_payable")
         outstanding = invoice.total_amount - invoice.paid_amount
-        if amount > outstanding:
+        if merged[invoice_id] > outstanding:
             raise ApiError.conflict(code="billing.allocation_exceeds_outstanding")
-        resolved.append((invoice, amount))
+        resolved.append((invoice, merged[invoice_id]))
     return resolved
 
 
