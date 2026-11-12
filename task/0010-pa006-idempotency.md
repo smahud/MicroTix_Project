@@ -8,11 +8,13 @@
 | Controller | ChatGPT Work / reviewer proyek |
 | Executor | Agent implementasi yang ditugaskan; sandbox |
 | Baseline yang diperiksa | `main@a0f653e89bf77b1238ca0ed9bcdb0e2f0aee612e`, 12 November 2026; PR10 hanya dokumentasi, source PA-006 tetap sama |
+| Main pada submission check controller | `9903d9b0cf09d737b553da3c21067b4810e956c0`; baseline sebelumnya ancestor, delta backend/apps/installer/lab/CI kosong |
 | Dependency | PA-001 merged PR #9, merge `8ce94d468232eda77cd675f6d18e5fcb41f3d708`; semua source PR9 ada pada baseline |
 | Implementation / tested SHA | Belum ada — diisi executor setelah implementasi dan tes |
 | Candidate branch / published SHA / PR | Belum diserahkan — tidak ditemukan hasil implementasi task0010 pada main/refs/PR yang diperiksa 12 November 2026 |
 | Execution report / acceptance evidence | Belum diserahkan — wajib ditautkan coding agent |
-| Controller review report / reviewed SHA | Belum ada — review implementasi belum dimulai |
+| Controller review report / reviewed SHA | [Submission check 12 November 2026](../report/controller/20261112T072128Z-0010-pa006-review.md): `not_submitted`; implementation reviewed SHA N/A — review implementasi belum dimulai |
+| Ref keputusan controller | `review/0010-pa006-submission-check-20261112`; publikasi/verifikasi dan PR dicatat pada report submission check, terpisah dari candidate implementasi |
 | Next actor | `coding_agent` |
 | Next action | Implementasikan/resume PA-006 di sandbox setelah memeriksa refs/PR terbaru; jangan mengulang PA-001 |
 
@@ -84,6 +86,8 @@ Coding agent mengisi ringkasan hasil singkat di packet (apa yang berubah, accept
 Controller menyimpan keputusan implementasi di `report/controller/<UTC>-0010-pa006-review.md`, menautkannya ke metadata packet dan mengikatnya pada exact reviewed SHA. Report memuat verdict, finding→koreksi→acceptance, evidence limits serta next actor/action. Changes requested membuka kembali task0010 yang sama; coding agent memperbaiki finding dan menyerahkan SHA baru. Accepted mengembalikan kendali ke controller untuk penyiapan task penerus sesuai dependencies/integration. Publish keputusan di ref GitHub yang disebut di handoff sebelum pergantian peran; jangan meninggalkan keputusan hanya di chat.
 
 **Ringkasan hasil implementasi saat ini:** belum diserahkan. Penyiapan instruksi/workflow bukan implementasi PA-006; jangan mengisi matriks actual atau menambahkan `_done` sebelum coding agent memenuhi penyerahan.
+
+Submission check controller pada `main@9903d9b0cf09d737b553da3c21067b4810e956c0` memeriksa 14 branch remote dan dua PR terbuka; belum ditemukan penyerahan implementasi PA-006. Ini snapshot published refs, bukan bukti tidak ada pekerjaan lokal executor. Acceptance/scope di atas tetap; next actor `coding_agent` mengambil packet ini setelah fetch ulang.
 
 Isi metadata di atas, update [LATEST_HANDOFF](../report/LATEST_HANDOFF.md) dan [progress](../docs/progress.md), lalu ikuti penutupan pada panduan tetap: completion rename ke `0010-pa006-idempotency_done.md` ikut commit, push/remote/CI diverifikasi, review menjadi pending. Task ini baru accepted ketika controller mencatat review exact SHA. Jangan memasukkan secret/runtime/unrelated files ke commit atau merge otomatis ke main.
 
