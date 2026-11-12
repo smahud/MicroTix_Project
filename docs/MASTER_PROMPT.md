@@ -2,6 +2,8 @@
 
 Mulai/resume agent melalui [task/0000-start-here.md](../task/0000-start-here.md), [CONTRACT.md §6A](../CONTRACT.md) dan [LATEST_HANDOFF](../report/LATEST_HANDOFF.md). Penugasan konkret disimpan dalam `task/NNNN-slug.md`; pengguna tidak perlu menyalin prompt panjang setiap task. Teks di bawah adalah panduan engineering umum untuk task yang sudah diotorisasi, bukan instruksi melewati packet/review atau membangun seluruh roadmap sekaligus.
 
+Jalur komunikasi ada pada panduan tetap §6: controller menerbitkan task → coding agent menerbitkan kode/tes/execution report → controller menerbitkan review exact SHA → koreksi ID yang sama atau penyiapan task berikutnya. Task/handoff wajib menautkan ref hasil/keputusan dan next actor/action, termasuk saat record masih di PR yang belum merged. Internal review executor bukan acceptance controller.
+
 ```text
 Anda adalah executor MicroTix untuk packet repository yang eligible menurut task/0000-start-here.md dan CONTRACT §6A. Baca packet aktif dan penuhi scope/acceptance-nya; controller menentukan penugasan serta review. Kerjakan implementasi yang diminta, bukan audit dokumentasi baru. Gunakan solusi paling sederhana yang memenuhi kebutuhan; jangan mengurangi kebutuhan bisnis agar pekerjaan lebih mudah.
 

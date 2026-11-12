@@ -2,25 +2,35 @@
 
 Pintu masuk tetap: [task/0000-start-here.md](../task/0000-start-here.md), wajib menurut CONTRACT §6A. Handoff ini menyimpan status sesi aktual; docs/AGENT_HANDOFF.md hanya panduan navigasi/bootstrap.
 
-## 0. Sesi dokumentasi kontrol task — 12 November 2026
+## 0. Jalur komunikasi aktif — 12 November 2026
 
-- Pemilik menyetujui penugasan Markdown di task/, nama berurutan dan suffix _done pada penyerahan executor, serta meminta aturan masuk CONTRACT/docs.
-- Entry guide dan packet awal ID0010 / PA-006 dibuat. **PA-006 belum diimplementasikan**: execution ready, review not_submitted. Executor berikutnya membaca guide dan file0010 pada instruction ref yang dipublikasikan; bila sudah merged gunakan main aktual.
-- Source, schema, installer, dependency dan deployment tidak berubah pada sesi ini. Baseline remote sebelum penulisan: a2207b66cc705fece79645034ea45900e81a9f38. Riwayat implementasi PR9 di bawah tetap berlaku.
-- Laporan keputusan/validasi: [task-workflow decision](controller/20261112T031235Z-task-workflow-contract.md). Status publikasi/SHA/CI sesi ini dicatat dalam laporan dan metadata PR setelah verifikasi; jangan mengisi SHA final file sebelum commit ada.
-- Publikasi awal terverifikasi: [PR #10](https://github.com/smahud/MicroTix_Project/pull/10), commit `44b0e4aa1457ba1c420722fd529c5ee6ec0fde4a`; tree lokal/remote identik, independent review APPROVED. Metadata closure berikutnya tidak mengubah task/source. Fetch final main/PR refs dan CI aktual saat resume; publication snapshot ini tidak mengklaim CI atau merge sebelum diamati.
-- _done berarti executor delivered; controller acceptance exact SHA, merge dan release tetap terpisah. Changes requested membuka kembali ID yang sama. Beta masih NOT_READY.
+PR10 sudah MERGED (main teramati a0f653e89bf77b1238ca0ed9bcdb0e2f0aee612e; CI main run43148282521 success). Entry/CONTRACT/task0010 tersedia, tetapi belum ditemukan hasil kode task0010 yang dipublikasikan pada refs/PR/report yang diperiksa. Jangan menyamakan file instruksi dengan hasil implementasi.
+
+| Field handoff | Status / pointer |
+|---|---|
+| Active task | ID0010 / PA-006; cari filename unfinished atau _done pada ref kandidat aktual |
+| Execution / review | ready / not_submitted; belum ada penyerahan implementasi |
+| Candidate branch / PR / tested-published SHA | Belum diserahkan untuk PA006; PR7/PR8 adalah pekerjaan berbeda |
+| Execution report / acceptance evidence | Belum diserahkan; executor wajib memetakan acceptance→actual result→evidence |
+| Controller review / reviewed SHA | Belum ada untuk implementasi0010; review dokumen workflow tidak menggantikannya |
+| Next actor | **coding_agent** |
+| Exact next action | Fetch refs/PR, baca task/0000-start-here.md lalu implementasikan/resume task0010/PA006 di sandbox; serahkan candidate+report dan alihkan ke controller_reviewer |
+| Instruction ref sesi ini | docs/task-communication-loop-20261112 sampai integrasi; fetch main/PR aktual. Record hasil/review dapat ada pada PR yang belum merged |
+
+Protokol lengkap ada pada panduan tetap §6 dan CONTRACT §6A. Controller publishes instructions→executor publishes code/tests/report→controller publishes exact-SHA review→same-ID corrections atau accepted→prepare dependent task. Verdict/corrections dan next actor/action harus dipush/verified di GitHub sebelum berganti peran; tidak ditinggalkan hanya di chat. Internal executor review bukan controller acceptance.
+
+Penajaman sesi ini hanya dokumentasi. Laporan: [communication loop](controller/20261112T051809Z-task-communication-loop.md), dengan independent review pada path yang dirujuk. Task0010 belum done; task0020 belum dibuka. Beta tetap NOT_READY; riwayat implementasi PR9 di bawah tetap berlaku.
 
 ## 1. Status kanonis SAAT INI
 
 | Item | Nilai |
 |---|---|
-| **Branch kanonis** | `main` @ **`a2207b66cc705fece79645034ea45900e81a9f38`** (remote teramati sebelum sesi dokumentasi ini; ancestor merge PR9 `8ce94d4`). Instruction candidate sesi ini berada pada branch `docs/task-workflow-20261112` sampai integrasi; fetch remote aktual, jangan anggap snapshot ini selalu HEAD |
+| **Branch kanonis** | `main` @ **`a0f653e89bf77b1238ca0ed9bcdb0e2f0aee612e`** (snapshot sebelum penajaman komunikasi sesi ini; PR10 merged, CI success). Instruksi baru pada branch docs/task-communication-loop-20261112 sampai integrasi; fetch HEAD aktual, bukan menganggap snapshot selalu terbaru |
 | **PR sesi sebelumnya** | **#9 MERGED** (`session/2026-11-11-pa001-payment-concurrency`; kandidat pertama `3b20b56` REQUEST CHANGES → kandidat kedua `482602e` diverifikasi independen 2× + CI hijau → merge commit `8ce94d4` atas wewenang pemilik repo; lihat `report/orchestrator/20261111T145417Z-pr9-merge-integration.md`) |
 | PR lain terbuka | **#7** SSTP Phase-2 (head `d7fa35e`; CI backend/frontend success, docs FAIL **manifest mismatch** — bukan bukti SSTP gagal runtime; disposition = packet terpisah) · **#8** docs planning-audit DRAFT (head `6bb57c9`; CI docs FAIL manifest mismatch = pekerjaan DEC-02, branch itu pemilik file manifest — jaga ownership disjoint) |
 | Rilis kandidat | `v0.1.0-beta.1` tetap **NOT_READY** — bloker = code blockers (§3) + environment blockers; klaim lama "penahan tunggal host / BUKAN pekerjaan kode" SUDAH DICABUT (REV-1111-10) |
 | CONTRACT.md | §6A task workflow ditambahkan atas persetujuan pemilik 12 November 2026; lihat laporan keputusan sesi ini |
-| Prioritas aktif | Sandbox-first; mulai dari guide tetap, task ID **0010 / PA-006** (uang/idempotency). PA-001 sudah merged; berikutnya PA-002/PA-003 setelah dependency/review terpenuhi |
+| Prioritas aktif | Next actor **coding_agent**, task **0010 / PA-006**; hasil implementasi belum diserahkan. PA-001 merged; PA-002/PA-003 baru setelah dependency/review terpenuhi |
 
 ## 2. Riwayat implementasi terakhir — PR9 (bukti di laporan orchestrator)
 
@@ -82,7 +92,7 @@ Environment blockers (prasyarat eksternal, TETAP ADA):
 1. **PA-006 (P1)** — menuntaskan uang/idempotency: principal-scoped idempotency, HTTP
    replay/race konkuren (rekomendasi review controller §8: "Packet selanjutnya sesudah
    PR9 diterima: PA-006"). Rujukan: `common/idempotency.py` (scope tanpa principal),
-   jobs/views permission operasi (REV-1111-11 sebagian).
+   jobs/models IdempotencyKey dan decorator scope pada views pemilik. Permission job lifecycle terpisah di PA-003, bukan perluasan PA-006.
 2. **PA-002 + authority PA-003 (P1)** — job lifecycle fencing/drain (termasuk risiko
    tersisa PA-001: penahan kunci invoice selama render kwitansi PDF dalam transaksi;
    runworker tanpa drain; write tanpa ownership check).

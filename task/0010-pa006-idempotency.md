@@ -7,10 +7,14 @@
 | Review status | `not_submitted` |
 | Controller | ChatGPT Work / reviewer proyek |
 | Executor | Agent implementasi yang ditugaskan; sandbox |
-| Baseline yang diperiksa | `main@a2207b66cc705fece79645034ea45900e81a9f38`, 12 November 2026 |
+| Baseline yang diperiksa | `main@a0f653e89bf77b1238ca0ed9bcdb0e2f0aee612e`, 12 November 2026; PR10 hanya dokumentasi, source PA-006 tetap sama |
 | Dependency | PA-001 merged PR #9, merge `8ce94d468232eda77cd675f6d18e5fcb41f3d708`; semua source PR9 ada pada baseline |
 | Implementation / tested SHA | Belum ada — diisi executor setelah implementasi dan tes |
-| Candidate / PR / report / review evidence | Belum ada — diisi saat penyerahan/review |
+| Candidate branch / published SHA / PR | Belum diserahkan — tidak ditemukan hasil implementasi task0010 pada main/refs/PR yang diperiksa 12 November 2026 |
+| Execution report / acceptance evidence | Belum diserahkan — wajib ditautkan coding agent |
+| Controller review report / reviewed SHA | Belum ada — review implementasi belum dimulai |
+| Next actor | `coding_agent` |
+| Next action | Implementasikan/resume PA-006 di sandbox setelah memeriksa refs/PR terbaru; jangan mengulang PA-001 |
 
 Mulai dari [panduan tetap](0000-start-here.md) dan [CONTRACT](../CONTRACT.md). Ini task implementasi, **bukan bukti PA-006 selesai**. Fetch refs dan review delta bila remote berubah; pilih branch baru dari main aktual dengan packet ini tersedia. Jika instruksi belum merged, catat instruction ref/PR dan bawa perubahan dokumentasi yang sah secara semantik; jangan menimpa pekerjaan lain atau menganggap SHA baseline sebagai main untuk selamanya.
 
@@ -73,7 +77,13 @@ Assertion harus memeriksa state/effect count dan tenant/actor/target, bukan stat
 
 ## Penyerahan dan batas selesai
 
-Laporan executor: `report/orchestrator/<UTC>-0010-pa006-idempotency.md`; laporan reviewer di `report/<reviewer-role>/<UTC>-0010-pa006-review.md`. Sertakan minimal solution/alternatives, migration/recovery policy, scope table, tests+evidence, risiko tersisa dan next step.
+Laporan executor: `report/orchestrator/<UTC>-0010-pa006-idempotency.md`; internal reviewer di `report/<reviewer-role>/<UTC>-0010-pa006-review.md`. Sertakan minimal solution/alternatives, migration/recovery policy, scope table, **setiap baris acceptance → actual result → evidence**, risiko/unfinished work dan next actor/action. Laporan internal executor tidak menggantikan keputusan controller.
+
+Coding agent mengisi ringkasan hasil singkat di packet (apa yang berubah, acceptance yang sudah/belum terbukti, pointer report/candidate/CI), lalu mengalihkan next actor ke `controller_reviewer` hanya setelah candidate/report dipublikasikan dan diverifikasi. Jika blocked/failed, catat batasnya dan pihak yang benar-benar dapat membuka blocker, bukan mengklaim selesai.
+
+Controller menyimpan keputusan implementasi di `report/controller/<UTC>-0010-pa006-review.md`, menautkannya ke metadata packet dan mengikatnya pada exact reviewed SHA. Report memuat verdict, finding→koreksi→acceptance, evidence limits serta next actor/action. Changes requested membuka kembali task0010 yang sama; coding agent memperbaiki finding dan menyerahkan SHA baru. Accepted mengembalikan kendali ke controller untuk penyiapan task penerus sesuai dependencies/integration. Publish keputusan di ref GitHub yang disebut di handoff sebelum pergantian peran; jangan meninggalkan keputusan hanya di chat.
+
+**Ringkasan hasil implementasi saat ini:** belum diserahkan. Penyiapan instruksi/workflow bukan implementasi PA-006; jangan mengisi matriks actual atau menambahkan `_done` sebelum coding agent memenuhi penyerahan.
 
 Isi metadata di atas, update [LATEST_HANDOFF](../report/LATEST_HANDOFF.md) dan [progress](../docs/progress.md), lalu ikuti penutupan pada panduan tetap: completion rename ke `0010-pa006-idempotency_done.md` ikut commit, push/remote/CI diverifikasi, review menjadi pending. Task ini baru accepted ketika controller mencatat review exact SHA. Jangan memasukkan secret/runtime/unrelated files ke commit atau merge otomatis ke main.
 
