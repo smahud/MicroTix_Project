@@ -45,6 +45,8 @@ Remote main a2207b6, PR9 merged at8ce94d4; PR7/PR8 tetap open dan tidak disentuh
 
 ## 5. Publication and handoff
 
-Saat draft: **NOT PUSHED**; belum commit/PR/merge. Seluruh perubahan masih documentation-only pada branch di atas. SHA publikasi, reviewer outcome dan CI akan diverifikasi dan dicatat setelah validasi, bukan diasumsikan. File tidak diminta memuat SHA commit final dirinya sendiri.
+Paket awal **PUBLISHED, remote diverifikasi**: commit `44b0e4aa1457ba1c420722fd529c5ee6ec0fde4a`, tree `d5bc522fd8e7a0ce17b62de8691442abe00d2aa0` identik local staged tree. Branch `docs/task-workflow-20261112`, [PR #10](https://github.com/smahud/MicroTix_Project/pull/10),13 changed files seluruhnya docs/manifest. Remote PR head dan parent main diverifikasi melalui API; source/config tidak berubah. Metadata penutupan sesi ini merupakan descendant dokumentasi dari paket yang direview; gunakan final remote PR head sebagai SHA publikasi saat handoff, bukan meminta file memuat SHA commit dirinya sendiri.
+
+Pada checkpoint publikasi ini, [CI run43147881915](https://github.com/smahud/MicroTix_Project/actions/runs/43147881915) untuk44b0e4 masih in_progress, bukan klaim PASS. Sebelum integrasi dokumentasi, controller wajib membaca required CI pada final head, memeriksa main/PR delta dan expected head. Persetujuan pemilik berlaku untuk workflow/CONTRACT/docs ini; independent review APPROVED dan validasi lokal sudah terpenuhi. Tidak ada persetujuan merge aplikasi lain atau deployment. Metadata PR/Git mencatat outcome publikasi/integrasi yang aktual sesudah checkpoint ini; jangan menafsirkan snapshot pending ini sebagai outcome masa depan.
 
 Next executable task setelah instruksi tersedia: executor membaca guide, memverifikasi main/PR delta dan mengerjakan ID0010/PA-006 di sandbox. Panduan/packet tidak mengotorisasi deployment, menerima task sendiri atau merge otomatis. Setelah controller menerima exact PA-006 SHA, siapkan PA-002/PA-003 yang terarah.

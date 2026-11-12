@@ -8,6 +8,7 @@ Pintu masuk tetap: [task/0000-start-here.md](../task/0000-start-here.md), wajib 
 - Entry guide dan packet awal ID0010 / PA-006 dibuat. **PA-006 belum diimplementasikan**: execution ready, review not_submitted. Executor berikutnya membaca guide dan file0010 pada instruction ref yang dipublikasikan; bila sudah merged gunakan main aktual.
 - Source, schema, installer, dependency dan deployment tidak berubah pada sesi ini. Baseline remote sebelum penulisan: a2207b66cc705fece79645034ea45900e81a9f38. Riwayat implementasi PR9 di bawah tetap berlaku.
 - Laporan keputusan/validasi: [task-workflow decision](controller/20261112T031235Z-task-workflow-contract.md). Status publikasi/SHA/CI sesi ini dicatat dalam laporan dan metadata PR setelah verifikasi; jangan mengisi SHA final file sebelum commit ada.
+- Publikasi awal terverifikasi: [PR #10](https://github.com/smahud/MicroTix_Project/pull/10), commit `44b0e4aa1457ba1c420722fd529c5ee6ec0fde4a`; tree lokal/remote identik, independent review APPROVED. Metadata closure berikutnya tidak mengubah task/source. Fetch final main/PR refs dan CI aktual saat resume; publication snapshot ini tidak mengklaim CI atau merge sebelum diamati.
 - _done berarti executor delivered; controller acceptance exact SHA, merge dan release tetap terpisah. Changes requested membuka kembali ID yang sama. Beta masih NOT_READY.
 
 ## 1. Status kanonis SAAT INI

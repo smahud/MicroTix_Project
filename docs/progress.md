@@ -8,7 +8,7 @@ Pemilik menyetujui workflow pada breakdown sebelumnya dan meminta aturan dimasuk
 
 Dibuat entry tetap task/0000-start-here.md dan packet ID0010/PA-006 (ready/not_submitted, belum implementasi). CONTRACT §6A menetapkan stable four-digit IDs, completion rename _done yang dipush, review exact SHA terpisah, reopening same-ID, blocker/dependency/resume dan laporan wajib. README, MASTER_PROMPT, IMPLEMENTATION_PLAN, indeks docs serta AGENT_HANDOFF diarahkan ke entry yang sama; latest handoff tetap sumber status aktual.
 
-Sesi ini khusus dokumentasi; tidak mengubah source/schema/installer/dependency atau deployment. App tests/CHR/restore NOT_RUN; validasi dokumen/tautan, consistency review dan diff dicatat pada report/controller/20261112T031235Z-task-workflow-contract.md beserta evidence publikasi/CI setelah diverifikasi. PA-001 tetap merged; Beta tetap NOT_READY; executor berikutnya mengerjakan PA-006 di sandbox.
+Sesi ini khusus dokumentasi; tidak mengubah source/schema/installer/dependency atau deployment. App tests/CHR/restore NOT_RUN; validator PASS22file/78link, manual80local-links dan diff checks PASS, independent review APPROVED sesudah koreksi DTR-01 eventual replay. Publikasi awal PR10/44b0e4 terverifikasi; final remote refs/CI harus diperiksa kembali, bukan disimpulkan dari checkpoint ini. Evidence pada report/controller/20261112T031235Z-task-workflow-contract.md. PA-001 tetap merged; Beta tetap NOT_READY; executor berikutnya mengerjakan PA-006 di sandbox.
 
 ## Checkpoint SESI-2026-11-11 (final) — Verifikasi independen & MERGE PR #9: PA-001 tuntas di main
 
