@@ -17,6 +17,8 @@ Controller menulis task dan mereview exact SHA; executor mengimplementasikan, me
 
 Setiap sesi/sub-agent tetap membuat report unik. Latest handoff menyebut actual main, instruction/task ref bila belum merged, hasil terverifikasi, PR terbuka, blocker dan next eligible packet. Progress adalah checkpoint ringkas; report menyimpan bukti rinci. Jangan mengganti handoff baru dengan status historis dari branch lain.
 
+Tambahkan execution report, controller review report/reviewed SHA dan next actor/action pada packet/handoff. Cari task ID pada candidate branch/PR sebelum menganggap ready di main belum dikerjakan. Protokol penyerahan/koreksi/acceptance lengkap ada pada panduan tetap §6; keputusan yang hanya ada di chat belum menjadi record handoff GitHub.
+
 Keterangan handoff lama yang menyatakan host sebagai satu-satunya penahan Beta sudah ditarik melalui review 11 November 2026. Riwayat dan hasil test bertanggal tetap ada di progress, report dan Git; gunakan status/gates aktual untuk instruksi berikutnya. PA-001 telah merged melalui PR9; prioritas berikutnya dirujuk dari latest handoff dan task, bukan tabel statis di file ini.
 
 ## 3. Bootstrap/verifikasi sandbox

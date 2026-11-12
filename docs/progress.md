@@ -2,6 +2,12 @@
 
 Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-12 (Asia/Jakarta).
 
+## Checkpoint 2026-11-12 — GitHub sebagai jalur komunikasi controller/coding
+
+Permintaan pemilik: periksa hasil pekerjaan task, rapikan komunikasi controller→coding agent→review→koreksi/next task, lalu lanjut menuju Beta. Baseline main a0f653e (PR10 merged), CI main43148282521 success. Task0010 tetap ready/not_submitted; belum ditemukan implementation PR/branch/report task0010 pada refs yang diperiksa, sehingga next actor coding_agent, bukan review hasil kosong.
+
+CONTRACT §6A/panduan §6 diperjelas: acceptance→actual evidence pada execution report, separate exact-SHA controller verdict/findings, next actor/action dan published ref/PR pointers sebelum pergantian peran. Candidate di unmerged PR harus diperiksa sebelum main-ready dianggap belum diklaim. Packet0010 ditambah result/review pointers dan empty-result summary yang jujur; task0020 belum dibuat. Source/acceptance PA006, schema, installer, dependency dan deployment tidak berubah. Laporan/checks/review/publication: report/controller/20261112T051809Z-task-communication-loop.md. Application tests/real lab/DR NOT_RUN sesi dokumentasi ini; Beta tetap NOT_READY.
+
 ## Checkpoint 2026-11-12 — Task repository dan CONTRACT §6A
 
 Pemilik menyetujui workflow pada breakdown sebelumnya dan meminta aturan dimasukkan ke CONTRACT/docs. Baseline remote a2207b66cc705fece79645034ea45900e81a9f38; pekerjaan di branch docs/task-workflow-20261112, terisolasi dari branch PR7/PR8.
