@@ -1,37 +1,39 @@
-# LATEST_HANDOFF — Kanonis (12 November 2026: default role prompts; PA-006 siap ditugaskan)
+# LATEST_HANDOFF — Kanonis (12 November 2026: reviewer submission check PA-006)
 
 Pintu masuk tetap: [task/0000-start-here.md](../task/0000-start-here.md), wajib menurut CONTRACT §6A. Handoff ini menyimpan status sesi aktual; docs/AGENT_HANDOFF.md hanya panduan navigasi/bootstrap.
 
-## 0. Prompt default dan jalur komunikasi aktif — 12 November 2026
+## 0. Hasil reviewer dan jalur komunikasi aktif — 12 November 2026
 
-PR10 workflow dan PR11 komunikasi sudah MERGED; main teramati `2278b7741bb5ec38757cc7d3659b9099c31341ea` saat mulai sesi ini. Entry/CONTRACT/task0010 tersedia, tetapi belum ditemukan hasil kode task0010 yang dipublikasikan pada refs/PR/report yang diperiksa. Jangan menyamakan file instruksi dengan hasil implementasi.
+PR10 workflow, PR11 komunikasi dan PR12 default prompts sudah **MERGED**. Main terverifikasi `9903d9b0cf09d737b553da3c21067b4810e956c0`. Controller menjalankan master prompt reviewer dan pemeriksaan independen atas 14 branch remote, dua PR terbuka, task/report serta delta dari baseline packet. **Belum ditemukan penyerahan implementasi PA-006** pada published refs yang diperiksa; tidak menyimpulkan pekerjaan lokal executor tidak ada.
 
-Prompt permanen untuk setiap sesi: [executor](../docs/MASTER_PROMPT_EXECUTOR.md) dan [controller reviewer](../docs/MASTER_PROMPT_REVIEWER.md); [MASTER_PROMPT](../docs/MASTER_PROMPT.md) menjadi indeks kompatibel. Pilih peran, fetch GitHub, lalu temukan packet/candidate aktual. Prompt tidak mengunci sesi berikutnya pada ID/SHA di snapshot handoff ini. Scope produk berikutnya tetap task0010; penambahan prompt bukan implementasinya.
+Prompt permanen: [executor](../docs/MASTER_PROMPT_EXECUTOR.md) dan [controller reviewer](../docs/MASTER_PROMPT_REVIEWER.md); [MASTER_PROMPT](../docs/MASTER_PROMPT.md) adalah indeks kompatibel. Fetch refs dan temukan task/candidate aktual pada setiap sesi. Pemeriksaan reviewer ini hanya menutup pemeriksaan status penyerahan, bukan implementasi atau acceptance PA-006.
 
 | Field handoff | Status / pointer |
 |---|---|
-| Active task | ID0010 / PA-006; cari filename unfinished atau _done pada ref kandidat aktual |
+| Active task | [ID0010 / PA-006](../task/0010-pa006-idempotency.md), filename unfinished |
 | Execution / review | ready / not_submitted; belum ada penyerahan implementasi |
 | Candidate branch / PR / tested-published SHA | Belum diserahkan untuk PA006; PR7/PR8 adalah pekerjaan berbeda |
 | Execution report / acceptance evidence | Belum diserahkan; executor wajib memetakan acceptance→actual result→evidence |
-| Controller review / reviewed SHA | Belum ada untuk implementasi0010; review dokumen workflow tidak menggantikannya |
+| Controller review / reviewed SHA | [Submission check](controller/20261112T072128Z-0010-pa006-review.md): **not_submitted**; implementation reviewed SHA **N/A**, tanpa candidate |
+| Independent reviewer | [Laporan bukti penyerahan](reviewer/20261112T072128Z-0010-pa006-submission-evidence.md); bukan acceptance implementasi |
 | Next actor | **coding_agent** |
-| Exact next action | Fetch refs/PR, baca task/0000-start-here.md lalu implementasikan/resume task0010/PA006 di sandbox; serahkan candidate+report dan alihkan ke controller_reviewer |
-| Instruction ref sesi ini | [PR12](https://github.com/smahud/MicroTix_Project/pull/12), branch `docs/default-agent-prompts-20261112`; publikasi awal terverifikasi `639dca9d7d9c1d8509cdc3dd0aa43597b37af9fc`. PR11 sudah merged; fetch final main/PR aktual. Record hasil/review dapat ada pada PR yang belum merged |
+| Exact next action | Fetch refs/PR, jalankan prompt executor dan implementasikan/resume task0010 di sandbox; publish candidate, execution report, matriks acceptance→actual evidence dan internal review sebelum dialihkan ke controller |
+| Instruction ref | Prompt/packet tersedia di main `9903d9b…`; baseline packet sebelumnya `a0f653e…` ancestor dan delta source relevan kosong |
+| Ref keputusan sesi ini | `review/0010-pa006-submission-check-20261112`; status publikasi/PR/checks terverifikasi dicatat pada [report controller §6](controller/20261112T072128Z-0010-pa006-review.md#6-publication-and-handoff), sampai integrasi. Ini ref keputusan, bukan candidate implementasi |
 
 Protokol lengkap ada pada panduan tetap §6 dan CONTRACT §6A. Controller publishes instructions→executor publishes code/tests/report→controller publishes exact-SHA review→same-ID corrections atau accepted→prepare dependent task. Verdict/corrections dan next actor/action harus dipush/verified di GitHub sebelum berganti peran; tidak ditinggalkan hanya di chat. Internal executor review bukan controller acceptance.
 
-Sesi ini hanya dokumentasi. Laporan: [default prompts](controller/20261112T065349Z-default-agent-prompts.md), dengan independent review pada path yang dirujuk; protokol sebelumnya pada [communication loop](controller/20261112T051809Z-task-communication-loop.md). Task0010 belum done; task0020 belum dibuka. Beta tetap NOT_READY; riwayat implementasi PR9 di bawah tetap berlaku.
+Sesi ini mengubah report/pointer status saja; scope/acceptance task0010 tetap, runtime application/host/lab/deploy **NOT_RUN oleh controller**. CI main [run43172995657](https://github.com/smahud/MicroTix_Project/actions/runs/43172995657) backend/docs/frontend success, tanpa bukti implementasi PA-006. Task0010 belum done; task0020 belum dibuka. Beta tetap **NOT_READY**. Riwayat PR9 dan register blocker di bawah dipertahankan, tidak diuji ulang dalam submission check ini.
 
 ## 1. Status kanonis SAAT INI
 
 | Item | Nilai |
 |---|---|
-| **Branch kanonis** | `main` @ **`2278b7741bb5ec38757cc7d3659b9099c31341ea`** (snapshot sebelum default prompts sesi ini; PR11 merged). Instruksi baru pada branch docs/default-agent-prompts-20261112 sampai integrasi; fetch HEAD aktual, bukan menganggap snapshot selalu terbaru |
+| **Branch kanonis** | `main` @ **`9903d9b0cf09d737b553da3c21067b4810e956c0`**, snapshot terverifikasi; PR10/11/12 merged. Keputusan submission check pada ref sesi §0 sampai integrasi; fetch HEAD aktual |
 | **PR sesi sebelumnya** | **#9 MERGED** (`session/2026-11-11-pa001-payment-concurrency`; kandidat pertama `3b20b56` REQUEST CHANGES → kandidat kedua `482602e` diverifikasi independen 2× + CI hijau → merge commit `8ce94d4` atas wewenang pemilik repo; lihat `report/orchestrator/20261111T145417Z-pr9-merge-integration.md`) |
-| PR lain terbuka | **#7** SSTP Phase-2 (head `d7fa35e`; CI backend/frontend success, docs FAIL **manifest mismatch** — bukan bukti SSTP gagal runtime; disposition = packet terpisah) · **#8** docs planning-audit DRAFT (head `6bb57c9`; CI docs FAIL manifest mismatch = pekerjaan DEC-02, branch itu pemilik file manifest — jaga ownership disjoint) |
+| PR lain terbuka | **#7** SSTP Phase-2 (head `d7fa35e`) dan **#8** planning-audit DRAFT (head `6bb57c9`) terverifikasi, pekerjaan berbeda dan tidak disentuh. Bukti CI historis keduanya docs FAIL **manifest mismatch** tetap dirujuk sesi sebelumnya; tidak dihitung sebagai bukti runtime SSTP gagal atau diulang di sesi ini |
 | Rilis kandidat | `v0.1.0-beta.1` tetap **NOT_READY** — bloker = code blockers (§3) + environment blockers; klaim lama "penahan tunggal host / BUKAN pekerjaan kode" SUDAH DICABUT (REV-1111-10) |
-| CONTRACT.md | §6A task workflow/komunikasi tetap berlaku, ditambah kewajiban default prompts per peran dan context checkpoint atas permintaan pemilik 12 November 2026; lihat laporan keputusan sesi ini |
+| CONTRACT.md | §6A task workflow/komunikasi dan default prompts tetap berlaku; sesi submission check ini tidak mengubah kontrak |
 | Prioritas aktif | Next actor **coding_agent**, task **0010 / PA-006**; hasil implementasi belum diserahkan. PA-001 merged; PA-002/PA-003 baru setelah dependency/review terpenuhi |
 
 ## 2. Riwayat implementasi terakhir — PR9 (bukti di laporan orchestrator)
@@ -82,6 +84,7 @@ Environment blockers (prasyarat eksternal, TETAP ADA):
 
 ## 4. Cabang kerja
 
+- `review/0010-pa006-submission-check-20261112` — report/pointer keputusan reviewer sesi ini; publication/PR/checks pada report controller §6, tanpa candidate implementasi PA-006.
 - `session/2026-11-11-pa001-payment-concurrency` — **MERGED ke main** (PR #9; branch
   remote dibiarkan sebagai arsip riwayat).
 - Terbuka milik pihak lain (JANGAN ditimpa): `docs/planning-audit-20261110` (PR #8),
