@@ -18,6 +18,8 @@ The initial deliverables are an integrated, installable application on Debian 13
 
 All applicable repository documentation is binding, including docs/PRODUCT.md, ARCHITECTURE.md, UI_UX.md, ROUTEROS.md, RADIUS.md, ACS.md, FINANCE.md, OPERATIONS.md, ACCEPTANCE.md, IMPLEMENTATION_PLAN.md, I18N.md, MASTER_PROMPT.md, tasks.json, test-cases.json, defaults.json, branding.json, and other applicable files discovered in the current tree. Consult docs/README.md and actual repository references for scope and authority.
 
+The persistent agent entry point is [task/0000-start-here.md](task/0000-start-here.md). Repository task packets describe the currently authorized execution scope; docs/tasks.json remains the product backlog, and the domain documents retain ownership of requirements. Task packets do not replace or weaken those requirements.
+
 
 Before modifying code, identify applicable requirements and acceptance criteria. Maintain traceability requirement → implementation → test → evidence → report. Never silently omit, weaken, or reinterpret a requirement to match defective code. A test passing against mocks does not establish real integration. A missing implementation remains a documented gap, not a completed feature.
 
@@ -77,6 +79,23 @@ Fetch current remote refs; inspect main, outstanding branches/PRs, worktrees, un
 
 
 Use the workflow DISCOVER → PRIORITIZE → DELEGATE → IMPLEMENT → INTEGRATE → TEST → REVIEW → REPORT → COMMIT → HANDOFF. Continue independent safe tasks when a lab, credential, license, or hardware dependency blocks another task.
+
+
+6A. Repository Task Packets — Mandatory
+
+Approved by the project owner on 12 November 2026: future execution instructions are stored as Markdown files in task/, so users do not repeatedly copy long prompts between sessions. Every agent starts with task/0000-start-here.md, this contract and report/LATEST_HANDOFF.md, then verifies actual remote refs and selects the earliest eligible packet. The entry guide is permanent and is not an executable task.
+
+The controller/reviewer authors and scopes packets, assigns stable four-digit IDs, and records review decisions. The executor implements, tests, reports, commits and pushes the scoped work from its sandbox. Use NNNN-lowercase-hyphen-slug.md; on completed executor delivery rename the same file to NNNN-lowercase-hyphen-slug_done.md. Keep IDs permanent; never renumber historical tasks or create a duplicate task to hide an unfinished correction. Do not create a second product backlog, queue service, daemon or task framework.
+
+Each packet states its objective, baseline and dependencies, requirement references, permitted/forbidden changes, measurable acceptance, required tests, report locations and delivery evidence. Follow filename order only among tasks whose prerequisites are satisfied. Preserve unrelated work and declared file ownership; one main session allocates IDs. If the baseline changed, inspect the delta before implementing. Do not rerun completed work or duplicate an existing pending-review candidate.
+
+Execution status is ready, in_progress, blocked, failed or done. Review status is not_submitted, pending, accepted or changes_requested. The executor updates execution evidence; the controller owns acceptance. Record the exact implementation/tested SHA, published candidate/PR and review evidence. The _done suffix means the executor delivered the declared scope with required tests and reports; it is not controller acceptance, merge, release_enabled or deployment authorization. Controller acceptance applies only to the reviewed code; later source changes require relevant revalidation. A report-only descendant must identify its tested ancestor and prove unchanged application content, rather than inventing a file's own future commit SHA.
+
+Include the completion rename in the delivered commit, push it and verify remote publication before declaring done. Failed, blocked or incomplete tasks retain the unfinished filename and record a concrete blocker/resume step. A controller request for corrections reopens the same ID by removing _done, preserving review history in report/. Safe independent tasks may continue only when their own prerequisites permit it. Pending review is not permission to repeat the action or bypass a dependent gate.
+
+Before handoff, update the task evidence, session/reviewer reports, report/LATEST_HANDOFF.md and docs/progress.md consistently. Executor completion does not replace the task-level Definition of Done in section 13, which also requires the applicable review and integration. An active session may process subsequent authorized eligible tasks; files alone do not schedule or restart agents in the background.
+
+Until the candidate passes the relevant sandbox and deployment-readiness review, implementation remains sandbox-first. Do not put deployment access details or credentials in task packets or hand them to an executor prematurely. A reviewed task, green CI, or _done filename never grants an automatic merge, production deployment, feature activation or release tag. Those actions follow their separate existing authority and evidence requirements.
 
 
 7. Beta Scope, Production Deployment & GNS3

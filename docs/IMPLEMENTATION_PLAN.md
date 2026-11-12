@@ -1,6 +1,6 @@
 # MicroTix — rencana eksekusi agent
 
-Target adalah aplikasi yang dapat dipakai sesuai [PRODUCT.md](PRODUCT.md), bukan menghasilkan audit dokumentasi berikutnya. [tasks.json](tasks.json) satu backlog; 85 ID TK dipertahankan supaya jejak pekerjaan lama tetap dapat dipakai. [MASTER_PROMPT.md](MASTER_PROMPT.md) adalah perintah eksekusi. Seluruh fase R1–R4 tetap berada dalam scope produk; jangan membangun modul fase lanjut sebelum inti yang diperlukan selesai.
+Target adalah aplikasi yang dapat dipakai sesuai [PRODUCT.md](PRODUCT.md), bukan menghasilkan audit dokumentasi berikutnya. [tasks.json](tasks.json) satu backlog; 85 ID TK dipertahankan supaya jejak pekerjaan lama tetap dapat dipakai. Pintu masuk eksekusi adalah [task/0000-start-here.md](../task/0000-start-here.md) menurut [CONTRACT §6A](../CONTRACT.md); [MASTER_PROMPT.md](MASTER_PROMPT.md) mengarahkan ke workflow yang sama. Packet Markdown membatasi penugasan aktif tanpa menduplikasi backlog. Seluruh fase R1–R4 tetap scope produk; jangan membangun fase lanjut sebelum inti dan packet terkait siap.
 
 ## 1 Urutan pengiriman
 
@@ -24,7 +24,7 @@ Jika hanya verifikasi lab R1 menunggu akses, kode dan pengujian R2 yang independ
 
 ## 2 Cara mengerjakan satu task
 
-1. Baca objective, dependency dan requirements task; lalu hanya bagian dokumen domain yang relevan. PRODUCT memiliki kebijakan, ARCHITECTURE kontrak lintas domain, dokumen domain detail. Audit report bukan bahan yang harus dibaca ulang setiap task.
+1. Baca packet `task/NNNN-slug.md` yang eligible, baseline/dependency/review prasyarat dan requirement ID-nya; verifikasi remote delta, lalu hanya bagian dokumen domain yang relevan. PRODUCT memiliki kebijakan, ARCHITECTURE kontrak lintas domain, dokumen domain detail. Audit report bukan bahan yang harus dibaca ulang setiap task.
 2. Nyatakan acceptance yang benar-benar akan dibuktikan. Pilih skenario relevan dari test-cases.json serta invariant lintas tenant/uang/efek perangkat. Case majemuk dipisah per assertion/resource; tidak ada PASS semua case dari satu happy path.
 3. Bangun vertical slice: migration/constraint→service/transaction→API/OpenAPI→UI→automated test. UI memakai API nyata. Hindari menyelesaikan seluruh backend atau seluruh mockup sebelum satu alur bisa dicoba.
 4. Jalankan test relevan dengan dependency nyata; perbaiki akar masalah. Review diff untuk race/security/UX. Jika reviewer terpisah tersedia, serahkan diff, acceptance dan hasil test ringkas. Satu agent dapat self-review secara jujur; jangan berhenti karena nama model reviewer tidak tersedia.
@@ -37,6 +37,8 @@ Tidak ada batas tiga putaran perbaikan yang memaksa menyerah pada bug yang masih
 contract = interface/schema/behavior yang konkret; build = implementasi+tes lokal yang relevan; verified = bukti runtime lingkungan yang diperlukan. Dependency verified membatasi verifikasi/rilis penerus, bukan larangan menulis interface/kode/test penerus. Jangan memakai stub yang mengembalikan sukses untuk menyatakan dependency selesai.
 
 Catat per task: contract_complete, implemented, verified_local, verified_lab (jika relevan), release_enabled. Tidak perlu service registry/status database baru; checkpoint Markdown dan hasil CI cukup pada awal. Task internal berstatus todo/in_progress/done/blocked pada milestone yang dinyatakan. blocked mencantumkan item konkret, misalnya CHR image atau grant target, bukan “full audit belum sempurna”.
+
+Packet eksekusi mengikuti status dan rename pada CONTRACT §6A/panduan tetap. `_done.md` adalah penyerahan scope executor dengan tests/report/verified push, bukan otomatis accepted, merged atau release_enabled. Controller mencatat exact reviewed SHA. Changes requested membuka kembali ID yang sama; pending-review/completed work tidak diulang. Ini tidak mengubah status/desain katalog tasks.json menjadi hasil test.
 
 TK-003 hanya fondasi yang dipakai R1. Domain ledger lengkap R2; R1 menyimpan source event pembayaran platform immutable. TK-109 renderer berfungsi sebagai worker/module terbatas pada image yang sama jika cukup; tidak harus satu deployment bisnis baru. TK-1001 inventory remote tidak boleh menghalangi bootstrap kode lokal. TK-1005 scale/HA dijalankan saat mengaktifkan skala terkait, bukan prasyarat setiap commit.
 

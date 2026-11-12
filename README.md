@@ -2,7 +2,9 @@
 
 Aplikasi SaaS untuk pengusaha RT/RW Net Indonesia: MikroTik, pelanggan berbasis RADIUS per perusahaan, penagihan, pembayaran, pembukuan, monitoring dan backup.
 
-**Status: kandidat beta 0.1 (R1-core)** — frontend DAN backend keduanya terimplementasi dan teruji: 252 tes backend (PostgreSQL nyata + RLS), 42 tes frontend, E2E browser nyata 7/7, verifikasi FreeRADIUS nyata 15/15, smoke live API 20/20. Fitur jaringan pada perangkat fisik menunggu bukti lab (gate G1) — status jujur per fitur: [docs/BETA_RELEASE_STATUS.md](docs/BETA_RELEASE_STATUS.md); bukti eksekusi: [docs/BETA_TEST_EVIDENCE.md](docs/BETA_TEST_EVIDENCE.md); rekam jejak: [docs/progress.md](docs/progress.md).
+**Status: kandidat beta 0.1 — NOT_READY untuk Production Beta.** Status aktual, exact SHA, PR dan code/environment blockers ada di [report/LATEST_HANDOFF.md](report/LATEST_HANDOFF.md). Bukti historis: [docs/BETA_TEST_EVIDENCE.md](docs/BETA_TEST_EVIDENCE.md) dan [docs/progress.md](docs/progress.md); hasil lokal/CI tidak menggantikan gate perangkat, install/upgrade dan recovery.
+
+**Agent mulai/resume dari [task/0000-start-here.md](task/0000-start-here.md).** Controller menulis penugasan Markdown bernomor; executor mengimplementasikan, menguji, membuat laporan, commit/push dan menutup dengan `_done.md`. Review exact SHA tetap terpisah sesuai [CONTRACT.md §6A](CONTRACT.md).
 
 ## Instalasi resmi (satu perintah)
 
@@ -27,6 +29,7 @@ cd backend && bash scripts/test_radius.sh
 - `instalasi.sh` — installer produksi Debian 13.
 - `locales/{id,en}/` — katalog i18n domain `web`.
 - `docs/` — kontrak produk, arsitektur, UI/UX, dan rencana implementasi (documentation-first; kode tunduk pada dokumen).
+- `task/` — panduan masuk tetap dan packet eksekusi agent; `docs/tasks.json` tetap backlog produk.
 
 ## Pengembangan
 
@@ -37,7 +40,7 @@ cd backend && bash scripts/dev_bootstrap.sh   # PostgreSQL lokal + migrasi + see
 # frontend: cd ../apps/web && pnpm install && pnpm exec vitest run
 ```
 
-Mulai dari [indeks dokumen](docs/README.md). Untuk meminta coding agent melanjutkan, gunakan [master prompt eksekusi](docs/MASTER_PROMPT.md) dan [docs/AGENT_HANDOFF.md](docs/AGENT_HANDOFF.md) (titik masuk agent: selalu dari `main` terbaru). Agent menyelesaikan R1, lalu R2, kemudian R3/R4; menulis kode lokal tidak menunggu akses perangkat yang hanya diperlukan untuk verifikasi lab.
+Mulai dari [panduan agent](task/0000-start-here.md) dan [indeks dokumen](docs/README.md). [MASTER_PROMPT](docs/MASTER_PROMPT.md) serta [AGENT_HANDOFF](docs/AGENT_HANDOFF.md) menautkan workflow yang sama; tidak perlu menyalin prompt panjang setiap task. Fetch main aktual dan lanjutkan packet eligible; seluruh roadmap R1–R4 tetap scope produk, sementara task aktif membatasi pekerjaan menuju Beta. Kode/tes sandbox independen tidak menunggu akses yang hanya diperlukan untuk lab.
 
 [Kebutuhan produk](docs/PRODUCT.md) memiliki harga dan kebijakan; [arsitektur](docs/ARCHITECTURE.md) memiliki stack/API/job/data; [rencana implementasi](docs/IMPLEMENTATION_PLAN.md) mengatur urutan; [audit](docs/AUDIT_REPORT.md) menjelaskan temuan dan perlakuan seluruh 77 berkas sumber.
 

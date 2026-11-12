@@ -1,22 +1,28 @@
-# LATEST_HANDOFF — Kanonis (sesi 2026-11-11 final: PR #9 diverifikasi independen & MERGED — PA-001 tuntas di main)
+# LATEST_HANDOFF — Kanonis (12 November 2026: workflow task repository; PA-006 siap ditugaskan)
 
-Diperbarui atomik SETELAH verifikasi sesi. Dokumen ini adalah titik masuk
-WAJIB agent berikutnya (CONTRACT.md §10; dokumen handoff lain di
-docs/AGENT_HANDOFF.md tetap sebagai panduan alur — perbarui statusnya,
-jangan duplikasi laporan penuh).
+Pintu masuk tetap: [task/0000-start-here.md](../task/0000-start-here.md), wajib menurut CONTRACT §6A. Handoff ini menyimpan status sesi aktual; docs/AGENT_HANDOFF.md hanya panduan navigasi/bootstrap.
+
+## 0. Sesi dokumentasi kontrol task — 12 November 2026
+
+- Pemilik menyetujui penugasan Markdown di task/, nama berurutan dan suffix _done pada penyerahan executor, serta meminta aturan masuk CONTRACT/docs.
+- Entry guide dan packet awal ID0010 / PA-006 dibuat. **PA-006 belum diimplementasikan**: execution ready, review not_submitted. Executor berikutnya membaca guide dan file0010 pada instruction ref yang dipublikasikan; bila sudah merged gunakan main aktual.
+- Source, schema, installer, dependency dan deployment tidak berubah pada sesi ini. Baseline remote sebelum penulisan: a2207b66cc705fece79645034ea45900e81a9f38. Riwayat implementasi PR9 di bawah tetap berlaku.
+- Laporan keputusan/validasi: [task-workflow decision](controller/20261112T031235Z-task-workflow-contract.md). Status publikasi/SHA/CI sesi ini dicatat dalam laporan dan metadata PR setelah verifikasi; jangan mengisi SHA final file sebelum commit ada.
+- Publikasi awal terverifikasi: [PR #10](https://github.com/smahud/MicroTix_Project/pull/10), commit `44b0e4aa1457ba1c420722fd529c5ee6ec0fde4a`; tree lokal/remote identik, independent review APPROVED. Metadata closure berikutnya tidak mengubah task/source. Fetch final main/PR refs dan CI aktual saat resume; publication snapshot ini tidak mengklaim CI atau merge sebelum diamati.
+- _done berarti executor delivered; controller acceptance exact SHA, merge dan release tetap terpisah. Changes requested membuka kembali ID yang sama. Beta masih NOT_READY.
 
 ## 1. Status kanonis SAAT INI
 
 | Item | Nilai |
 |---|---|
-| **Branch kanonis** | `main` @ **`8ce94d468232eda77cd675f6d18e5fcb41f3d708`** (merge PR #9; diverifikasi fetch ulang pasca-merge) — memuat PA-001 + seluruh koreksi REV-1111-01/02/03/10 |
+| **Branch kanonis** | `main` @ **`a2207b66cc705fece79645034ea45900e81a9f38`** (remote teramati sebelum sesi dokumentasi ini; ancestor merge PR9 `8ce94d4`). Instruction candidate sesi ini berada pada branch `docs/task-workflow-20261112` sampai integrasi; fetch remote aktual, jangan anggap snapshot ini selalu HEAD |
 | **PR sesi sebelumnya** | **#9 MERGED** (`session/2026-11-11-pa001-payment-concurrency`; kandidat pertama `3b20b56` REQUEST CHANGES → kandidat kedua `482602e` diverifikasi independen 2× + CI hijau → merge commit `8ce94d4` atas wewenang pemilik repo; lihat `report/orchestrator/20261111T145417Z-pr9-merge-integration.md`) |
 | PR lain terbuka | **#7** SSTP Phase-2 (head `d7fa35e`; CI backend/frontend success, docs FAIL **manifest mismatch** — bukan bukti SSTP gagal runtime; disposition = packet terpisah) · **#8** docs planning-audit DRAFT (head `6bb57c9`; CI docs FAIL manifest mismatch = pekerjaan DEC-02, branch itu pemilik file manifest — jaga ownership disjoint) |
 | Rilis kandidat | `v0.1.0-beta.1` tetap **NOT_READY** — bloker = code blockers (§3) + environment blockers; klaim lama "penahan tunggal host / BUKAN pekerjaan kode" SUDAH DICABUT (REV-1111-10) |
-| CONTRACT.md | Versi `1fff190` (tidak diubah) |
-| Prioritas aktif | Mandat master prompt user 2026-11-10 (sandbox terlebih dahulu). PA-001 tuntas; packet berikutnya **PA-006** (uang/idempotency), lalu **PA-002+PA-003** (job lifecycle) |
+| CONTRACT.md | §6A task workflow ditambahkan atas persetujuan pemilik 12 November 2026; lihat laporan keputusan sesi ini |
+| Prioritas aktif | Sandbox-first; mulai dari guide tetap, task ID **0010 / PA-006** (uang/idempotency). PA-001 sudah merged; berikutnya PA-002/PA-003 setelah dependency/review terpenuhi |
 
-## 2. Ringkasan sesi terakhir (bukti penuh di laporan orchestrator sesi masing-masing)
+## 2. Riwayat implementasi terakhir — PR9 (bukti di laporan orchestrator)
 
 Sesi 2026-11-11 terdiri dari tiga tahap (semua laporan persist di `report/`):
 
@@ -87,11 +93,12 @@ Environment blockers (prasyarat eksternal, TETAP ADA):
 6. Installer/upgrade/restore/scheduler code blockers (REV-1111-04/05/07/09) — S4 setelah
    DEC-01; ops host Gate A/G setelah code blocker ditutup.
 
-## 6. Titik mulai EKSAK agent berikutnya
+## 6. Contoh bootstrap sandbox — pilih scope dari task guide
 
 ```bash
 git fetch origin --prune
-git switch main && git pull --ff-only        # main @ 8ce94d4 (lihat §1)
+# Periksa status/worktree; gunakan branch task dari main aktual atau instruction ref yang sah.
+# Jangan switch/reset di atas perubahan pihak lain; baca task/0000-start-here.md.
 git log --oneline -5
 # Sandbox uji (PostgreSQL 17 user-space + Python 3.13; tanpa systemd di sandbox z.ai):
 MT_SANDBOX_BASE=/home/z/pgbase bash docs/tools/setup_env.sh   # PG 17.11 + FreeRADIUS 3.2.7 deb-extract
