@@ -15,7 +15,7 @@ PR10 sudah MERGED (main teramati a0f653e89bf77b1238ca0ed9bcdb0e2f0aee612e; CI ma
 | Controller review / reviewed SHA | Belum ada untuk implementasi0010; review dokumen workflow tidak menggantikannya |
 | Next actor | **coding_agent** |
 | Exact next action | Fetch refs/PR, baca task/0000-start-here.md lalu implementasikan/resume task0010/PA006 di sandbox; serahkan candidate+report dan alihkan ke controller_reviewer |
-| Instruction ref sesi ini | docs/task-communication-loop-20261112 sampai integrasi; fetch main/PR aktual. Record hasil/review dapat ada pada PR yang belum merged |
+| Instruction ref sesi ini | [PR11](https://github.com/smahud/MicroTix_Project/pull/11), branch docs/task-communication-loop-20261112; publikasi awal terverifikasi `7e7f90e930311e5da5e3b35d77a490c6e9c7100d`. Fetch final main/PR aktual; record hasil/review dapat ada pada PR yang belum merged |
 
 Protokol lengkap ada pada panduan tetap §6 dan CONTRACT §6A. Controller publishes instructions→executor publishes code/tests/report→controller publishes exact-SHA review→same-ID corrections atau accepted→prepare dependent task. Verdict/corrections dan next actor/action harus dipush/verified di GitHub sebelum berganti peran; tidak ditinggalkan hanya di chat. Internal executor review bukan controller acceptance.
 

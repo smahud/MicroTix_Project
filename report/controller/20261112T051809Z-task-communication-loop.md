@@ -58,7 +58,9 @@ NOT_RUN sesi controller: app pytest/frontend browser, DB/HTTP/migrations/jobs, i
 
 ## 5. Penyerahan dan kelanjutan aktual
 
-Pada draft: NOT_PUSHED, belum PR/merge sesi ini. Semua edits documentation-only pada branch terisolasi. Laporan publikasi akan mengikat published tree/SHA/PR yang teramati, bukan mengarang SHA akhir file. Review record/metadata GitHub tetap sumber outcome publication/integration setelah checkpoint laporan.
+Paket instruksi/keputusan **PUBLISHED dan remote terverifikasi**: [PR11](https://github.com/smahud/MicroTix_Project/pull/11), branch `docs/task-communication-loop-20261112`, commit `7e7f90e930311e5da5e3b35d77a490c6e9c7100d`. Remote tree `612e128ecfb32fc12d0337f8d243d96ed95c88d1` identik local staged tree. Diff10files seluruhnya dokumentasi/manifest; independent review APPROVED. Closure metadata sesudahnya hanya mencatat pointer publikasi, tidak mengubah acceptance atau source.
+
+CI first package run43161320513 masih in_progress pada checkpoint publikasi ini; tidak diklaim PASS sebelum teramati. Final head/ref/CI dan outcome integration tercatat di metadata PR/Git setelah checkpoint ini. Controller memverifikasi required CI pada final head, scope diff, main delta dan expected-head sebelum mengintegrasikan perubahan dokumentasi yang diminta pemilik. Ini bukan approval merge kode aplikasi atau deployment. Report tidak diminta memuat SHA akhir commit dirinya sendiri; gunakan hubungan tested/reviewed ancestor dan published candidate yang aktual.
 
 Next actor untuk pekerjaan produk: **coding_agent**. Next action: baca entry tetap, fetch refs/PR aktual, claim/resume task0010/PA006 di sandbox dan kirim candidate+execution report dengan evidence. Hasil belum dipublikasikan berarti controller tidak memaksakan review hasil kosong atau membuka task0020. Setelah PA006 accepted dan dependency integration sah, controller menyiapkan PA002/PA003.
 
