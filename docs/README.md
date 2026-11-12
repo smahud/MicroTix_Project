@@ -17,7 +17,9 @@ Indeks kebutuhan/arsitektur hasil konsolidasi revisi 2.2; alur agent diperbarui 
 | [test-cases.json](test-cases.json) | Katalog actions/assertions terinci; bukan bukti eksekusi |
 | [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) | Milestone, loop kerja, command dan batas kompleksitas |
 | [tasks.json](tasks.json) | Satu backlog85 task dengan dependency; tidak perlu backlog salinan |
-| [MASTER_PROMPT.md](MASTER_PROMPT.md) | Pengarah ke entry task yang sama dan panduan engineering umum |
+| [MASTER_PROMPT.md](MASTER_PROMPT.md) | Indeks kompatibel dan instruksi singkat untuk memilih peran sesi |
+| [MASTER_PROMPT_EXECUTOR.md](MASTER_PROMPT_EXECUTOR.md) | Prompt default coding agent: discovery/resume, scope, implementasi, tes dan penyerahan |
+| [MASTER_PROMPT_REVIEWER.md](MASTER_PROMPT_REVIEWER.md) | Prompt default controller: review exact SHA, verdict/koreksi dan packet berikutnya |
 | [task/0000-start-here.md](../task/0000-start-here.md) | Cara memilih/menutup packet Markdown, `_done`, review exact SHA dan resume |
 | [defaults.json](defaults.json) | Nilai default teknis bertipe; harga/kuota tetap dimiliki PRODUCT |
 | [branding.json](branding.json) | Resolver nama tampilan dan metadata publik |

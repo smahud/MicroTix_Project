@@ -3,6 +3,8 @@
 Panduan permanen, disetujui pemilik proyek 12 November 2026. File ini tidak diberi `_done`.
 Aturan wajib: [CONTRACT.md §6A](../CONTRACT.md). Status sesi aktual: [LATEST_HANDOFF](../report/LATEST_HANDOFF.md).
 
+Pilih prompt sesuai peran sesi: [executor/coding agent](../docs/MASTER_PROMPT_EXECUTOR.md) atau [controller reviewer](../docs/MASTER_PROMPT_REVIEWER.md). Keduanya berlaku untuk semua sesi baru/resume, mengambil task/ref aktual dari GitHub dan memakai workflow yang sama di bawah. Prompt default bukan packet dan tidak diberi `_done`.
+
 ## 1. Mulai dari kondisi aktual
 
 1. Baca instruksi workspace/AGENTS yang berlaku, CONTRACT, handoff kanonis dan checkpoint terbaru [progress](../docs/progress.md).
@@ -12,7 +14,7 @@ Aturan wajib: [CONTRACT.md §6A](../CONTRACT.md). Status sesi aktual: [LATEST_HA
 5. Baca packet itu dan hanya kebutuhan/domain yang relevan. [docs/tasks.json](../docs/tasks.json) tetap backlog produk; packet Markdown adalah instruksi eksekusi terbatas, bukan salinan seluruh roadmap.
 6. Mulai/resume pekerjaan yang sama dari evidence terakhir. Task `_done` atau kandidat yang menunggu review tidak diimplementasikan ulang. Jika tidak ada task eligible, laporkan blocker/next action yang tepat; jangan mengarang task atau memperluas fitur sendiri.
 
-Task awal workflow ini: ID **0010 / PA-006 — HTTP idempotency**. PA-001 sudah merged melalui PR #9. Berikutnya PA-002/PA-003 disiapkan controller setelah hasil 0010 diterima; file penerus belum otomatis diotorisasi hanya karena disebut di roadmap.
+Status/prioritas aktual ditemukan pada latest handoff, packet dan refs yang diverifikasi. Jangan mengunci prompt permanen pada task awal atau SHA historis. File penerus belum otomatis diotorisasi hanya karena disebut di roadmap.
 
 ## 2. Peran dan sumber keputusan
 

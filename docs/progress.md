@@ -2,6 +2,12 @@
 
 Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-12 (Asia/Jakarta).
 
+## Checkpoint 2026-11-12 — Default prompts executor dan controller reviewer
+
+Permintaan pemilik: siapkan prompt tetap untuk kedua peran di semua sesi, tanpa kehilangan konteks atau keluar dari rencana. Baseline remote main2278b7741bb5ec38757cc7d3659b9099c31341ea (PR11 merged). Dibuat docs/MASTER_PROMPT_EXECUTOR.md dan MASTER_PROMPT_REVIEWER.md; MASTER_PROMPT lama menjadi indeks kompatibel. CONTRACT §6A, README/docs index, panduan task dan handoff menautkan kedua peran. Prompt mengambil task/candidate/ref aktual, memisahkan internal review dari controller acceptance, menutup koreksi pada ID sama, serta menyimpan partial checkpoint/evidence/next actor pada record existing.
+
+Tidak membuat framework, backlog baru atau penugasan duplikat; tidak mengubah acceptance/task0010 atau source/schema/installer/dependency. Task0010 PA006 tetap ready/not_submitted; next actor coding_agent. Validation/review/publication aktual dicatat di report/controller/20261112T065349Z-default-agent-prompts.md. Runtime application/lab/deploy NOT_RUN oleh controller; Production Beta tetap NOT_READY.
+
 ## Checkpoint 2026-11-12 — GitHub sebagai jalur komunikasi controller/coding
 
 Permintaan pemilik: periksa hasil pekerjaan task, rapikan komunikasi controller→coding agent→review→koreksi/next task, lalu lanjut menuju Beta. Baseline main a0f653e (PR10 merged), CI main43148282521 success. Task0010 tetap ready/not_submitted; belum ditemukan implementation PR/branch/report task0010 pada refs yang diperiksa, sehingga next actor coding_agent, bukan review hasil kosong.
