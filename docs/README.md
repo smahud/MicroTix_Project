@@ -1,6 +1,6 @@
 # MicroTix — indeks dokumentasi
 
-Revisi 2.2, 5 November 2026 (Asia/Jakarta). Tujuan: membuat agent membangun aplikasi RT/RW Net sesuai kebutuhan awal dengan arsitektur sederhana. Semua dokumentasi tetap di docs; README di root hanya pintu masuk. Riwayat lengkap sebelum konsolidasi tersedia di commit sumber yang dicatat pada AUDIT_REPORT.
+Indeks kebutuhan/arsitektur hasil konsolidasi revisi 2.2; alur agent diperbarui 12 November 2026 (Asia/Jakarta). Tujuan: membangun aplikasi RT/RW Net sesuai kebutuhan awal dengan arsitektur sederhana. Dokumen engineering ada di docs; [CONTRACT](../CONTRACT.md) mengatur kewajiban dan [task/0000-start-here.md](../task/0000-start-here.md) menjadi pintu masuk tetap. Packet task di luar docs menyimpan instruksi eksekusi terbatas. Riwayat sebelum konsolidasi tetap tersedia di commit sumber pada AUDIT_REPORT.
 
 | Dokumen | Memiliki |
 |---|---|
@@ -17,7 +17,8 @@ Revisi 2.2, 5 November 2026 (Asia/Jakarta). Tujuan: membuat agent membangun apli
 | [test-cases.json](test-cases.json) | Katalog actions/assertions terinci; bukan bukti eksekusi |
 | [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) | Milestone, loop kerja, command dan batas kompleksitas |
 | [tasks.json](tasks.json) | Satu backlog85 task dengan dependency; tidak perlu backlog salinan |
-| [MASTER_PROMPT.md](MASTER_PROMPT.md) | Prompt eksekusi sekali perintah, resume dan hasil terminal |
+| [MASTER_PROMPT.md](MASTER_PROMPT.md) | Pengarah ke entry task yang sama dan panduan engineering umum |
+| [task/0000-start-here.md](../task/0000-start-here.md) | Cara memilih/menutup packet Markdown, `_done`, review exact SHA dan resume |
 | [defaults.json](defaults.json) | Nilai default teknis bertipe; harga/kuota tetap dimiliki PRODUCT |
 | [branding.json](branding.json) | Resolver nama tampilan dan metadata publik |
 | [AUDIT_REPORT.md](AUDIT_REPORT.md) | Temuan, koreksi, sumber resmi dan disposition seluruh berkas lama |
@@ -26,6 +27,6 @@ Revisi 2.2, 5 November 2026 (Asia/Jakarta). Tujuan: membuat agent membangun apli
 
 Urutan otoritas: instruksi pengguna yang berlaku→dokumen pemilik konsep di tabel ini. Dokumen lain menautkan, bukan mengubah kebijakan konsep itu. Konflik konkret diperbaiki pada sumbernya dan dilacak di checkpoint; jangan menambah lapisan amendemen di atas amendemen. Pilihan implementasi rutin dicatat singkat, tanpa memperbesar scope bisnis.
 
-Untuk mulai: baca MASTER_PROMPT dan IMPLEMENTATION_PLAN, jalankan validator dari akar repo, kemudian task fase aktif dan domain relevan. Saat resume cukup checkpoint+diff+task yang belum selesai. Jangan memuat seluruh katalog/riwayat untuk setiap perubahan.
+Untuk mulai: baca panduan task, CONTRACT dan latest handoff; fetch refs aktual, pilih packet eligible, baca IMPLEMENTATION_PLAN/domain relevan dan jalankan validator dari akar repo. Saat resume cukup checkpoint+diff+packet/evidence terakhir. Jangan memuat seluruh katalog/riwayat atau menyalin master prompt panjang setiap perubahan. `docs/tasks.json` tetap satu backlog produk; packet bukan sumber kebutuhan tandingan.
 
 Kesiapan dokumen berarti dapat menjadi input implementasi. verified_local, verified_lab dan release_enabled memerlukan bukti berbeda; tidak ada hasil runtime aplikasi yang dinyatakan oleh paket ini.
