@@ -17,7 +17,7 @@ Prompt permanen untuk setiap sesi: [executor](../docs/MASTER_PROMPT_EXECUTOR.md)
 | Controller review / reviewed SHA | Belum ada untuk implementasi0010; review dokumen workflow tidak menggantikannya |
 | Next actor | **coding_agent** |
 | Exact next action | Fetch refs/PR, baca task/0000-start-here.md lalu implementasikan/resume task0010/PA006 di sandbox; serahkan candidate+report dan alihkan ke controller_reviewer |
-| Instruction ref sesi ini | Branch `docs/default-agent-prompts-20261112`, draft dokumentasi belum dipublikasikan pada checkpoint ini. PR11 sudah merged; fetch final main/PR aktual. Record hasil/review dapat ada pada PR yang belum merged |
+| Instruction ref sesi ini | [PR12](https://github.com/smahud/MicroTix_Project/pull/12), branch `docs/default-agent-prompts-20261112`; publikasi awal terverifikasi `639dca9d7d9c1d8509cdc3dd0aa43597b37af9fc`. PR11 sudah merged; fetch final main/PR aktual. Record hasil/review dapat ada pada PR yang belum merged |
 
 Protokol lengkap ada pada panduan tetap §6 dan CONTRACT §6A. Controller publishes instructions→executor publishes code/tests/report→controller publishes exact-SHA review→same-ID corrections atau accepted→prepare dependent task. Verdict/corrections dan next actor/action harus dipush/verified di GitHub sebelum berganti peran; tidak ditinggalkan hanya di chat. Internal executor review bukan controller acceptance.
 
