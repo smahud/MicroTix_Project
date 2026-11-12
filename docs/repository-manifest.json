@@ -18,8 +18,8 @@
   "files": [
     {
       "path": "README.md",
-      "bytes": 3653,
-      "sha256": "aab270b99753d1a80a794f1eeb5935aa92e8a0504be56f315c0ab761fb379ce3"
+      "bytes": 3935,
+      "sha256": "2c2352b2f7fdbd8c86823eb6540241a8ff1a64b0bca8881bc89d356df35ded2b"
     },
     {
       "path": "docs/ACCEPTANCE.md",
@@ -58,8 +58,18 @@
     },
     {
       "path": "docs/MASTER_PROMPT.md",
-      "bytes": 9198,
-      "sha256": "7e3f789e30486fba9ec952aabd8cb2f58c52ebd6c730de60081281a485d70e35"
+      "bytes": 1941,
+      "sha256": "d502a3d361828cd6aa8e02099be13831985ba038de0e4e136f225f7e477b40af"
+    },
+    {
+      "path": "docs/MASTER_PROMPT_EXECUTOR.md",
+      "bytes": 9185,
+      "sha256": "fcdcefc5d2486a0dc17f451c223a5ebacf6c16f82c8048bd9de536f7ef286a82"
+    },
+    {
+      "path": "docs/MASTER_PROMPT_REVIEWER.md",
+      "bytes": 9754,
+      "sha256": "1e3b8a14081befed67a5da0634307896f963476b7f25d97845b63e888cec8e11"
     },
     {
       "path": "docs/OPERATIONS.md",
@@ -78,8 +88,8 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 3511,
-      "sha256": "7e79826cbb0314acc978d9c8e0493511a9945bb3d4a3dd4e1b16c13e7e66d6b6"
+      "bytes": 3806,
+      "sha256": "33bf6844bf330258a4001e795e1284c1c71a7b752b0354adda13e55b864df4c4"
     },
     {
       "path": "docs/ROUTEROS.md",

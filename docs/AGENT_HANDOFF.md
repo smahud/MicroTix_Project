@@ -4,6 +4,8 @@ Diperbarui 12 November 2026 (Asia/Jakarta), sesuai keputusan pemilik tentang tas
 
 **Mulai/resume dari [task/0000-start-here.md](../task/0000-start-here.md).** Aturan wajib ada di [CONTRACT §6A](../CONTRACT.md); status sesi aktual hanya di [report/LATEST_HANDOFF.md](../report/LATEST_HANDOFF.md). File ini adalah panduan navigasi/bootstrap, bukan salinan status main, prioritas atau gate rilis.
 
+Gunakan prompt tetap sesuai peran: [executor](MASTER_PROMPT_EXECUTOR.md) atau [controller reviewer](MASTER_PROMPT_REVIEWER.md). Keduanya membaca refs/task/evidence terbaru dan menyimpan checkpoint parsial pada packet/report/handoff agar sesi berikutnya dapat melanjutkan tanpa chat lama.
+
 ## 1. Sebelum bekerja
 
 - Fetch default branch dan refs PR aktual; periksa git status/diff/worktrees/CI. Pertahankan pekerjaan pihak lain dan arsip branch lama. Buat branch/worktree sesuai packet; jangan memakai archive branch sebagai main.

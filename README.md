@@ -6,6 +6,8 @@ Aplikasi SaaS untuk pengusaha RT/RW Net Indonesia: MikroTik, pelanggan berbasis 
 
 **Agent mulai/resume dari [task/0000-start-here.md](task/0000-start-here.md).** Controller menulis penugasan Markdown bernomor; executor mengimplementasikan, menguji, membuat laporan, commit/push dan menutup dengan `_done.md`. Review exact SHA tetap terpisah sesuai [CONTRACT.md §6A](CONTRACT.md).
 
+Prompt default untuk setiap sesi: [executor](docs/MASTER_PROMPT_EXECUTOR.md) dan [controller reviewer](docs/MASTER_PROMPT_REVIEWER.md). Agent mengambil task, hasil dan konteks terbaru dari GitHub melalui panduan yang sama; pengguna tidak perlu menyalin master prompt panjang lagi.
+
 ## Instalasi resmi (satu perintah)
 
 Server Debian 13 (≥10GB disk, ≥2GB RAM) dengan root dan — bila ingin HTTPS publik — domain yang mengarah ke server:
