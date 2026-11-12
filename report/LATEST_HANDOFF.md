@@ -19,7 +19,7 @@ Prompt permanen: [executor](../docs/MASTER_PROMPT_EXECUTOR.md) dan [controller r
 | Next actor | **coding_agent** |
 | Exact next action | Fetch refs/PR, jalankan prompt executor dan implementasikan/resume task0010 di sandbox; publish candidate, execution report, matriks acceptance→actual evidence dan internal review sebelum dialihkan ke controller |
 | Instruction ref | Prompt/packet tersedia di main `9903d9b…`; baseline packet sebelumnya `a0f653e…` ancestor dan delta source relevan kosong |
-| Ref keputusan sesi ini | `review/0010-pa006-submission-check-20261112`; status publikasi/PR/checks terverifikasi dicatat pada [report controller §6](controller/20261112T072128Z-0010-pa006-review.md#6-publication-and-handoff), sampai integrasi. Ini ref keputusan, bukan candidate implementasi |
+| Ref keputusan sesi ini | `review/0010-pa006-submission-check-20261112`, publikasi `92e6c6a99f82aca4fa4f20440c7591f324d96d44` dan tree terverifikasi; closure descendant hanya metadata. Final ref/PR/CI diperiksa di GitHub; evidence pada [report controller §6](controller/20261112T072128Z-0010-pa006-review.md#6-publication-and-handoff), sampai integrasi. Ini ref keputusan, bukan candidate implementasi |
 
 Protokol lengkap ada pada panduan tetap §6 dan CONTRACT §6A. Controller publishes instructions→executor publishes code/tests/report→controller publishes exact-SHA review→same-ID corrections atau accepted→prepare dependent task. Verdict/corrections dan next actor/action harus dipush/verified di GitHub sebelum berganti peran; tidak ditinggalkan hanya di chat. Internal executor review bukan controller acceptance.
 
