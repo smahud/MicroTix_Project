@@ -1,0 +1,7 @@
+{"phase": "before", "proof_file_count": 1, "response": {"state": "submitted", "submission_id": "5232b8cf-4941-48e7-95e8-1f37e2582339"}, "retained_scopes": ["payment_submission:a404dc56-02ef-468d-adba-09445bbf5f16:"], "status": 201, "submission_count": 1}
+{"phase": "after", "proof_file_count": 2, "response": {"state": "submitted", "submission_id": "56d5bf9c-5372-455b-8f04-63cbd493a5ab"}, "retained_scopes": ["payment_submission:a404dc56-02ef-468d-adba-09445bbf5f16:", "payment_submission:a404dc56-02ef-468d-adba-09445bbf5f16:7ba17c2a-d6d6-4cae-996f-1719db82cafa"], "status": 201, "submission_count": 2}
+Traceback (most recent call last):
+  File "/workspace/scratch/9b9247ab90da/MicroTix_Project/report/controller-evidence/20261113T114222Z-pa006/live_upgrade_probe.py", line 64, in <module>
+    assert response.status_code == 201 and response.json() == state["original_response"] and len(submissions) == 1, "legacy retry created a second logical proof submission after actual migration"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: legacy retry created a second logical proof submission after actual migration

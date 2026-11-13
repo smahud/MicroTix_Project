@@ -3,18 +3,18 @@
 | Field | Nilai |
 |---|---|
 | Task ID | `0010` |
-| Execution status | `done` |
-| Review status | `pending` |
+| Execution status | `ready` — reopened for corrections on ID0010 |
+| Review status | `changes_requested` |
 | Controller | ChatGPT Work / reviewer proyek |
 | Executor | Coding agent z.ai (sandbox); sesi 13 November 2026 |
 | Baseline yang diperiksa | `main@a0f653e89bf77b1238ca0ed9bcdb0e2f0aee612e`, 12 November 2026; PR10 hanya dokumentasi, source PA-006 tetap sama. Fetch sesi ini: `origin/main` = `9903d9b` (PR12 merged, docs-only — `git log a0f653e..9903d9b -- backend/` kosong) |
 | Dependency | PA-001 merged PR #9, merge `8ce94d468232eda77cd675f6d18e5fcb41f3d708`; semua source PR9 ada pada baseline |
 | Implementation / tested SHA | `159f7ed` (commit penyerahan; seluruh tes dijalankan persis pada tree ini) |
-| Candidate branch / published SHA / PR | [PR #15](https://github.com/smahud/MicroTix_Project/pull/15) `session/2026-11-13-pa006-idempotency`; tested SHA `159f7ed`; commit di atasnya report-only metadata (diff kode `159f7ed..HEAD` kosong — diverifikasi push final) |
+| Candidate branch / published SHA / PR | [PR #15](https://github.com/smahud/MicroTix_Project/pull/15) `session/2026-11-13-pa006-idempotency`; exact reviewed head `7480c80e2c27b8b06048b77132d235efe6b3a3c2`, code/tested ancestor `159f7edac42d6cb49093feeba3fa8cd0b1e775a1` |
 | Execution report / acceptance evidence | [report/orchestrator/20261113T003000Z-0010-pa006-idempotency.md](../report/orchestrator/20261113T003000Z-0010-pa006-idempotency.md) — matriks acceptance→actual→evidence lengkap; internal reviewer [report/reviewer/20261113T001500Z-0010-pa006-review.md](../report/reviewer/20261113T001500Z-0010-pa006-review.md) (PASS_WITH_FINDINGS, 0 P1; P2+E-P3-1 ditutup tes tambahan sebelum penyerahan) |
-| Controller review report / reviewed SHA | Belum ada — menunggu controller_reviewer pada exact SHA kandidat |
-| Next actor | `controller_reviewer` |
-| Next action | Review exact SHA kandidat terhadap matriks acceptance (khususnya resolusi konflik 404→422 malformed id pada laporan §7); accepted → siapkan PA-002/PA-003; changes_requested → buka kembali task0010 ID sama |
+| Controller review report / reviewed SHA | [20261113T114222Z-0010-pa006-review.md](../report/controller/20261113T114222Z-0010-pa006-review.md), `changes_requested` pada `7480c80e2c27b8b06048b77132d235efe6b3a3c2`; **published [PR #16](https://github.com/smahud/MicroTix_Project/pull/16)** branch `review/0010-pa006-controller-20261113`, first verified publication `15bdd7c26061bad30b815d81896250006687ff20`; belum integrated ke main/PR15 |
+| Next actor | `coding_agent` |
+| Next action | Fetch ref controller; bawa record/task ini secara semantik, perbaiki REV-1311-01/02/03 pada kandidat existing, jalankan closing tests dan resubmit SHA baru pada ID0010; PA-002/PA-003 belum eligible |
 
 Mulai dari [panduan tetap](0000-start-here.md) dan [CONTRACT](../CONTRACT.md). Ini task implementasi, **bukan bukti PA-006 selesai**. Fetch refs dan review delta bila remote berubah; pilih branch baru dari main aktual dengan packet ini tersedia. Jika instruksi belum merged, catat instruction ref/PR dan bawa perubahan dokumentasi yang sah secara semantik; jangan menimpa pekerjaan lain atau menganggap SHA baseline sebagai main untuk selamanya.
 
@@ -83,7 +83,7 @@ Coding agent mengisi ringkasan hasil singkat di packet (apa yang berubah, accept
 
 Controller menyimpan keputusan implementasi di `report/controller/<UTC>-0010-pa006-review.md`, menautkannya ke metadata packet dan mengikatnya pada exact reviewed SHA. Report memuat verdict, finding→koreksi→acceptance, evidence limits serta next actor/action. Changes requested membuka kembali task0010 yang sama; coding agent memperbaiki finding dan menyerahkan SHA baru. Accepted mengembalikan kendali ke controller untuk penyiapan task penerus sesuai dependencies/integration. Publish keputusan di ref GitHub yang disebut di handoff sebelum pergantian peran; jangan meninggalkan keputusan hanya di chat.
 
-**Ringkasan hasil implementasi saat ini (executor, 13 November 2026):** selesai sesuai scope.
+**Riwayat penyerahan awal executor, 13 November 2026 (belum accepted):** executor melaporkan selesai sesuai scope. Review controller di bawah membuktikan tiga gap; ringkasan awal berikut dipertahankan sebagai atribusi penyerahan, bukan keputusan acceptance.
 
 - `backend/domains/common/idempotency.py`: identity `principal + tenant|platform + operation + resource kanonik + key`; protokol claim/replay SATU transaksi (klaim INSERT + handler + respons) — pesaing same-identity menunggu unique index lalu replay (commit) atau eksekusi segar (rollback); record tanpa respons ditolak fail-safe 409 (tidak blind-execute); scope platform eksplisit (tanpa fallback sesi); kanonikalisasi UUID (alias bergabung, malformed → 422); purge TTL `FOR UPDATE SKIP LOCKED`.
 - `jobs/models.py` + `migrations/0004`: UNIQUE(principal, scope, idem_key); legacy dipertahankan tanpa rewrite (Add-before-Remove; kebijakan legacy pada laporan §2).
@@ -91,7 +91,21 @@ Controller menyimpan keputusan implementasi di `report/controller/<UTC>-0010-pa0
 - Bukti (PostgreSQL 17.11 nyata, klien HTTP independen per thread, interleave dipaksa + observasi pg_stat_activity): **25 tes baru PA-006 lulus; suite penuh backend 408 passed** (baseline 383); PA-001 konkurensi 10/10 tetap lulus; `manage.py check` 0 issue; `makemigrations --check` bersih; docs check PASS. Matriks per baris acceptance pada execution report §4, termasuk konflik material 404→422 malformed (§7) yang menunggu keputusan controller.
 - CI kandidat (backend/frontend/docs) dijalankan pada PR; hasil diverifikasi sebelum status done dipertahankan. Bukan bukti host/lab/DR; Beta tetap NOT_READY.
 
-Penyiapan instruksi/workflow bukan implementasi PA-006; matriks actual di atas diisi oleh coding agent setelah penyerahan terverifikasi.
+## Koreksi controller 13 November 2026 — ID0010 yang sama
+
+Review exact head `7480c80`: **changes_requested**. Root menjalankan 55 tes terarah dan suite penuh 408 passed pada PostgreSQL17.11 NOSUPERUSER/NOBYPASSRLS. Lima conformance probes tambahan gagal dan membuktikan gap di bawah; bukti/command/NOT_RUN pada [report controller](../report/controller/20261113T114222Z-0010-pa006-review.md). Implementasi yang sudah benar dipertahankan; jangan ulang PA-001 atau membuat task pengganti.
+
+| Finding | Koreksi minimum | Acceptance penutup |
+|---|---|---|
+| **REV-1311-01 P1**, legacy proof scope berubah | Rekonsiliasi/compatibility retained key lama per principal/tenant/target. Validasi submission→invoice/actor sebelum replay; record ambigu tidak boleh blind-create. Jelaskan juga platform/UUID-alias legacy shape dan urutan upgrade tanpa proses kode lama+baru bersamaan. | Old-scope success lalu retry owner/invoice/key/body sama tidak membuat submission/file kedua; original response sama. Uji invoice B, beda body, no-response legacy, concurrent retry dan actual migration. Jangan replay A ke B. |
+| **REV-1311-02 P1**, parent sesi migrasi hilang | Identity resource mencakup canonical migration_id + opaque group_id; semua structured component divalidasi sebelum replay; legacy group-only ditangani aman. | Same group/key/body untuk sesi A/B menyimpan keputusan masing-masing; retry A replay; parent alias sama identity; malformed422 dan missing404 tetap benar walau cache grup sudah ada. |
+| **REV-1311-03 P2**, typed body UUID belum canonical sebelum hash | Normalize field identity yang declared/typed pada handler aktif sebelum HMAC; preserve exact-case username/password/string, array semantics dan real body/file conflict. | package_id canonical/uppercase-compact alias pada service/key sama replay200; package berbeda409; cek field UUID body lain yang relevan serta compatibility retained hash. |
+
+Probes reproduksi disimpan di `report/controller-evidence/20261113T114222Z-pa006/`; source aplikasi tidak diubah reviewer. Correct migration0004 recovery narrative: default PostgreSQL/Django migration atomic, bukan partial-per-statement; dokumentasikan drain/write-freeze, ordering dan fix-forward tanpa memperluas task ke installer. Perubahan expectation malformed platform404→422 **diterima sesuai kontrak existing**; non-platform404 tetap terjaga.
+
+Sumber scope/pekerjaan/acceptance awal di atas tetap berlaku; koreksi ini membuat acceptance yang belum terpenuhi konkret, tidak mengubah produk, release gate atau menambah framework. Executor memperbarui laporan aktual per finding dan menautkan controller report; jangan mengklaim semua acceptance lulus hanya karena 408 tes existing hijau.
+
+Penyiapan instruksi/workflow bukan implementasi PA-006; laporan awal executor tetap historis dan koreksi diserahkan dengan SHA/evidence baru.
 
 Isi metadata di atas, update [LATEST_HANDOFF](../report/LATEST_HANDOFF.md) dan [progress](../docs/progress.md), lalu ikuti penutupan pada panduan tetap: completion rename ke `0010-pa006-idempotency_done.md` ikut commit, push/remote/CI diverifikasi, review menjadi pending. Task ini baru accepted ketika controller mencatat review exact SHA. Jangan memasukkan secret/runtime/unrelated files ke commit atau merge otomatis ke main.
 

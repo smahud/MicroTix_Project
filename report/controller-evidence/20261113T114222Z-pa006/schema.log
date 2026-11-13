@@ -1,0 +1,10 @@
+           conname           |        pg_get_constraintdef
+-----------------------------+-------------------------------------
+ jobs_idempotency_key_pkey   | PRIMARY KEY (id)
+ uq_idem_principal_scope_key | UNIQUE (principal, scope, idem_key)
+(2 rows)
+
+           relname           | relrowsecurity | relforcerowsecurity
+-----------------------------+----------------+---------------------
+ customers_migration_session | t              | t
+(1 row)
