@@ -10,7 +10,7 @@ Sesi executor (coding agent z.ai sandbox) mengimplementasikan task **0010 / PA-0
 |---|---|
 | Active task | **0010 / PA-006** — `task/0010-pa006-idempotency_done.md` |
 | Execution / review | `done` / `pending` (submission; acceptance milik controller) |
-| Candidate branch / PR | `session/2026-11-13-pa006-idempotency`; PR + tested/published SHA tercantum pada metadata packet (commit metadata penyerahan) |
+| Candidate branch / PR | `session/2026-11-13-pa006-idempotency`; tested SHA `159f7ed` (commit penyerahan); PR dibuat sesi ini — nomor pada commit metadata terakhir branch |
 | Execution report / acceptance evidence | [20261113T003000Z-0010-pa006-idempotency.md](orchestrator/20261113T003000Z-0010-pa006-idempotency.md) — matriks acceptance→actual→evidence + tabel 28 call site + kebijakan legacy + konflik material §7 |
 | Internal reviewer (executor-internal) | [20261113T001500Z-0010-pa006-review.md](reviewer/20261113T001500Z-0010-pa006-review.md) — PASS_WITH_FINDINGS, 0 P1; P2 (takeover leader-gagal) + P3 (alias resource) ditutup tes tambahan; P3 tersisa dicatat pada laporan eksekusi §6 |
 | Controller review / reviewed SHA | Belum ada — `controller_reviewer` berikutnya |

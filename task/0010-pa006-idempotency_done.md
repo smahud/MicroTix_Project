@@ -9,8 +9,8 @@
 | Executor | Coding agent z.ai (sandbox); sesi 13 November 2026 |
 | Baseline yang diperiksa | `main@a0f653e89bf77b1238ca0ed9bcdb0e2f0aee612e`, 12 November 2026; PR10 hanya dokumentasi, source PA-006 tetap sama. Fetch sesi ini: `origin/main` = `9903d9b` (PR12 merged, docs-only — `git log a0f653e..9903d9b -- backend/` kosong) |
 | Dependency | PA-001 merged PR #9, merge `8ce94d468232eda77cd675f6d18e5fcb41f3d708`; semua source PR9 ada pada baseline |
-| Implementation / tested SHA | Diisi pada commit penyerahan di bawah (seluruh tes dijalankan persis pada tree kode tersebut) |
-| Candidate branch / published SHA / PR | `session/2026-11-13-pa006-idempotency` (dari `origin/main@9903d9b`); PR/SHA final pada commit metadata penyerahan |
+| Implementation / tested SHA | `159f7ed` (commit penyerahan; seluruh tes dijalankan persis pada tree ini) |
+| Candidate branch / published SHA / PR | `session/2026-11-13-pa006-idempotency` (dari `origin/main@9903d9b`); head publik = commit metadata setelah `159f7ed`; PR diisi setelah push (lihat handoff) |
 | Execution report / acceptance evidence | [report/orchestrator/20261113T003000Z-0010-pa006-idempotency.md](../report/orchestrator/20261113T003000Z-0010-pa006-idempotency.md) — matriks acceptance→actual→evidence lengkap; internal reviewer [report/reviewer/20261113T001500Z-0010-pa006-review.md](../report/reviewer/20261113T001500Z-0010-pa006-review.md) (PASS_WITH_FINDINGS, 0 P1; P2+E-P3-1 ditutup tes tambahan sebelum penyerahan) |
 | Controller review report / reviewed SHA | Belum ada — menunggu controller_reviewer pada exact SHA kandidat |
 | Next actor | `controller_reviewer` |
