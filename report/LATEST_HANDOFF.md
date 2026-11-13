@@ -12,7 +12,7 @@ Pintu masuk tetap: [task/0000-start-here.md](../task/0000-start-here.md); CONTRA
 | Candidate reviewed | [PR #15](https://github.com/smahud/MicroTix_Project/pull/15), `session/2026-11-13-pa006-idempotency@7480c80e2c27b8b06048b77132d235efe6b3a3c2` |
 | Executor code/tested ancestor | `159f7edac42d6cb49093feeba3fa8cd0b1e775a1`; delta source ke reviewed head kosong |
 | Controller decision | [20261113T114222Z-0010-pa006-review.md](controller/20261113T114222Z-0010-pa006-review.md), **changes_requested**, bukan acceptance |
-| Decision ref | `review/0010-pa006-controller-20261113`; publication commit/PR/verified status pada report controller §6. Belum merged ke main atau branch PR15 |
+| Decision ref | **PUBLISHED [PR #16](https://github.com/smahud/MicroTix_Project/pull/16)**, `review/0010-pa006-controller-20261113`; verified first publication `15bdd7c26061bad30b815d81896250006687ff20`, metadata descendants preserve code. PR16 base = branch kandidat PR15; belum merged ke main atau branch PR15. Detail readback/CI pada report controller §6 |
 | Next actor | **coding_agent** |
 | Exact next action | Fetch decision ref; bawa task/report/pointer secara semantik ke correction branch dari kandidat existing; perbaiki REV-1311-01/02/03, jalankan closing tests+regression+required CI dan resubmit exact SHA pada **ID0010 yang sama** |
 | Dependency gate | PA-002/PA-003 **belum eligible**; PA-006 belum accepted/integrated. Jangan membuat packet duplikat atau mengulang PA-001 |
