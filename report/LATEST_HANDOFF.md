@@ -10,7 +10,7 @@ Sesi executor (coding agent z.ai sandbox) mengimplementasikan task **0010 / PA-0
 |---|---|
 | Active task | **0010 / PA-006** — `task/0010-pa006-idempotency_done.md` |
 | Execution / review | `done` / `pending` (submission; acceptance milik controller) |
-| Candidate branch / PR | `session/2026-11-13-pa006-idempotency`; tested SHA `159f7ed` (commit penyerahan); PR dibuat sesi ini — nomor pada commit metadata terakhir branch |
+| Candidate branch / PR | [PR #15](https://github.com/smahud/MicroTix_Project/pull/15) `session/2026-11-13-pa006-idempotency`; tested SHA `159f7ed`; published head `28a961c` |
 | Execution report / acceptance evidence | [20261113T003000Z-0010-pa006-idempotency.md](orchestrator/20261113T003000Z-0010-pa006-idempotency.md) — matriks acceptance→actual→evidence + tabel 28 call site + kebijakan legacy + konflik material §7 |
 | Internal reviewer (executor-internal) | [20261113T001500Z-0010-pa006-review.md](reviewer/20261113T001500Z-0010-pa006-review.md) — PASS_WITH_FINDINGS, 0 P1; P2 (takeover leader-gagal) + P3 (alias resource) ditutup tes tambahan; P3 tersisa dicatat pada laporan eksekusi §6 |
 | Controller review / reviewed SHA | Belum ada — `controller_reviewer` berikutnya |
@@ -25,7 +25,7 @@ Perubahan PA-006 (ringkas): `backend/domains/common/idempotency.py` — identity
 | Item | Nilai |
 |---|---|
 | **Branch kanonis** | `main` @ `9903d9b` (snapshot sesi ini; fetch HEAD aktual sebelum bertindak) |
-| PR terbuka | **Kandidat 0010/PA-006** (`session/2026-11-13-pa006-idempotency`) menunggu review · **#7** SSTP Phase-2 (head `d7fa35e`; docs CI FAIL manifest mismatch — bukan bukti runtime) · **#8** docs planning-audit DRAFT (pemilik file manifest; ownership dijaga) |
+| PR terbuka | **#15 Kandidat 0010/PA-006** (`session/2026-11-13-pa006-idempotency`, tested `159f7ed`) menunggu review · **#7** SSTP Phase-2 (head `d7fa35e`; docs CI FAIL manifest mismatch — bukan bukti runtime) · **#8** docs planning-audit DRAFT (pemilik file manifest; ownership dijaga) |
 | Rilis kandidat | `v0.1.0-beta.1` tetap **NOT_READY** — code blockers (§3) + environment blockers; PA-006 menutup bagian REV-1111-11 (idempotency/principal scope) pada jalur yang diuji, bukan seluruh register |
 | CONTRACT.md | §6A tetap berlaku (packet workflow, default prompts, komunikasi via GitHub) |
 | Prioritas aktif | Review kandidat 0010 → PA-002/PA-003 (job fencing/drain/authority) setelah accepted |
