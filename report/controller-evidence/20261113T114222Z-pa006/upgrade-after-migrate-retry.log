@@ -1,0 +1,4 @@
+Operations to perform:
+  Apply all migrations: admin, audit, auth, backups, billing, contenttypes, customers, documents, identity, jobs, network, radius, sessions, subscriptions, tenancy
+Running migrations:
+  Applying jobs.0004_idem_principal_scope... OK

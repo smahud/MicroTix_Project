@@ -1,0 +1,9 @@
+{
+  "targeted": 0,
+  "full": 0,
+  "conformance_probes": 1,
+  "django_check": 0,
+  "migrate": 0,
+  "migration_consistency": 0,
+  "schema": 0
+}

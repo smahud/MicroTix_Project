@@ -1,0 +1,12 @@
+{
+  "repository": "smahud/MicroTix_Project",
+  "head_sha": "7480c80e2c27b8b06048b77132d235efe6b3a3c2",
+  "run_id": 43336914973,
+  "conclusion": "success",
+  "jobs": {
+    "backend": "success",
+    "frontend": "success",
+    "docs": "success"
+  },
+  "source": "GitHub connector workflow-runs and workflow jobs reads"
+}
