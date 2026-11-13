@@ -1,6 +1,14 @@
 # MicroTix — checkpoint kemajuan
 
-Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-12 (Asia/Jakarta).
+Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-13 (Asia/Jakarta).
+
+## Checkpoint 2026-11-13 — PA-006 (task 0010) implementasi & penyerahan executor
+
+Sesi coding agent (sandbox z.ai) menuntaskan implementasi task0010/PA-006 dari `origin/main@9903d9b` (delta baseline `a0f653e` docs-only). Defek ditutup pada `backend/domains/common/idempotency.py`: identity kini `principal + tenant|platform + operation + resource kanonik + key` (principal masuk lookup/uniqueness — respons tidak tertukar lintas pengguna), protokol claim/replay SATU transaksi database (klaim INSERT + handler + persistensi respons; pesaing same-key menunggu unique index PostgreSQL → replay saat commit / eksekusi segar saat rollback; record tanpa respons ditolak fail-safe 409, bukan eksekusi ulang buta), scope platform eksplisit "platform" (tidak berubah saat operator pindah active tenant), kanonikalisasi UUID (ejaan alias target sama = scope sama; malformed resource = 422), purge TTL `FOR UPDATE SKIP LOCKED`. `jobs` UNIQUE(principal, scope, idem_key) via migration 0004 (Add-before-Remove, legacy tanpa rewrite); `payment_submission` menscope `invoice_id`; `identity_conflict_resolve` menandai resource opaque.
+
+Bukti (PostgreSQL 17.11 nyata, klien HTTP terautentikasi independen per thread, interleave dipaksa + observasi pg_stat_activity): 25 tes baru PA-006 lulus mencakup seluruh matriks acceptance (konkuren same-key satu aksi logis + replay; leader-gagal → follower takeover; body/file conflict 409; pemisahan principal/tenant/platform/operation/resource; alias & malformed; SaaS proof invoice A vs B; platform pindah tenant; replay ditolak saat permission/reauth/revocation; rollback pra-commit; tak ada klaim ter-commit tanpa respons; TTL/legacy tanpa kebocoran). Suite penuh **408 passed** (baseline 383), PA-001 konkurensi 10/10, `manage.py check` 0 issue, `makemigrations --check` bersih, docs check PASS. Konflik material satu-satunya: ekspektasi 404→422 untuk submission_id malformed (acceptance packet) — tes lama diperbarui dengan justifikasi, menunggu keputusan controller.
+
+Internal reviewer (executor-internal): PASS_WITH_FINDINGS 0 P1; P2 (cabang takeover belum teruji) dan P3 (alias resource) ditutup tes tambahan sebelum penyerahan. Penyerahan: packet rename `_done`, review `pending`, next actor **controller_reviewer** (exact SHA). Bukti rinci: `report/orchestrator/20261113T003000Z-0010-pa006-idempotency.md` + `report/reviewer/20261113T001500Z-0010-pa006-review.md`. Bukan bukti host/lab/DR; PA-002/PA-003 tetap berikutnya setelah accepted; Production Beta tetap NOT_READY.
 
 ## Checkpoint 2026-11-12 — Default prompts executor dan controller reviewer
 

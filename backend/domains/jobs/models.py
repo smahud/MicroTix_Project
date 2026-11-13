@@ -201,9 +201,12 @@ class OutboxEvent(models.Model):
 
 
 class IdempotencyKey(models.Model):
-    """Idempotency-Key — scope principal+tenant+operation+resource+key (§5).
+    """Idempotency-Key — identity principal+tenant/platform+operation+resource+key (§5, PA-006).
 
     Retensi 7 hari; body dibandingkan HMAC; respons disimpan untuk replay.
+    Uniqueness (principal, scope, idem_key): kunci dimiliki principal —
+    record principal lain tidak saling mengunci ataupun saling membocorkan
+    respons; scope memuat operation:tenant|platform:resource kanonik.
     """
 
     id = models.BigAutoField(primary_key=True)
@@ -218,6 +221,9 @@ class IdempotencyKey(models.Model):
     class Meta:
         db_table = "jobs_idempotency_key"
         constraints = [
-            models.UniqueConstraint(fields=["scope", "idem_key"], name="uq_idem_scope_key"),
+            models.UniqueConstraint(
+                fields=["principal", "scope", "idem_key"],
+                name="uq_idem_principal_scope_key",
+            ),
         ]
         indexes = [models.Index(fields=["created_at"], name="ix_idem_created")]
