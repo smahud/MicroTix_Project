@@ -295,9 +295,16 @@ class TestPlatformQueueAccess:
         assert resp.status_code == 404
         assert resp.json()["code"] == "not_found"
 
-    def test_malformed_submission_id_404(self, platform_client):
+    def test_malformed_submission_id_422(self, platform_client):
+        """submission_id salah bentuk → 422 (PA-006: idempotency layer
+        memvalidasi identitas UUID terstruktur SEBELUM klaim; acceptance
+        task/0010 "input malformed structured 422"). Ekspektasi lama 404
+        diubah mengikuti acceptance PA-006; jalur 404-generik bagi
+        non-platform tetap dijaga PlatformApiView.initial() sebelum
+        dekorator (lihat test_platform_denied_*), tidak bocor apa pun."""
         resp = platform_client.post(
             "/api/v1/platform/payment-submissions/bukan-uuid/approve",
             headers={"Idempotency-Key": "pf-unk-2"},
         )
-        assert resp.status_code == 404
+        assert resp.status_code == 422
+        assert resp.json()["code"] == "validation_error"

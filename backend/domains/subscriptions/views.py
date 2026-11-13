@@ -96,7 +96,12 @@ class PaymentSubmissionView(TenantApiView):
     required_permission = "subscription.manage"
     sensitive = True
 
-    @idempotent("payment_submission")
+    @idempotent(
+        "payment_submission",
+        # Resource SaaS proof = invoice tujuan (PA-006): bukti untuk invoice
+        # A dan B dengan key sama adalah dua aksi logis berbeda.
+        resource_from=lambda request, kwargs: str(kwargs.get("invoice_id", "")),
+    )
     @extend_schema(summary="Ajukan bukti pembayaran invoice SaaS")
     def post(self, request: Request, tenant_id: str, invoice_id: str) -> Response:
         invoice = SaaSInvoice.objects.filter(id=invoice_id, tenant_id=tenant_id).first()

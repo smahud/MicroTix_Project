@@ -3,18 +3,18 @@
 | Field | Nilai |
 |---|---|
 | Task ID | `0010` |
-| Execution status | `ready` |
-| Review status | `not_submitted` |
+| Execution status | `done` |
+| Review status | `pending` |
 | Controller | ChatGPT Work / reviewer proyek |
-| Executor | Agent implementasi yang ditugaskan; sandbox |
-| Baseline yang diperiksa | `main@a0f653e89bf77b1238ca0ed9bcdb0e2f0aee612e`, 12 November 2026; PR10 hanya dokumentasi, source PA-006 tetap sama |
+| Executor | Coding agent z.ai (sandbox); sesi 13 November 2026 |
+| Baseline yang diperiksa | `main@a0f653e89bf77b1238ca0ed9bcdb0e2f0aee612e`, 12 November 2026; PR10 hanya dokumentasi, source PA-006 tetap sama. Fetch sesi ini: `origin/main` = `9903d9b` (PR12 merged, docs-only — `git log a0f653e..9903d9b -- backend/` kosong) |
 | Dependency | PA-001 merged PR #9, merge `8ce94d468232eda77cd675f6d18e5fcb41f3d708`; semua source PR9 ada pada baseline |
-| Implementation / tested SHA | Belum ada — diisi executor setelah implementasi dan tes |
-| Candidate branch / published SHA / PR | Belum diserahkan — tidak ditemukan hasil implementasi task0010 pada main/refs/PR yang diperiksa 12 November 2026 |
-| Execution report / acceptance evidence | Belum diserahkan — wajib ditautkan coding agent |
-| Controller review report / reviewed SHA | Belum ada — review implementasi belum dimulai |
-| Next actor | `coding_agent` |
-| Next action | Implementasikan/resume PA-006 di sandbox setelah memeriksa refs/PR terbaru; jangan mengulang PA-001 |
+| Implementation / tested SHA | `159f7ed` (commit penyerahan; seluruh tes dijalankan persis pada tree ini) |
+| Candidate branch / published SHA / PR | [PR #15](https://github.com/smahud/MicroTix_Project/pull/15) `session/2026-11-13-pa006-idempotency`; tested SHA `159f7ed`; commit di atasnya report-only metadata (diff kode `159f7ed..HEAD` kosong — diverifikasi push final) |
+| Execution report / acceptance evidence | [report/orchestrator/20261113T003000Z-0010-pa006-idempotency.md](../report/orchestrator/20261113T003000Z-0010-pa006-idempotency.md) — matriks acceptance→actual→evidence lengkap; internal reviewer [report/reviewer/20261113T001500Z-0010-pa006-review.md](../report/reviewer/20261113T001500Z-0010-pa006-review.md) (PASS_WITH_FINDINGS, 0 P1; P2+E-P3-1 ditutup tes tambahan sebelum penyerahan) |
+| Controller review report / reviewed SHA | Belum ada — menunggu controller_reviewer pada exact SHA kandidat |
+| Next actor | `controller_reviewer` |
+| Next action | Review exact SHA kandidat terhadap matriks acceptance (khususnya resolusi konflik 404→422 malformed id pada laporan §7); accepted → siapkan PA-002/PA-003; changes_requested → buka kembali task0010 ID sama |
 
 Mulai dari [panduan tetap](0000-start-here.md) dan [CONTRACT](../CONTRACT.md). Ini task implementasi, **bukan bukti PA-006 selesai**. Fetch refs dan review delta bila remote berubah; pilih branch baru dari main aktual dengan packet ini tersedia. Jika instruksi belum merged, catat instruction ref/PR dan bawa perubahan dokumentasi yang sah secara semantik; jangan menimpa pekerjaan lain atau menganggap SHA baseline sebagai main untuk selamanya.
 
@@ -83,7 +83,15 @@ Coding agent mengisi ringkasan hasil singkat di packet (apa yang berubah, accept
 
 Controller menyimpan keputusan implementasi di `report/controller/<UTC>-0010-pa006-review.md`, menautkannya ke metadata packet dan mengikatnya pada exact reviewed SHA. Report memuat verdict, finding→koreksi→acceptance, evidence limits serta next actor/action. Changes requested membuka kembali task0010 yang sama; coding agent memperbaiki finding dan menyerahkan SHA baru. Accepted mengembalikan kendali ke controller untuk penyiapan task penerus sesuai dependencies/integration. Publish keputusan di ref GitHub yang disebut di handoff sebelum pergantian peran; jangan meninggalkan keputusan hanya di chat.
 
-**Ringkasan hasil implementasi saat ini:** belum diserahkan. Penyiapan instruksi/workflow bukan implementasi PA-006; jangan mengisi matriks actual atau menambahkan `_done` sebelum coding agent memenuhi penyerahan.
+**Ringkasan hasil implementasi saat ini (executor, 13 November 2026):** selesai sesuai scope.
+
+- `backend/domains/common/idempotency.py`: identity `principal + tenant|platform + operation + resource kanonik + key`; protokol claim/replay SATU transaksi (klaim INSERT + handler + respons) — pesaing same-identity menunggu unique index lalu replay (commit) atau eksekusi segar (rollback); record tanpa respons ditolak fail-safe 409 (tidak blind-execute); scope platform eksplisit (tanpa fallback sesi); kanonikalisasi UUID (alias bergabung, malformed → 422); purge TTL `FOR UPDATE SKIP LOCKED`.
+- `jobs/models.py` + `migrations/0004`: UNIQUE(principal, scope, idem_key); legacy dipertahankan tanpa rewrite (Add-before-Remove; kebijakan legacy pada laporan §2).
+- Views: `payment_submission` kini menscope `invoice_id`; `identity_conflict_resolve` resource opaque (`resource_is_uuid=False`). Tidak ada perubahan bentuk respons API.
+- Bukti (PostgreSQL 17.11 nyata, klien HTTP independen per thread, interleave dipaksa + observasi pg_stat_activity): **25 tes baru PA-006 lulus; suite penuh backend 408 passed** (baseline 383); PA-001 konkurensi 10/10 tetap lulus; `manage.py check` 0 issue; `makemigrations --check` bersih; docs check PASS. Matriks per baris acceptance pada execution report §4, termasuk konflik material 404→422 malformed (§7) yang menunggu keputusan controller.
+- CI kandidat (backend/frontend/docs) dijalankan pada PR; hasil diverifikasi sebelum status done dipertahankan. Bukan bukti host/lab/DR; Beta tetap NOT_READY.
+
+Penyiapan instruksi/workflow bukan implementasi PA-006; matriks actual di atas diisi oleh coding agent setelah penyerahan terverifikasi.
 
 Isi metadata di atas, update [LATEST_HANDOFF](../report/LATEST_HANDOFF.md) dan [progress](../docs/progress.md), lalu ikuti penutupan pada panduan tetap: completion rename ke `0010-pa006-idempotency_done.md` ikut commit, push/remote/CI diverifikasi, review menjadi pending. Task ini baru accepted ketika controller mencatat review exact SHA. Jangan memasukkan secret/runtime/unrelated files ke commit atau merge otomatis ke main.
 
