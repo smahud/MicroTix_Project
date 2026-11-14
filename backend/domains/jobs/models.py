@@ -201,14 +201,19 @@ class OutboxEvent(models.Model):
 
 
 class IdempotencyKey(models.Model):
-    """Idempotency-Key — scope principal+tenant+operation+resource+key (§5).
+    """Idempotency-Key — scope principal+tenant/platform+operation+resource+key (§5).
 
     Retensi 7 hari; body dibandingkan HMAC; respons disimpan untuk replay.
+    Kolom identitas menyimpan bentuk canonical (UUID lowercase / 'platform');
+    ejaan alias URL tidak pernah membuat scope baru. Record terkomit selalu
+    memiliki respons (protokol claim/replay satu transaksi — PA-006).
     """
 
     id = models.BigAutoField(primary_key=True)
     principal = models.CharField(max_length=64)  # user id / 'anonymous'
-    scope = models.CharField(max_length=256)
+    tenant_scope = models.CharField(max_length=64)  # UUID tenant canonical / 'platform'
+    operation = models.CharField(max_length=64)
+    resource = models.CharField(max_length=64)  # UUID canonical / '' (operasi penciptaan)
     idem_key = models.CharField(max_length=128)
     body_hash = models.CharField(max_length=64)
     response_status = models.IntegerField(null=True, blank=True)
@@ -218,6 +223,9 @@ class IdempotencyKey(models.Model):
     class Meta:
         db_table = "jobs_idempotency_key"
         constraints = [
-            models.UniqueConstraint(fields=["scope", "idem_key"], name="uq_idem_scope_key"),
+            models.UniqueConstraint(
+                fields=["principal", "tenant_scope", "operation", "resource", "idem_key"],
+                name="uq_idem_identity",
+            ),
         ]
         indexes = [models.Index(fields=["created_at"], name="ix_idem_created")]

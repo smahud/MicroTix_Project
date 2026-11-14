@@ -569,7 +569,11 @@ class IdentityConflictsView(TenantApiView):
 class IdentityConflictResolveView(TenantApiView):
     required_permission = "migration.run"
 
-    @idempotent("identity_conflict_resolve", resource_from=lambda request, kwargs: str(kwargs.get("group_id", "")))
+    @idempotent(
+        "identity_conflict_resolve",
+        resource_from=lambda request, kwargs: str(kwargs.get("group_id", "")),
+        resource_uuid=False,  # group_id = sha256[:16] opaque exact-case, bukan UUID
+    )
     @extend_schema(summary="Simpan resolusi konflik identitas (merge/keep_one/rename)")
     def post(self, request: Request, tenant_id: str, migration_id: str, group_id: str) -> Response:
         session = _get_session(tenant_id, _validate_uuid("migration_id", migration_id))

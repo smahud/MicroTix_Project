@@ -96,7 +96,10 @@ class PaymentSubmissionView(TenantApiView):
     required_permission = "subscription.manage"
     sensitive = True
 
-    @idempotent("payment_submission")
+    @idempotent(
+        "payment_submission",
+        resource_from=lambda request, kwargs: kwargs.get("invoice_id", ""),
+    )
     @extend_schema(summary="Ajukan bukti pembayaran invoice SaaS")
     def post(self, request: Request, tenant_id: str, invoice_id: str) -> Response:
         invoice = SaaSInvoice.objects.filter(id=invoice_id, tenant_id=tenant_id).first()
@@ -182,7 +185,11 @@ def _decision_body(request: Request) -> str:
 
 
 class PlatformSubmissionApproveView(PlatformApiView):
-    @idempotent("platform_submission_approve", resource_from=lambda request, kwargs: kwargs.get("submission_id", ""))
+    @idempotent(
+        "platform_submission_approve",
+        resource_from=lambda request, kwargs: kwargs.get("submission_id", ""),
+        platform=True,
+    )
     @extend_schema(summary="Setujui bukti → invoice paid + subscription aktif")
     def post(self, request: Request, submission_id: str) -> Response:
         services.decide_platform_submission(
@@ -195,7 +202,11 @@ class PlatformSubmissionApproveView(PlatformApiView):
 
 
 class PlatformSubmissionRejectView(PlatformApiView):
-    @idempotent("platform_submission_reject", resource_from=lambda request, kwargs: kwargs.get("submission_id", ""))
+    @idempotent(
+        "platform_submission_reject",
+        resource_from=lambda request, kwargs: kwargs.get("submission_id", ""),
+        platform=True,
+    )
     @extend_schema(summary="Tolak bukti pembayaran (alasan wajib)")
     def post(self, request: Request, submission_id: str) -> Response:
         services.decide_platform_submission(
@@ -209,7 +220,11 @@ class PlatformSubmissionRejectView(PlatformApiView):
 
 
 class PlatformSubmissionRevisionView(PlatformApiView):
-    @idempotent("platform_submission_revision", resource_from=lambda request, kwargs: kwargs.get("submission_id", ""))
+    @idempotent(
+        "platform_submission_revision",
+        resource_from=lambda request, kwargs: kwargs.get("submission_id", ""),
+        platform=True,
+    )
     @extend_schema(summary="Minta perbaikan bukti pembayaran (alasan wajib)")
     def post(self, request: Request, submission_id: str) -> Response:
         services.decide_platform_submission(
