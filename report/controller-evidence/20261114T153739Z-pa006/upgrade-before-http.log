@@ -1,0 +1,1 @@
+{"phase": "before", "proof_file_count": 1, "response": {"state": "submitted", "submission_id": "9477e0c0-e174-4d73-b384-347ab6e86837"}, "retained_scopes": [{"idem_key": "review-live-upgrade-key", "principal": "4f6b4090-94b6-4c48-988d-a9aa93f00c19", "response_status": 201, "scope": "payment_submission:c48870d9-4fa8-4f0d-a685-ef00cac7883f:"}], "status": 201, "submission_count": 1}

@@ -2,7 +2,15 @@
 
 Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-14 (Asia/Jakarta).
 
-## Checkpoint 2026-11-14 — task0010/PA-006: HTTP idempotency aman terhadap scope dan race (penyerahan executor)
+## Checkpoint 2026-11-14 — controller review PR17: changes_requested, task0010 reopened
+
+Exact reviewed candidate **37a87291ae66a0fa9167f0c72d1e8340aa5fd245**, main9903d9b; keputusan pada branch `review/0010-pa006-controller-20261114`, belum integrated. [Laporan controller](../report/controller/20261114T153739Z-0010-pa006-review.md) menautkan dua independent source reviews, command/log dan enam conformance probes gagal. Root PostgreSQL17.11 NOSUPERUSER/NOBYPASSRLS: targeted48 passed, full401 passed (3 adapter-thread warnings), check/migration consistency/docs PASS; CI candidate43609853986 backend/frontend/docs success.
+
+**REV-1311-01/02/03 masih OPEN**: actual old-code upload→0004→retry menduplikasi submission/file1→2; injected old-schema ambiguous claim dihapus lalu invoice kedua; resolusi sesi A/B204/204 dengan decisions[2,0], malformed/missing parent cached204; typed package UUID alias200→409. **REV-1411-04 P2**: bukti race direct-method bukan concurrent authenticated HTTP, lock polling dapat timeout tanpa gagal, after-write rollback/contender takeover belum dibuktikan. Klaim all-PASS/penutupan REV-1111-11 pada penyerahan di bawah **tidak diterima controller**.
+
+Packet [0010](../task/0010-pa006-idempotency.md) kembali unfinished **ready / changes_requested**, ID sama; objective/scope/mandatory work/full acceptance asli dipulihkan dan prior correction PR16 ditautkan. Next actor **coding_agent**: fetch ref keputusan ini, tutup empat finding dengan finding→change→closing test→actual evidence, resubmit exact SHA baru. Perbaikan yang sudah benar/PA-001/histori executor dipertahankan. PA-002/003 belum eligible, tidak ada task dependent baru, merge/deploy/tag. Beta **NOT_READY**; host/lab/DR/capacity NOT_RUN. Sumber/bukti dan status publikasi terverifikasi di laporan/handoff, bukan chat saja.
+
+## Checkpoint 2026-11-14 — riwayat klaim executor task0010/PA-006: HTTP idempotency aman terhadap scope dan race (penyerahan executor)
 
 **Scope**: implementasi penuh PA-006 pada sandbox (PostgreSQL 17.11 nyata, peran runtime non-superuser `mtx_app` — RLS FORCE efektif). Baseline main `9903d9b` (PR10–12 hanya dokumentasi; source PA-006 identik dengan baseline packet `a0f653e`). Branch kandidat `session/2026-11-14-pa006-idempotency` (PR #17); **tested SHA `774b191`** (source produksi implementasi `5922e1f` + fix portabilitas observer tes CI; suite 401 passed pada konten `774b191`); commit penyerahan setelahnya metadata-only. Packet direname `0010-pa006-idempotency_done.md` (execution `done`, review `pending`) — menunggu controller review exact SHA.
 

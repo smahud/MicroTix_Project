@@ -1,61 +1,44 @@
-# LATEST_HANDOFF — Kanonis (14 November 2026: PA-006 diserahkan untuk review)
+# LATEST_HANDOFF — Kanonis (14 November 2026: controller meminta koreksi PA-006)
 
-Pintu masuk tetap: [task/0000-start-here.md](../task/0000-start-here.md), wajib menurut CONTRACT §6A. Handoff ini menyimpan status sesi aktual; docs/AGENT_HANDOFF.md hanya panduan navigasi/bootstrap.
+Pintu masuk tetap: [task/0000-start-here.md](../task/0000-start-here.md); CONTRACT §6A wajib. Fetch refs sebelum bertindak. Status main bisa tertinggal dari keputusan/candidate yang belum merged; jangan mengulang implementasi dari unfinished filename main saja.
 
-## 0. Status sesi — penyerahan task0010/PA-006 (14 November 2026)
+## 0. Task aktif dan exact next action
 
-Sesi executor sandbox: implementasi PA-006 selesai pada branch kandidat `session/2026-11-14-pa006-idempotency` (base `main@9903d9b`, head terkini lihat PR, PR12 merged; source PA-006 pada baseline identik dengan `a0f653e` karena PR10–12 hanya dokumentasi). Tested SHA **`774b191`** (source produksi implementasi `5922e1f`: protokol idempotency 5-tuple canonical + claim/replay satu transaksi + migrasi jobs 0004 + 18 tes PA-006; `774b191` = fix portabilitas observer tes untuk CI service port 5432 tanpa perubahan source produksi; suite 401 passed pada konten `774b191`); commit metadata setelahnya report/metadata-only. Fetch HEAD aktual sebelum bertindak; jangan mengunci pada snapshot ini.
-
-| Field handoff | Status / pointer |
+| Field | Status / pointer |
 |---|---|
-| Active task | ID0010 / PA-006 — **penyerahan executor selesai** (`0010-pa006-idempotency_done.md` pada branch kandidat) |
-| Execution / review | `done` / `pending` — menunggu controller review exact SHA |
-| Candidate branch / tested SHA / PR | `session/2026-11-14-pa006-idempotency`; tested SHA `5922e1f`; **[PR #17](https://github.com/smahud/MicroTix_Project/pull/17)** (head terverifikasi `7243c263d35af7749c5133e8591b6854bff95257`) |
-| Execution report / acceptance evidence | `report/orchestrator/20261114T150000Z-0010-pa006-idempotency.md` — matriks SEMUA acceptance → actual result → evidence (18/18 PASS; suite penuh 401 passed; PA-001 10/10) + tabel 28 call site + kebijakan migrasi/legacy |
-| Internal reviewer | `report/reviewer/20261114T150000Z-0010-pa006-review.md` — LULUS DENGAN CATATAN (6 temuan P3, tanpa P1/P2; koreksi minimum diterapkan sebelum penyerahan). Review internal executor, BUKAN acceptance controller |
-| Controller review / reviewed SHA | Belum ada — next actor controller_reviewer |
-| Next actor | **controller_reviewer** |
-| Exact next action | Review kandidat exact SHA `774b191` (source produksi `5922e1f`; `774b191` hanya fix portabilitas observer tes CI — diff 1 file tes): tabel call-site, interleaving tes konkuren, kebijakan migrasi/legacy 0004 (backfill/dedupe/purge/preservasi opaque), no auth bypass, dan tiga FUP terdokumentasi (FUP-001 resolve_membership malformed tenant 500; FUP-002 berkas yatim; FUP-003 iterasi antrean platform). Changes requested → buka kembali task0010 ID sama (rename balik unfinished) |
+| Canonical main | `9903d9b0cf09d737b553da3c21067b4810e956c0` — diperiksa sesi14 November; tidak diubah controller |
+| Active task | [0010 / PA-006](../task/0010-pa006-idempotency.md), filename unfinished kembali pada ref keputusan; ID tetap |
+| Execution / review | **ready / changes_requested**; tiga finding lama masih terbuka dan satu gap bukti wajib |
+| Candidate / reviewed SHA | [PR17](https://github.com/smahud/MicroTix_Project/pull/17), `session/2026-11-14-pa006-idempotency@37a87291ae66a0fa9167f0c72d1e8340aa5fd245` |
+| Executor implementation / tested SHA | Produksi5922e1f, tested774b191; descendant37a8729 hanya metadata terhadap backend/apps/config. Root checks pada candidate source37a8729 |
+| Execution / internal review | [Executor report](orchestrator/20261114T150000Z-0010-pa006-idempotency.md), [internal review](reviewer/20261114T150000Z-0010-pa006-review.md); dipertahankan sebagai riwayat executor, bukan acceptance |
+| Controller decision | [Review14 November](controller/20261114T153739Z-0010-pa006-review.md) — `changes_requested`, reviewed37a8729; independent runtime-source/migration reports ditautkan di dalam |
+| Instruction / decision branch | `review/0010-pa006-controller-20261114`, record-only descendant PR17, belum integrated; publication SHA/PR diverifikasi setelah commit dan dicatat di report |
+| Prior correction history | [PR16 record exact5da0d80](https://github.com/smahud/MicroTix_Project/blob/5da0d801c71b020fbb8b977294502ea5a09e7bcb/report/controller/20261113T114222Z-0010-pa006-review.md) atas PR15; tidak dibawa oleh PR17, tiga finding tetap berlaku; refs historis dipertahankan |
+| Next actor | **coding_agent** |
+| Exact next action | Fetch ref keputusan ini; bawa packet/riwayat secara semantik, tutup REV-1311-01/02/03 dan REV-1411-04, jalankan closing tests + acceptance/regression penuh, resubmit exact SHA baru pada ID0010 |
+| Dependent work | PA-002/003 belum eligible; task0020 tidak dibuka; tidak ada merge/deploy/release otomatis |
 
-Protokol lengkap ada pada panduan tetap §6 dan CONTRACT §6A. Verdict/corrections dan next actor/action harus dipush/verified di GitHub sebelum berganti peran; tidak ditinggalkan hanya di chat. Internal executor review bukan controller acceptance.
+## 1. Hasil review dan batas bukti
 
-## 1. Status kanonis SAAT INI
+Root PostgreSQL17.11 nyata, Python3.13.5, peran runtime NOSUPERUSER/NOBYPASSRLS; RLS+FORCE tetap aktif. Targeted48 passed (termasuk PA-00110/10); full401 passed (3 adapter-thread warnings); check/migration consistency/docs PASS. Candidate CI [43609853986](https://github.com/smahud/MicroTix_Project/actions/runs/43609853986) backend/frontend/docs success pada37a8729. **Enam conformance probes gagal** dengan assertion acceptance, tanpa setup/teardown error pada run final. Semua command/log/limits ada di laporan controller.
 
-| Item | Nilai |
-|---|---|
-| **Branch kanonis** | `main` @ **`9903d9b`** (default prompts PR12 merged). Instruksi kandidat PA-006 pada branch `session/2026-11-14-pa006-idempotency` sampai integrasi; fetch HEAD aktual, bukan menganggap snapshot selalu terbaru |
-| **Kandidat aktif** | **task0010/PA-006** di **[PR #17](https://github.com/smahud/MicroTix_Project/pull/17)** (branch `session/2026-11-14-pa006-idempotency`, head `7243c26`, tested SHA `5922e1f`); execution report + internal review terpublish pada branch yang sama; menunggu controller review |
-| PR lain terbuka | **#7** SSTP Phase-2 (head `d7fa35e`; CI backend/frontend success, docs FAIL **manifest mismatch** — bukan bukti SSTP gagal runtime; disposition = packet terpisah) · **#8** docs planning-audit DRAFT (head `6bb57c9`; CI docs FAIL manifest mismatch = pekerjaan DEC-02, branch itu pemilik file manifest — jaga ownership disjoint) |
-| Rilis kandidat | `v0.1.0-beta.1` tetap **NOT_READY** — bloker = code blockers (§3) + environment blockers; REV-1111-11 (idempotency HTTP) ditutup pada kandidat PA-006 menunggu review exact SHA |
-| CONTRACT.md | §6A task workflow/komunikasi tetap berlaku, ditambah default prompts per peran (12 November 2026) |
-| Prioritas aktif | Review PA-006 (controller) → setelah accepted: PA-002/PA-003 (job fencing/drain/authority), DEC-01 topology, DEC-02 manifest docs |
+- **REV-1311-01 P1 OPEN**: actual main upload→migration0004→same-key retry menghasilkan submission/file1→2; injected old-schema no-response claim dipurge lalu retry menambah invoice kedua.
+- **REV-1311-02 P1 OPEN**: sesi migrasi A/B menerima204/204 tetapi decision count[2,0]; cache grup melewati parent malformed422/missing404.
+- **REV-1311-03 P2 OPEN**: equivalent package UUID body alias200→409; raw typed identity belum canonical sebelum HMAC.
+- **REV-1411-04 P2**: race tests direct `.post`/fake request, lock observations tidak diwajibkan berhasil, after-write rollback+waiting-contender takeover belum terbukti melalui HTTP authenticated.
 
-## 2. Riwayat implementasi terakhir — task0010/PA-006 (bukti di laporan eksekutor)
+Perbaikan principal/fresh invoice/platform/atomic yang benar tetap dipertahankan. Kebutuhan dan tabel acceptance awal dipulihkan pada packet lengkap; klaim executor seluruh PASS dan penutupan REV-1111-11 dibantah bukti. Histori executor tidak dihapus atau diedit agar tampak lulus.
 
-Sesi 2026-11-14 (sandbox Z.ai, PostgreSQL 17.11 nyata, peran runtime non-superuser `mtx_app`):
+NOT_RUN: host Gate A/G, install/upgrade/restore/DR, CHR/GNS3/live network, live RADIUS auth/accounting, pilot, benchmarkS6; frontend lokal tidak dijalankan (bukti CI diatribusikan ke GitHub). Actual sandbox source/schema transition bukan rehearsal installer host. Beta tetap **NOT_READY**.
 
-1. **Protokol claim/replay satu transaksi** (`common/idempotency.py`): identitas
-   canonical 5-tuple (principal + tenant/platform + operation + resource + key);
-   claim `INSERT … ON CONFLICT DO NOTHING RETURNING`; konkuren same-identity menunggu
-   lalu MEREPLAY (bukan 409 permanen/500/duplikat); respons 2xx tersimpan dalam
-   transaksi yang sama dengan efek; exception → rollback klaim+efek → retry key
-   semula; record tanpa respons ditolak aman (bukan eksekusi ulang buta).
-2. **Migrasi jobs 0004**: kolom identitas + `uq_idem_identity`; backfill canonical;
-   dedupe alias (terbaru ber-respons dipertahankan); purge klaim tanpa respons/
-   salah bentuk; resource opaque (`identity_conflict_resolve` group_id) dipertahankan
-   verbatim; reverse jujur (tabel kosong) + fix-forward terdokumentasi.
-3. **Call-site**: `payment_submission` resource `invoice_id` (bug scope packet);
-   `platform_submission_approve/reject/revision` `platform=True` (scope platform
-   stabil lintas active tenant); `identity_conflict_resolve` `resource_uuid=False`.
-4. **Bukti**: 18 tes PA-006 (interleaving dipaksa penahanan kunci baris + observasi
-   `pg_stat_activity` via pengamat psycopg; klien HTTP independen per principal);
-   suite penuh **401 passed** (baseline 383); PA-001 **10/10** tetap; `manage.py
-   check` 0; `makemigrations --check` bersih; docs PASS; frontend tsc/eslint/
-   vitest 66/i18n/build-live bersih. Matriks acceptance lengkap di laporan eksekusi §5.
+## 2. Riwayat kandidat dan kepemilikan
+
+PR9/PA-001 sudah merged; tidak diulang. PR15 calon13 November ditolak oleh PR16. PR17 calon14 November berawal dari main, bukan descendant koreksi PR16, dan gagal closing acceptance yang sama. Controller tidak mengimplementasikan aplikasi. Seluruh laporan dan refs lama tetap tersedia; packet saat ini menautkan record immutable agar executor tidak kehilangan konteks.
 
 ## 3. Bloker beta — CODE blockers (jujur; BUKAN hanya host/environment)
 
-Register lengkap + baris bukti: `report/controller/20261111T074225Z-repo-handoff-review.md` §4. Pembaruan status setelah kandidat PA-006:
+Register lengkap + baris bukti: `report/controller/20261111T074225Z-repo-handoff-review.md` §4. Snapshot blocker existing; sesi ini memverifikasi scope PA-006, bukan mengaudit ulang scope lain:
 
 | Code blocker (defect source, terbuka) | Temuan | Status PA-006 |
 |---|---|---|
@@ -65,39 +48,31 @@ Register lengkap + baris bukti: `report/controller/20261111T074225Z-repo-handoff
 | Restore end-to-end + pemisahan secret migrator belum terbukti | REV-1111-07 (P1) | TERBUKA (S4) |
 | Topology deployment belum konsisten dengan ARCHITECTURE — DEC-01 belum resolved | REV-1111-08 (P1) | TERBUKA (keputusan pemilik) |
 | Scheduler invoice belum diimplementasikan | REV-1111-09 (P1) | TERBUKA (S4) |
-| Security/idempotency/seleksi kontrak terbuka | REV-1111-11 (P1) | **KANDIDAT TERTUTUP pada SHA `5922e1f`** (principal-scoped idempotency, HTTP replay/race, selected-set terkait idempotency) — menunggu review exact SHA; temuan turunan baru: FUP-001 (`resolve_membership` malformed tenant 500), FUP-002 (berkas yatim), FUP-003 (iterasi antrean platform) — dicatat berbukti, belum ditugaskan |
+| Security/idempotency/seleksi kontrak terbuka | REV-1111-11 (P1) | **TERBUKA** — PR17 changes_requested: REV-1311-01/02/03 + REV-1411-04; PA-006 belum accepted. Permission lifecycle/selected-set/scanner bukan ditutup oleh perbaikan idempotency |
 | Kapasitas target 1.000×1.000 belum dibuktikan benchmark | REV-1111-12 (P2) | TERBUKA (S6/G4-G5) |
 
 Environment blockers (prasyarat eksternal, TETAP ADA): Gate A/G host Debian 13 nyata; G1 lab MikroTik CHR/fisik; lab GNS3 API-driven (CONTRACT §7).
 
-## 4. Cabang kerja
+## 4. Cabang/PR belum merged — jangan ditimpa
 
-- `session/2026-11-14-pa006-idempotency` — **KANDIDAT task0010/PA-006, PR #17**
-  (tested SHA `5922e1f`; head `7243c26` — report-only metadata commits setelah
-  tested SHA; remote diverifikasi).
-- Terbuka milik pihak lain (JANGAN ditimpa): `docs/planning-audit-20261110` (PR #8),
-  `session/2026-11-07-sstp-phase2` (PR #7).
-- `session/2026-11-11-pa001-payment-concurrency` — MERGED (PR #9; arsip riwayat).
-- Arsip riwayat (remote, tidak diubah): `parallel/beta-be2` (unmerged),
-  `integration/beta-0.1`, `session/2026-11-06/07-*`.
+| PR | Branch / fungsi |
+|---|---|
+| 17 | `session/2026-11-14-pa006-idempotency` — candidate37a8729, changes_requested oleh keputusan sesi ini |
+| 16 | `review/0010-pa006-controller-20261113` — prior corrections5da0d80 atas PR15 |
+| 15 | `session/2026-11-13-pa006-idempotency` — candidate lama7480c80, belum accepted |
+| 14 | `docs/payment-point-planning-20261113` — DANA planning, terpisah/default disabled, bukan task Beta ini |
+| 13 | `review/0010-pa006-submission-check-20261112` — snapshot not_submitted historis, sudah ada candidate setelahnya |
+| 8 | `docs/planning-audit-20261110` — docs/manifest ownership tetap terpisah; status CI historis di register |
+| 7 | `session/2026-11-07-sstp-phase2` — SSTP terpisah; tidak dihitung integrated main |
 
-## 5. Prioritas eksekusi berikutnya (urut)
+Branch keputusan sesi ini `review/0010-pa006-controller-20261114` memuat report/task/handoff/progress/evidence; PR-nya dicatat setelah publication. Tidak ada PR lama ditutup/di-merge, force-push atau destructive cleanup. Arsip branch lain tetap dipertahankan.
 
-1. **Review controller PA-006** pada exact SHA `774b191` (kandidat PR #17 di atas; source produksi `5922e1f`).
-   Changes requested → koreksi ID sama; accepted → catat SHA + evidence, siapkan
-   task penerus.
-2. **PA-002 + authority PA-003 (P1)** — job lifecycle fencing/drain (termasuk risiko
-   tersisa PA-001: penahan kunci invoice selama render kwitansi PDF dalam transaksi;
-   runworker tanpa drain; write tanpa ownership check).
-3. **DEC-01** — keputusan topology (wajib sebelum rehearsal S4; executor menyiapkan
-   proposal biaya/risiko/isolasi, BUKAN mengubah ARCHITECTURE/CONTRACT).
-4. **DEC-02** — PR #8 docs/manifest (branch itu pemilik file — jaga ownership disjoint).
-5. **PR #7 disposition** (SSTP Phase-2; docs CI fail = manifest mismatch).
-6. Installer/upgrade/restore/scheduler code blockers (REV-1111-04/05/07/09) — S4
-   setelah DEC-01; ops host Gate A/G setelah code blocker ditutup.
-7. FUP-001/002/003 hasil PA-006 — masukkan ke packet berikutnya yang relevan
-   (FUP-001 kandidat packet API hygiene kecil; FUP-002 bersama pekerjaan dokumen;
-   FUP-003 bersama PA-002/003).
+## 5. Urutan kelanjutan
+
+1. Coding agent koreksi task0010 empat finding di atas; kembali ke controller untuk exact-SHA review, belum ke PA-002/003.
+2. Setelah acceptance/integration prerequisites terpenuhi, controller menyiapkan PA-002/PA-003 job fencing/drain/authority dari backlog existing.
+3. DEC-01 topology sebelum rehearsalS4; DEC-02 docs/manifest milik PR8; PR7 SSTP disposition tetap terpisah.
+4. Installer/upgrade/restore/scheduler blockersS4 dan host gates mengikuti prasyarat existing. FUP-001/002/003 dicatat untuk scope relevan; tidak memperluas0010 diam-diam.
 
 ## 6. Contoh bootstrap sandbox — pilih scope dari task guide
 
@@ -110,29 +85,16 @@ git log --oneline -5
 MT_SANDBOX_BASE=/home/z/my-project bash docs/tools/setup_env.sh   # PG 17.11 + FreeRADIUS 3.2.7 deb-extract
 cd backend && MT_PG_BIN=/home/z/my-project/pgbin/pg17 bash scripts/dev_bootstrap.sh
 # (venv: uv venv .venv --python /usr/bin/python3.13 --seed bila python3.13-venv absen)
-MT_ENV=test .venv/bin/python -m pytest tests -q   # 401 passed pasca-PA-006 (383 baseline)
+MT_ENV=test .venv/bin/python -m pytest tests -q   # root401 passed pada candidate37a8729; bukan seluruh acceptance PASS
 env -u DATABASE_URL MT_ENV=test .venv/bin/python manage.py check   # 0 issue
 python3 docs/tools/check_docs.py
 ```
 
-## 7. Risiko & keterbatasan yang diketahui
+## 7. Risiko dan batas verifikasi
 
-- Penahan kunci baris invoice selama transaksi verifikasi (termasuk render PDF
-  kwitansi) — pemindahan I/O keluar transaksi = lingkup **PA-002**.
-- Tes konkurensi PA-006 protokol memanggil method view terdekorasi langsung
-  (jalur produksi decorator+service, tanpa test client multi-thread yang diketahui
-  tidak thread-safe); boundary HTTP diuji klien independen sekuensial — bukti
-  multi-request HTTP truly-paralel tetap lewat CI runner.
-- Observasi `pg_stat_activity` lintas sesi pada sandbox ini flaky bila dilakukan
-  dari koneksi Django main (superuser selalu melihat) — tes PA-006 memakai pengamat
-  psycopg terpisah yang stabil; dicatat pada laporan eksekusi (keanehan sandbox,
-  bukan produk).
-- Mutasi router tetap jalur simulator (capability.source=simulator) — tidak ada
-  klaim perangkat nyata (G1).
-- Kapasitas 1.000 tenant × 1.000 online tetap klaim desain, bukan benchmark.
-- xhtml2pdf 0.2.28 dipin — pantau advisori keamanan.
-- Verdict review controller PA-006 belum diterbitkan — register REV-1111 tetap
-  rujukan; REV-1111-11 hanya ditutup jika review menerima kandidat.
-- **PAT GitHub hanya dipakai untuk fetch/push/PR dari sandbox (tidak pernah
-  di-commit; scan diff bersih). Rotasi PAT tetap disarankan** karena melewati
-  kanal chat.
+- Lock invoice selama render kwitansi dalam transaksi tetap scopePA-002; sesi ini tidak mengubahnya.
+- PA-006 concurrent HTTP/forced lock/after-write rollback+contender takeover **BELUM TERBUKTI** sesuai REV-1411-04. CI menjalankan suite yang sama dan tidak menambahkan bukti concurrent HTTP yang hilang.
+- Klaim observasi Django pg_stat_activity flaky berasal dari laporan executor; root tidak menggeneralisasikannya sebagai fakta platform. PID saja tidak membuktikan lock yang diwajibkan.
+- Mutasi router tetap simulator; G1 nyata belum verified. Kapasitas1.000×1.000 belum dibenchmark.
+- Controller meminta changes_requested; record/versioned publication pada §0 dan laporan controller. REV-1111-11 tetap terbuka.
+- Tidak ada kredensial produksi atau akses deployment diserahkan; sesi controller memakai koneksi GitHub yang tersedia dan tidak memakai PAT percakapan lama.
