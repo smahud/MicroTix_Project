@@ -14,7 +14,7 @@ ada penyerahan. Semua tanggal di sini Asia/Jakarta; evidence filenames UTC.
 | Execution / review | **ready / changes_requested**; third submission tidak diterima seluruh scope |
 | Reviewed candidate / PR | [PR19](https://github.com/smahud/MicroTix_Project/pull/19), `session/2026-11-15-pa006-idempotency` @ **9e9bf2d42002a00a69d54fc355b77384897b9478** |
 | Tested source ancestor | **c99838cd6e9f144adf53bb44ed792fba15a432fe**, implementation1780e15; candidate descendants report-only pada source/config terkait |
-| Latest instruction/decision ref | **review/0010-pa006-controller-20261115** (ditargetkan ke candidate PR19 branch; records-only delta); publication pointer di bawah setelah diverifikasi |
+| Latest instruction/decision ref | [PR20](https://github.com/smahud/MicroTix_Project/pull/20), **review/0010-pa006-controller-20261115**, target candidate PR19 branch; first verified decision ancestor2c2797b37ba536100fdf67c8dd08ceab793c5ff9; records-only delta |
 | Controller decision | [15 November review](controller/20261114T212816Z-0010-pa006-review.md); OPEN01/03/05, CLOSED02/04 pada SHA yang diperiksa |
 | Executor/history | [Third executor report](orchestrator/20261114T164816Z-0010-pa006-idempotency.md), [internal review](reviewer/20261114T164816Z-0010-pa006-review.md), [previous controller](controller/20261114T153739Z-0010-pa006-review.md); klaim all-PASS lama ditolak untuk scope yang masih gagal |
 | Independent controller source review | [Runtime](reviewer/20261114T213051Z-0010-runtime-independent.md), [migration](reviewer/20261114T212943Z-0010-migration-independent.md); root runtime/effect evidence terpisah pada laporan keputusan |
@@ -24,12 +24,21 @@ ada penyerahan. Semua tanggal di sini Asia/Jakarta; evidence filenames UTC.
 
 ## Publication record
 
-Pada penulisan awal records **NOT PUSHED**. Branch keputusan disiapkan dari
-reviewed candidate9e9bf2d; commit/push, PR target candidate branch, readback
-report/task dan exact-head CI harus diverifikasi sebelum handoff final.
-First verified publication ancestor dan PR dicatat setelah commit itu ada;
-report tidak mengarang SHA masa depannya sendiri. Main dan PR19 input
-terakhir diperiksa melalui `git ls-remote`, sama dengan tabel di atas.
+**PUBLISHED**, [PR20](https://github.com/smahud/MicroTix_Project/pull/20)
+menargetkan `session/2026-11-15-pa006-idempotency`. First verified decision
+ancestor **2c2797b37ba536100fdf67c8dd08ceab793c5ff9**, remote tree
+**43a03b4683165a6d647044d82093b05b26305919** cocok byte-content dengan
+local reviewed records. Fetch+local checkout remote commit terverifikasi;
+source/config delta dari input9e9bf2d tetap kosong. Commit metadata berikutnya
+hanya menyimpan pointer publikasi yang sudah ada; reviewed application SHA
+tetap9e9bf2d. Main dan input PR19 tidak diubah.
+
+Publication CI [43644492925](https://github.com/smahud/MicroTix_Project/actions/runs/43644492925)
+terverifikasi **completed / success** pada ancestor2c2797b: backend,
+frontend dan docs masing-masing success. Final metadata head/required CI
+diverifikasi lewat PR sebelum handoff. Status CI record
+tidak menutup failure acceptance aplikasi. Detail publikasi ada pada laporan
+controller; tidak ada SHA masa depan file yang dikarang.
 
 ## 1. Hasil review terbaru
 

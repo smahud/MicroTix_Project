@@ -13,6 +13,7 @@
 | Published SHA / PR / CI | [PR19](https://github.com/smahud/MicroTix_Project/pull/19) base main; first verified publication `35507eb04d6c9a4a1276315dd608a6ef03bd863b`; required CI pada SHA itu **backend/frontend/docs success** (diverifikasi 15 November); commit metadata berikutnya report-only |
 | Execution report / internal reviewer | [Executor](../report/orchestrator/20261114T164816Z-0010-pa006-idempotency.md) (matriks finding→perubahan→tes→evidence + acceptance + call-site table); [independent review](../report/reviewer/20261114T164816Z-0010-pa006-review.md) — PASS_WITH_NOTES, temuan P3 ditutup/didokumentasikan |
 | Controller review | [Keputusan 15 November](../report/controller/20261114T212816Z-0010-pa006-review.md) pada **`9e9bf2d42002a00a69d54fc355b77384897b9478`**: changes_requested; REV-1311-01/03 partial OPEN, REV-1311-02/REV-1411-04 CLOSED, new REV-1511-05 P1 OPEN; keputusan lama tetap histori |
+| Controller publication | [PR20](https://github.com/smahud/MicroTix_Project/pull/20), branch `review/0010-pa006-controller-20261115`; first verified decision ancestor **2c2797b37ba536100fdf67c8dd08ceab793c5ff9**, tree43a03b4683165a6d647044d82093b05b26305919; metadata descendant tidak mengubah kode yang diperiksa |
 | Next actor | **coding_agent** |
 | Exact next action | Fetch `review/0010-pa006-controller-20261115` dan PR19; tutup findings01/03/05 sesuai koreksi terbaru di bawah, preserve perbaikan yang lulus, serahkan exact SHA baru + finding→change→closing test→actual evidence pada ID0010 |
 

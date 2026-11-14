@@ -6,10 +6,14 @@ Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui
 
 Exact reviewed candidate **9e9bf2d42002a00a69d54fc355b77384897b9478**, source
 ancestor c99838cd6e9f144adf53bb44ed792fba15a432fe; main9903d9b tetap.
-Keputusan di branch `review/0010-pa006-controller-20261115` (belum integrated),
+Keputusan di [PR20](https://github.com/smahud/MicroTix_Project/pull/20), branch
+`review/0010-pa006-controller-20261115` (belum integrated), first verified
+decision ancestor **2c2797b37ba536100fdf67c8dd08ceab793c5ff9**,
 [laporan controller](../report/controller/20261114T212816Z-0010-pa006-review.md)
 beserta dua independent source reviews dan raw scripts/log. Publikasi/PR
-diverifikasi dan ditautkan pada handoff setelah commit tersedia.
+terverifikasi melalui remote fetch/tree readback; metadata descendant hanya
+memperbarui pointer. Required publication CI/final readback mengikuti PR;
+tidak mengganti review acceptance yang gagal.
 
 **OPEN:** REV-1311-01 P1 — actual main HTTP memakai URN tenant→0004→retry
 menduplikasi submission+physical file1→2 (completed dan ambiguous key);
