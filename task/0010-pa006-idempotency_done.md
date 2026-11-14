@@ -3,19 +3,18 @@
 | Field | Nilai |
 |---|---|
 | Task ID | `0010` — ID tetap; dibuka kembali untuk koreksi |
-| Execution status | `ready` |
-| Review status | `changes_requested` |
+| Execution status | `done` (executor; scope + tes wajib selesai, menunggu review controller) |
+| Review status | `pending` |
 | Controller | ChatGPT Work / reviewer proyek |
-| Executor | Coding agent sandbox; penyerahan terbaru Z.ai 14 November 2026 |
+| Executor | Coding agent sandbox; penyerahan ketiga Z.ai 15 November 2026 |
 | Baseline / dependency | `main@9903d9b0cf09d737b553da3c21067b4810e956c0`; PA-001 merged PR9 (`8ce94d4`); tidak diulang |
-| Instruction revision | Kebutuhan awal pada main; koreksi [PR16 exact ref](https://github.com/smahud/MicroTix_Project/blob/5da0d801c71b020fbb8b977294502ea5a09e7bcb/task/0010-pa006-idempotency.md) tetap berlaku dan belum dibawa PR17 |
-| Candidate / exact reviewed SHA | [PR17](https://github.com/smahud/MicroTix_Project/pull/17), `session/2026-11-14-pa006-idempotency@37a87291ae66a0fa9167f0c72d1e8340aa5fd245` |
-| Implementation / executor-tested SHA | Produksi `5922e1f`; tes observer `774b191`; diff `774b191..37a8729` kosong untuk backend/apps/config terkait. Root mereview dan menjalankan checks terhadap source candidate37a8729 |
-| Execution report / internal reviewer | [Executor](../report/orchestrator/20261114T150000Z-0010-pa006-idempotency.md), [internal review](../report/reviewer/20261114T150000Z-0010-pa006-review.md); klaim seluruh acceptance PASS dibantah reproduksi controller |
-| Controller review | [Keputusan 14 November](../report/controller/20261114T153739Z-0010-pa006-review.md), `changes_requested` pada37a8729; [keputusan 13 November](https://github.com/smahud/MicroTix_Project/blob/5da0d801c71b020fbb8b977294502ea5a09e7bcb/report/controller/20261113T114222Z-0010-pa006-review.md) tetap historis |
-| Decision branch / publication | [PR18](https://github.com/smahud/MicroTix_Project/pull/18), `review/0010-pa006-controller-20261114`; first verified publicationbb9241ccbf78bffd2ffc19c1cfb232d6dff8be1a, record-only descendant PR17; fetch head aktual |
-| Next actor | **coding_agent** |
-| Exact next action | Fetch ref keputusan ini; bawa packet/riwayat secara semantik; tutup REV-1311-01/02/03 dan REV-1411-04 pada ID0010, jalankan closing tests, resubmit exact SHA baru. PA-002/003 belum eligible |
+| Instruction revision | Kebutuhan awal pada main; koreksi [PR16 exact ref](https://github.com/smahud/MicroTix_Project/blob/5da0d801c71b020fbb8b977294502ea5a09e7bcb/task/0010-pa006-idempotency.md) + keputusan [PR18](https://github.com/smahud/MicroTix_Project/pull/18) — keduanya dibawa semantik pada kandidat ini |
+| Candidate branch / exact tested SHA | `session/2026-11-15-pa006-idempotency`; implementation `1780e150695a6b7bbb4109b6f13ea44df54fa6a0` + hardening `c99838c` (tree uji identik); base `review/0010-pa006-controller-20261114@b6a0cb8` |
+| Published SHA / PR / CI | PR kandidat base main; head publikasi + required CI dicatat pada [LATEST_HANDOFF](../report/LATEST_HANDOFF.md) setelah verifikasi remote |
+| Execution report / internal reviewer | [Executor](../report/orchestrator/20261114T164816Z-0010-pa006-idempotency.md) (matriks finding→perubahan→tes→evidence + acceptance + call-site table); [independent review](../report/reviewer/20261114T164816Z-0010-pa006-review.md) — PASS_WITH_NOTES, temuan P3 ditutup/didokumentasikan |
+| Controller review | [Keputusan 14 November](../report/controller/20261114T153739Z-0010-pa006-review.md) `changes_requested` pada `37a8729` — kandidat ini menutup keempat finding; review baru belum ada |
+| Next actor | **controller_reviewer** |
+| Exact next action | Review kandidat exact SHA (`1780e15`+`c99838c`, head publikasi di handoff) terhadap REV-1311-01/02/03 + REV-1411-04 dan acceptance awal; keputusan di `report/controller/<UTC>-0010-pa006-review.md` |
 
 Mulai dari [panduan tetap](0000-start-here.md) dan [CONTRACT](../CONTRACT.md). Ini task implementasi, **bukan bukti PA-006 selesai**. Fetch refs dan review delta bila remote berubah; pilih branch baru dari main aktual dengan packet ini tersedia. Jika instruksi belum merged, catat instruction ref/PR dan bawa perubahan dokumentasi yang sah secara semantik; jangan menimpa pekerjaan lain atau menganggap SHA baseline sebagai main untuk selamanya.
 
@@ -84,7 +83,9 @@ Coding agent mengisi ringkasan hasil singkat di packet (apa yang berubah, accept
 
 Controller menyimpan keputusan implementasi di `report/controller/<UTC>-0010-pa006-review.md`, menautkannya ke metadata packet dan mengikatnya pada exact reviewed SHA. Report memuat verdict, finding→koreksi→acceptance, evidence limits serta next actor/action. Changes requested membuka kembali task0010 yang sama; coding agent memperbaiki finding dan menyerahkan SHA baru. Accepted mengembalikan kendali ke controller untuk penyiapan task penerus sesuai dependencies/integration. Publish keputusan di ref GitHub yang disebut di handoff sebelum pergantian peran; jangan meninggalkan keputusan hanya di chat.
 
-**Riwayat penyerahan:** PR15 (13 November) dan PR17 (14 November) adalah hasil executor, belum accepted. Laporan historis executor dipertahankan. Metadata dan koreksi di atas/bawah merupakan keputusan controller atas exact SHA, bukan penghapusan hasil implementasi.
+**Riwayat penyerahan:** PR15 (13 November), PR17 (14 November), dan kandidat ini (15 November) adalah hasil executor pada ID0010 yang sama; dua pertama changes_requested. Laporan historis dipertahankan.
+
+**Ringkasan hasil implementasi (penyerahan ketiga, executor):** koreksi empat finding controller — (1) REV-1311-01: migrasi 0004 menahan record tanpa respons + remap platform + dedupe berrespons; runtime legacy_shapes/replay_guard merekonsiliasi payment_submission resource='' dengan verifikasi submission→invoice/tenant (transisi migrasi NYATA 0003→0004 dibuktikan: retry pasca-upgrade mereplay submission semula, count 1, beda body 409); (2) REV-1311-02: identitas identity_conflict_resolve = migration UUID + group; parent divalidasi SEBELUM klaim/replay (422/404); session A/B menulis keputusan masing-masing [2,2]; legacy group-only 409 aman; (3) REV-1311-03: hash v2 field UUID body dideklarasikan (package_id/router_id/selected_account_ids) + kompatibilitas v1 raw; alias replay, beda nyata 409; (4) REV-1411-04: tes konkurensi HTTP klien terautentikasi per-thread melalui dispatch penuh, observasi lock DIASSERTI, takeover test injeksi kegagalan setelah writes dengan penantang menunggu (rollback menyeluruh + 1 aksi terkomit). Bukti: suite penuh **426 passed** (PG 17.11 nyata, role non-superuser, FreeRADIUS aktif), targeted 65 passed, **6/6 probe acceptance controller PASS**, `manage.py check` 0 issue, `makemigrations --check` bersih, docs PASS. Review internal independen PASS_WITH_NOTES (temuan P3 ditutup pada `c99838c` atau didokumentasikan). Semua baris acceptance packet terpetakan PASS pada laporan executor §3; NOT_RUN: host/lab/E2E/benchmark (di luar scope). Detail + evidence: laporan executor di atas.
 
 Isi metadata di atas, update [LATEST_HANDOFF](../report/LATEST_HANDOFF.md) dan [progress](../docs/progress.md), lalu ikuti penutupan pada panduan tetap: completion rename ke `0010-pa006-idempotency_done.md` ikut commit, push/remote/CI diverifikasi, review menjadi pending. Task ini baru accepted ketika controller mencatat review exact SHA. Jangan memasukkan secret/runtime/unrelated files ke commit atau merge otomatis ke main.
 

@@ -1,6 +1,14 @@
 # MicroTix — checkpoint kemajuan
 
-Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-14 (Asia/Jakarta).
+Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-15 (Asia/Jakarta).
+
+## Checkpoint 2026-11-15 — executor task0010/PA-006 penyerahan ketiga: empat finding controller ditutup
+
+Koreksi atas keputusan [PR18 changes_requested](https://github.com/smahud/MicroTix_Project/pull/18) pada ID0010 yang sama; branch kandidat `session/2026-11-15-pa006-idempotency` (base keputusan `b6a0cb8`), **implementation `1780e15` + hardening `c99838c`**; packet direname `_done` (execution done / review pending) — menunggu controller review exact SHA. **Bukan acceptance.**
+
+**Perubahan inti**: (1) REV-1311-01 — migrasi `jobs/0004` menahan record tanpa respons (penjaga efek ambigu), remap operasi platform legacy ke `tenant_scope='platform'`, dedupe alias memilih record berrespons; runtime `legacy_shapes`+`replay_guard` merekonsiliasi `payment_submission` `resource=''` dengan verifikasi submission→tenant(RLS)→invoice sebelum replay; transisi migrasi NYATA 0003→0004 dibuktikan (retry pasca-upgrade mereplay submission semula, beda body 409, no-response 409 aman). (2) REV-1311-02 — `identity_conflict_resolve` identitas `<migration UUID>:<group_id>`; parent divalidasi SEBELUM klaim/replay (422/404); session A/B → keputusan [2,2]; legacy group-only 409 aman. (3) REV-1311-03 — hash v2 field UUID body dideklarasikan (`package_id`/`router_id`/`selected_account_ids`) + kompatibilitas v1 raw konstan-waktu. (4) REV-1411-04 — tes konkurensi HTTP klien terautentikasi per-thread via dispatch penuh; observasi lock `pg_stat_activity` DIASSERTI; takeover test injeksi kegagalan setelah writes domain/audit/outbox dengan penantang same-key menunggu → rollback menyeluruh + takeover + satu aksi terkomit.
+
+**Bukti (PG 17.11 nyata, role non-superuser, FreeRADIUS aktif)**: suite penuh **426 passed** (3 warning pra-ada), targeted controller set 65 passed, **6/6 probe acceptance controller PASS** (evidence 14 Nov dijalankan ulang), `manage.py check` 0 issue, `makemigrations --check` bersih, docs PASS. Review internal sub-agent read-only: PASS_WITH_NOTES — temuan P3 ditutup pada `c99838c` (validasi group_id, assert join, counter dedupe, 2 tes celah bukti) atau didokumentasikan sebagai batas. Laporan: [executor](../report/orchestrator/20261114T164816Z-0010-pa006-idempotency.md) + [reviewer](../report/reviewer/20261114T164816Z-0010-pa006-review.md). Next actor **controller_reviewer**. Beta tetap NOT_READY; PA-002/003 menunggu accepted.
 
 ## Checkpoint 2026-11-14 — controller review PR17: changes_requested, task0010 reopened
 
