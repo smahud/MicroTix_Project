@@ -141,6 +141,7 @@ def _backfill_identity(apps, schema_editor):
             best[identity] = candidate
         elif rank > prev["rank"]:
             delete_ids.append(prev["pk"])
+            stats["duplicate_deleted"] += 1
             best[identity] = candidate
         else:
             delete_ids.append(pk)

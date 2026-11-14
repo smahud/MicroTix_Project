@@ -649,6 +649,7 @@ def _thread(fn):
 def _join(threads):
     for t in threads:
         t.join(timeout=JOIN_TIMEOUT_S)
+        assert not t.is_alive(), f"thread {t.name} tidak selesai dalam {JOIN_TIMEOUT_S}s"
 
 
 def _http_post_runner(tag, *, user, tenant_id, url, body, key, results, pids,
@@ -1656,3 +1657,101 @@ class TestBodyUuidAliasNormalization:
         assert changed.status_code == 409
         assert changed.json()["code"] == "idempotency_conflict"
         assert _count_in_tenant(PaymentSubmission, world.tenant.id, invoice_id=invoice.id) == 1
+
+    def test_concurrent_http_legacy_proof_retry_both_replay_original(self):
+        """Celah bukti REV-1311-01 'concurrent retry': dua klien HTTP
+        konkuren me-retry record legacy payment_submission resource='' —
+        keduanya MEREPLAY submission semula; tidak ada submission kedua."""
+        sub_services.seed_plans()
+        from domains.common.tenant_context import tenant_scope
+        from django.utils import timezone
+
+        world = _world("rtrw-pa000038")
+        invoice = _make_invoice(world)
+        with tenant_scope(world.tenant.id):
+            original = PaymentSubmission.objects.create(
+                tenant=world.tenant, invoice=invoice, amount=invoice.amount,
+                proof_path="payment-proofs/synthetic-old-conc", proof_mime="image/png",
+                proof_size=64, submitted_by=world.owner,
+            )
+        response_old = {"submission_id": str(original.id), "state": original.state}
+        IdempotencyKey.objects.create(
+            principal=str(world.owner.id), tenant_scope=str(world.tenant.id),
+            operation="payment_submission", resource="", idem_key="pa006-legacy-conc",
+            body_hash=_body_hash_legacy_of(_PROOF_BODY), response_status=201,
+            response_body=response_old, created_at=timezone.now(),
+        )
+        url = f"/api/v1/tenants/{world.tenant.id}/saas-invoices/{invoice.id}/payment-submissions"
+        results: dict[str, dict] = {}
+        barrier = threading.Barrier(2, timeout=30)
+
+        def run(tag):
+            from django.db import connection as conn
+
+            try:
+                client = _client_for(world.owner, world.tenant.id, reauth_until=REAUTH_FAR_FUTURE)
+                barrier.wait()
+                response = client.post(url, _PROOF_BODY, headers={"Idempotency-Key": "pa006-legacy-conc"})
+                results[tag] = {"status": response.status_code, "data": _response_data(response)}
+            except Exception as exc:  # noqa: BLE001
+                results[tag] = {"exception": f"{type(exc).__name__}: {exc}"}
+            finally:
+                conn.close()
+
+        threads = [_thread(lambda: run("A")), _thread(lambda: run("B"))]
+        _join(threads)
+        for tag, res in results.items():
+            assert "exception" not in res, (tag, res)
+            assert res["status"] == 201
+            assert res["data"] == response_old
+        # Record legacy statis (bukan klaim baru); submission tetap satu.
+        assert _count_in_tenant(PaymentSubmission, world.tenant.id, invoice_id=invoice.id) == 1
+        assert _idem_count(operation="payment_submission", idem_key="pa006-legacy-conc") == 1
+
+    def test_retained_raw_hash_noncanonical_original_fails_safe_409(self):
+        """Batas terdokumentasi kebijakan retained hash: record v1 yang
+        ASLINYA memakai ejaan non-canonical + retry berbeda ejaan → 409 aman
+        (bukan replay salah, bukan eksekusi kedua). Body identik byte-per-byte
+        tetap replay (dibuktikan tes lain)."""
+        sub_services.seed_plans()
+        from domains.billing.models import BillingPackage
+        from domains.common.tenant_context import tenant_scope
+        from django.utils import timezone
+
+        world = _world("rtrw-pa000039")
+        client = _client_for(world.owner, world.tenant.id, reauth_until=REAUTH_FAR_FUTURE)
+        with tenant_scope(world.tenant.id):
+            from domains.customers.models import Customer, Service
+
+            customer = Customer.objects.create(tenant=world.tenant, display_name="NC", customer_code="C-NC")
+            service = Service.objects.create(tenant=world.tenant, customer=customer, service_code="S-NC")
+            package = BillingPackage.objects.create(tenant=world.tenant, name="NC package", monthly_price=1)
+            service.billing_package = package  # emulasi aksi era main yang sudah selesai
+            service.save(update_fields=["billing_package"])
+        # Record era main yang aslinya NON-canonical (uppercase hex).
+        noncanon_body = {"package_id": package.id.hex.upper()}
+        response_old = {"service_id": str(service.id), "billing_package_id": str(package.id)}
+        IdempotencyKey.objects.create(
+            principal=str(world.owner.id), tenant_scope=str(world.tenant.id),
+            operation="service_billing_package", resource=str(service.id),
+            idem_key="pa006-nc-legacy",
+            body_hash=_body_hash_legacy_of(noncanon_body),
+            response_status=200, response_body=response_old, created_at=timezone.now(),
+        )
+        url = f"/api/v1/tenants/{world.tenant.id}/services/{service.id}/billing-package"
+        # Retry dengan ejaan canonical (berbeda dari body asli) → 409 aman.
+        canonical = client.post(
+            url, {"package_id": str(package.id)}, headers={"Idempotency-Key": "pa006-nc-legacy"}
+        )
+        assert canonical.status_code == 409
+        assert canonical.json()["code"] == "idempotency_conflict"
+        # Retry identik byte-per-byte dengan body asli → tetap replay.
+        identical = client.post(
+            url, noncanon_body, headers={"Idempotency-Key": "pa006-nc-legacy"}
+        )
+        assert identical.status_code == 200
+        assert identical.json() == response_old
+        # Tidak ada aksi kedua: state service tidak berubah oleh 409/replay.
+        with tenant_scope(world.tenant.id):
+            service.refresh_from_db()
+        assert str(service.billing_package_id) == str(package.id)

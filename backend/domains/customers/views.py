@@ -7,6 +7,7 @@ kecuali reveal-credentials (rahasia tidak pernah di-cache, no-store).
 """
 from __future__ import annotations
 
+import re
 import uuid as uuid_mod
 
 from django.db.models import Exists, OuterRef, Prefetch, Q
@@ -573,16 +574,27 @@ def _conflict_resolve_resource(request, kwargs) -> str:
     saja tidak cukup karena group dipakai ulang lintas session. Validasi
     parent (bentuk UUID → 422; session tidak ditemukan → 404) dilakukan di
     sini SEBELUM klaim/replay, sehingga respons cache tidak dapat melewati
-    validasi parent maupun menyeberang antar session.
+    validasi parent maupun menyeberang antar session. group_id divalidasi
+    bentuknya (sha256[:16] lowercase — bentuk stabil conflict_group_id);
+    nilai lain → 404 generik, sekaligus menjaga resource ≤64 karakter agar
+    input URL panjang tidak menjadi DataError 500 pada klaim.
     """
     migration_c = _validate_uuid("migration_id", str(kwargs.get("migration_id", "")))
     _get_session(str(kwargs.get("tenant_id", "")), migration_c)  # 404 bila parent tidak ada
-    return f"{migration_c}:{str(kwargs.get('group_id', ''))}"
+    group_id = str(kwargs.get("group_id", ""))
+    if not _GROUP_ID_RE.fullmatch(group_id):
+        raise ApiError.not_found()
+    return f"{migration_c}:{group_id}"
 
 
 def _legacy_group_shapes(resource: str) -> list[str]:
     """Bentuk resource pra-migrasi-0004: group_id saja tanpa migration UUID."""
     return [resource.split(":", 1)[1]] if ":" in resource else []
+
+
+# group_id = sha256(username terurut)[:16] lowercase — bentuk stabil
+# conflict_group_id (customers/services.py); bukan UUID.
+_GROUP_ID_RE = re.compile(r"[0-9a-f]{16}")
 
 
 class IdentityConflictResolveView(TenantApiView):
