@@ -18,8 +18,28 @@ Protokol claim/replay (PA-006) — satu transaksi PostgreSQL:
 Identitas canonical: UUID (tenant/resource) dinormalkan ke bentuk lowercase
 standar — semua ejaan alias (huruf besar/urn/kurung/tanpa hyphen) menjadi
 scope yang sama; input salah bentuk → 422. String semantik (username, pesan,
-body) TIDAK diubah. Operasi platform memakai scope eksplisit `platform`
+body opaque) TIDAK diubah. Operasi platform memakai scope eksplisit `platform`
 yang tidak bergeser ketika operator berpindah active tenant.
+
+Hash body v2 (REV-1311-03): field identitas UUID yang DIDEKLARASIKAN view
+(`body_uuid_fields`) dinormalkan ke bentuk canonical sebelum HMAC — ejaan
+alias UUID pada body menghasilkan hash yang sama (replay), bukan 409 palsu.
+String lain tetap exact-case; elemen list dinormalkan per elemen tanpa
+mengubah urutan/semantik array. Kompatibilitas record lama: perbandingan
+menerima hash v2 ATAU hash v1 raw — body yang identik byte-per-byte dengan
+request aslinya selalu cocok dengan record pra-v2.
+
+Legacy shapes (REV-1311-01/02): migrasi jobs.0004 menormalkan record
+pra-0004 ke identitas baru bila dapat direkonsiliasi. Dua bentuk TIDAK dapat
+dinormalkan migrasi dan ditangani runtime SEBELUM klaim:
+- `payment_submission` resource='' (protokol lama tanpa resource): body sama
+  + respons ada → replay setelah replay_guard memverifikasi kepemilikan
+  submission/invoice/tenant; verifikasi gagal atau tanpa respons → 409 aman.
+- `identity_conflict_resolve` group-only (tanpa migration UUID): tidak dapat
+  diikat ke session → 409 aman (`legacy_replay=False`), tidak pernah
+  mereplay lintas session.
+Record legacy statis (tidak ada penulis baru bentuk ini pasca-migrasi),
+jadi pemeriksaan SELECT sebelum INSERT bebas race.
 """
 from __future__ import annotations
 
@@ -28,7 +48,7 @@ import hashlib
 import hmac
 import json
 import uuid as _uuid
-from typing import Any, Callable
+from typing import Any, Callable, Iterable
 
 from django.conf import settings
 from django.db import transaction
@@ -43,9 +63,71 @@ PLATFORM_SCOPE = "platform"
 _CLAIM_ATTEMPTS = 3
 
 
-def _body_hash(body: Any) -> str:
-    canonical = json.dumps(body or {}, sort_keys=True, separators=(",", ":"), default=str)
+def _canonical_uuid_value(value: Any) -> str | None:
+    """Canonical lowercase bila value ejaan UUID sah; None bila bukan."""
+    if not isinstance(value, str):
+        return None
+    try:
+        return str(_uuid.UUID(value))
+    except (ValueError, AttributeError, TypeError):
+        return None
+
+
+def _hash_payload(payload: Any) -> str:
+    canonical = json.dumps(payload or {}, sort_keys=True, separators=(",", ":"), default=str)
     return hmac.new(settings.SECRET_KEY.encode(), canonical.encode(), hashlib.sha256).hexdigest()
+
+
+def _normalize_body(body: Any, uuid_fields: Iterable[str]) -> Any:
+    """Salin body dengan field UUID yang dideklarasikan dinormalkan (v2).
+
+    Hanya nilai yang benar-benar ejaan UUID yang diganti; string lain
+    (username, kode, opaque) dipertahankan exact-case. List dinormalkan per
+    elemen tanpa mengubah urutan (semantik array dipertahankan). Body bukan
+    dict dikembalikan apa adanya.
+    """
+    fields = tuple(uuid_fields)
+    if not fields or not isinstance(body, dict):
+        return body
+
+    def _canon_or_keep(value: Any) -> Any:
+        if isinstance(value, str):
+            canon = _canonical_uuid_value(value)
+            return canon if canon is not None else value
+        return value
+
+    normalized = dict(body)
+    for field in fields:
+        if field not in normalized:
+            continue
+        value = normalized[field]
+        if isinstance(value, list):
+            normalized[field] = [_canon_or_keep(v) for v in value]
+        else:
+            normalized[field] = _canon_or_keep(value)
+    return normalized
+
+
+def _body_hash(body: Any, uuid_fields: Iterable[str] = ()) -> str:
+    """Hash v2 — field UUID dideklarasikan dinormalkan sebelum HMAC."""
+    return _hash_payload(_normalize_body(body, uuid_fields))
+
+
+def _body_hash_legacy(body: Any) -> str:
+    """Hash v1 raw — kompatibilitas record pra-v2 / pra-migrasi 0004."""
+    return _hash_payload(body)
+
+
+def _body_matches(record_hash: str, body: Any, uuid_fields: Iterable[str]) -> bool:
+    """True bila hash record cocok dengan v2 (normalized) atau v1 (raw) body.
+
+    Perbandingan konstan-waktu (hmac.compare_digest). Record v1 cocok dengan
+    body identik byte-per-byte; record v1 yang aslinya sudah canonical juga
+    cocok dengan ejaan alias yang sama-sama canonical di v2.
+    """
+    fields = tuple(uuid_fields)
+    candidates = {_body_hash(body, fields), _body_hash_legacy(body)}
+    return any(hmac.compare_digest(record_hash, c) for c in candidates)
 
 
 def _principal(request) -> str:
@@ -121,17 +203,28 @@ def idempotent(
     *,
     platform: bool = False,
     resource_uuid: bool = True,
+    body_uuid_fields: tuple[str, ...] = (),
+    legacy_shapes: Callable[[str], list[str]] | None = None,
+    legacy_replay: bool = True,
+    replay_guard: Callable[[Any, Any, dict], None] | None = None,
 ):
     """Dekorator view DRF: claim/replay respons per Idempotency-Key.
 
-    `platform=True` → scope eksplisit `platform` (operasi lintas tenant:
-    keputusan antrean pembayaran SaaS); tidak pernah diambil dari sesi
-    active tenant sehingga operator berpindah tenant tidak membuat scope
-    baru. Tanpa flag: tenant dari URL (kanonikalisasi UUID), fallback sesi
-    active tenant — kompatibel view resource-scoped.
-    `resource_uuid=False` → resource adalah token opaque exact-case
-    (mis. sha256[:16] grup konflik identitas) — tidak di-kanonikalisasi;
-    validasi bentuk tetap milik domain/view.
+    `platform=True` → scope eksplisit `platform` (operasi lintas tenant);
+    tidak pernah diambil dari sesi active tenant. Tanpa flag: tenant dari URL
+    (kanonikalisasi UUID), fallback sesi active tenant.
+    `resource_uuid=False` → resource adalah token opaque exact-case — tidak
+    di-kanonikalisasi; validasi bentuk tetap milik domain/view.
+    `body_uuid_fields` → nama field body yang memuat identitas UUID
+    terstruktur; dinormalkan sebelum hash (v2) supaya ejaan alias tidak
+    menjadi konflik palsu (REV-1311-03).
+    `legacy_shapes(resource)` → daftar bentuk resource pra-migrasi-0004 yang
+    tidak dapat dinormalkan; diperiksa sebelum klaim. `legacy_replay=False`
+    → record legacy selalu ditolak aman (target tidak dapat diverifikasi,
+    mis. group konflik identitas tanpa migration UUID).
+    `replay_guard(request, kwargs, record)` → verifikasi operation-specific
+    kepemilikan/target respons cache sebelum replay; raise ApiError.conflict
+    bila respons tidak lagi sahih (REV-1311-01).
     """
 
     def decorator(func: Callable) -> Callable:
@@ -162,7 +255,8 @@ def idempotent(
                 resource = _canonical_uuid(resource_raw, "resource_id", allow_empty=True)
             else:
                 resource = str(resource_raw or "").strip()
-            body_h = _body_hash(getattr(request, "data", None))
+            body = getattr(request, "data", None)
+            body_h = _body_hash(body, body_uuid_fields)
 
             with transaction.atomic():
                 # Retensi 7 hari: kelas data cache; business uniqueness
@@ -170,21 +264,60 @@ def idempotent(
                 cutoff = timezone.now() - timezone.timedelta(seconds=TTL_S)
                 IdempotencyKey.objects.filter(created_at__lt=cutoff).delete()
 
+                # Legacy pra-0004 (REV-1311-01/02): bentuk resource lama yang
+                # tidak dapat dinormalkan migrasi diperiksa SEBELUM klaim —
+                # tanpa ini klaim INSERT baru berhasil dan efek dieksekusi
+                # ulang buta. Record legacy statis: penulis bentuk ini hanya
+                # ada pra-migrasi, SELECT di sini bebas race.
+                if legacy_shapes is not None:
+                    shapes = [s for s in legacy_shapes(resource) if s != resource]
+                    if shapes:
+                        legacy = (
+                            IdempotencyKey.objects.filter(
+                                principal=principal,
+                                tenant_scope=tenant_part,
+                                operation=operation,
+                                idem_key=key,
+                                resource__in=shapes,
+                            )
+                            .order_by("-created_at", "-id")
+                            .first()
+                        )
+                        if legacy is not None:
+                            if not _body_matches(legacy.body_hash, body, body_uuid_fields):
+                                raise ApiError.conflict(
+                                    "idempotency_conflict", "error.idempotency_conflict"
+                                )
+                            if legacy.response_status is None or not legacy_replay:
+                                # Efek tak terbukti, atau target tidak dapat
+                                # diikat ke identitas baru → tolak aman.
+                                raise ApiError.conflict(
+                                    "idempotency_conflict", "error.idempotency_conflict"
+                                )
+                            if replay_guard is not None:
+                                replay_guard(request, kwargs, legacy)
+                            return Response(
+                                legacy.response_body, status=legacy.response_status
+                            )
+
                 claimed_id, existing = _claim_id(
                     principal, tenant_part, operation, resource, key, body_h
                 )
                 if claimed_id is None:
-                    if existing.body_hash != body_h:
+                    if not _body_matches(existing.body_hash, body, body_uuid_fields):
                         raise ApiError.conflict("idempotency_conflict", "error.idempotency_conflict")
                     if existing.response_status is None:
                         # Record terkomit tanpa respons = klaim protokol lama
                         # (pra-migrasi 0004) yang efeknya tak bisa dibuktikan
-                        # — tolak aman, jangan eksekusi ulang buta. Migrasi
-                        # menghapus record seperti ini; cabang ini defensif.
+                        # — tolak aman, jangan eksekusi ulang buta. Rekonsili
+                        # asi ops (isi respons sesuai outcome) memulihkan replay.
                         raise ApiError.conflict(
                             "idempotency_conflict", "error.idempotency_conflict"
                         )
                     # Replay respons logis: satu aksi logis, hasil sama.
+                    # Guard verifikasi kepemilikan/target respons cache.
+                    if replay_guard is not None:
+                        replay_guard(request, kwargs, existing)
                     return Response(existing.response_body, status=existing.response_status)
 
                 response = func(self, request, *args, **kwargs)

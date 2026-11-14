@@ -1,42 +1,54 @@
 """Tes integrasi PA-006 — HTTP idempotency aman terhadap scope dan race.
 
-Matriks acceptance packet task/0010, diuji pada PostgreSQL nyata melalui
-peran runtime non-superuser mtx_app (FORCE RLS berlaku pada tabel tenant):
+Matriks acceptance packet task/0010 + koreksi REV-1311-01/02/03 dan
+REV-1411-04, diuji pada PostgreSQL nyata melalui peran runtime non-superuser
+mtx_app (FORCE RLS berlaku pada tabel tenant):
 
 Boundary HTTP (klien terautentikasi independen):
 - Same identity/key/body → SATU aksi logis; replay respons logis sama.
 - Same key beda body → 409 idempotency_conflict tanpa efek kedua.
 - Beda principal / tenant / platform / operation / resource → respons dan
   aksi tidak tertukar; business uniqueness tetap berlaku.
-- UUID alias (huruf besar) → scope canonical sama; malformed → 422.
+- UUID alias (huruf besar/tanpa hyphen, URL maupun body ter-typed) → scope
+  canonical sama; malformed → 422.
 - SaaS proof invoice A vs B dengan key/body sama → target B tidak
-  memperoleh submission/respons A.
+  memperoleh submission/respons A (termasuk record legacy resource='').
 - Platform operator berpindah active tenant → scope platform tidak bergeser.
 - Permission/sensitive step-up tidak sah saat replay → tidak membocorkan
   respons cache, aksi tidak dijalankan.
 
-Protokol konkuren (interleaving dipaksa + lock observation pg_stat_activity,
-dua koneksi PostgreSQL nyata dengan PID berbeda):
-- Same-key same-body bersamaan → satu efek; yang kalah menunggu lalu
-  MEREPLAY respons (bukan 409 permanen, bukan duplicate write/500).
+Konkurensi HTTP nyata (REV-1411-04) — tiap thread memakai klien HTTP
+terautentikasi SENDIRI melalui dispatch penuh (middleware, routing,
+permission, outer tenant transaction). Interleaving DIPAKSA (kunci baris
+domain dipegang thread utama) dan KONDISI TERBLOKIR DIASSERTI lewat
+pg_stat_activity — observer gagal mengamati lock membuat tes GAGAL:
+- Same-key same-body bersamaan → pemilik klaim menunggu kunci domain,
+  penantang menunggu klaim INSERT unik; setelah selesai penantang MEREPLAY
+  respons (bukan 409 permanen, bukan duplicate write/500).
 - Same-key beda body bersamaan → 409 tanpa efek kedua.
 - Keputusan platform konkuren → replay 204; efek keputusan tepat satu.
 - 8 thread same-key → tanpa unique-violation 500.
+- Takeover: kegagalan DISUNTIK setelah writes domain/audit/outbox sebelum
+  respons dipersist → seluruh transaksi leader ter-rollbalik (klaim + efek
+  + cache); penantang same-key yang menunggu mengambil alih dan mengeksekusi
+  bersih → satu aksi logis terkomit.
 
 Kegagalan/pemulihan:
 - Gagal sebelum DB commit → klaim+efek ter-rollbalik konsisten; retry
   memakai key semula mengeksekusi ulang dengan bersih.
-- Record terkomit tanpa respons (crash setelah commit domain sebelum
-  respons tersimpan pada protokol lama) → ditolak aman tanpa eksekusi
-  ulang buta; rekonsiliasi lalu replay.
+- Record terkomit tanpa respons (crash setelah commit domain sebelum respons
+  tersimpan pada protokol lama) → ditolak aman tanpa eksekusi ulang buta;
+  rekonsiliasi lalu replay.
 
-TTL/legacy:
-- Record kedaluwarsa terhapus → eksekusi ulang ditahan business
-  uniqueness domain (external_ref unik), bukan duplikat diam-diam.
-- Record legacy (backfill migrasi 0004) hanya mereplay untuk principal
-  dan target canonical yang sama.
-- Migrasi 0004: backfill canonical + dedupe alias + purge klaim tanpa
-  respons/bermacam; constraint identitas dipasang.
+Legacy/migrasi 0004 (REV-1311-01/02):
+- Record legacy payment_submission resource='' → replay asli setelah
+  replay_guard memverifikasi submission→invoice/tenant; target beda → 409.
+- Record tanpa respons TIDAK dihapus migrasi; retry → 409 aman.
+- Transisi aktual: schema main (0003) → record format lama → migrasi 0004
+  nyata → retry HTTP → submission/keputusan semula, tanpa efek kedua.
+- Operasi platform scope active-tenant lama → remap 'platform' → replay.
+- identity_conflict_resolve: identitas menyertakan migration UUID; parent
+  divalidasi sebelum replay; record group-only lama ditolak aman.
 """
 from __future__ import annotations
 
@@ -45,6 +57,7 @@ import threading
 import time
 import uuid as _uuid
 from types import SimpleNamespace
+from unittest import mock
 
 import pytest
 
@@ -120,11 +133,24 @@ def _world(namespace: str, *, extra_member=False) -> SimpleNamespace:
     return world
 
 
-def _client_for(user, tenant_id=None, *, reauth_until=None):
-    """Klien HTTP terautentikasi independen (sesi + csrf seperti SPA)."""
+def _client_for(user, tenant_id=None, *, reauth_until=None, raise_request_exception=True):
+    """Klien HTTP terautentikasi independen (sesi + csrf seperti SPA).
+
+    Aman dipakai per-thread: tiap thread membuat instansinya sendiri;
+    permintaan melalui dispatch penuh (middleware + routing + permission +
+    outer tenant transaction pada koneksi thread-lokal).
+
+    CATATAN concurrency (REV-1411-04): Django menangkap exception request
+    lewat signal global got_request_exception; dua klien yang overlap akan
+    saling menulari exc_info. Untuk tes konkurensi yang mengandung request
+    gagal (injeksi rollback), pakai raise_request_exception=False sehingga
+    klien penantang tidak salah menaikkan exception milik leader — kegagalan
+    leader dibuktikan lewat respons 500 + state DB.
+    """
     from tests.conftest import CsrfAPIClient
 
     client = CsrfAPIClient(enforce_csrf_checks=False)
+    client.raise_request_exception = raise_request_exception
     client.get("/api/v1/auth/session")
     client.force_login(user)
     session = client.session
@@ -166,7 +192,7 @@ def _make_invoice(world, *, plan_code="gold") -> SaaSInvoice:
         )
 
 
-def _make_platform_submission(world) -> PaymentSubmission:
+def _make_platform_submission(world, *, state=PaymentSubmission.State.SUBMITTED) -> PaymentSubmission:
     from domains.common.tenant_context import tenant_scope
 
     with tenant_scope(world.tenant.id):
@@ -179,6 +205,7 @@ def _make_platform_submission(world) -> PaymentSubmission:
             proof_mime="image/png",
             proof_size=1024,
             submitted_by=world.owner,
+            state=state,
         )
 
 
@@ -202,6 +229,12 @@ def _body_hash_of(body) -> str:
     from domains.common.idempotency import _body_hash
 
     return _body_hash(body)
+
+
+def _body_hash_legacy_of(body) -> str:
+    from domains.common.idempotency import _body_hash_legacy
+
+    return _body_hash_legacy(body)
 
 
 # ---------------------------------------------------------------------------
@@ -326,7 +359,6 @@ class TestScopeBoundaries:
 
         # Operator berpindah active tenant → scope platform TIDAK bergeser:
         # replay tetap respons yang sama, tanpa efek keputusan baru.
-        from domains.common.tenant_context import tenant_scope
         from domains.jobs.models import OutboxEvent
 
         other_tenant = Tenant.objects.create(display_name="Lain", namespace="rtrw-pa000007")
@@ -450,7 +482,7 @@ class TestScopeBoundaries:
 
 
 # ---------------------------------------------------------------------------
-# B. Kegagalan dan pemulihan
+# B. Kegagalan dan pemulihan (sekuensial)
 # ---------------------------------------------------------------------------
 
 
@@ -527,8 +559,6 @@ class TestFailureAndRecovery:
         assert r1.status_code == 201
         from domains.billing.models import InternetPayment
 
-        payment_id = r1.json()["id"]
-
         # TTL habis: record terhapus → replay mengeksekusi ulang, tetapi
         # business uniqueness domain (external_ref unik tenant) menahan
         # duplikasi → 409 domain, bukan duplicate write.
@@ -540,7 +570,10 @@ class TestFailureAndRecovery:
 
 
 # ---------------------------------------------------------------------------
-# C. Konkurensi — interleaving dipaksa + observasi lock
+# C. Konkurensi HTTP nyata — interleaving dipaksa + observasi lock DIASSERTI
+#    (REV-1411-04: tiap thread = klien HTTP terautentikasi sendiri melalui
+#    dispatch penuh: middleware + routing + auth/permission + outer tenant
+#    transaction pada koneksi thread-lokal yang terpisah)
 # ---------------------------------------------------------------------------
 
 
@@ -569,8 +602,23 @@ def _observer_conn():
     return psycopg.connect(autocommit=True, **kwargs)
 
 
-def _wait_backend_lock_wait(observer, pid: int, *, deadline_s: float = 30.0) -> bool:
-    """Polling pg_stat_activity (via pengamat raw) — deteksi KONDISI terblokir."""
+def _wait_pid(pids: dict, tag: str, *, deadline_s: float = 30.0) -> int:
+    """Tunggu thread terdaftar PID koneksi PostgreSQL-nya; gagal = tes gagal."""
+    deadline = time.monotonic() + deadline_s
+    while time.monotonic() < deadline:
+        pid = pids.get(tag)
+        if pid is not None:
+            return pid
+        time.sleep(0.02)
+    raise AssertionError(f"thread {tag} tidak terdaftar PID koneksi dalam {deadline_s}s")
+
+
+def _assert_lock_wait(observer, pid: int, *, context: str, deadline_s: float = 30.0) -> None:
+    """ASSERT backend pid benar-benar TERBLOKIR menunggu lock.
+
+    REV-1411-04: observer yang gagal mengamati kondisi terblokir harus
+    membuat tes GAGAL — bukan sekadar break dan berharap race terjadi.
+    """
     deadline = time.monotonic() + deadline_s
     while time.monotonic() < deadline:
         cur = observer.cursor()
@@ -580,19 +628,16 @@ def _wait_backend_lock_wait(observer, pid: int, *, deadline_s: float = 30.0) -> 
         row = cur.fetchone()
         cur.close()
         if row is not None and row[0] == "Lock":
-            return True
+            return
         time.sleep(0.05)
-    return False
+    raise AssertionError(f"{context}: pid {pid} tidak teramati menunggu lock dalam {deadline_s}s")
 
 
-def _fake_request(user, *, data=None, idem_key=None):
-    """Request minimal untuk pemanggilan langsung method view terdekorasi."""
-    return SimpleNamespace(
-        headers={"Idempotency-Key": idem_key} if idem_key else {},
-        data=data or {},
-        user=user,
-        session={},
-    )
+def _response_data(response):
+    """Payload JSON respons (204 tanpa isi → None)."""
+    if response.status_code == 204 or not getattr(response, "content", b""):
+        return None
+    return response.json()
 
 
 def _thread(fn):
@@ -606,15 +651,41 @@ def _join(threads):
         t.join(timeout=JOIN_TIMEOUT_S)
 
 
-class TestConcurrentClaimReplay:
-    def test_concurrent_same_identity_waits_then_replays_single_effect(self):
-        """Same identity/key/body bersamaan: pemilik klaim menunggu kunci
-        subscription (dipaksa), penantang memblok pada INSERT unik (diamati
-        pg_stat_activity); setelah selesai, penantang MEREPLAY respons —
-        bukan 409 permanen, bukan duplicate write/500."""
+def _http_post_runner(tag, *, user, tenant_id, url, body, key, results, pids,
+                      raise_request_exception=True):
+    """Runner thread: klien HTTP terautentikasi SENDIRI + POST dispatch penuh."""
+
+    def run():
+        from django.db import connection as conn
+
+        try:
+            client = _client_for(
+                user, tenant_id, reauth_until=REAUTH_FAR_FUTURE,
+                raise_request_exception=raise_request_exception,
+            )
+            pids[tag] = _pg_pid()
+            response = client.post(url, body, headers={"Idempotency-Key": key})
+            results[tag] = {"status": response.status_code, "data": _response_data(response)}
+        except ApiError as exc:
+            results[tag] = {"api_error": exc.code, "status": exc.status_code}
+        except Exception as exc:  # noqa: BLE001
+            results[tag] = {"exception": f"{type(exc).__name__}: {exc}"}
+        finally:
+            conn.close()
+
+    return run
+
+
+class TestConcurrentHttpClaimReplay:
+    def test_concurrent_http_same_identity_waits_then_replays_single_effect(self):
+        """Same identity/key/body bersamaan via HTTP penuh: pemilik klaim
+        menunggu kunci domain (dipaksa), penantang memblok pada INSERT unik
+        klaim (diamati pg_stat_activity); setelah selesai, penantang MEREPLAY
+        respons — bukan 409 permanen, bukan duplicate write/500."""
         world = _world("rtrw-pa000014")
         body = {"plan_code": "gold", "term": "monthly"}
         key = "pa006-race-1"
+        url = f"/api/v1/tenants/{world.tenant.id}/quotations"
         results: dict[str, dict] = {}
         pids: dict[str, int] = {}
         observer = _observer_conn()
@@ -622,59 +693,30 @@ class TestConcurrentClaimReplay:
         from domains.common.tenant_context import tenant_scope
         from domains.subscriptions.models import Subscription
 
-        def run(tag):
-            from django.db import connection as conn
+        run_a = _http_post_runner("A", user=world.owner, tenant_id=world.tenant.id,
+                                  url=url, body=body, key=key, results=results, pids=pids)
+        run_b = _http_post_runner("B", user=world.owner, tenant_id=world.tenant.id,
+                                  url=url, body=body, key=key, results=results, pids=pids)
 
-            try:
-                pids[tag] = _pg_pid()
-                from domains.subscriptions.views import QuotationView
-
-                resp = QuotationView().post(
-                    _fake_request(world.owner, data=body, idem_key=key),
-                    tenant_id=str(world.tenant.id),
-                )
-                results[tag] = {"status": resp.status_code, "data": resp.data}
-            except ApiError as exc:
-                results[tag] = {"api_error": exc.code, "status": exc.status_code}
-            except Exception as exc:  # noqa: BLE001
-                results[tag] = {"exception": f"{type(exc).__name__}: {exc}"}
-            finally:
-                conn.close()
-
-        # Kunci baris subscription dipegang main thread → memaksa interleaving.
+        # Kunci baris subscription dipegang thread utama → memaksa interleaving:
+        # A terblokir DI DALAM handler (setelah klaim INSERT), B terblokir pada
+        # klaim INSERT unik milik A (speculative unique wait PostgreSQL).
         scope = tenant_scope(world.tenant.id)
         scope.__enter__()
         try:
             Subscription.objects.select_for_update().get(tenant=world.tenant.id)
-
-            ta = _thread(lambda: run("A"))
-            # Tunggu A benar-benar TERBLOKIR (pid thread sendiri; observasi
-            # kondisi via pengamat raw — pola PA-001, bukan pengatur race).
-            deadline = time.monotonic() + 30
-            a_pid = None
-            while time.monotonic() < deadline:
-                a_pid = pids.get("A")
-                if a_pid is not None and _wait_backend_lock_wait(observer, a_pid, deadline_s=1.0):
-                    break
-                time.sleep(0.05)
-            assert a_pid is not None, "thread A belum teramati menunggu lock"
-
-            tb = _thread(lambda: run("B"))
-            # B memblok pada klaim INSERT A (speculative unique wait).
-            deadline = time.monotonic() + 30
-            b_pid = None
-            while time.monotonic() < deadline:
-                b_pid = pids.get("B")
-                if b_pid is not None and _wait_backend_lock_wait(observer, b_pid, deadline_s=1.0):
-                    break
-                time.sleep(0.05)
-            assert b_pid is not None, "thread B belum teramati menunggu pada klaim INSERT"
+            ta = _thread(run_a)
+            a_pid = _wait_pid(pids, "A")
+            _assert_lock_wait(observer, a_pid, context="A (dispatch HTTP) menunggu kunci subscription")
+            tb = _thread(run_b)
+            b_pid = _wait_pid(pids, "B")
+            _assert_lock_wait(observer, b_pid, context="B (dispatch HTTP) menunggu klaim INSERT unik A")
         finally:
-            scope.__exit__(None, None, None)  # lepaskan kunci subscription
+            scope.__exit__(None, None, None)  # lepaskan kunci → A selesai → B replay
             observer.close()
 
         _join([ta, tb])
-        assert pids["A"] != pids["B"]
+        assert pids["A"] != pids["B"], "kedua thread harus koneksi PostgreSQL terpisah"
 
         # Satu aksi logis; penantang mereplay respons identik; tanpa exception.
         assert "exception" not in results.get("A", {}), results
@@ -685,9 +727,10 @@ class TestConcurrentClaimReplay:
         assert _count_in_tenant(SaaSInvoice, world.tenant.id) == 1
         assert _idem_count(operation="quotation", idem_key=key) == 1
 
-    def test_concurrent_same_key_different_body_conflict(self):
+    def test_concurrent_http_same_key_different_body_conflict(self):
         world = _world("rtrw-pa000015")
         key = "pa006-race-2"
+        url = f"/api/v1/tenants/{world.tenant.id}/quotations"
         results: dict[str, dict] = {}
         pids: dict[str, int] = {}
         observer = _observer_conn()
@@ -695,99 +738,60 @@ class TestConcurrentClaimReplay:
         from domains.common.tenant_context import tenant_scope
         from domains.subscriptions.models import Subscription
 
-        def run(tag, body):
-            from django.db import connection as conn
-
-            try:
-                pids[tag] = _pg_pid()
-                from domains.subscriptions.views import QuotationView
-
-                resp = QuotationView().post(
-                    _fake_request(world.owner, data=body, idem_key=key),
-                    tenant_id=str(world.tenant.id),
-                )
-                results[tag] = {"status": resp.status_code, "data": resp.data}
-            except ApiError as exc:
-                results[tag] = {"api_error": exc.code, "status": exc.status_code}
-            except Exception as exc:  # noqa: BLE001
-                results[tag] = {"exception": f"{type(exc).__name__}: {exc}"}
-            finally:
-                conn.close()
+        run_a = _http_post_runner("A", user=world.owner, tenant_id=world.tenant.id, url=url,
+                                  body={"plan_code": "gold", "term": "monthly"}, key=key,
+                                  results=results, pids=pids)
+        run_b = _http_post_runner("B", user=world.owner, tenant_id=world.tenant.id, url=url,
+                                  body={"plan_code": "silver", "term": "monthly"}, key=key,
+                                  results=results, pids=pids)
 
         scope = tenant_scope(world.tenant.id)
         scope.__enter__()
         try:
             Subscription.objects.select_for_update().get(tenant=world.tenant.id)
-            ta = _thread(lambda: run("A", {"plan_code": "gold", "term": "monthly"}))
-            deadline = time.monotonic() + 30
-            while time.monotonic() < deadline:
-                if pids.get("A") and _wait_backend_lock_wait(observer, pids["A"], deadline_s=1.0):
-                    break
-                time.sleep(0.05)
-            tb = _thread(lambda: run("B", {"plan_code": "silver", "term": "monthly"}))
-            deadline = time.monotonic() + 30
-            while time.monotonic() < deadline:
-                if pids.get("B") and _wait_backend_lock_wait(observer, pids["B"], deadline_s=1.0):
-                    break
-                time.sleep(0.05)
+            ta = _thread(run_a)
+            _assert_lock_wait(observer, _wait_pid(pids, "A"), context="A menunggu kunci subscription")
+            tb = _thread(run_b)
+            _assert_lock_wait(observer, _wait_pid(pids, "B"), context="B menunggu klaim INSERT unik A")
         finally:
             scope.__exit__(None, None, None)
             observer.close()
 
         _join([ta, tb])
         statuses = sorted(r.get("status") for r in results.values())
-        assert statuses == [201, 409]
+        assert statuses == [201, 409], results
         loser = results["A"] if results["A"]["status"] == 409 else results["B"]
-        assert loser["api_error"] == "idempotency_conflict"
+        assert loser["data"]["code"] == "idempotency_conflict"
         assert _count_in_tenant(SaaSInvoice, world.tenant.id) == 1
 
-    def test_concurrent_platform_decision_replay_204_single_effect(self):
+    def test_concurrent_http_platform_decision_replay_204_single_effect(self):
         world = _world("rtrw-pa000016")
         admin = _platform_admin("platform-race-pa006@test.local")
         submission = _make_platform_submission(world)
         key = "pa006-race-3"
+        url = f"/api/v1/platform/payment-submissions/{submission.id}/approve"
         results: dict[str, dict] = {}
         pids: dict[str, int] = {}
         observer = _observer_conn()
 
         from domains.common.tenant_context import tenant_scope
 
-        def run(tag):
-            from django.db import connection as conn
-
-            try:
-                pids[tag] = _pg_pid()
-                from domains.subscriptions.views import PlatformSubmissionApproveView
-
-                resp = PlatformSubmissionApproveView().post(
-                    _fake_request(admin, idem_key=key),
-                    submission_id=str(submission.id),
-                )
-                results[tag] = {"status": resp.status_code, "data": resp.data}
-            except ApiError as exc:
-                results[tag] = {"api_error": exc.code, "status": exc.status_code}
-            except Exception as exc:  # noqa: BLE001
-                results[tag] = {"exception": f"{type(exc).__name__}: {exc}"}
-            finally:
-                conn.close()
+        run_a = _http_post_runner("A", user=admin, tenant_id=None, url=url,
+                                  body=None, key=key, results=results, pids=pids)
+        run_b = _http_post_runner("B", user=admin, tenant_id=None, url=url,
+                                  body=None, key=key, results=results, pids=pids)
 
         # Paksa interleaving: pegang kunci baris submission (RLS → dalam scope).
         scope = tenant_scope(world.tenant.id)
         scope.__enter__()
         try:
             PaymentSubmission.objects.select_for_update().get(id=submission.id)
-            ta = _thread(lambda: run("A"))
-            deadline = time.monotonic() + 30
-            while time.monotonic() < deadline:
-                if pids.get("A") and _wait_backend_lock_wait(observer, pids["A"], deadline_s=1.0):
-                    break
-                time.sleep(0.05)
-            tb = _thread(lambda: run("B"))
-            deadline = time.monotonic() + 30
-            while time.monotonic() < deadline:
-                if pids.get("B") and _wait_backend_lock_wait(observer, pids["B"], deadline_s=1.0):
-                    break
-                time.sleep(0.05)
+            ta = _thread(run_a)
+            _assert_lock_wait(observer, _wait_pid(pids, "A"),
+                              context="A (HTTP platform) menunggu kunci submission")
+            tb = _thread(run_b)
+            _assert_lock_wait(observer, _wait_pid(pids, "B"),
+                              context="B (HTTP platform) menunggu klaim INSERT unik A")
         finally:
             scope.__exit__(None, None, None)
             observer.close()
@@ -800,8 +804,9 @@ class TestConcurrentClaimReplay:
         from domains.audit.models import AuditEvent
         from domains.jobs.models import OutboxEvent
         from domains.subscriptions.models import PlatformPaymentSourceEvent, Subscription
+        from domains.common.tenant_context import tenant_scope as _ts
 
-        with tenant_scope(world.tenant.id):
+        with _ts(world.tenant.id):
             submission.refresh_from_db()
         assert submission.state == PaymentSubmission.State.APPROVED
         assert _count_in_tenant(
@@ -814,16 +819,16 @@ class TestConcurrentClaimReplay:
         assert _count_in_tenant(
             PlatformPaymentSourceEvent, world.tenant.id, submission=submission
         ) == 1
-        sub = None
-        with tenant_scope(world.tenant.id):
+        with _ts(world.tenant.id):
             sub = Subscription.objects.get(tenant_id=world.tenant.id)
         assert sub.state == Subscription.State.ACTIVE
         assert sub.period_index == 1
 
-    def test_eight_threads_same_key_no_unique_violation_500(self):
+    def test_http_eight_threads_same_key_no_unique_violation_500(self):
         world = _world("rtrw-pa000017")
         key = "pa006-race-4"
         body = {"plan_code": "gold", "term": "monthly"}
+        url = f"/api/v1/tenants/{world.tenant.id}/quotations"
         results: dict[str, dict] = {}
         barrier = threading.Barrier(8, timeout=30)
 
@@ -831,14 +836,10 @@ class TestConcurrentClaimReplay:
             from django.db import connection as conn
 
             try:
+                client = _client_for(world.owner, world.tenant.id, reauth_until=REAUTH_FAR_FUTURE)
                 barrier.wait()
-                from domains.subscriptions.views import QuotationView
-
-                resp = QuotationView().post(
-                    _fake_request(world.owner, data=body, idem_key=key),
-                    tenant_id=str(world.tenant.id),
-                )
-                results[tag] = {"status": resp.status_code, "data": resp.data}
+                response = client.post(url, body, headers={"Idempotency-Key": key})
+                results[tag] = {"status": response.status_code, "data": _response_data(response)}
             except Exception as exc:  # noqa: BLE001
                 results[tag] = {"exception": f"{type(exc).__name__}: {exc}"}
             finally:
@@ -855,10 +856,11 @@ class TestConcurrentClaimReplay:
         assert _count_in_tenant(SaaSInvoice, world.tenant.id) == 1
         assert _idem_count(operation="quotation", idem_key=key) == 1
 
-    def test_concurrent_different_principal_same_key_both_execute(self):
+    def test_http_concurrent_different_principal_same_key_both_execute(self):
         world = _world("rtrw-pa000018", extra_member=True)
         key = "pa006-race-5"
         body = {"plan_code": "gold", "term": "monthly"}
+        url = f"/api/v1/tenants/{world.tenant.id}/quotations"
         results: dict[str, dict] = {}
         barrier = threading.Barrier(2, timeout=30)
 
@@ -866,14 +868,10 @@ class TestConcurrentClaimReplay:
             from django.db import connection as conn
 
             try:
+                client = _client_for(user, world.tenant.id, reauth_until=REAUTH_FAR_FUTURE)
                 barrier.wait()
-                from domains.subscriptions.views import QuotationView
-
-                resp = QuotationView().post(
-                    _fake_request(user, data=body, idem_key=key),
-                    tenant_id=str(world.tenant.id),
-                )
-                results[tag] = {"status": resp.status_code, "data": resp.data}
+                response = client.post(url, body, headers={"Idempotency-Key": key})
+                results[tag] = {"status": response.status_code, "data": _response_data(response)}
             except Exception as exc:  # noqa: BLE001
                 results[tag] = {"exception": f"{type(exc).__name__}: {exc}"}
             finally:
@@ -892,10 +890,141 @@ class TestConcurrentClaimReplay:
         assert _count_in_tenant(SaaSInvoice, world.tenant.id) == 2
         assert _idem_count(operation="quotation", idem_key=key) == 2
 
+    def test_http_leader_rollback_after_writes_contender_takes_over(self):
+        """REV-1411-04: kegagalan DISUNTIK setelah writes domain/audit/outbox
+        sebelum respons dipersist, SAAT penantang same-key menunggu klaim.
+        Transaksi leader harus ter-rollbalik utuh (klaim+efek+cache); penantang
+        mengambil alih dan mengeksekusi bersih → SATU aksi logis terkomit."""
+        world = _world("rtrw-pa000021")
+        admin = _platform_admin("platform-takeover-pa006@test.local")
+        submission = _make_platform_submission(world)
+        key = "pa006-race-6"
+        url = f"/api/v1/platform/payment-submissions/{submission.id}/approve"
+        results: dict[str, dict] = {}
+        pids: dict[str, int] = {}
+        observer = _observer_conn()
+
+        from domains.common.tenant_context import tenant_scope
+        from domains.subscriptions import services as sub_services
+
+        real_decide = sub_services.decide_platform_submission
+        fail_once = threading.Event()
+
+        def flaky_decide(*args, **kwargs):
+            # Panggil implementasi nyata: state submission, audit event, outbox
+            # event, source event — semuanya ditulis dalam transaksi request.
+            result = real_decide(*args, **kwargs)
+            if fail_once.is_set():
+                fail_once.clear()  # satu-kali: hanya leader yang gagal
+                raise RuntimeError(
+                    "injected: kegagalan setelah domain/audit/outbox writes, "
+                    "sebelum respons idempotency dipersist"
+                )
+            return result
+
+        run_a = _http_post_runner("A", user=admin, tenant_id=None, url=url,
+                                  body=None, key=key, results=results, pids=pids,
+                                  raise_request_exception=False)
+        run_b = _http_post_runner("B", user=admin, tenant_id=None, url=url,
+                                  body=None, key=key, results=results, pids=pids,
+                                  raise_request_exception=False)
+
+        scope = tenant_scope(world.tenant.id)
+        scope.__enter__()
+        try:
+            # A terblokir di dalam handler (sebelum writes) pada kunci baris
+            # submission; B terblokir pada klaim INSERT unik milik A.
+            PaymentSubmission.objects.select_for_update().get(id=submission.id)
+            with mock.patch.object(
+                sub_services, "decide_platform_submission", side_effect=flaky_decide
+            ):
+                ta = _thread(run_a)
+                _assert_lock_wait(observer, _wait_pid(pids, "A"),
+                                  context="A terblokir di dalam handler (dispatch HTTP)")
+                tb = _thread(run_b)
+                _assert_lock_wait(observer, _wait_pid(pids, "B"),
+                                  context="B menunggu klaim INSERT unik A")
+                # Suntik kegagalan satu-kali SETELAH writes decide_platform_
+                # submission, SEBELUM respons dipersist oleh dekorator.
+                fail_once.set()
+        finally:
+            # Lepaskan kunci → A menyelesaikan writes lalu GAGAL (rollback
+            # transaksi request: klaim + efek + cache); B mengambil alih.
+            scope.__exit__(None, None, None)
+            observer.close()
+
+        _join([ta, tb])
+
+        # Leader A gagal setelah writes → seluruh transaksinya ter-rollbalik;
+        # klien tes menangkapnya sebagai respons 500 (raise_request_exception
+        # dimatikan agar signal exception Django tidak menular ke klien B).
+        assert results["A"]["status"] == 500, results
+
+        # Penantang B mengambil alih klaim yang sudah ter-rollbalik → 204.
+        assert results["B"]["status"] == 204, results
+
+        from domains.audit.models import AuditEvent
+        from domains.jobs.models import OutboxEvent
+        from domains.subscriptions.models import PlatformPaymentSourceEvent, Subscription
+        from domains.common.tenant_context import tenant_scope as _ts
+
+        # SATU aksi logis terkomit: efek A ter-rollbalik, hanya efek B yang
+        # tersisa — klaim/cache tepat satu record dan dimiliki penyerahan B.
+        assert _idem_count(idem_key=key) == 1
+        record = IdempotencyKey.objects.get(idem_key=key)
+        assert record.response_status == 204
+        assert record.tenant_scope == "platform"
+        assert record.operation == "platform_submission_approve"
+        with _ts(world.tenant.id):
+            submission.refresh_from_db()
+        assert submission.state == PaymentSubmission.State.APPROVED
+        assert _count_in_tenant(
+            AuditEvent, world.tenant.id, action_code="payment_submission.approve",
+            target_id=submission.id,
+        ) == 1
+        assert OutboxEvent.objects.filter(
+            event_type="payment_submission.approve", aggregate_id=submission.id
+        ).count() == 1
+        assert _count_in_tenant(
+            PlatformPaymentSourceEvent, world.tenant.id, submission=submission
+        ) == 1
+        with _ts(world.tenant.id):
+            sub = Subscription.objects.get(tenant_id=world.tenant.id)
+        assert sub.state == Subscription.State.ACTIVE
+
+        # Retry setelah takeover → replay respons B (aksi logis yang sama).
+        client = _client_for(admin, reauth_until=REAUTH_FAR_FUTURE)
+        r3 = client.post(url, headers={"Idempotency-Key": key})
+        assert r3.status_code == 204
+        assert _idem_count(idem_key=key) == 1
+        assert OutboxEvent.objects.filter(
+            event_type="payment_submission.approve", aggregate_id=submission.id
+        ).count() == 1
+
 
 # ---------------------------------------------------------------------------
-# D. Legacy record & migrasi 0004
+# D. Legacy record & migrasi 0004 (REV-1311-01/02/03)
 # ---------------------------------------------------------------------------
+
+
+def _migration_world(namespace):
+    """Dua session migrasi (router beda) dengan grup konflik identitas sama."""
+    from domains.common.tenant_context import tenant_scope
+    from domains.customers.models import MigrationSession
+    from domains.customers.services import conflict_group_id
+    from domains.network.models import DiscoveryObject, DiscoverySnapshot, Router
+
+    sub_services.seed_plans()
+    world = _world(namespace)
+    client = _client_for(world.owner, world.tenant.id, reauth_until=REAUTH_FAR_FUTURE)
+    with tenant_scope(world.tenant.id):
+        sessions = []
+        for i, username in enumerate(("scope.repro", "Scope.Repro")):
+            router = Router.objects.create(tenant=world.tenant, display_name=f"Scope R{i}", router_code=f"scope-r{i}")
+            snapshot = DiscoverySnapshot.objects.create(tenant=world.tenant, router=router, status=DiscoverySnapshot.Status.SUCCEEDED)
+            DiscoveryObject.objects.create(tenant=world.tenant, router=router, snapshot=snapshot, username=username, kind=DiscoveryObject.Kind.PPPOE)
+            sessions.append(MigrationSession.objects.create(tenant=world.tenant, router=router, snapshot=snapshot, state=MigrationSession.State.DISCOVERED))
+    return world, client, sessions, conflict_group_id(["scope.repro", "Scope.Repro"])
 
 
 class TestLegacyAndMigration:
@@ -933,11 +1062,233 @@ class TestLegacyAndMigration:
         assert _count_in_tenant(SaaSInvoice, world.tenant.id) == 1
         assert _idem_count(operation="quotation", idem_key=key) == 2
 
+    # -- REV-1311-01: legacy payment_submission (resource='') ---------------
+
+    def test_retained_old_proof_scope_replays_without_second_submission(self):
+        """Record hasil migrasi 0004 dari scope lama payment_submission:<t>:
+        (resource='') — retry owner/invoice/key/body sama HARUS mereplay
+        submission semula, bukan menulis submission/file kedua."""
+        sub_services.seed_plans()
+        from domains.common.tenant_context import tenant_scope
+        from django.utils import timezone
+
+        world = _world("rtrw-pa000022")
+        invoice = _make_invoice(world)
+        with tenant_scope(world.tenant.id):
+            original = PaymentSubmission.objects.create(
+                tenant=world.tenant, invoice=invoice, amount=invoice.amount,
+                proof_path="payment-proofs/synthetic-old", proof_mime="image/png",
+                proof_size=64, submitted_by=world.owner,
+            )
+        response_old = {"submission_id": str(original.id), "state": original.state}
+        # Persis hasil migrasi 0004 pada baris sukses format main:
+        # scope payment_submission:<tenant>: → resource='' + respons utuh.
+        IdempotencyKey.objects.create(
+            principal=str(world.owner.id), tenant_scope=str(world.tenant.id),
+            operation="payment_submission", resource="", idem_key="pa006-legacy-proof-1",
+            body_hash=_body_hash_legacy_of(_PROOF_BODY), response_status=201,
+            response_body=response_old, created_at=timezone.now(),
+        )
+        client = _client_for(world.owner, world.tenant.id, reauth_until=REAUTH_FAR_FUTURE)
+        response = client.post(
+            f"/api/v1/tenants/{world.tenant.id}/saas-invoices/{invoice.id}/payment-submissions",
+            _PROOF_BODY, headers={"Idempotency-Key": "pa006-legacy-proof-1"},
+        )
+        assert response.status_code == 201
+        assert response.json() == response_old
+        assert _count_in_tenant(PaymentSubmission, world.tenant.id, invoice_id=invoice.id) == 1
+
+    def test_legacy_proof_replay_guard_rejects_wrong_invoice_target(self):
+        """Record legacy milik invoice A: retry key sama ke invoice B → 409
+        (B tidak memperoleh respons/submission A), tanpa efek kedua."""
+        sub_services.seed_plans()
+        from domains.common.tenant_context import tenant_scope
+        from django.utils import timezone
+
+        world = _world("rtrw-pa000023")
+        inv_a, inv_b = _make_invoice(world), _make_invoice(world)
+        with tenant_scope(world.tenant.id):
+            original = PaymentSubmission.objects.create(
+                tenant=world.tenant, invoice=inv_a, amount=inv_a.amount,
+                proof_path="payment-proofs/synthetic-old-b", proof_mime="image/png",
+                proof_size=64, submitted_by=world.owner,
+            )
+        IdempotencyKey.objects.create(
+            principal=str(world.owner.id), tenant_scope=str(world.tenant.id),
+            operation="payment_submission", resource="", idem_key="pa006-legacy-proof-2",
+            body_hash=_body_hash_legacy_of(_PROOF_BODY), response_status=201,
+            response_body={"submission_id": str(original.id), "state": original.state},
+            created_at=timezone.now(),
+        )
+        client = _client_for(world.owner, world.tenant.id, reauth_until=REAUTH_FAR_FUTURE)
+        response = client.post(
+            f"/api/v1/tenants/{world.tenant.id}/saas-invoices/{inv_b.id}/payment-submissions",
+            _PROOF_BODY, headers={"Idempotency-Key": "pa006-legacy-proof-2"},
+        )
+        assert response.status_code == 409
+        assert response.json()["code"] == "idempotency_conflict"
+        # Tidak ada efek kedua: submission B tidak terbentuk, A tetap satu.
+        assert _count_in_tenant(PaymentSubmission, world.tenant.id, invoice_id=inv_a.id) == 1
+        assert _count_in_tenant(PaymentSubmission, world.tenant.id, invoice_id=inv_b.id) == 0
+
+    def test_legacy_proof_without_response_blocked_safe(self):
+        """Record legacy TANPA respons (efek tak terbukti — crash window
+        protokol lama): retry → 409 aman, tidak blind-execute."""
+        sub_services.seed_plans()
+        from django.utils import timezone
+
+        world = _world("rtrw-pa000024")
+        invoice = _make_invoice(world)
+        IdempotencyKey.objects.create(
+            principal=str(world.owner.id), tenant_scope=str(world.tenant.id),
+            operation="payment_submission", resource="", idem_key="pa006-legacy-proof-3",
+            body_hash=_body_hash_legacy_of(_PROOF_BODY),
+            created_at=timezone.now(),
+        )
+        client = _client_for(world.owner, world.tenant.id, reauth_until=REAUTH_FAR_FUTURE)
+        response = client.post(
+            f"/api/v1/tenants/{world.tenant.id}/saas-invoices/{invoice.id}/payment-submissions",
+            _PROOF_BODY, headers={"Idempotency-Key": "pa006-legacy-proof-3"},
+        )
+        assert response.status_code == 409
+        assert response.json()["code"] == "idempotency_conflict"
+        assert _count_in_tenant(PaymentSubmission, world.tenant.id, invoice_id=invoice.id) == 0
+
+    def test_actual_migration_must_not_erase_ambiguous_committed_effect_guard(self):
+        """Transisi migrasi NYATA (0003 → 0004): klaim quotation tanpa respons
+        (crash window main) TIDAK BOLEH dihapus migrasi; retry HTTP tidak
+        menulis invoice kedua."""
+        from django.db import connection
+        from django.db.migrations.executor import MigrationExecutor
+        from django.utils import timezone
+
+        world = _world("rtrw-pa000025")
+        body = {"plan_code": "gold", "term": "monthly"}
+        # Emulasi crash window main: efek bisnis terkomit, respons absen.
+        from domains.common.tenant_context import tenant_scope
+
+        with tenant_scope(world.tenant.id):
+            invoice, _ = sub_services.create_quotation(world.tenant.id, "gold", "monthly")
+        IdempotencyKey.objects.all().delete()  # reverse 0004 butuh tabel kosong
+        executor = MigrationExecutor(connection)
+        executor.migrate([("jobs", "0003_alter_job_kind")])
+        old_apps = executor.loader.project_state(("jobs", "0003_alter_job_kind")).apps
+        old_model = old_apps.get_model("jobs", "IdempotencyKey")
+        old_model.objects.create(
+            principal=str(world.owner.id), scope=f"quotation:{world.tenant.id}:",
+            idem_key="pa006-mig-guard-1", body_hash=_body_hash_legacy_of(body),
+            response_status=None, response_body=None, created_at=timezone.now(),
+        )
+        # Migrasi Django/PostgreSQL nyata, lalu retry HTTP terautentikasi.
+        MigrationExecutor(connection).migrate([("jobs", "0004_idempotency_identity")])
+        guard_count = IdempotencyKey.objects.filter(idem_key="pa006-mig-guard-1").count()
+        client = _client_for(world.owner, world.tenant.id, reauth_until=REAUTH_FAR_FUTURE)
+        response = client.post(
+            f"/api/v1/tenants/{world.tenant.id}/quotations", body,
+            headers={"Idempotency-Key": "pa006-mig-guard-1"},
+        )
+        assert guard_count == 1, "migrasi menghapus penjaga klaim ambigu"
+        assert response.status_code == 409, "retry mengeksekusi ulang efek tak terbukti"
+        assert _count_in_tenant(SaaSInvoice, world.tenant.id) == 1
+
+    def test_actual_migration_payment_submission_retry_replays_original(self):
+        """Acceptance REV-1311-01: upload format main → migrasi 0004 nyata →
+        retry owner/invoice/key/body sama mengembalikan submission semula;
+        submission/file tetap 1; beda body → 409."""
+        from django.db import connection
+        from django.db.migrations.executor import MigrationExecutor
+        from django.utils import timezone
+        from domains.common.tenant_context import tenant_scope
+
+        sub_services.seed_plans()
+        world = _world("rtrw-pa000026")
+        invoice = _make_invoice(world)
+        with tenant_scope(world.tenant.id):
+            original = PaymentSubmission.objects.create(
+                tenant=world.tenant, invoice=invoice, amount=invoice.amount,
+                proof_path="payment-proofs/synthetic-main-upgrade", proof_mime="image/png",
+                proof_size=64, submitted_by=world.owner,
+            )
+        response_old = {"submission_id": str(original.id), "state": original.state}
+        IdempotencyKey.objects.all().delete()
+        executor = MigrationExecutor(connection)
+        executor.migrate([("jobs", "0003_alter_job_kind")])
+        old_apps = executor.loader.project_state(("jobs", "0003_alter_job_kind")).apps
+        old_model = old_apps.get_model("jobs", "IdempotencyKey")
+        old_model.objects.create(
+            principal=str(world.owner.id), scope=f"payment_submission:{world.tenant.id}:",
+            idem_key="pa006-mig-proof-1", body_hash=_body_hash_legacy_of(_PROOF_BODY),
+            response_status=201, response_body=response_old, created_at=timezone.now(),
+        )
+        MigrationExecutor(connection).migrate([("jobs", "0004_idempotency_identity")])
+        client = _client_for(world.owner, world.tenant.id, reauth_until=REAUTH_FAR_FUTURE)
+        # Retry identik → submission semula; tidak ada submission/file kedua.
+        r_retry = client.post(
+            f"/api/v1/tenants/{world.tenant.id}/saas-invoices/{invoice.id}/payment-submissions",
+            _PROOF_BODY, headers={"Idempotency-Key": "pa006-mig-proof-1"},
+        )
+        assert r_retry.status_code == 201
+        assert r_retry.json() == response_old
+        assert _count_in_tenant(PaymentSubmission, world.tenant.id, invoice_id=invoice.id) == 1
+        # Body beda pada key yang sama → 409 idempotency_conflict.
+        r_conflict = client.post(
+            f"/api/v1/tenants/{world.tenant.id}/saas-invoices/{invoice.id}/payment-submissions",
+            {**_PROOF_BODY, "file_name": "bukti-lain.png"},
+            headers={"Idempotency-Key": "pa006-mig-proof-1"},
+        )
+        assert r_conflict.status_code == 409
+        assert r_conflict.json()["code"] == "idempotency_conflict"
+        assert _count_in_tenant(PaymentSubmission, world.tenant.id, invoice_id=invoice.id) == 1
+
+    def test_actual_migration_platform_active_tenant_scope_replayed(self):
+        """Legacy scope platform_submission_approve:<active-tenant>:<sub>
+        (defek pra-PA006) → migrasi 0004 remap tenant_scope='platform' →
+        retry platform admin MEREPLAY 204 tanpa keputusan baru."""
+        from django.db import connection
+        from django.db.migrations.executor import MigrationExecutor
+        from django.utils import timezone
+
+        sub_services.seed_plans()
+        world = _world("rtrw-pa000027")
+        admin = _platform_admin("platform-mig-pa006@test.local")
+        submission = _make_platform_submission(world, state=PaymentSubmission.State.APPROVED)
+        IdempotencyKey.objects.all().delete()
+        executor = MigrationExecutor(connection)
+        executor.migrate([("jobs", "0003_alter_job_kind")])
+        old_apps = executor.loader.project_state(("jobs", "0003_alter_job_kind")).apps
+        old_model = old_apps.get_model("jobs", "IdempotencyKey")
+        old_model.objects.create(
+            principal=str(admin.id),
+            scope=f"platform_submission_approve:{world.tenant.id}:{submission.id}",
+            idem_key="pa006-mig-platform-1", body_hash=_body_hash_legacy_of(None),
+            response_status=204, response_body=None, created_at=timezone.now(),
+        )
+        MigrationExecutor(connection).migrate([("jobs", "0004_idempotency_identity")])
+        record = IdempotencyKey.objects.get(idem_key="pa006-mig-platform-1")
+        assert record.tenant_scope == "platform"  # remap dari active-tenant lama
+        assert record.resource == str(submission.id)
+
+        from domains.audit.models import AuditEvent
+        from domains.jobs.models import OutboxEvent
+
+        client = _client_for(admin, reauth_until=REAUTH_FAR_FUTURE)
+        r = client.post(
+            f"/api/v1/platform/payment-submissions/{submission.id}/approve",
+            headers={"Idempotency-Key": "pa006-mig-platform-1"},
+        )
+        assert r.status_code == 204  # replay, bukan eksekusi ulang keputusan
+        assert _idem_count(idem_key="pa006-mig-platform-1") == 1
+        assert OutboxEvent.objects.filter(
+            event_type="payment_submission.approve", aggregate_id=submission.id
+        ).count() == 0
+        assert _count_in_tenant(
+            AuditEvent, world.tenant.id, action_code="payment_submission.approve"
+        ) == 0
+
     def test_migration_0004_backfill_canonical_dedupe_and_purge(self):
-        """Migrasi jobs.0004: backfill kolom identitas canonical dari scope
-        lama, dedupe alias, purge klaim tanpa respons / scope salah bentuk,
-        pasang uq_idem_identity, hapus kolom scope. Replay melalui protokol
-        baru terhadap record hasil backfill terbukti."""
+        """Migrasi jobs.0004: backfill identitas canonical dari scope lama,
+        dedupe alias, HANYA hapus scope tak terurai; record tanpa respons
+        DIPERTAHANKAN (penjaga efek ambigu); constraint identitas dipasang."""
         from django.db import connection
         from django.db.migrations.executor import MigrationExecutor
 
@@ -952,7 +1303,7 @@ class TestLegacyAndMigration:
         apps_old = executor.loader.project_state(("jobs", "0003_alter_job_kind")).apps
         IdemOld = apps_old.get_model("jobs", "IdempotencyKey")
 
-        world = _world("rtrw-pa000020")
+        world = _world("rtrw-pa000028")
         body = {"plan_code": "gold", "term": "monthly"}
         body_h = _body_hash_of(body)
         response_old = {"quotation_id": "aaa-legacy", "invoice_id": "aaa-legacy", "amount": "1500000.00"}
@@ -982,7 +1333,8 @@ class TestLegacyAndMigration:
             response_body=response_latest,
             created_at=now - _dt.timedelta(days=1),
         )
-        # 3) klaim tanpa respons (protokol lama) → dihapus.
+        # 3) klaim tanpa respons (crash window protokol lama) → DIPERTAHANKAN
+        #    sebagai penjaga; runtime menolak aman (409) pada retry.
         IdemOld.objects.create(
             principal=str(world.owner.id),
             scope=f"quotation:{world.tenant.id}:",
@@ -990,7 +1342,7 @@ class TestLegacyAndMigration:
             body_hash=body_h,
             created_at=now - _dt.timedelta(days=2),
         )
-        # 4) scope salah bentuk → dihapus.
+        # 4) scope salah bentuk → dihapus (data cache rusak, tak terurai).
         IdemOld.objects.create(
             principal=str(world.owner.id),
             scope="tidak-terurai",
@@ -999,9 +1351,8 @@ class TestLegacyAndMigration:
             response_status=201,
             created_at=now - _dt.timedelta(days=2),
         )
-        # 5) resource opaque sah (identity_conflict_resolve group_id sha256[:16])
-        #    → DIPERTAHANKAN apa adanya (cermin resource_uuid=False), respons
-        #    tetap bisa direplay pasca-migrasi.
+        # 5) resource opaque sah (identity_conflict_resolve group sha256[:16])
+        #    → DIPERTAHANKAN apa adanya (bentuk legacy; runtime menolak aman).
         IdemOld.objects.create(
             principal=str(world.owner.id),
             scope=f"identity_conflict_resolve:{world.tenant.id}:0f1e2d3c4b5a6978",
@@ -1016,7 +1367,8 @@ class TestLegacyAndMigration:
         executor = MigrationExecutor(connection)
         executor.migrate([("jobs", "0004_idempotency_identity")])
 
-        assert IdempotencyKey.objects.filter(idem_key="mig-stale").count() == 0
+        # Klaim tanpa respons DIPERTAHANKAN (bukan dihapus).
+        assert IdempotencyKey.objects.filter(idem_key="mig-stale").count() == 1
         assert IdempotencyKey.objects.filter(idem_key="mig-bad").count() == 0
         kept = IdempotencyKey.objects.get(idem_key="mig-keep")
         assert kept.tenant_scope == str(world.tenant.id)  # alias terkanonikalisasi
@@ -1055,6 +1407,22 @@ class TestLegacyAndMigration:
         assert ra.json() == response_latest
         assert _count_in_tenant(SaaSInvoice, world.tenant.id) == 0
 
+        # Klaim tanpa respons hasil backfill → ditolak aman saat retry.
+        r_stale = ca.post(
+            f"/api/v1/tenants/{world.tenant.id}/quotations",
+            body, headers={"Idempotency-Key": "mig-stale"},
+        )
+        assert r_stale.status_code == 409
+        assert _count_in_tenant(SaaSInvoice, world.tenant.id) == 0
+
+        # Key record opaque pada operasi BERBEDA → aksi baru sah (identity
+        # terpisah per operasi; blocking legacy hanya pada operasinya).
+        r_opaque = ca.post(
+            f"/api/v1/tenants/{world.tenant.id}/quotations",
+            body, headers={"Idempotency-Key": "mig-opaque"},
+        )
+        assert r_opaque.status_code == 201  # operasi beda → aksi baru sah
+
         # Principal berbeda tidak memperoleh respons legacy (target/principal salah).
         member = User.objects.create_user(
             email="member-mig@test.local", full_name="Member Migrasi",
@@ -1068,4 +1436,223 @@ class TestLegacyAndMigration:
         )
         assert rb.status_code == 201
         assert rb.json() != response_latest
-        assert _count_in_tenant(SaaSInvoice, world.tenant.id) == 1
+        # Dua invoice total: satu dari aksi baru key mig-opaque (r_opaque),
+        # satu dari aksi baru principal member — keduanya bukan replay legacy.
+        assert _count_in_tenant(SaaSInvoice, world.tenant.id) == 2
+
+
+# ---------------------------------------------------------------------------
+# E. REV-1311-02 — identity_conflict_resolve terikat session migrasi
+# ---------------------------------------------------------------------------
+
+
+class TestConflictResolveSessionScope:
+    def test_same_key_same_group_different_session_applies_both(self):
+        """Group sama dipakai ulang lintas session: key/body sama pada session
+        A lalu B → B menulis keputusannya SENDIRI (bukan replay 204 milik A)."""
+        from domains.common.tenant_context import tenant_scope
+        from domains.customers.models import MigrationAccountDecision
+
+        world, client, sessions, group_id = _migration_world("rtrw-pa000029")
+        body = {"resolution": "merge"}
+        headers = {"Idempotency-Key": "pa006-crs-1"}
+        base = f"/api/v1/tenants/{world.tenant.id}/migrations"
+        first = client.post(f"{base}/{sessions[0].id}/identity-conflicts/{group_id}", body, headers=headers)
+        assert first.status_code == 204, first.content
+        second = client.post(f"{base}/{sessions[1].id}/identity-conflicts/{group_id}", body, headers=headers)
+        assert second.status_code == 204, second.content
+        with tenant_scope(world.tenant.id):
+            counts = [MigrationAccountDecision.objects.filter(session=s).count() for s in sessions]
+        assert counts == [2, 2], "204 kedua mereplay session pertama; session kedua tidak terselesaikan"
+
+    def test_retry_same_session_replays_without_second_decision_set(self):
+        """Retry session A (key/body sama) → replay 204; keputusan tidak
+        diduplikasi; record idempotency tepat satu per session."""
+        from domains.common.tenant_context import tenant_scope
+        from domains.customers.models import MigrationAccountDecision
+
+        world, client, sessions, group_id = _migration_world("rtrw-pa000030")
+        body = {"resolution": "merge"}
+        headers = {"Idempotency-Key": "pa006-crs-2"}
+        url = f"/api/v1/tenants/{world.tenant.id}/migrations/{sessions[0].id}/identity-conflicts/{group_id}"
+        first = client.post(url, body, headers=headers)
+        assert first.status_code == 204
+        retry = client.post(url, body, headers=headers)
+        assert retry.status_code == 204
+        with tenant_scope(world.tenant.id):
+            count = MigrationAccountDecision.objects.filter(session=sessions[0]).count()
+        assert count == 2
+        assert _idem_count(operation="identity_conflict_resolve", idem_key="pa006-crs-2") == 1
+
+    @pytest.mark.parametrize("bad_parent,expected", [("not-a-uuid", 422), (str(_uuid.uuid4()), 404)])
+    def test_cached_group_must_not_skip_invalid_or_missing_parent(self, bad_parent, expected):
+        """Respons cache tidak boleh melewati validasi parent: migration_id
+        salah bentuk → 422; session tidak ditemukan → 404 (bukan 204 replay)."""
+        world, client, sessions, group_id = _migration_world(f"rtrw-pa000031{expected}")
+        body = {"resolution": "merge"}
+        headers = {"Idempotency-Key": "pa006-crs-3"}
+        base = f"/api/v1/tenants/{world.tenant.id}/migrations"
+        valid = client.post(f"{base}/{sessions[0].id}/identity-conflicts/{group_id}", body, headers=headers)
+        assert valid.status_code == 204, valid.content
+        invalid = client.post(f"{base}/{bad_parent}/identity-conflicts/{group_id}", body, headers=headers)
+        assert invalid.status_code == expected, "respons cache group melewati validasi/lookup parent"
+
+    def test_parent_uuid_alias_same_identity_replays(self):
+        """Ejaan alias migration UUID (huruf besar) → identitas canonical sama
+        → replay, bukan aksi baru."""
+        from domains.common.tenant_context import tenant_scope
+        from domains.customers.models import MigrationAccountDecision
+
+        world, client, sessions, group_id = _migration_world("rtrw-pa000032")
+        body = {"resolution": "merge"}
+        headers = {"Idempotency-Key": "pa006-crs-4"}
+        base = f"/api/v1/tenants/{world.tenant.id}/migrations"
+        first = client.post(f"{base}/{sessions[0].id}/identity-conflicts/{group_id}", body, headers=headers)
+        assert first.status_code == 204
+        alias = client.post(
+            f"{base}/{str(sessions[0].id).upper()}/identity-conflicts/{group_id}", body, headers=headers
+        )
+        assert alias.status_code == 204
+        with tenant_scope(world.tenant.id):
+            count = MigrationAccountDecision.objects.filter(session=sessions[0]).count()
+        assert count == 2
+        assert _idem_count(operation="identity_conflict_resolve", idem_key="pa006-crs-4") == 1
+
+    def test_legacy_group_only_record_rejected_safe(self):
+        """Record pra-0004 (group-only, tanpa migration UUID) tidak dapat
+        diikat ke session → retry key yang sama ditolak aman 409; keputusan
+        session tidak dieksekusi ulang; session lain tidak terkena efek."""
+        from domains.customers.models import MigrationAccountDecision
+        from django.utils import timezone
+
+        world, client, sessions, group_id = _migration_world("rtrw-pa000033")
+        # Record legacy hasil backfill 0004 (resource = group saja).
+        IdempotencyKey.objects.create(
+            principal=str(world.owner.id), tenant_scope=str(world.tenant.id),
+            operation="identity_conflict_resolve", resource=group_id,
+            idem_key="pa006-crs-legacy",
+            body_hash=_body_hash_of({"resolution": "merge"}),
+            response_status=204, response_body=None, created_at=timezone.now(),
+        )
+        body = {"resolution": "merge"}
+        url = f"/api/v1/tenants/{world.tenant.id}/migrations/{sessions[0].id}/identity-conflicts/{group_id}"
+        response = client.post(url, body, headers={"Idempotency-Key": "pa006-crs-legacy"})
+        assert response.status_code == 409
+        assert response.json()["code"] == "idempotency_conflict"
+        assert MigrationAccountDecision.objects.filter(session=sessions[0]).count() == 0
+
+
+# ---------------------------------------------------------------------------
+# F. REV-1311-03 — body UUID ter-typed dinormalkan sebelum HMAC
+# ---------------------------------------------------------------------------
+
+
+class TestBodyUuidAliasNormalization:
+    def _billing_world(self, namespace):
+        from decimal import Decimal
+
+        from domains.billing.models import BillingPackage
+        from domains.common.tenant_context import tenant_scope
+        from domains.customers.models import Customer, Service
+
+        sub_services.seed_plans()
+        world = _world(namespace)
+        client = _client_for(world.owner, world.tenant.id, reauth_until=REAUTH_FAR_FUTURE)
+        with tenant_scope(world.tenant.id):
+            customer = Customer.objects.create(tenant=world.tenant, display_name="Alias", customer_code="C-ALIAS")
+            service = Service.objects.create(tenant=world.tenant, customer=customer, service_code="S-ALIAS")
+            package = BillingPackage.objects.create(tenant=world.tenant, name="Alias package", monthly_price=Decimal("50000"))
+            package_b = BillingPackage.objects.create(tenant=world.tenant, name="Alias package B", monthly_price=Decimal("60000"))
+        return world, client, service, package, package_b
+
+    def test_body_uuid_alias_replays_canonical_identity(self):
+        """package_id ejaan alias (hex uppercase) pada body → hash canonical
+        sama → REPLAY respons, bukan 409 konflik palsu."""
+        world, client, service, package, _ = self._billing_world("rtrw-pa000034")
+        url = f"/api/v1/tenants/{world.tenant.id}/services/{service.id}/billing-package"
+        headers = {"Idempotency-Key": "pa006-body-1"}
+        first = client.post(url, {"package_id": str(package.id)}, headers=headers)
+        assert first.status_code == 200, first.content
+        alias = client.post(url, {"package_id": package.id.hex.upper()}, headers=headers)
+        assert alias.status_code == 200, "identitas UUID di body di-hash sebelum kanonikalisasi"
+        assert alias.json() == first.json()
+
+    def test_body_uuid_real_different_package_conflicts(self):
+        """Package BENAR-BENAR berbeda pada key yang sama → 409 tanpa efek
+        kedua (normalisasi tidak melebur target berbeda)."""
+        world, client, service, package, package_b = self._billing_world("rtrw-pa000035")
+        url = f"/api/v1/tenants/{world.tenant.id}/services/{service.id}/billing-package"
+        headers = {"Idempotency-Key": "pa006-body-2"}
+        first = client.post(url, {"package_id": str(package.id)}, headers=headers)
+        assert first.status_code == 200
+        conflict = client.post(url, {"package_id": str(package_b.id)}, headers=headers)
+        assert conflict.status_code == 409
+        assert conflict.json()["code"] == "idempotency_conflict"
+        # Efek pertama tetap: service masih terpasang package pertama.
+        from domains.common.tenant_context import tenant_scope
+        from domains.customers.models import Service
+
+        with tenant_scope(world.tenant.id):
+            service.refresh_from_db()
+        assert str(service.billing_package_id) == str(package.id)
+
+    def test_retained_raw_hash_record_replays_identical_and_alias_body(self):
+        """Kompatibilitas hash raw pra-v2 (record era main): body identik
+        byte-per-byte → replay; ejaan alias → replay karena original
+        canonical (v2 == v1 canonical)."""
+        world, client, service, package, _ = self._billing_world("rtrw-pa000036")
+        from django.utils import timezone
+
+        response_old = {
+            "service_id": str(service.id),
+            "billing_package_id": str(package.id),
+        }
+        # Record era main: hash v1 dari body canonical (lowercase).
+        IdempotencyKey.objects.create(
+            principal=str(world.owner.id), tenant_scope=str(world.tenant.id),
+            operation="service_billing_package", resource=str(service.id),
+            idem_key="pa006-body-legacy",
+            body_hash=_body_hash_legacy_of({"package_id": str(package.id)}),
+            response_status=200, response_body=response_old, created_at=timezone.now(),
+        )
+        url = f"/api/v1/tenants/{world.tenant.id}/services/{service.id}/billing-package"
+        # Body identik byte-per-byte → cocok via hash v1.
+        identical = client.post(
+            url, {"package_id": str(package.id)}, headers={"Idempotency-Key": "pa006-body-legacy"}
+        )
+        assert identical.status_code == 200
+        assert identical.json() == response_old
+        # Ejaan alias → v2(normalized) == v1(canonical original) → replay.
+        alias = client.post(
+            url, {"package_id": str(package.id).upper()}, headers={"Idempotency-Key": "pa006-body-legacy"}
+        )
+        assert alias.status_code == 200
+        assert alias.json() == response_old
+        # Package berbeda pada key legacy → 409 (body beda nyata).
+        from domains.billing.models import BillingPackage
+        from domains.common.tenant_context import tenant_scope
+
+        with tenant_scope(world.tenant.id):
+            other = BillingPackage.objects.create(tenant=world.tenant, name="Lain", monthly_price=1)
+        conflict = client.post(
+            url, {"package_id": str(other.id)}, headers={"Idempotency-Key": "pa006-body-legacy"}
+        )
+        assert conflict.status_code == 409
+
+    def test_body_file_change_conflicts(self):
+        """Bukti upload berbeda (file_b64 beda) pada key sama → 409 —
+        normalisasi UUID tidak melebur perubahan isi file nyata."""
+        world = _world("rtrw-pa000037")
+        client = _client_for(world.owner, world.tenant.id, reauth_until=REAUTH_FAR_FUTURE)
+        invoice = _make_invoice(world)
+        url = f"/api/v1/tenants/{world.tenant.id}/saas-invoices/{invoice.id}/payment-submissions"
+        headers = {"Idempotency-Key": "pa006-body-4"}
+        first = client.post(url, _PROOF_BODY, headers=headers)
+        assert first.status_code == 201
+        other_png = base64.b64encode(b"\x89PNG\r\n\x1a\n" + b"BUKTI-LAIN" * 6).decode()
+        changed = client.post(
+            url, {**_PROOF_BODY, "file_b64": other_png}, headers=headers
+        )
+        assert changed.status_code == 409
+        assert changed.json()["code"] == "idempotency_conflict"
+        assert _count_in_tenant(PaymentSubmission, world.tenant.id, invoice_id=invoice.id) == 1

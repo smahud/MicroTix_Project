@@ -218,7 +218,11 @@ class ServiceBillingPackageView(TenantApiView):
 
     required_permission = "services.provision"
 
-    @idempotent("service_billing_package", resource_from=lambda request, kwargs: kwargs.get("service_id", ""))
+    @idempotent(
+        "service_billing_package",
+        resource_from=lambda request, kwargs: kwargs.get("service_id", ""),
+        body_uuid_fields=("package_id",),  # identitas UUID di body (REV-1311-03)
+    )
     @extend_schema(summary="Pasang paket penagihan ke layanan")
     def post(self, request: Request, tenant_id: str, service_id: str) -> Response:
         from domains.billing.models import BillingPackage

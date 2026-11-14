@@ -274,7 +274,7 @@ class ServiceListView(TenantApiView):
         rows = [service_row(s, _first_account(s)) for s in services_page]
         return Response(page_response(rows, next_cursor))
 
-    @idempotent("service_provision")
+    @idempotent("service_provision", body_uuid_fields=("router_id",))
     @extend_schema(summary="Buat layanan: pelanggan + layanan draft + akun akses opsional")
     def post(self, request: Request, tenant_id: str) -> Response:
         service = services.provision_service_draft(request.mt_membership.tenant, _body(request), actor=request.user)
@@ -566,13 +566,34 @@ class IdentityConflictsView(TenantApiView):
         return Response(candidates)
 
 
+def _conflict_resolve_resource(request, kwargs) -> str:
+    """Identitas resource resolusi konflik: canonical migration UUID + group.
+
+    REV-1311-02: keputusan resolusi milik SESSION migrasi tertentu — group_id
+    saja tidak cukup karena group dipakai ulang lintas session. Validasi
+    parent (bentuk UUID → 422; session tidak ditemukan → 404) dilakukan di
+    sini SEBELUM klaim/replay, sehingga respons cache tidak dapat melewati
+    validasi parent maupun menyeberang antar session.
+    """
+    migration_c = _validate_uuid("migration_id", str(kwargs.get("migration_id", "")))
+    _get_session(str(kwargs.get("tenant_id", "")), migration_c)  # 404 bila parent tidak ada
+    return f"{migration_c}:{str(kwargs.get('group_id', ''))}"
+
+
+def _legacy_group_shapes(resource: str) -> list[str]:
+    """Bentuk resource pra-migrasi-0004: group_id saja tanpa migration UUID."""
+    return [resource.split(":", 1)[1]] if ":" in resource else []
+
+
 class IdentityConflictResolveView(TenantApiView):
     required_permission = "migration.run"
 
     @idempotent(
         "identity_conflict_resolve",
-        resource_from=lambda request, kwargs: str(kwargs.get("group_id", "")),
-        resource_uuid=False,  # group_id = sha256[:16] opaque exact-case, bukan UUID
+        resource_from=_conflict_resolve_resource,
+        resource_uuid=False,  # <migration UUID canonical>:<group_id sha256[:16] opaque>
+        legacy_shapes=_legacy_group_shapes,
+        legacy_replay=False,  # group-only lama tak dapat diikat session → tolak aman
     )
     @extend_schema(summary="Simpan resolusi konflik identitas (merge/keep_one/rename)")
     def post(self, request: Request, tenant_id: str, migration_id: str, group_id: str) -> Response:
@@ -587,7 +608,11 @@ class IdentityConflictResolveView(TenantApiView):
 class MigrationCommitView(TenantApiView):
     required_permission = "migration.run"
 
-    @idempotent("migration_commit", resource_from=lambda request, kwargs: str(kwargs.get("migration_id", "")))
+    @idempotent(
+        "migration_commit",
+        resource_from=lambda request, kwargs: str(kwargs.get("migration_id", "")),
+        body_uuid_fields=("selected_account_ids",),  # daftar UUID objek discovery (REV-1311-03)
+    )
     @extend_schema(summary="Commit adopsi migrasi → job commit_migration (202)")
     def post(self, request: Request, tenant_id: str, migration_id: str) -> Response:
         session = _get_session(tenant_id, _validate_uuid("migration_id", migration_id))

@@ -2,6 +2,8 @@
 dan antrean keputusan platform admin (M2): /platform/payment-submissions."""
 from __future__ import annotations
 
+import uuid as uuid_mod
+
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.request import Request
@@ -92,6 +94,35 @@ class QuotationView(TenantApiView):
         )
 
 
+def _verify_payment_submission_replay(request, kwargs, record) -> None:
+    """REV-1311-01: verifikasi kepemilikan/target respons cache sebelum replay.
+
+    Respons cache hanya direplay bila submission yang tercatat di respons
+    masih ada, milik tenant URL, dan menunjuk invoice yang diminta — respons
+    milik target lain tidak pernah dibocorkan ke target ini. Query berjalan
+    dalam tenant_scope (RLS) sehingga submission tenant lain tidak terlihat;
+    filter tenant eksplisit dipertahankan sebagai pengaman ganda.
+    """
+    from domains.subscriptions.models import PaymentSubmission
+
+    response_body = record.response_body if isinstance(record.response_body, dict) else {}
+    submission_raw = str(response_body.get("submission_id") or "")
+    try:
+        invoice_c = str(uuid_mod.UUID(str(kwargs.get("invoice_id", ""))))
+        sub_uuid = uuid_mod.UUID(submission_raw) if submission_raw else None
+    except (ValueError, AttributeError, TypeError):
+        raise ApiError.conflict("idempotency_conflict", "error.idempotency_conflict") from None
+    submission = (
+        PaymentSubmission.objects.filter(
+            id=sub_uuid, tenant_id=str(kwargs.get("tenant_id", ""))
+        ).first()
+        if sub_uuid is not None
+        else None
+    )
+    if submission is None or str(submission.invoice_id) != invoice_c:
+        raise ApiError.conflict("idempotency_conflict", "error.idempotency_conflict")
+
+
 class PaymentSubmissionView(TenantApiView):
     required_permission = "subscription.manage"
     sensitive = True
@@ -99,6 +130,11 @@ class PaymentSubmissionView(TenantApiView):
     @idempotent(
         "payment_submission",
         resource_from=lambda request, kwargs: kwargs.get("invoice_id", ""),
+        # Bentuk pra-migrasi-0004: scope payment_submission:<tenant>: tanpa
+        # resource (REV-1311-01) — diperiksa runtime sebelum klaim; replay
+        # diverifikasi _verify_payment_submission_replay.
+        legacy_shapes=lambda resource: [""] if resource else [],
+        replay_guard=_verify_payment_submission_replay,
     )
     @extend_schema(summary="Ajukan bukti pembayaran invoice SaaS")
     def post(self, request: Request, tenant_id: str, invoice_id: str) -> Response:

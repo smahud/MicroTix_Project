@@ -203,10 +203,16 @@ class OutboxEvent(models.Model):
 class IdempotencyKey(models.Model):
     """Idempotency-Key — scope principal+tenant/platform+operation+resource+key (§5).
 
-    Retensi 7 hari; body dibandingkan HMAC; respons disimpan untuk replay.
+    Retensi 7 hari; body dibandingkan HMAC (v2: field UUID dideklarasikan
+    dinormalkan; kompatibel hash v1 raw); respons disimpan untuk replay.
     Kolom identitas menyimpan bentuk canonical (UUID lowercase / 'platform');
-    ejaan alias URL tidak pernah membuat scope baru. Record terkomit selalu
-    memiliki respons (protokol claim/replay satu transaksi — PA-006).
+    ejaan alias URL/body tidak pernah membuat scope baru.
+
+    Protokol claim/replay baru (PA-006) menyimpan respons dalam transaksi yang
+    sama dengan efek → record terkomit SELALU punya respons. Record TANPA
+    respons hanyalah sisa protokol lama pra-migrasi 0004 (efek tak terbukti):
+    dipertahankan sebagai penjaga dan ditolak aman (409) saat retry sampai
+    ops merekonsiliasi respons sesuai outcome.
     """
 
     id = models.BigAutoField(primary_key=True)

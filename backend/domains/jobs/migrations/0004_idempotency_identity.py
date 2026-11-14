@@ -7,41 +7,68 @@ Perubahan skema jobs_idempotency_key:
 - Unique constraint identitas `(principal, tenant_scope, operation, resource,
   idem_key)` menggantikan `(scope, idem_key)`; kolom `scope` lama dihapus.
 
-Kebijakan legacy record (PA-006 pekerjaan wajib no. 6):
-- Record TANPA respons dihapus: klaim protokol lama yang efeknya tidak bisa
-  dibuktikan (klaim lama ter-commit terpisah dari efek dan respons; protokol
-  baru menyimpan respons dalam transaksi yang sama dengan efek). Kelas data
-  ini cache ber-TTL 7 hari (§5 "retensi key tujuh hari"), bukan history
-  bisnis; business uniqueness domain tidak tersentuh. Penghapusan mencegah
-  dua keburukan: replay buta (duplikat efek) dan konflik permanen.
-- Bentuk scope yang tidak terurai (bukan 3 bagian / UUID salah bentuk /
-  tenant bukan 'platform') dihapus sebagai data rusak (dicatat jumlahnya).
-  Resource operasi opaque (identity_conflict_resolve group_id sha256[:16])
-  dipertahankan apa adanya melalui _OPAQUE_RESOURCE_OPERATIONS —
-  cermin resource_uuid=False pada decorator, sehingga record lama kelas itu
-  tetap bisa mereplay setelah backfill.
+Kebijakan legacy record (PA-006 pekerjaan wajib no. 6; koreksi REV-1311-01):
+- Record TANPA respons TIDAK DIHAPUS. Protokol lama (pra-0004) meng-commit
+  klaim terpisah dari efek dan respons, sehingga record tanpa respons =
+  keadaan efek tak terbukti (crash window main). Menghapusnya = menghapus
+  penjaga lalu mengeksekusi ulang buta. Record ini dipertahankan; runtime
+  menolak aman (409 idempotency_conflict) pada identitas sama maupun bentuk
+  legacy, sampai ops merekonsiliasi respons sesuai outcome.
+- Operasi platform (platform_submission_approve/reject/revision): scope lama
+  memakai active-tenant operator (defek pra-PA006). Keputusan platform
+  lintas tenant → tenant_scope dinormalkan ke 'platform' sehingga retry
+  pasca-upgrade menemukan record semula dan MEREPLAY (bukan aksi baru),
+  termasuk ketika operator berpindah active tenant.
+- `identity_conflict_resolve`: resource lama adalah group_id opaque TANPA
+  migration UUID. Identitas baru menyertakan migration UUID (REV-1311-02),
+  sehingga bentuk lama TIDAK dapat direkonsiliasi migrasi — dipertahankan
+  apa adanya; runtime menolak aman (legacy_replay=False) dan tidak pernah
+  mereplay lintas session.
+- `payment_submission`: scope lama `payment_submission:<tenant>:` tanpa
+  resource. Rekonsiliasi ke invoice dilakukan RUNTIME saat replay via
+  legacy_shapes + replay_guard (verifikasi submission→invoice/tenant) —
+  migrasi sengaja TIDAK membaca tabel tenant subs_payment_submission karena
+  FORCE RLS berlaku juga bagi migrator tanpa konteks tenant.
+- Bentuk scope yang tidak terurai (bukan 3 bagian / operation kosong)
+  dihapus sebagai data cache rusak (jumlah dicatat). Identitas yang tidak
+  dapat dipetakan (tenant/resource bukan UUID padahal operasinya UUID)
+  dipertahankan dengan nilai mentah — baris mati yang tak pernah cocok,
+  bukan dihapus.
 - Tabrakan identitas canonical setelah normalisasi alias (mis. ejaan huruf
-  besar vs kecil) di-dedupe: dipertahankan record TERBARU yang memiliki
-  respons; sisanya dihapus.
-- Reverse: memulihkan kolom `scope` dari komponen identitas. CATATAN:
-  re-add kolom NOT NULL pada tabel berisi baris ditolak PostgreSQL, jadi
-  reverse penuh hanya didukung pada tabel kosong (rollback dev); jalur
-  pemulihan data nyata adalah fix-forward (jalankan ulang protokol baru).
-  Baris yang dihapus tidak dibangkitkan kembali (data kelas cache ≤7 hari).
+  besar vs kecil): dipertahankan satu record TERBARU YANG PUNYA RESPONS
+  (bukti aksi selesai); bila tidak ada yang punya respons, terbaru. Sisanya
+  dihapus.
 
-Ordering/compatibility: constraint lama `uq_idem_scope_key` di-dropy AFTER
-backfill supaya kolom scope bisa dihapus; constraint baru dipasang setelah
-backfill menjamin keunikan canonical. Kegagalan migrasi → transaksi DDL
-PostgreSQL atomik per statement; ulangi migrasi (idempotent terhadap baris
-sudah ter-backfill: kolom baru diisi ulang dari scope bila masih ada).
+Ordering/atomicity: Django menjalankan satu migrasi PostgreSQL dalam SATU
+transaksi (DDL+DML atomik per migrasi). Kegagalan migrasi → rollback penuh,
+skema+data lama utuh; ulangi migrasi setelah perbaikan (idempoten terhadap
+baris sudah ter-backfill: kolom baru diisi ulang dari scope bila masih ada).
+
+Write-freeze/drain dan urutan old/new-code (REV-1311-01): jalankan migrasi
+saat penulis DIBERHENTIKAN (drain request / stop worker): kode lama
+bergantung pada kolom `scope` yang dihapus, kode baru bergantung pada kolom
+identitas baru — tidak ada window tulis campuran; migrasi atomik adalah
+titik write-freeze-nya. Setelah sukses, nyalakan kode baru. Jalur pemulihan
+data nyata adalah fix-forward (protokol baru); reverse penuh hanya didukung
+pada tabel kosong (rollback dev) — re-add kolom NOT NULL pada tabel berisi
+baris ditolak PostgreSQL, dan reverse bersifat lossy (ejaan alias/normalisasi
+platform tidak dipulihkan). Baris yang dihapus (cache ≤7 hari) tidak
+dibangkitkan kembali.
 """
 from django.db import migrations, models
 import uuid as _uuid
 
 # Operasi yang resource-nya token opaque exact-case (bukan UUID) — cermin
-# resource_uuid=False pada decorator. Migrasi mempertahankan resource baris
-# operasi ini apa adanya (bukan dipurge sebagai "UUID salah bentuk").
+# resource_uuid=False pada decorator. Resource lama dipertahankan apa adanya;
+# runtime legacy fallback (legacy_replay=False) menolak aman.
 _OPAQUE_RESOURCE_OPERATIONS = frozenset({"identity_conflict_resolve"})
+
+# Operasi platform lintas tenant — cermin platform=True pada decorator
+# (subscriptions/views.py). Scope lama memakai active-tenant operator;
+# dinormalkan ke 'platform' agar retry pasca-upgrade mereplay aksi semula.
+_PLATFORM_OPERATIONS = frozenset(
+    {"platform_submission_approve", "platform_submission_reject", "platform_submission_revision"}
+)
 
 
 def _canonical_uuid(value):
@@ -53,58 +80,88 @@ def _canonical_uuid(value):
 
 def _backfill_identity(apps, schema_editor):
     IdempotencyKey = apps.get_model("jobs", "IdempotencyKey")
-    stats = {"kept": 0, "no_response": 0, "malformed": 0, "duplicate_canonical": 0}
+    stats = {
+        "kept": 0,
+        "kept_no_response": 0,
+        "platform_remapped": 0,
+        "legacy_opaque": 0,
+        "malformed_deleted": 0,
+        "duplicate_deleted": 0,
+    }
     # Tahap 1: materialisasi seluruh baris (tanpa mutasi sambil iterasi).
     rows = list(
         IdempotencyKey.objects.all()
         .order_by("-created_at", "-id")
-        .values_list("id", "principal", "scope", "idem_key", "response_status")
+        .values_list("id", "principal", "scope", "idem_key", "response_status", "created_at")
     )
-    seen: set[tuple[str, str, str, str, str]] = set()
+    # best[identity] = dict kandidat yang dipertahankan. Kandidat dipilih
+    # berdasarkan rank = (punya_respons, created_at, id): utamakan bukti aksi
+    # selesai, lalu yang terbaru. Baris lain dengan identitas canonical sama
+    # adalah duplikat alias → dihapus.
+    best: dict[tuple, dict] = {}
     delete_ids: list[int] = []
-    updates: list[tuple[int, str, str, str]] = []
-    for pk, principal, scope, idem_key, response_status in rows:
+    for pk, principal, scope, idem_key, response_status, created_at in rows:
         parts = str(scope or "").split(":")
-        if len(parts) != 3:
+        if len(parts) != 3 or not parts[0]:
             delete_ids.append(pk)
-            stats["malformed"] += 1
+            stats["malformed_deleted"] += 1
             continue
         operation, tenant_raw, resource_raw = parts
-        tenant_c = "platform" if tenant_raw.lower() == "platform" else _canonical_uuid(tenant_raw)
+        if operation in _PLATFORM_OPERATIONS:
+            tenant_c = "platform"
+            if tenant_raw and tenant_raw.lower() != "platform":
+                stats["platform_remapped"] += 1
+        elif str(tenant_raw).lower() == "platform":
+            tenant_c = "platform"
+        else:
+            # UUID canonical; nilai mentah yang tidak valid tetap disimpan
+            # (baris mati yang tak pernah cocok — bukan dihapus).
+            tenant_c = _canonical_uuid(tenant_raw) or str(tenant_raw)
         if operation in _OPAQUE_RESOURCE_OPERATIONS:
-            resource_c = resource_raw  # token opaque sah — tidak divalidasi sebagai UUID
+            # Bentuk lama group-only TIDAK dapat diikat ke migration UUID —
+            # dipertahankan apa adanya; runtime menolak aman (REV-1311-02).
+            resource_c = resource_raw
+            stats["legacy_opaque"] += 1
         else:
             resource_c = _canonical_uuid(resource_raw) if resource_raw else ""
-        if tenant_c is None or resource_c is None or not operation:
-            delete_ids.append(pk)
-            stats["malformed"] += 1
-            continue
-        if response_status is None:
-            # Klaim lama tanpa respons: efek tak terbukti → hapus (lihat kebijakan).
-            delete_ids.append(pk)
-            stats["no_response"] += 1
-            continue
+            if resource_raw and resource_c is None:
+                resource_c = resource_raw  # baris mati, dipertahankan
         identity = (str(principal), tenant_c, operation, resource_c, str(idem_key))
-        if identity in seen:
-            # Terbaru diproses dulu (order desc): tabrakan alias canonical →
-            # duplikat lebih lama dihapus.
+        rank = (1 if response_status is not None else 0, created_at, pk)
+        candidate = {
+            "rank": rank,
+            "pk": pk,
+            "tenant": tenant_c,
+            "operation": operation,
+            "resource": resource_c,
+            "has_response": response_status is not None,
+        }
+        prev = best.get(identity)
+        if prev is None:
+            best[identity] = candidate
+        elif rank > prev["rank"]:
+            delete_ids.append(prev["pk"])
+            best[identity] = candidate
+        else:
             delete_ids.append(pk)
-            stats["duplicate_canonical"] += 1
-            continue
-        seen.add(identity)
-        updates.append((pk, tenant_c, operation, resource_c))
-        stats["kept"] += 1
+            stats["duplicate_deleted"] += 1
+    stats["kept"] = sum(1 for c in best.values() if c["has_response"])
+    stats["kept_no_response"] = sum(1 for c in best.values() if not c["has_response"])
     if delete_ids:
         IdempotencyKey.objects.filter(id__in=delete_ids).delete()
-    for pk, tenant_c, operation, resource_c in updates:
-        IdempotencyKey.objects.filter(id=pk).update(
-            tenant_scope=tenant_c, operation=operation, resource=resource_c
+    for candidate in best.values():
+        IdempotencyKey.objects.filter(id=candidate["pk"]).update(
+            tenant_scope=candidate["tenant"],
+            operation=candidate["operation"],
+            resource=candidate["resource"],
         )
     print(
         "jobs.0004 idempotency identity backfill: "
-        f"kept={stats['kept']} no_response_deleted={stats['no_response']} "
-        f"malformed_deleted={stats['malformed']} "
-        f"duplicate_canonical_deleted={stats['duplicate_canonical']}"
+        f"kept_with_response={stats['kept']} kept_no_response={stats['kept_no_response']} "
+        f"platform_remapped={stats['platform_remapped']} "
+        f"legacy_opaque_group={stats['legacy_opaque']} "
+        f"malformed_deleted={stats['malformed_deleted']} "
+        f"duplicate_deleted={stats['duplicate_deleted']}"
     )
 
 
