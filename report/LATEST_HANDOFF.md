@@ -10,7 +10,7 @@ Sesi executor sandbox: implementasi PA-006 selesai pada branch kandidat `session
 |---|---|
 | Active task | ID0010 / PA-006 — **penyerahan executor selesai** (`0010-pa006-idempotency_done.md` pada branch kandidat) |
 | Execution / review | `done` / `pending` — menunggu controller review exact SHA |
-| Candidate branch / tested SHA / PR | `session/2026-11-14-pa006-idempotency`; tested SHA `5922e1f`; PR kandidat dibuat setelah push (lihat kolom PR di bawah — verifikasi remote aktual) |
+| Candidate branch / tested SHA / PR | `session/2026-11-14-pa006-idempotency`; tested SHA `5922e1f`; **[PR #17](https://github.com/smahud/MicroTix_Project/pull/17)** (head terverifikasi `7243c263d35af7749c5133e8591b6854bff95257`) |
 | Execution report / acceptance evidence | `report/orchestrator/20261114T150000Z-0010-pa006-idempotency.md` — matriks SEMUA acceptance → actual result → evidence (18/18 PASS; suite penuh 401 passed; PA-001 10/10) + tabel 28 call site + kebijakan migrasi/legacy |
 | Internal reviewer | `report/reviewer/20261114T150000Z-0010-pa006-review.md` — LULUS DENGAN CATATAN (6 temuan P3, tanpa P1/P2; koreksi minimum diterapkan sebelum penyerahan). Review internal executor, BUKAN acceptance controller |
 | Controller review / reviewed SHA | Belum ada — next actor controller_reviewer |
@@ -24,7 +24,7 @@ Protokol lengkap ada pada panduan tetap §6 dan CONTRACT §6A. Verdict/correctio
 | Item | Nilai |
 |---|---|
 | **Branch kanonis** | `main` @ **`9903d9b`** (default prompts PR12 merged). Instruksi kandidat PA-006 pada branch `session/2026-11-14-pa006-idempotency` sampai integrasi; fetch HEAD aktual, bukan menganggap snapshot selalu terbaru |
-| **Kandidat aktif** | **task0010/PA-006** di branch `session/2026-11-14-pa006-idempotency` — tested SHA `5922e1f`; execution report + internal review terpublish pada branch yang sama; menunggu controller review |
+| **Kandidat aktif** | **task0010/PA-006** di **[PR #17](https://github.com/smahud/MicroTix_Project/pull/17)** (branch `session/2026-11-14-pa006-idempotency`, head `7243c26`, tested SHA `5922e1f`); execution report + internal review terpublish pada branch yang sama; menunggu controller review |
 | PR lain terbuka | **#7** SSTP Phase-2 (head `d7fa35e`; CI backend/frontend success, docs FAIL **manifest mismatch** — bukan bukti SSTP gagal runtime; disposition = packet terpisah) · **#8** docs planning-audit DRAFT (head `6bb57c9`; CI docs FAIL manifest mismatch = pekerjaan DEC-02, branch itu pemilik file manifest — jaga ownership disjoint) |
 | Rilis kandidat | `v0.1.0-beta.1` tetap **NOT_READY** — bloker = code blockers (§3) + environment blockers; REV-1111-11 (idempotency HTTP) ditutup pada kandidat PA-006 menunggu review exact SHA |
 | CONTRACT.md | §6A task workflow/komunikasi tetap berlaku, ditambah default prompts per peran (12 November 2026) |
@@ -72,8 +72,9 @@ Environment blockers (prasyarat eksternal, TETAP ADA): Gate A/G host Debian 13 n
 
 ## 4. Cabang kerja
 
-- `session/2026-11-14-pa006-idempotency` — **KANDIDAT task0010/PA-006** (tested SHA
-  `5922e1f`; report-only commits metadata setelahnya; PR dibuat saat push).
+- `session/2026-11-14-pa006-idempotency` — **KANDIDAT task0010/PA-006, PR #17**
+  (tested SHA `5922e1f`; head `7243c26` — report-only metadata commits setelah
+  tested SHA; remote diverifikasi).
 - Terbuka milik pihak lain (JANGAN ditimpa): `docs/planning-audit-20261110` (PR #8),
   `session/2026-11-07-sstp-phase2` (PR #7).
 - `session/2026-11-11-pa001-payment-concurrency` — MERGED (PR #9; arsip riwayat).
@@ -82,7 +83,7 @@ Environment blockers (prasyarat eksternal, TETAP ADA): Gate A/G host Debian 13 n
 
 ## 5. Prioritas eksekusi berikutnya (urut)
 
-1. **Review controller PA-006** pada exact SHA `5922e1f` (kandidat branch di atas).
+1. **Review controller PA-006** pada exact SHA `5922e1f` (kandidat PR #17 di atas).
    Changes requested → koreksi ID sama; accepted → catat SHA + evidence, siapkan
    task penerus.
 2. **PA-002 + authority PA-003 (P1)** — job lifecycle fencing/drain (termasuk risiko
