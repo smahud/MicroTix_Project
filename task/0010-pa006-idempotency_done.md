@@ -10,7 +10,7 @@
 | Baseline / dependency | `main@9903d9b0cf09d737b553da3c21067b4810e956c0`; PA-001 merged PR9 (`8ce94d4`); tidak diulang |
 | Instruction revision | Kebutuhan awal pada main; koreksi [PR16 exact ref](https://github.com/smahud/MicroTix_Project/blob/5da0d801c71b020fbb8b977294502ea5a09e7bcb/task/0010-pa006-idempotency.md) + keputusan [PR18](https://github.com/smahud/MicroTix_Project/pull/18) — keduanya dibawa semantik pada kandidat ini |
 | Candidate branch / exact tested SHA | `session/2026-11-15-pa006-idempotency`; implementation `1780e150695a6b7bbb4109b6f13ea44df54fa6a0` + hardening `c99838c` (tree uji identik); base `review/0010-pa006-controller-20261114@b6a0cb8` |
-| Published SHA / PR / CI | PR kandidat base main; head publikasi + required CI dicatat pada [LATEST_HANDOFF](../report/LATEST_HANDOFF.md) setelah verifikasi remote |
+| Published SHA / PR / CI | [PR19](https://github.com/smahud/MicroTix_Project/pull/19) base main; first verified publication `35507eb04d6c9a4a1276315dd608a6ef03bd863b`; required CI pada SHA itu **backend/frontend/docs success** (diverifikasi 15 November); commit metadata berikutnya report-only |
 | Execution report / internal reviewer | [Executor](../report/orchestrator/20261114T164816Z-0010-pa006-idempotency.md) (matriks finding→perubahan→tes→evidence + acceptance + call-site table); [independent review](../report/reviewer/20261114T164816Z-0010-pa006-review.md) — PASS_WITH_NOTES, temuan P3 ditutup/didokumentasikan |
 | Controller review | [Keputusan 14 November](../report/controller/20261114T153739Z-0010-pa006-review.md) `changes_requested` pada `37a8729` — kandidat ini menutup keempat finding; review baru belum ada |
 | Next actor | **controller_reviewer** |

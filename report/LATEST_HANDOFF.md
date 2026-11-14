@@ -19,9 +19,15 @@ Pintu masuk tetap: [task/0000-start-here.md](../task/0000-start-here.md); CONTRA
 
 ## Publication record (diisi executor setelah verifikasi remote)
 
-Placeholder ini diisi/diperbarui saat penyerahan: PR kandidat, head publikasi
-terverifikasi, dan status required CI (backend/frontend/docs). Bila baris ini
-belum terisi, penyerahan belum final dan next actor tetap `coding_agent`.
+- **PR kandidat**: [PR19](https://github.com/smahud/MicroTix_Project/pull/19),
+  head `session/2026-11-15-pa006-idempotency`, base `main`.
+- **First verified publication**: `35507eb04d6c9a4a1276315dd608a6ef03bd863b`
+  (git push terverifikasi; remote SHA == lokal).
+- **Required CI pada `35507eb`**: backend **success**, frontend **success**,
+  docs **success** (check-runs GitHub Actions diverifikasi 15 November).
+- Commit metadata berikutnya di atas `35507eb` bersifat report-only
+  (handoff/packet pointer); kode tidak berubah — implementation/tested SHA
+  tetap `1780e15` + `c99838c`.
 
 ## 1. Ringkasan penyerahan ketiga (executor, 15 November 2026)
 
