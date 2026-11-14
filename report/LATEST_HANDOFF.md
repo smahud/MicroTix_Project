@@ -13,7 +13,7 @@ Pintu masuk tetap: [task/0000-start-here.md](../task/0000-start-here.md); CONTRA
 | Executor implementation / tested SHA | Produksi5922e1f, tested774b191; descendant37a8729 hanya metadata terhadap backend/apps/config. Root checks pada candidate source37a8729 |
 | Execution / internal review | [Executor report](orchestrator/20261114T150000Z-0010-pa006-idempotency.md), [internal review](reviewer/20261114T150000Z-0010-pa006-review.md); dipertahankan sebagai riwayat executor, bukan acceptance |
 | Controller decision | [Review14 November](controller/20261114T153739Z-0010-pa006-review.md) — `changes_requested`, reviewed37a8729; independent runtime-source/migration reports ditautkan di dalam |
-| Instruction / decision branch | `review/0010-pa006-controller-20261114`, record-only descendant PR17, belum integrated; publication SHA/PR diverifikasi setelah commit dan dicatat di report |
+| Instruction / decision branch | [PR18](https://github.com/smahud/MicroTix_Project/pull/18), `review/0010-pa006-controller-20261114`; first verified publicationbb9241ccbf78bffd2ffc19c1cfb232d6dff8be1a, record-only descendant PR17, belum integrated; fetch final head aktual |
 | Prior correction history | [PR16 record exact5da0d80](https://github.com/smahud/MicroTix_Project/blob/5da0d801c71b020fbb8b977294502ea5a09e7bcb/report/controller/20261113T114222Z-0010-pa006-review.md) atas PR15; tidak dibawa oleh PR17, tiga finding tetap berlaku; refs historis dipertahankan |
 | Next actor | **coding_agent** |
 | Exact next action | Fetch ref keputusan ini; bawa packet/riwayat secara semantik, tutup REV-1311-01/02/03 dan REV-1411-04, jalankan closing tests + acceptance/regression penuh, resubmit exact SHA baru pada ID0010 |
@@ -65,7 +65,7 @@ Environment blockers (prasyarat eksternal, TETAP ADA): Gate A/G host Debian 13 n
 | 8 | `docs/planning-audit-20261110` — docs/manifest ownership tetap terpisah; status CI historis di register |
 | 7 | `session/2026-11-07-sstp-phase2` — SSTP terpisah; tidak dihitung integrated main |
 
-Branch keputusan sesi ini `review/0010-pa006-controller-20261114` memuat report/task/handoff/progress/evidence; PR-nya dicatat setelah publication. Tidak ada PR lama ditutup/di-merge, force-push atau destructive cleanup. Arsip branch lain tetap dipertahankan.
+Branch keputusan sesi ini `review/0010-pa006-controller-20261114` memuat report/task/handoff/progress/evidence; [PR18](https://github.com/smahud/MicroTix_Project/pull/18) mempublikasikan keputusan; first verified ancestorbb9241c, lihat report untuk tree/readback. Final metadata descendants tidak mengubah aplikasi. Tidak ada PR lama ditutup/di-merge, force-push atau destructive cleanup. Arsip branch lain tetap dipertahankan.
 
 ## 5. Urutan kelanjutan
 

@@ -13,7 +13,7 @@
 | Implementation / executor-tested SHA | Produksi `5922e1f`; tes observer `774b191`; diff `774b191..37a8729` kosong untuk backend/apps/config terkait. Root mereview dan menjalankan checks terhadap source candidate37a8729 |
 | Execution report / internal reviewer | [Executor](../report/orchestrator/20261114T150000Z-0010-pa006-idempotency.md), [internal review](../report/reviewer/20261114T150000Z-0010-pa006-review.md); klaim seluruh acceptance PASS dibantah reproduksi controller |
 | Controller review | [Keputusan 14 November](../report/controller/20261114T153739Z-0010-pa006-review.md), `changes_requested` pada37a8729; [keputusan 13 November](https://github.com/smahud/MicroTix_Project/blob/5da0d801c71b020fbb8b977294502ea5a09e7bcb/report/controller/20261113T114222Z-0010-pa006-review.md) tetap historis |
-| Decision branch / publication | `review/0010-pa006-controller-20261114`, record-only descendant PR17; verifikasi head/PR aktual pada [handoff](../report/LATEST_HANDOFF.md) |
+| Decision branch / publication | [PR18](https://github.com/smahud/MicroTix_Project/pull/18), `review/0010-pa006-controller-20261114`; first verified publicationbb9241ccbf78bffd2ffc19c1cfb232d6dff8be1a, record-only descendant PR17; fetch head aktual |
 | Next actor | **coding_agent** |
 | Exact next action | Fetch ref keputusan ini; bawa packet/riwayat secara semantik; tutup REV-1311-01/02/03 dan REV-1411-04 pada ID0010, jalankan closing tests, resubmit exact SHA baru. PA-002/003 belum eligible |
 
