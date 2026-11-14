@@ -553,21 +553,20 @@ def _pg_pid() -> int:
 
 
 def _observer_conn():
-    """Koneksi pengamat psycopg (peran runtime yang sama, DB uji sama).
+    """Koneksi pengamat psycopg dengan parameter koneksi Django aktif.
 
-    Observasi pg_stat_activity lintas sesi dari koneksi raw psycopg stabil
-    pada klaster uji ini (koneksi Django main menunjukkan flakiness
-    visibilitas lintas-sesi yang tidak dapat diandalkan untuk bukti).
+    Host/port/user/dbname diambil dari DATABASES (berlaku untuk sandbox
+    user-space 55432 maupun service CI 5432 — bukan hardcode). Observasi
+    pg_stat_activity lintas sesi dari koneksi psycopg stabil pada klaster
+    uji ini (koneksi Django main menunjukkan flakiness visibilitas lintas
+    sesi yang tidak dapat diandalkan untuk bukti).
     """
     import psycopg
     from django.db import connection as dj_conn
 
-    with dj_conn.cursor() as cur:
-        cur.execute("SELECT current_database()")
-        dbname = cur.fetchone()[0]
-    return psycopg.connect(
-        f"postgresql://mtx_app@127.0.0.1:55432/{dbname}", autocommit=True
-    )
+    params = dj_conn.get_connection_params()
+    kwargs = {k: params[k] for k in ("host", "port", "dbname", "user", "password") if params.get(k)}
+    return psycopg.connect(autocommit=True, **kwargs)
 
 
 def _wait_backend_lock_wait(observer, pid: int, *, deadline_s: float = 30.0) -> bool:
