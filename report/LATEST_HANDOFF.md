@@ -4,7 +4,7 @@ Pintu masuk tetap: [task/0000-start-here.md](../task/0000-start-here.md), wajib 
 
 ## 0. Status sesi — penyerahan task0010/PA-006 (14 November 2026)
 
-Sesi executor sandbox: implementasi PA-006 selesai pada branch kandidat `session/2026-11-14-pa006-idempotency` (base `main@9903d9b`, PR12 merged; source PA-006 pada baseline identik dengan `a0f653e` karena PR10–12 hanya dokumentasi). Tested SHA **`5922e1f`** (commit implementasi: protokol idempotency 5-tuple canonical + claim/replay satu transaksi + migrasi jobs 0004 + 18 tes PA-006); commit penyerahan setelahnya report/metadata-only (packet `_done`, handoff, progress — tanpa perubahan source). Fetch HEAD aktual sebelum bertindak; jangan mengunci pada snapshot ini.
+Sesi executor sandbox: implementasi PA-006 selesai pada branch kandidat `session/2026-11-14-pa006-idempotency` (base `main@9903d9b`, head terkini lihat PR, PR12 merged; source PA-006 pada baseline identik dengan `a0f653e` karena PR10–12 hanya dokumentasi). Tested SHA **`774b191`** (source produksi implementasi `5922e1f`: protokol idempotency 5-tuple canonical + claim/replay satu transaksi + migrasi jobs 0004 + 18 tes PA-006; `774b191` = fix portabilitas observer tes untuk CI service port 5432 tanpa perubahan source produksi; suite 401 passed pada konten `774b191`); commit metadata setelahnya report/metadata-only. Fetch HEAD aktual sebelum bertindak; jangan mengunci pada snapshot ini.
 
 | Field handoff | Status / pointer |
 |---|---|
@@ -15,7 +15,7 @@ Sesi executor sandbox: implementasi PA-006 selesai pada branch kandidat `session
 | Internal reviewer | `report/reviewer/20261114T150000Z-0010-pa006-review.md` — LULUS DENGAN CATATAN (6 temuan P3, tanpa P1/P2; koreksi minimum diterapkan sebelum penyerahan). Review internal executor, BUKAN acceptance controller |
 | Controller review / reviewed SHA | Belum ada — next actor controller_reviewer |
 | Next actor | **controller_reviewer** |
-| Exact next action | Review kandidat exact SHA `5922e1f` (+ commit metadata-only setelahnya): tabel call-site, interleaving tes konkuren, kebijakan migrasi/legacy 0004 (backfill/dedupe/purge/preservasi opaque), no auth bypass, dan tiga FUP terdokumentasi (FUP-001 resolve_membership malformed tenant 500; FUP-002 berkas yatim; FUP-003 iterasi antrean platform). Changes requested → buka kembali task0010 ID sama (rename balik unfinished) |
+| Exact next action | Review kandidat exact SHA `774b191` (source produksi `5922e1f`; `774b191` hanya fix portabilitas observer tes CI — diff 1 file tes): tabel call-site, interleaving tes konkuren, kebijakan migrasi/legacy 0004 (backfill/dedupe/purge/preservasi opaque), no auth bypass, dan tiga FUP terdokumentasi (FUP-001 resolve_membership malformed tenant 500; FUP-002 berkas yatim; FUP-003 iterasi antrean platform). Changes requested → buka kembali task0010 ID sama (rename balik unfinished) |
 
 Protokol lengkap ada pada panduan tetap §6 dan CONTRACT §6A. Verdict/corrections dan next actor/action harus dipush/verified di GitHub sebelum berganti peran; tidak ditinggalkan hanya di chat. Internal executor review bukan controller acceptance.
 
@@ -83,7 +83,7 @@ Environment blockers (prasyarat eksternal, TETAP ADA): Gate A/G host Debian 13 n
 
 ## 5. Prioritas eksekusi berikutnya (urut)
 
-1. **Review controller PA-006** pada exact SHA `5922e1f` (kandidat PR #17 di atas).
+1. **Review controller PA-006** pada exact SHA `774b191` (kandidat PR #17 di atas; source produksi `5922e1f`).
    Changes requested → koreksi ID sama; accepted → catat SHA + evidence, siapkan
    task penerus.
 2. **PA-002 + authority PA-003 (P1)** — job lifecycle fencing/drain (termasuk risiko
