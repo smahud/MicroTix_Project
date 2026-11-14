@@ -1,6 +1,16 @@
 # MicroTix — checkpoint kemajuan
 
-Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-12 (Asia/Jakarta).
+Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-14 (Asia/Jakarta).
+
+## Checkpoint 2026-11-14 — task0010/PA-006: HTTP idempotency aman terhadap scope dan race (penyerahan executor)
+
+**Scope**: implementasi penuh PA-006 pada sandbox (PostgreSQL 17.11 nyata, peran runtime non-superuser `mtx_app` — RLS FORCE efektif). Baseline main `9903d9b` (PR10–12 hanya dokumentasi; source PA-006 identik dengan baseline packet `a0f653e`). Branch kandidat `session/2026-11-14-pa006-idempotency`; **tested SHA `5922e1f`** (implementasi); commit penyerahan setelahnya metadata-only. Packet direname `0010-pa006-idempotency_done.md` (execution `done`, review `pending`) — menunggu controller review exact SHA.
+
+**Perubahan inti**: (1) `common/idempotency.py` — protokol claim/replay SATU transaksi: identitas canonical 5-tuple (principal + tenant/platform + operation + resource + key), claim `INSERT … ON CONFLICT DO NOTHING RETURNING` (konkuren menunggu lalu MEREPLAY — bukan 409 permanen/500/duplikat), respons 2xx tersimpan bersama efek domain, exception → rollback klaim+efek (retry key semula), record tanpa respons ditolak aman, UUID alias dikanonikalisasi, structured malformed → 422, `platform=True` scope eksplisit stabil lintas active tenant, `resource_uuid=False` untuk token opaque; (2) migrasi `jobs/0004` — kolom identitas + `uq_idem_identity`, backfill canonical, dedupe alias, purge klaim tanpa respons/salah bentuk, resource opaque dipertahankan; (3) call-site `payment_submission` resource `invoice_id`, tiga platform ops `platform=True`, `identity_conflict_resolve` opaque; (4) 18 tes PA-006 baru (interleaving dipaksa penahanan kunci baris + observasi `pg_stat_activity` via pengamat psycopg; klien HTTP independen per principal) + koreksi ekspektasi malformed submission_id 404→422 sesuai acceptance.
+
+**Bukti (semua PostgreSQL nyata)**: targeted PA-006 **18/18**; suite penuh **401 passed** (baseline 383, tanpa regresi); PA-001 konkurensi **10/10**; `manage.py check` 0 issue; `makemigrations --check` bersih; migrasi 0004 + `grant_runtime` pada dev DB; docs check PASS; frontend paritas CI (`tsc`/`eslint`/`vitest 66`/`check_i18n`/`vite build` live) exit 0. Matriks acceptance → actual result → evidence lengkap (semua baris PASS) pada `report/orchestrator/20261114T150000Z-0010-pa006-idempotency.md` + tabel 28 call site. Review internal (sub-agent read-only): `report/reviewer/20261114T150000Z-0010-pa006-review.md` — LULUS DENGAN CATATAN (6×P3, tanpa P1/P2); dua koreksi minimum diterapkan sebelum penyerahan.
+
+**Follow-up berbukuti (di luar scope PA-006, belum ditugaskan)**: FUP-001 `resolve_membership` malformed tenant → 500 (pra-ada, semua endpoint tenant); FUP-002 berkas yatim upload saat rollback; FUP-003 iterasi antrean platform per tenant. NOT_RUN: host Gate A/G, lab G1, benchmark S6. REV-1111-11 ditutup PADA KANDIDAT menunggu review; Beta tetap NOT_READY.
 
 ## Checkpoint 2026-11-12 — Default prompts executor dan controller reviewer
 
