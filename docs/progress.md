@@ -2,7 +2,40 @@
 
 Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-15 (Asia/Jakarta).
 
-## Checkpoint 2026-11-15 — executor task0010/PA-006 penyerahan ketiga: empat finding controller ditutup
+## Checkpoint 2026-11-15 — controller PR19 changes_requested; task0010 reopened
+
+Exact reviewed candidate **9e9bf2d42002a00a69d54fc355b77384897b9478**, source
+ancestor c99838cd6e9f144adf53bb44ed792fba15a432fe; main9903d9b tetap.
+Keputusan di branch `review/0010-pa006-controller-20261115` (belum integrated),
+[laporan controller](../report/controller/20261114T212816Z-0010-pa006-review.md)
+beserta dua independent source reviews dan raw scripts/log. Publikasi/PR
+diverifikasi dan ditautkan pada handoff setelah commit tersedia.
+
+**OPEN:** REV-1311-01 P1 — actual main HTTP memakai URN tenant→0004→retry
+menduplikasi submission+physical file1→2 (completed dan ambiguous key);
+REV-1311-03 P2 — nested allocation UUID alias200/409/200 dan hash-selected
+UUID alias202 menghasilkan preview0 vs canonical1 + raw job payload;
+REV-1511-05 P1 — pre-existing CSV validation plaintext password masuk
+persisted/replayed response (sentinel di memori; log boolean saja).
+**CLOSED pada SHA ini:** REV-1311-02 parent+group, REV-1411-04 authenticated
+HTTP/after-write rollback+takeover; controller supplement mengassert query
+serta blocker pada empat forced wait graphs. Klaim all-PASS executor di
+bawah adalah histori, bukan acceptance.
+
+Root PostgreSQL17.11 NOSUPERUSER/NOBYPASSRLS: **67 targeted,426 full,6 prior
+probes PASS**, PA-00110 lulus; Django/migration/docs PASS; CI43618187731
+exact9e9bf2d backend/frontend/docs success. Tiga new HTTP conformance cases
+dan dua URN actual-source upgrade cases FAIL; canonical actual-source
+upload/retry PASS. Setup-process-lifetime dan truncated query1024 harness
+issues diakui terpisah; affected attribution tests rerun capture8192 PASS.
+
+Packet [0010](../task/0010-pa006-idempotency.md) kembali **ready /
+changes_requested**, ID tetap, original acceptance utuh. Next actor
+**coding_agent**, tutup01/03/05 minimum lalu resubmit exact SHA + evidence.
+PA-002/003 belum eligible; tidak ada dependent task baru, merge/deploy/tag;
+Beta **NOT_READY**. Host/lab/DR/capacity NOT_RUN.
+
+## Checkpoint 2026-11-15 — riwayat klaim executor task0010/PA-006 penyerahan ketiga (belum diterima)
 
 Koreksi atas keputusan [PR18 changes_requested](https://github.com/smahud/MicroTix_Project/pull/18) pada ID0010 yang sama; branch kandidat `session/2026-11-15-pa006-idempotency` (base keputusan `b6a0cb8`), **implementation `1780e15` + hardening `c99838c`**; packet direname `_done` (execution done / review pending) — menunggu controller review exact SHA. **Bukan acceptance.**
 

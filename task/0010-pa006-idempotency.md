@@ -3,8 +3,8 @@
 | Field | Nilai |
 |---|---|
 | Task ID | `0010` — ID tetap; dibuka kembali untuk koreksi |
-| Execution status | `done` (executor; scope + tes wajib selesai, menunggu review controller) |
-| Review status | `pending` |
+| Execution status | `ready` — reopened untuk koreksi pada ID yang sama; penyerahan ketiga tersimpan dalam histori |
+| Review status | `changes_requested` — controller 15 November 2026 pada PR19 exact head |
 | Controller | ChatGPT Work / reviewer proyek |
 | Executor | Coding agent sandbox; penyerahan ketiga Z.ai 15 November 2026 |
 | Baseline / dependency | `main@9903d9b0cf09d737b553da3c21067b4810e956c0`; PA-001 merged PR9 (`8ce94d4`); tidak diulang |
@@ -12,9 +12,9 @@
 | Candidate branch / exact tested SHA | `session/2026-11-15-pa006-idempotency`; implementation `1780e150695a6b7bbb4109b6f13ea44df54fa6a0` + hardening `c99838c` (tree uji identik); base `review/0010-pa006-controller-20261114@b6a0cb8` |
 | Published SHA / PR / CI | [PR19](https://github.com/smahud/MicroTix_Project/pull/19) base main; first verified publication `35507eb04d6c9a4a1276315dd608a6ef03bd863b`; required CI pada SHA itu **backend/frontend/docs success** (diverifikasi 15 November); commit metadata berikutnya report-only |
 | Execution report / internal reviewer | [Executor](../report/orchestrator/20261114T164816Z-0010-pa006-idempotency.md) (matriks finding→perubahan→tes→evidence + acceptance + call-site table); [independent review](../report/reviewer/20261114T164816Z-0010-pa006-review.md) — PASS_WITH_NOTES, temuan P3 ditutup/didokumentasikan |
-| Controller review | [Keputusan 14 November](../report/controller/20261114T153739Z-0010-pa006-review.md) `changes_requested` pada `37a8729` — kandidat ini menutup keempat finding; review baru belum ada |
-| Next actor | **controller_reviewer** |
-| Exact next action | Review kandidat exact SHA (`1780e15`+`c99838c`, head publikasi di handoff) terhadap REV-1311-01/02/03 + REV-1411-04 dan acceptance awal; keputusan di `report/controller/<UTC>-0010-pa006-review.md` |
+| Controller review | [Keputusan 15 November](../report/controller/20261114T212816Z-0010-pa006-review.md) pada **`9e9bf2d42002a00a69d54fc355b77384897b9478`**: changes_requested; REV-1311-01/03 partial OPEN, REV-1311-02/REV-1411-04 CLOSED, new REV-1511-05 P1 OPEN; keputusan lama tetap histori |
+| Next actor | **coding_agent** |
+| Exact next action | Fetch `review/0010-pa006-controller-20261115` dan PR19; tutup findings01/03/05 sesuai koreksi terbaru di bawah, preserve perbaikan yang lulus, serahkan exact SHA baru + finding→change→closing test→actual evidence pada ID0010 |
 
 Mulai dari [panduan tetap](0000-start-here.md) dan [CONTRACT](../CONTRACT.md). Ini task implementasi, **bukan bukti PA-006 selesai**. Fetch refs dan review delta bila remote berubah; pilih branch baru dari main aktual dengan packet ini tersedia. Jika instruksi belum merged, catat instruction ref/PR dan bawa perubahan dokumentasi yang sah secara semantik; jangan menimpa pekerjaan lain atau menganggap SHA baseline sebagai main untuk selamanya.
 
@@ -35,6 +35,8 @@ Bukti source pada baseline:
 ## Scope dan ownership
 
 Diizinkan: `backend/domains/common/idempotency.py`; bagian model/migration idempotency milik jobs bila perlu; decorator resource/platform scope dan metadata API terkait pada views pemilik; tes relevan; laporan/task/progress/handoff. Hanya perubahan minimum yang dibutuhkan kontrak ini.
+
+Klarifikasi scope koreksi controller 15 November (memenuhi pekerjaan wajib2/5/6 existing, bukan perluasan produk): `customers/services.py` dan boundary handler terkait boleh dikoreksi **hanya** untuk menyamakan typed UUID selection pada hash/preview/durable payload/consumption serta proyeksi preview CSV tanpa plaintext credential. Cache replay/retained data dan tes API terkait boleh dikoreksi minimum; jangan mengubah kebijakan empty selection/authority/lifecycle PA-003, penyimpanan CSV staging secara luas, atau arsitektur. Justifikasi dan bukti ada pada keputusan controller terbaru.
 
 Tidak termasuk: implementasi PA-002/003 engine lifecycle, scanner/MFA, quota policy, network adapters/mutation, installer/deployment, ledger/Tax/ACS/OLT, perubahan CONTRACT atau kebijakan normatif. Bila incidental defect tidak diperlukan untuk PA-006, catat follow-up berbukti. Tidak ada deployment atau akses router/host produksi. Jangan menambah Redis/Celery/broker/framework/repository abstraction.
 
@@ -105,3 +107,43 @@ Source reproducer dan command/log ada pada [evidence controller](../report/contr
 Histori PR15/PR16 tetap di GitHub pada ref yang ditautkan; laporan executor PR17 tetap utuh. Saat resubmit wajib tulis matriks **finding→perubahan→closing test→actual evidence**, lalu acceptance awal seluruhnya. Koreksi expectation malformed platform404→422 sudah diterima sesuai kontrak existing, tidak perlu approval/implementasi ulang; non-platform generic404 tetap dijaga. Tidak ada perluasan ke PA-002/003, installer, Tax atau release gates.
 
 Next setelah accepted: controller menyiapkan PA-002/PA-003 untuk job fencing/drain/authority, termasuk fresh HTTP RLS payload dan uncertain/cancel/stale-writer cases. Kandidat Beta tetap NOT_READY selama gates terkait belum dipenuhi. Tidak ada izin rollout atau tanggal peluncuran yang dibuat oleh task ini.
+
+## Koreksi controller 15 November 2026 — keputusan terbaru, ID0010 tetap
+
+Review exact PR19 **9e9bf2d42002a00a69d54fc355b77384897b9478**:
+**changes_requested**. [Laporan controller](../report/controller/20261114T212816Z-0010-pa006-review.md)
+mengalahkan klaim all-PASS executor di atas; klaim itu dipertahankan sebagai
+histori penyerahan. Instruksi terbaru berada pada
+`review/0010-pa006-controller-20261115` sampai integrasi. Jangan kembali ke
+baseline main atau mengulang group-parent/atomic-claim yang sudah benar.
+
+| Finding | Koreksi minimum | Acceptance penutup |
+|---|---|---|
+| **REV-1311-01 P1 OPEN (partial)** | Parse seluruh valid legacy UUID spellings, termasuk URN tenant/resource; jangan menghapus ambiguous guard karena parser delimiter gagal. Preserve canonical/platform/opaque handling dan atomicity/drain policy. | Actual main HTTP upload→real0004→retry canonical/alias: known response asli, submission/file1; unknown409/reconciliation terbukti, tetap1. Uji URN pada tenant/resource, completed/no-response, wrong body/target409, concurrent retry dan malformed retained data fail-safe. Root sudah membuktikan completed+ambiguous URN membuat submission/file1→2. |
+| **REV-1311-03 P2 OPEN (partial)** | Lengkapi actual typed UUID body inventory: nested `allocations[].invoice_id`, serta selected IDs yang canonical di hash **dan** preview/job/consumption. Jangan normalize opaque strings atau reorder arrays. | Money canonical/uppercase-compact/URN alias same key mereplay200 dengan allocation/receipt/audit/outbox1; beda invoice/amount409; concurrency+retained hash terbukti. Alias-first selected target menghasilkan preview/payload/effect sama dengan canonical-first, satu job; malformed422. Root membuktikan200/409/200 dan alias202 to_create0 vs expected1. |
+| **REV-1511-05 P1 NEW, pre-existing path** | Proyeksi CSV validation/preview/cache/replay harus tanpa plaintext credential; tangani retained cache dengan aman tanpa erase-guard/blind reexecution. Update inventory safe response dan assertion lama yang menuntut raw password preview dengan justifikasi security contract. | Ephemeral sentinel tidak ada dalam initial/replayed response atau persisted/retained response_body; logical replay nonsecret sama, current auth+HMAC utuh. Log boolean/count saja. Root membuktikan seluruh presence boolean true pada200/200. |
+
+**CLOSED pada reviewed SHA:** REV-1311-02 (parent+group/current validation,
+decisions[2,2], malformed422/missing404); REV-1411-04 (full authenticated
+HTTP/after-write rollback+takeover). Query/blocker supplement controller
+membuktikan empat wait graphs: leader→holder dan claim contender→leader.
+Saat memelihara test terkait, bawa supplement assertions atau padanannya;
+jangan mengulang implementasi yang sudah lulus atau mempertahankan klaim
+Lock generik sebagai bukti query/blocker tertentu.
+
+Root independen: **67 targeted +426 full +6 prior probes PASS**;
+PA-001 semua10 tetap lulus, Django/migration/docs PASS; exact candidate CI
+43618187731 backend/frontend/docs success. Tiga new HTTP effect/replay
+probes FAIL (nested UUID,selected IDs,plaintext cache), dua actual URN
+upgrade cases FAIL; canonical real-upload upgrade PASS. Dua kegagalan
+awal harness query capture diperbaiki dengan8192-byte capture dan affected
+platform/rollback probes PASS tanpa melemahkan assertion.
+Evidence dan scripts berada di [controller evidence](../report/controller-evidence/20261114T212816Z-pa006/test_review_edges.py),
+[effect/lock probes](../report/controller-evidence/20261114T212816Z-pa006/test_review_effects.py),
+[actual-source upgrade](../report/controller-evidence/20261114T212816Z-pa006/live_upgrade_edges.py).
+
+Penyerahan koreksi: preserve histori dan perbaikan yang benar; finding→code
+change→failing-before/passing-after closing tests→actual evidence untuk
+01/03/05, lalu acceptance awal lengkap, candidate+remote+CI exact SHA.
+Execution `ready`, review `changes_requested`, next **coding_agent**.
+PA-002/003 dan task dependent baru belum eligible; tidak merge/deploy/tag.

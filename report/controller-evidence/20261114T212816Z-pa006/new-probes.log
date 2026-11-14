@@ -1,0 +1,25 @@
+2026-11-15 04:33:26,691 WARNING django.request Unauthorized: /api/v1/auth/session
+2026-11-15 04:33:26,773 WARNING django.request Conflict: /api/v1/tenants/c4ef5528-d216-4973-9979-943524d9533a/payments/ff7c4ab3-fb70-4c3b-950c-5ee48f2d14bc/verify
+jobs.0004 idempotency identity backfill: kept_with_response=0 kept_no_response=0 platform_remapped=0 legacy_opaque_group=0 malformed_deleted=0 duplicate_deleted=0
+OBSERVED nested allocation UUID {"alias_error": "idempotency_conflict", "effect_counts": {"allocations": 1, "audit": 1, "outbox": 1, "receipts": 1}, "statuses": [200, 409, 200]}
+F2026-11-15 04:33:27,231 WARNING django.request Unauthorized: /api/v1/auth/session
+OBSERVED secret cache {"plaintext_in_cached_response": true, "plaintext_in_initial_response": true, "plaintext_in_replayed_response": true, "statuses": [200, 200]}
+F
+=================================== FAILURES ===================================
+________ test_payment_allocation_uuid_alias_must_replay_original_action ________
+../report/controller-evidence/20261114T212816Z-pa006/test_review_edges.py:62: in test_payment_allocation_uuid_alias_must_replay_original_action
+    assert alias.status_code == 200 and alias.json() == first.json(), "typed nested UUID alias must replay same logical verification"
+E   AssertionError: typed nested UUID alias must replay same logical verification
+E   assert (409 == 200)
+E    +  where 409 = <Response status_code=409, "application/json">.status_code
+______ test_csv_validation_must_not_cache_or_replay_plaintext_credential _______
+../report/controller-evidence/20261114T212816Z-pa006/test_review_edges.py:92: in test_csv_validation_must_not_cache_or_replay_plaintext_credential
+    assert not observed["plaintext_in_cached_response"], "idempotency response cache must not persist a plaintext credential"
+E   AssertionError: idempotency response cache must not persist a plaintext credential
+E   assert not True
+------------------------------ Captured log call -------------------------------
+WARNING  django.request:log.py:293 Unauthorized: /api/v1/auth/session
+=========================== short test summary info ============================
+FAILED ::test_payment_allocation_uuid_alias_must_replay_original_action - Ass...
+FAILED ::test_csv_validation_must_not_cache_or_replay_plaintext_credential - ...
+2 failed in 4.86s
