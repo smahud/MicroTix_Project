@@ -25,7 +25,7 @@ known/unknown sudah PASS. **03A/03B/05 CLOSED**;02/04 dan PA-001 tetap lulus.
 | Instruction ancestry | PR20 `e507175`→b71574d→delivery0372dc4→metadata7b574d0→634da42; preserve all prior valid work |
 | Execution/internal reports | [Executor R4](orchestrator/20261115T044621Z-0010-pa006-idempotency.md), [internal review](reviewer/20261115T044616Z-0010-pa006-r4-review.md); executor closure claims are history, not controller acceptance |
 | Latest controller decision | [Controller R4](controller/20261115T053138Z-0010-pa006-r4-review.md); [upgrade/security reviewer](reviewer/20261115T053213Z-0010-r4-upgrade-security.md), [HTTP identity reviewer](reviewer/20261115T053229Z-0010-r4-http-identity.md) |
-| Decision ref / publication | `review/0010-pa006-controller-r4-20261115`, targeting PR21 branch; publication facts/PR appended to controller report after remote verification |
+| Decision ref / publication | [PR23](https://github.com/smahud/MicroTix_Project/pull/23), `review/0010-pa006-controller-r4-20261115`, targeting PR21 branch. Initial published ancestor **5c31ed63b5e88e2e6c92565c47e60d947dd81666**, tree0031a9ed, remote ref/files/local clean fetch verified; metadata descendant preserves source, controller report §7 |
 | Candidate CI | [43679221142](https://github.com/smahud/MicroTix_Project/actions/runs/43679221142), exact634da42 backend/frontend/docs **success**; does not close failing upgrade acceptance |
 | Next actor | **coding_agent** |
 | Exact next action | Fetch this controller decision ref, fix remaining **REV-1311-01** accepted legacy UUID grammar/reconciliation on task0010, preserve CLOSED03A/03B/05/02/04/PA001, prove old-source migration/retry effects1 and resubmit new exact SHA + report + CI |

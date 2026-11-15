@@ -24,6 +24,12 @@ terverifikasi dicatat pada controller report/handoff. PA-002/003 belum
 eligible, tidak ada packet0020. Host/lab/DR/browser/scale NOT_RUN; Beta
 **NOT_READY**. Tidak ada perubahan aplikasi, merge, deployment atau tag.
 
+Publikasi keputusan terverifikasi pada [PR23](https://github.com/smahud/MicroTix_Project/pull/23):
+initial ancestor **5c31ed63b5e88e2e6c92565c47e60d947dd81666**, remote tree0031a9ed
+sama dengan index lokal; report/packet/handoff/progress remote byte-identical.
+Metadata descendant mencatat fakta publikasi, source634da42 tetap sama;
+required CI publication diverifikasi melalui PR setelah commit terakhir.
+
 ## Checkpoint 2026-11-15 — executor task0010/PA-006 penyerahan keempat: REV-1311-01/03 + REV-1511-05 ditutup
 
 Koreksi atas keputusan [PR20 changes_requested](https://github.com/smahud/MicroTix_Project/pull/20) pada ID0010 yang sama; branch kandidat `session/2026-11-15-pa006-idempotency-correction` (base decision head `e507175`), **implementation `b71574d`**; packet direname `_done` (execution done / review pending) — menunggu controller review exact SHA. **Bukan acceptance.**
