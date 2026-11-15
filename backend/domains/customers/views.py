@@ -637,12 +637,27 @@ class MigrationCommitView(TenantApiView):
             raise ApiError.validation(
                 {"selected_account_ids": [{"code": "invalid", "message": "Harus daftar id objek discovery"}]}
             )
+        # REV-1311-03B: identitas terpilih dikanonikalisasi SEKALI di sini —
+        # ejaan alias UUID (huruf besar/compact/URN/braced) adalah objek
+        # discovery logis yang sama, sehingga preview, payload job durable,
+        # dan konsumsi domain melihat identitas canonical yang sama dengan
+        # hash body (v2). Salah bentuk → 422 (input structured tidak sah).
+        if selected:
+            canonical_selected = []
+            for item in selected:
+                raw = str(item)
+                try:
+                    canonical_selected.append(str(uuid_mod.UUID(raw)))
+                except (ValueError, AttributeError, TypeError):
+                    raise ApiError.validation(
+                        {"selected_account_ids": [{"code": "invalid", "message": "Id objek discovery bukan UUID valid"}]}
+                    ) from None
+        else:
+            canonical_selected = None
         # Ringkasan sinkron (MigrationSummaryCounts) disimpan ke session.counts
         # sebelum job dibuat; job commit_migration menghitung ulang nilai aktual
         # dan menimpa. Respons tetap ketat {job_id, status_url} (kontrak §5).
-        session.counts = services.preview_migration_summary(
-            session, [str(s) for s in selected] if selected else None
-        )
+        session.counts = services.preview_migration_summary(session, canonical_selected)
         session.save(update_fields=["counts"])
         job = engine.create_job(
             tenant_id=tenant_id,
@@ -651,7 +666,7 @@ class MigrationCommitView(TenantApiView):
             router=session.router,
             payload={
                 "session_id": str(session.id),
-                "selected_account_ids": [str(s) for s in selected] if selected else None,
+                "selected_account_ids": canonical_selected,
             },
         )
         return Response(

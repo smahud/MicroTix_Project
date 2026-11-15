@@ -429,6 +429,10 @@ class InternetPaymentVerifyView(TenantApiView):
     @idempotent(
         "internet_payment_verify",
         resource_from=lambda request, kwargs: str(kwargs.get("payment_id", "")),
+        # REV-1311-03: identitas uang bertingkat `allocations[].invoice_id`
+        # dinormalkan sebelum hash — ejaan alias UUID pada alokasi adalah
+        # invoice logis yang sama (replay), bukan 409 palsu.
+        body_uuid_fields=("allocations[].invoice_id",),
     )
     @extend_schema(summary="Verifikasi dana: allocation ke invoice(s) + kwitansi")
     def post(self, request: Request, tenant_id: str, payment_id: str) -> Response:

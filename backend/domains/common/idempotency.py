@@ -24,8 +24,12 @@ yang tidak bergeser ketika operator berpindah active tenant.
 Hash body v2 (REV-1311-03): field identitas UUID yang DIDEKLARASIKAN view
 (`body_uuid_fields`) dinormalkan ke bentuk canonical sebelum HMAC — ejaan
 alias UUID pada body menghasilkan hash yang sama (replay), bukan 409 palsu.
-String lain tetap exact-case; elemen list dinormalkan per elemen tanpa
-mengubah urutan/semantik array. Kompatibilitas record lama: perbandingan
+Spec field: nama top-level (skalar atau list skalar — `package_id`,
+`selected_account_ids`), atau path bertingkat dengan penanda list
+`a[].b` (`allocations[].invoice_id`) untuk angka dict dalam list; hanya
+nilai leaf yang benar-benar ejaan UUID yang diganti. String lain tetap
+exact-case; elemen list dinormalkan per elemen tanpa mengubah
+urutan/semantik array. Kompatibilitas record lama: perbandingan
 menerima hash v2 ATAU hash v1 raw — body yang identik byte-per-byte dengan
 request aslinya selalu cocok dengan record pra-v2.
 
@@ -78,26 +82,59 @@ def _hash_payload(payload: Any) -> str:
     return hmac.new(settings.SECRET_KEY.encode(), canonical.encode(), hashlib.sha256).hexdigest()
 
 
+def _canon_or_keep(value: Any) -> Any:
+    if isinstance(value, str):
+        canon = _canonical_uuid_value(value)
+        return canon if canon is not None else value
+    return value
+
+
+def _normalize_path(value: Any, segments: tuple[str, ...]) -> Any:
+    """Normalisasi rekursif pada path bertingkat yang dideklarasikan (v2).
+
+    `a[].b` → segmen `"a[]"` menelusuri list `a` dan menerapkan sisa path ke
+    tiap anggota; segmen tanpa `[]` menelusuri kunci dict. Leaf berupa
+    ejaan UUID diganti canonical; leaf list dinormalkan per elemen; nilai
+    lain/tipe lain/struktur yang tidak cocok dipertahankan apa adanya
+    (bentuk asing tidak diubah hash-nya → tetap konflik 409 yang jujur).
+    Urutan list dan kunci lain tidak disentuh.
+    """
+    if not segments:
+        if isinstance(value, list):
+            return [_canon_or_keep(v) for v in value]
+        return _canon_or_keep(value)
+    seg, rest = segments[0], segments[1:]
+    if not isinstance(value, dict):
+        return value
+    if seg.endswith("[]"):
+        key = seg[:-2]
+        if key in value and isinstance(value.get(key), list):
+            return {**value, key: [_normalize_path(item, rest) for item in value[key]]}
+        return value
+    if seg in value:
+        return {**value, seg: _normalize_path(value[seg], rest)}
+    return value
+
+
 def _normalize_body(body: Any, uuid_fields: Iterable[str]) -> Any:
     """Salin body dengan field UUID yang dideklarasikan dinormalkan (v2).
 
     Hanya nilai yang benar-benar ejaan UUID yang diganti; string lain
     (username, kode, opaque) dipertahankan exact-case. List dinormalkan per
     elemen tanpa mengubah urutan (semantik array dipertahankan). Body bukan
-    dict dikembalikan apa adanya.
+    dict dikembalikan apa adanya. Spec bertingkat `a[].b` menormalkan angka
+    dict dalam list (REV-1311-03: nested money identity
+    `allocations[].invoice_id`) tanpa mengubah urutan/angka lain.
     """
     fields = tuple(uuid_fields)
     if not fields or not isinstance(body, dict):
         return body
 
-    def _canon_or_keep(value: Any) -> Any:
-        if isinstance(value, str):
-            canon = _canonical_uuid_value(value)
-            return canon if canon is not None else value
-        return value
-
     normalized = dict(body)
     for field in fields:
+        if "." in field:
+            normalized = _normalize_path(normalized, tuple(field.split(".")))
+            continue
         if field not in normalized:
             continue
         value = normalized[field]

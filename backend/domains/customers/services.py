@@ -38,6 +38,24 @@ from domains.network.models import DiscoveryObject, DiscoverySnapshot, Router
 USERNAME_MAX_CHARS = 64
 USERNAME_MAX_BYTES = 64
 
+# Proyeksi preview CSV tanpa plaintext credential (REV-1511-05; ARCHITECTURE
+# §5 "jangan cache plaintext secret/reveal response"): nilai password pada
+# baris preview diganti penanda tetap — keberadaan kredensial tetap terlihat,
+# nilainya tidak pernah masuk respons/api cache idempotency.
+PREVIEW_SECRET_MASK = "********"
+
+
+def _preview_row(row: dict) -> dict:
+    """Salin baris preview dengan field credential dimasking (REV-1511-05).
+
+    Hanya kunci "password" yang diganti penanda; kunci lain, urutan, dan
+    baris tanpa password tidak disentuh. Baris bukan dict dikembalikan apa
+    adanya (bentuk asing tidak diubah — tetap terlihat jujur di preview).
+    """
+    if not isinstance(row, dict) or "password" not in row:
+        return row
+    return {**row, "password": PREVIEW_SECRET_MASK}
+
 CSV_MAX_ROWS = 5000
 CSV_PREVIEW_ROWS = 10
 
@@ -410,7 +428,11 @@ def validate_csv(csv_import: CsvImport) -> dict:
         "valid_rows": len(valid_idx),
         "error_rows": len(errors),
         "row_errors": errors,
-        "preview": [r for r in rows if isinstance(r, dict)][:CSV_PREVIEW_ROWS],
+        # REV-1511-05: preview bebas plaintext credential — respons ini
+        # di-cache oleh IdempotencyKey (csv_import_validate) dan direplay;
+        # nilai password tidak boleh masuk cache/respons mana pun. Penanda
+        # tetap menyatakan bahwa baris membawa kredensial.
+        "preview": [_preview_row(r) for r in rows if isinstance(r, dict)][:CSV_PREVIEW_ROWS],
     }
     csv_import.validation = result
     csv_import.state = CsvImport.State.VALIDATED
@@ -651,6 +673,26 @@ def resolve_conflict_group(session: MigrationSession, group_id: str, resolution:
     return len(group["objects"])
 
 
+def _canonical_selected_ids(selected_ids: list[str] | None) -> set[str] | None:
+    """Normalkan ejaan UUID objek discovery ke canonical (REV-1311-03B).
+
+    Konsumsi domain membandingkan `str(obj.id)` canonical — ejaan alias
+    (huruf besar/compact/URN/braced) harus mengenai objek yang sama; nilai
+    non-UUID dipertahankan apa adanya (tidak akan cocok → aman). Menutup
+    payload job lama yang menyimpan ejaan mentah.
+    """
+    if selected_ids is None:
+        return None
+    out: set[str] = set()
+    for s in selected_ids:
+        raw = str(s)
+        try:
+            out.add(str(uuid.UUID(raw)))
+        except (ValueError, AttributeError, TypeError):
+            out.add(raw)
+    return out
+
+
 @transaction.atomic
 def preview_migration_summary(session: MigrationSession, selected_ids: list[str] | None = None) -> dict:
     """Ringkasan MigrationSummaryCounts TANPA efek samping (untuk wizard U07).
@@ -660,7 +702,7 @@ def preview_migration_summary(session: MigrationSession, selected_ids: list[str]
     Job commit_migration menghitung ulang nilai aktual dan menimpa counts.
     """
     tenant_id = session.tenant_id
-    selected_set = {str(s) for s in selected_ids} if selected_ids is not None else None
+    selected_set = _canonical_selected_ids(selected_ids)
     decisions = {str(d.discovery_object_id): d for d in session.decisions.all()}
     groups = identity_conflict_groups(tenant_id)
     conflict_member_ids: set[str] = set()
@@ -746,7 +788,7 @@ def commit_migration(session: MigrationSession, *, selected_ids: list[str] | Non
         raise JobError(code="conflict", retryable=False, message=f"State sesi tidak sah untuk commit: {session.state}")
 
     tenant_id = session.tenant_id
-    selected_set = {str(s) for s in selected_ids} if selected_ids is not None else None
+    selected_set = _canonical_selected_ids(selected_ids)
     decisions = {str(d.discovery_object_id): d for d in session.decisions.all()}
     groups = identity_conflict_groups(tenant_id)
     # Objek mana pun yang masuk grup konflik (untuk pengecualian tanpa resolusi).

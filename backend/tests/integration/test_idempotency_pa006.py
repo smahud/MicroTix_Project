@@ -1286,10 +1286,11 @@ class TestLegacyAndMigration:
             AuditEvent, world.tenant.id, action_code="payment_submission.approve"
         ) == 0
 
-    def test_migration_0004_backfill_canonical_dedupe_and_purge(self):
+    def test_migration_0004_backfill_canonical_dedupe_and_fail_safe_retention(self):
         """Migrasi jobs.0004: backfill identitas canonical dari scope lama,
-        dedupe alias, HANYA hapus scope tak terurai; record tanpa respons
-        DIPERTAHANKAN (penjaga efek ambigu); constraint identitas dipasang."""
+        dedupe alias; scope tak terurai DIPERTAHANKAN sebagai baris mati
+        (fail-safe REV-1311-01); record tanpa respons DIPERTAHANKAN (penjaga
+        efek ambigu); constraint identitas dipasang."""
         from django.db import connection
         from django.db.migrations.executor import MigrationExecutor
 
@@ -1343,7 +1344,9 @@ class TestLegacyAndMigration:
             body_hash=body_h,
             created_at=now - _dt.timedelta(days=2),
         )
-        # 4) scope salah bentuk → dihapus (data cache rusak, tak terurai).
+        # 4) scope salah bentuk → baris mati DIPERTAHANKAN (fail-safe
+        #    REV-1311-01: kegagalan parser delimiter bukan izin menghapus
+        #    penjaga efek non-expired — bukti rekonsiliasi ops tetap ada).
         IdemOld.objects.create(
             principal=str(world.owner.id),
             scope="tidak-terurai",
@@ -1370,7 +1373,12 @@ class TestLegacyAndMigration:
 
         # Klaim tanpa respons DIPERTAHANKAN (bukan dihapus).
         assert IdempotencyKey.objects.filter(idem_key="mig-stale").count() == 1
-        assert IdempotencyKey.objects.filter(idem_key="mig-bad").count() == 0
+        # Scope tak terurai → baris mati RETAINED (bukan dihapus): penanda
+        # operasi khusus tidak pernah cocok dengan klaim runtime baru; respons
+        # (evidence aksi selesai) tetap utuh untuk rekonsiliasi ops.
+        bad = IdempotencyKey.objects.get(idem_key="mig-bad")
+        assert bad.operation == "__unparsed__"
+        assert bad.response_status == 201
         kept = IdempotencyKey.objects.get(idem_key="mig-keep")
         assert kept.tenant_scope == str(world.tenant.id)  # alias terkanonikalisasi
         assert kept.operation == "quotation"
@@ -1424,6 +1432,15 @@ class TestLegacyAndMigration:
         )
         assert r_opaque.status_code == 201  # operasi beda → aksi baru sah
 
+        # Key record tak-terurai pada operasi apa pun → aksi baru sah: baris
+        # mati ber-penanda operasi khusus tidak pernah cocok (tidak menahan,
+        # tidak 500); penjaga/evidence tetap tersimpan untuk ops.
+        r_bad = ca.post(
+            f"/api/v1/tenants/{world.tenant.id}/quotations",
+            body, headers={"Idempotency-Key": "mig-bad"},
+        )
+        assert r_bad.status_code == 201
+
         # Principal berbeda tidak memperoleh respons legacy (target/principal salah).
         member = User.objects.create_user(
             email="member-mig@test.local", full_name="Member Migrasi",
@@ -1437,9 +1454,10 @@ class TestLegacyAndMigration:
         )
         assert rb.status_code == 201
         assert rb.json() != response_latest
-        # Dua invoice total: satu dari aksi baru key mig-opaque (r_opaque),
-        # satu dari aksi baru principal member — keduanya bukan replay legacy.
-        assert _count_in_tenant(SaaSInvoice, world.tenant.id) == 2
+        # Tiga invoice total: aksi baru key mig-opaque, aksi baru key
+        # mig-bad (baris mati tak terurai tidak menahan), dan aksi baru
+        # principal member — keduanya bukan replay legacy.
+        assert _count_in_tenant(SaaSInvoice, world.tenant.id) == 3
 
 
 # ---------------------------------------------------------------------------

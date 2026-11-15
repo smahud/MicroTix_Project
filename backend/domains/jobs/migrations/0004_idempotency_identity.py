@@ -29,11 +29,21 @@ Kebijakan legacy record (PA-006 pekerjaan wajib no. 6; koreksi REV-1311-01):
   legacy_shapes + replay_guard (verifikasi submission→invoice/tenant) —
   migrasi sengaja TIDAK membaca tabel tenant subs_payment_submission karena
   FORCE RLS berlaku juga bagi migrator tanpa konteks tenant.
-- Bentuk scope yang tidak terurai (bukan 3 bagian / operation kosong)
-  dihapus sebagai data cache rusak (jumlah dicatat). Identitas yang tidak
-  dapat dipetakan (tenant/resource bukan UUID padahal operasinya UUID)
-  dipertahankan dengan nilai mentah — baris mati yang tak pernah cocok,
-  bukan dihapus.
+- Scope legacy menyimpan URL kwargs MENTAH: ejaan UUID apa pun yang diterima
+  router <str:...> bisa tersimpan, termasuk `urn:uuid:<hex>` yang mengandung
+  kolon (5+ segmen). Parser 0004 mengenali bentuk baseline yang sah itu
+  (tenant maupun resource) dan menormalkannya ke UUID canonical
+  (REV-1311-01: kegagalan parser delimiter lama pernah menghapus penjaga
+  record valid → retry pasca-upgrade menduplikasi submission).
+- Bentuk scope yang TIDAK dapat direkonstruksi (bukan pola baseline yang
+  sah, mis. sisa kolon yang tidak membentuk UUID) DIPERTAHANKAN sebagai
+  baris mati ber-penanda operasi khusus — BUKAN dihapus: kegagalan parser
+  bukan izin menghapus penjaga efek non-expired. Baris mati ini tidak akan
+  pernah cocok dengan identitas runtime baru (kolom operation memakai nilai
+  penanda yang bukan operasi decorator mana pun), sehingga tetap hanya
+  berfungsi sebagai bukti rekonsiliasi ops. Identitas yang terurai tetapi
+  tidak dapat dipetakan (tenant/resource bukan UUID padahal operasinya UUID)
+  juga dipertahankan dengan nilai mentah — baris mati yang tak pernah cocok.
 - Tabrakan identitas canonical setelah normalisasi alias (mis. ejaan huruf
   besar vs kecil): dipertahankan satu record TERBARU YANG PUNYA RESPONS
   (bukti aksi selesai); bila tidak ada yang punya respons, terbaru. Sisanya
@@ -70,12 +80,57 @@ _PLATFORM_OPERATIONS = frozenset(
     {"platform_submission_approve", "platform_submission_reject", "platform_submission_revision"}
 )
 
+# Penanda operasi untuk scope yang TIDAK dapat direkonstruksi (REV-1311-01):
+# nilai ini bukan nama operasi decorator mana pun sehingga identitas baris
+# mati tidak akan pernah cocok dengan klaim runtime baru.
+_UNPARSED_OPERATION = "__unparsed__"
+
 
 def _canonical_uuid(value):
     try:
         return str(_uuid.UUID(str(value)))
     except (ValueError, AttributeError, TypeError):
         return None
+
+
+def _seg_is_urn(seg: str) -> bool:
+    """Deteksi segmen 'urn'/'uuid' toleran kurung kurawal (braced-URN).
+
+    stdlib uuid.UUID menerima `{urn:uuid:<hex>}` (diverifikasi), sehingga
+    writer main dapat menyimpan ejaan itu pada kwargs URL. Stripping brace
+    hanya untuk DETEKSI; nilai yang direkonstruksi tetap verbatim lalu
+    dikanonikalisasi `_canonical_uuid` (ejaan asing yang tidak valid akan
+    gagal parse → tetap baris mati yang aman).
+    """
+    return str(seg).strip("{}").lower() == "urn"
+
+
+def _split_legacy_scope(scope):
+    """Uraikan scope lama `operation:tenant:resource` toleran URN (REV-1311-01).
+
+    Writer main menyimpan kwargs URL mentah: tenant/resource dapat berupa
+    ejaan UUID apa pun yang diterima router <str:...> dan stdlib uuid.UUID,
+    termasuk `urn:uuid:<hex>` dan `{urn:uuid:<hex>}` yang mengandung kolon.
+    Kembalikan tuple (operation, tenant_raw, resource_raw), atau None bila
+    bentuk tidak dapat direkonstruksi secara aman (pola kolon yang tidak
+    membentuk UUID/URN yang dikenal).
+    """
+    s = str(scope or "")
+    operation, sep, rest = s.partition(":")
+    if not sep or not operation:
+        return None
+    segs = rest.split(":") if rest else []
+    # Tenant URN: `urn:uuid:<hex>` (± kurung) menempati 3 segmen pertama;
+    # sisanya resource.
+    if len(segs) >= 3 and _seg_is_urn(segs[0]) and str(segs[1]).strip("{}").lower() == "uuid":
+        return operation, ":".join(segs[:3]), ":".join(segs[3:])
+    # Resource URN: 3 segmen terakhir; sisanya tenant.
+    if len(segs) >= 4 and _seg_is_urn(segs[-3]) and str(segs[-2]).strip("{}").lower() == "uuid":
+        return operation, ":".join(segs[:-3]), ":".join(segs[-3:])
+    # Bentuk standar dua segmen (tenant, resource — keduanya boleh kosong).
+    if len(segs) == 2:
+        return operation, segs[0], segs[1]
+    return None
 
 
 def _backfill_identity(apps, schema_editor):
@@ -85,7 +140,7 @@ def _backfill_identity(apps, schema_editor):
         "kept_no_response": 0,
         "platform_remapped": 0,
         "legacy_opaque": 0,
-        "malformed_deleted": 0,
+        "unparsed_retained": 0,
         "duplicate_deleted": 0,
     }
     # Tahap 1: materialisasi seluruh baris (tanpa mutasi sambil iterasi).
@@ -101,31 +156,39 @@ def _backfill_identity(apps, schema_editor):
     best: dict[tuple, dict] = {}
     delete_ids: list[int] = []
     for pk, principal, scope, idem_key, response_status, created_at in rows:
-        parts = str(scope or "").split(":")
-        if len(parts) != 3 or not parts[0]:
-            delete_ids.append(pk)
-            stats["malformed_deleted"] += 1
-            continue
-        operation, tenant_raw, resource_raw = parts
-        if operation in _PLATFORM_OPERATIONS:
-            tenant_c = "platform"
-            if tenant_raw and tenant_raw.lower() != "platform":
-                stats["platform_remapped"] += 1
-        elif str(tenant_raw).lower() == "platform":
-            tenant_c = "platform"
+        parsed = _split_legacy_scope(scope)
+        if parsed is None:
+            # REV-1311-01 fail-safe: identitas TIDAK dapat direkonstruksi —
+            # pertahankan sebagai baris mati (penanda operasi khusus yang
+            # tak pernah cocok dengan klaim runtime baru), jangan hapus
+            # penjaga efek non-expired. Sisa scope mentah disimpan pada
+            # tenant_scope sebagai bukti rekonsiliasi ops (truncated 64).
+            operation = _UNPARSED_OPERATION
+            tenant_c = str(scope or "").partition(":")[2][:64] or "_"
+            resource_c = ""
+            stats["unparsed_retained"] += 1
         else:
-            # UUID canonical; nilai mentah yang tidak valid tetap disimpan
-            # (baris mati yang tak pernah cocok — bukan dihapus).
-            tenant_c = _canonical_uuid(tenant_raw) or str(tenant_raw)
-        if operation in _OPAQUE_RESOURCE_OPERATIONS:
-            # Bentuk lama group-only TIDAK dapat diikat ke migration UUID —
-            # dipertahankan apa adanya; runtime menolak aman (REV-1311-02).
-            resource_c = resource_raw
-            stats["legacy_opaque"] += 1
-        else:
-            resource_c = _canonical_uuid(resource_raw) if resource_raw else ""
-            if resource_raw and resource_c is None:
-                resource_c = resource_raw  # baris mati, dipertahankan
+            operation, tenant_raw, resource_raw = parsed
+            if operation in _PLATFORM_OPERATIONS:
+                tenant_c = "platform"
+                if tenant_raw and tenant_raw.lower() != "platform":
+                    stats["platform_remapped"] += 1
+            elif str(tenant_raw).lower() == "platform":
+                tenant_c = "platform"
+            else:
+                # UUID canonical (semua ejaan sah termasuk URN/braced/compact);
+                # nilai mentah yang tidak valid tetap disimpan (baris mati
+                # yang tak pernah cocok — bukan dihapus).
+                tenant_c = _canonical_uuid(tenant_raw) or str(tenant_raw)
+            if operation in _OPAQUE_RESOURCE_OPERATIONS:
+                # Bentuk lama group-only TIDAK dapat diikat ke migration UUID —
+                # dipertahankan apa adanya; runtime menolak aman (REV-1311-02).
+                resource_c = resource_raw
+                stats["legacy_opaque"] += 1
+            else:
+                resource_c = _canonical_uuid(resource_raw) if resource_raw else ""
+                if resource_raw and resource_c is None:
+                    resource_c = resource_raw  # baris mati, dipertahankan
         identity = (str(principal), tenant_c, operation, resource_c, str(idem_key))
         rank = (1 if response_status is not None else 0, created_at, pk)
         candidate = {
@@ -161,7 +224,7 @@ def _backfill_identity(apps, schema_editor):
         f"kept_with_response={stats['kept']} kept_no_response={stats['kept_no_response']} "
         f"platform_remapped={stats['platform_remapped']} "
         f"legacy_opaque_group={stats['legacy_opaque']} "
-        f"malformed_deleted={stats['malformed_deleted']} "
+        f"unparsed_retained={stats['unparsed_retained']} "
         f"duplicate_deleted={stats['duplicate_deleted']}"
     )
 
