@@ -1,0 +1,92 @@
+{
+  "result": "PASS",
+  "command": "inline Python record QA (recorded checks below)",
+  "environment": {
+    "python": "3.12.14",
+    "git": "git version 2.52.0"
+  },
+  "checks": [
+    {
+      "check": "starting local HEAD",
+      "result": "PASS",
+      "detail": "80dfc892dba16703b1c0e5a2f59ab713fe1cc6bf"
+    },
+    {
+      "check": "candidate ancestry and protected candidate-to-decision delta",
+      "result": "PASS",
+      "detail": "ancestor; protected delta empty"
+    },
+    {
+      "check": "remote inventory, prior branch comparison",
+      "result": "PASS",
+      "detail": {
+        "branches": 25,
+        "open_prs": 13,
+        "unchanged_heads": 24,
+        "changed": {
+          "review/0010-pa006-controller-r4-20261115": {
+            "prior": "1bc84a44e6aacb3a436f7f99a203b6e43dbfbe59",
+            "current": "80dfc892dba16703b1c0e5a2f59ab713fe1cc6bf"
+          }
+        }
+      }
+    },
+    {
+      "check": "packet preserved except latest-state metadata row",
+      "result": "PASS",
+      "detail": {
+        "body_sha256": "b6ec7190ede3c0a859d7430e3bc71c0179437b88eac869a35007d895fc99b303"
+      }
+    },
+    {
+      "check": "native documentation validator",
+      "result": "PASS",
+      "detail": {
+        "command": "python3 docs/tools/check_docs.py",
+        "exit": 0,
+        "result": "PASS",
+        "scope": "documentation_static_only",
+        "files": 24,
+        "internal_links": 106,
+        "tasks": 85,
+        "dependency_edges": 240,
+        "designed_cases": 256,
+        "designed_assertions": 662,
+        "referenced_requirement_ids": 172,
+        "technical_defaults": 115,
+        "application_runtime_tests_executed": 0,
+        "production_readiness": "NOT_EVALUATED"
+      }
+    },
+    {
+      "check": "permitted paths and one unfinished packet",
+      "result": "PASS",
+      "detail": [
+        "docs/progress.md",
+        "report/LATEST_HANDOFF.md",
+        "report/controller-evidence/20261115T123944Z-pa006-state/checks.json",
+        "report/controller-evidence/20261115T123944Z-pa006-state/docs.log",
+        "report/controller-evidence/20261115T123944Z-pa006-state/remote-state.json",
+        "report/controller/20261115T123944Z-0010-pa006-state-review.md",
+        "report/reviewer/20261115T123939Z-0010-pa006-state-review.md",
+        "task/0010-pa006-idempotency.md"
+      ]
+    },
+    {
+      "check": "changed Markdown relative targets",
+      "result": "PASS",
+      "detail": {
+        "links": 67
+      }
+    },
+    {
+      "check": "git diff --check",
+      "result": "PASS",
+      "detail": {
+        "exit": 0
+      }
+    }
+  ],
+  "runtime_acceptance_tests_executed_locally": 0,
+  "note": "Record QA only; no application source or tests changed. CI fields in remote-state are pre-existing exact-head observations."
+}

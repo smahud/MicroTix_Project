@@ -1,0 +1,14 @@
+{
+  "result": "PASS",
+  "scope": "documentation_static_only",
+  "files": 24,
+  "internal_links": 106,
+  "tasks": 85,
+  "dependency_edges": 240,
+  "designed_cases": 256,
+  "designed_assertions": 662,
+  "referenced_requirement_ids": 172,
+  "technical_defaults": 115,
+  "application_runtime_tests_executed": 0,
+  "production_readiness": "NOT_EVALUATED"
+}
