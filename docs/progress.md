@@ -2,6 +2,14 @@
 
 Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-15 (Asia/Jakarta).
 
+## Checkpoint 2026-11-15 — executor task0010/PA-006 penyerahan keempat: REV-1311-01/03 + REV-1511-05 ditutup
+
+Koreksi atas keputusan [PR20 changes_requested](https://github.com/smahud/MicroTix_Project/pull/20) pada ID0010 yang sama; branch kandidat `session/2026-11-15-pa006-idempotency-correction` (base decision head `e507175`), **implementation `b71574d`**; packet direname `_done` (execution done / review pending) — menunggu controller review exact SHA. **Bukan acceptance.**
+
+**Perubahan inti**: (1) REV-1311-01 — parser scope legacy migrasi 0004 ditulis ulang toleran URN/braced-URN pada tenant maupun resource (kwargs URL mentah main; scope `urn:uuid:` valid tidak lagi dihapus "malformed"); scope tak-terurai DIPERTAHANKAN sebagai baris mati `__unparsed__` (fail-safe). (2) REV-1311-03A — normalisasi hash v2 bertingkat `allocations[].invoice_id` (alias satu invoice logis mereplay); REV-1311-03B — selected_account_ids dikanonikalisasi di view (preview/payload job durable, 422 malformed) + konsumsi domain melindungi payload job lama. (3) REV-1511-05 — preview CSV bebas plaintext credential (mask); migrasi **0005** scrub record retained tanpa menghapus penjaga; mock frontend paritas.
+
+**Bukti (PG 17.11 nyata, role non-superuser, FreeRADIUS aktif)**: **probe controller PR20 dijalankan ulang UTUH** dari worktree baseline main9903d9b — 15/15 langkah live upgrade exit 0: URN completed **201 replay submission semula (submission/file 1)**, URN ambiguous **409 aman (submission/file 1)** (dua kasus yang dulu FAIL); review-edges 2 passed (nested alias replay; plaintext false×3); review-effects 5 passed (selected canonical payload; 4 wait-graph query/blocker). Suite penuh **452 passed**, targeted 93, `manage.py check` 0, `makemigrations --check` bersih, docs PASS, frontend typecheck/lint/Vitest 66/i18n/contrast/live-build sukses. Review internal independen [PASS_WITH_NOTES](../report/reviewer/20261115T044616Z-0010-pa006-r4-review.md); temuan F-01 P2 (braced-URN) + F-02/F-03 P3 ditutup pada kandidat. Laporan: [executor keempat](../report/orchestrator/20261115T044621Z-0010-pa006-idempotency.md). Next actor **controller_reviewer**. Beta tetap NOT_READY; PA-002/003 menunggu accepted.
+
 ## Checkpoint 2026-11-15, 07:58 WIB — koreksi task0010 belum diserahkan
 
 [Controller submission check](../report/controller/20261115T005847Z-0010-pa006-resubmission-review.md)
