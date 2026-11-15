@@ -47,7 +47,12 @@ base main, branch `session/2026-11-15-pa006-idempotency-correction`, head
 pada exact head **completed/success** (backend, frontend, docs — GitHub
 results, bukan rerun lokal). CI hijau bukan acceptance; keputusan tetap
 milik controller_reviewer pada exact SHA. Metadata descendant ini hanya
-mencatat fakta publikasi yang sudah ada; tidak ada source delta.
+mencatat fakta publikasi yang sudah ada; tidak ada source delta. Final PR
+head saat ini **`7b574d097d816d4735167bae59859af95b75dae4`** (descendant
+report-only dari 0372dc4 — pohon source identik) dengan required CI
+[43678886349](https://github.com/smahud/MicroTix_Project/actions/runs/43678886349)
+exact-head backend/frontend/docs **success** juga terverifikasi; SHA masa
+depan file ini tidak dikarang.
 
 ## 1. Hasil penyerahan keempat (ringkas)
 
