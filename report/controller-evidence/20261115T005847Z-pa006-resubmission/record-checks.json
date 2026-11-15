@@ -1,0 +1,21 @@
+{
+  "result": "PASS",
+  "session_files_before_validation_record": [
+    "docs/progress.md",
+    "report/LATEST_HANDOFF.md",
+    "report/controller-evidence/20261115T005847Z-pa006-resubmission/existing-ci-jobs.json",
+    "report/controller-evidence/20261115T005847Z-pa006-resubmission/ref-source-checks.json",
+    "report/controller-evidence/20261115T005847Z-pa006-resubmission/remote-snapshot.json",
+    "report/controller-evidence/20261115T005847Z-pa006-resubmission/source-and-docs.log",
+    "report/controller/20261115T005847Z-0010-pa006-resubmission-review.md",
+    "report/reviewer/20261115T005900Z-0010-resubmission-independent.md",
+    "task/0010-pa006-idempotency.md"
+  ],
+  "session_file_count_before_validation_record": 9,
+  "local_markdown_links_checked": 47,
+  "packet_body_below_metadata": "byte-identical to prior decision",
+  "protected_delta": "empty excluding report/task/progress only",
+  "diff_check": "PASS",
+  "secret_pattern_scan": "PASS",
+  "independent_qa": "APPROVED; timezone corrected; no new application tests"
+}

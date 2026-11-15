@@ -7,6 +7,17 @@ ada penyerahan. Semua tanggal di sini Asia/Jakarta; evidence filenames UTC.
 
 ## 0. Task aktif dan exact next action
 
+Checkpoint terbaru **15 November 2026, mulai 07:58 WIB**:
+[controller submission check](controller/20261115T005847Z-0010-pa006-resubmission-review.md)
+dan [independent check](reviewer/20261115T005900Z-0010-resubmission-independent.md)
+memverifikasi 22 branch /10 PR terbuka; belum ada penyerahan koreksi setelah
+keputusan PR20@2f2416b. PR19 tetap9e9bf2d, main tetap9903d9b.
+**Correction delivery not_submitted**; review implementasi tetap
+**changes_requested**, next actor **coding_agent**. Checkpoint ditambahkan
+pada PR20 existing, tanpa PR/task dependent baru. Temuan01/03/05 masih
+OPEN dan02/04 tetap CLOSED; detail dan evidence milik keputusan di bawah.
+Tes runtime lama tidak diulang atau diklaim sebagai hasil sesi ini.
+
 | Field | Status / pointer |
 |---|---|
 | Canonical main teramati | **9903d9b0cf09d737b553da3c21067b4810e956c0**, tidak berubah |

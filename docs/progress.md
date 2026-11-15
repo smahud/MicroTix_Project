@@ -2,6 +2,21 @@
 
 Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-15 (Asia/Jakarta).
 
+## Checkpoint 2026-11-15, 07:58 WIB — koreksi task0010 belum diserahkan
+
+[Controller submission check](../report/controller/20261115T005847Z-0010-pa006-resubmission-review.md)
+memeriksa 22 branch /10 PR terbuka: main9903d9b, PR19@9e9bf2d dan
+starting decision PR20@2f2416b tidak berubah. Protected source/config delta
+kosong; belum ditemukan corrected candidate baru. **Correction delivery
+not_submitted**, task0010 tetap **ready / changes_requested**, next actor
+**coding_agent** menutup REV-1311-01/03 dan REV-1511-05 dari instruction ref
+PR20 existing. REV-1311-02 dan REV-1411-04 tetap CLOSED pada reviewed SHA.
+Docs validator PASS24files/106links; candidate/starting-decision exact-head
+CI diverifikasi success, tanpa mengklaim runtime tests baru. Independent
+check ditautkan pada laporan. Checkpoint dipublikasikan pada branch PR20
+yang sama; PA-002/003 tetap belum eligible, tidak ada task/PR baru,
+merge/deploy/tag. Beta **NOT_READY**.
+
 ## Checkpoint 2026-11-15 — controller PR19 changes_requested; task0010 reopened
 
 Exact reviewed candidate **9e9bf2d42002a00a69d54fc355b77384897b9478**, source

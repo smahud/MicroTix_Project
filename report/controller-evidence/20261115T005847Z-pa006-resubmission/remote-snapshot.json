@@ -1,0 +1,302 @@
+{
+  "observed_at_utc": "2026-11-15T00:59:46.249Z",
+  "main_sha": "9903d9b0cf09d737b553da3c21067b4810e956c0",
+  "branches": [
+    {
+      "name": "docs/default-agent-prompts-20261112",
+      "commit": {
+        "sha": "776099e10def9c6922a105f0e7b6ca278a47c025",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/776099e10def9c6922a105f0e7b6ca278a47c025"
+      },
+      "protected": false
+    },
+    {
+      "name": "docs/payment-point-planning-20261113",
+      "commit": {
+        "sha": "2a9803593c328ab014bab6695b298072ed4c1886",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/2a9803593c328ab014bab6695b298072ed4c1886"
+      },
+      "protected": false
+    },
+    {
+      "name": "docs/planning-audit-20261110",
+      "commit": {
+        "sha": "6bb57c9251f3a7a67b71b9523c01e507fdb1b601",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/6bb57c9251f3a7a67b71b9523c01e507fdb1b601"
+      },
+      "protected": false
+    },
+    {
+      "name": "docs/task-communication-loop-20261112",
+      "commit": {
+        "sha": "4f807e77484babf71550ede3bd2aa65a990aa877",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/4f807e77484babf71550ede3bd2aa65a990aa877"
+      },
+      "protected": false
+    },
+    {
+      "name": "docs/task-workflow-20261112",
+      "commit": {
+        "sha": "826672ee3fbebd48eddc833a3a9e29282ccbaec1",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/826672ee3fbebd48eddc833a3a9e29282ccbaec1"
+      },
+      "protected": false
+    },
+    {
+      "name": "integration/beta-0.1",
+      "commit": {
+        "sha": "0eb01d2e5baaa6511e0b2145f05850df18a1bdc0",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/0eb01d2e5baaa6511e0b2145f05850df18a1bdc0"
+      },
+      "protected": false
+    },
+    {
+      "name": "main",
+      "commit": {
+        "sha": "9903d9b0cf09d737b553da3c21067b4810e956c0",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/9903d9b0cf09d737b553da3c21067b4810e956c0"
+      },
+      "protected": false
+    },
+    {
+      "name": "parallel/beta-be2",
+      "commit": {
+        "sha": "c9023e6d9bb1e5e1b2ef18685d94bc82f6c6eb02",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/c9023e6d9bb1e5e1b2ef18685d94bc82f6c6eb02"
+      },
+      "protected": false
+    },
+    {
+      "name": "review/0010-pa006-controller-20261113",
+      "commit": {
+        "sha": "5da0d801c71b020fbb8b977294502ea5a09e7bcb",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/5da0d801c71b020fbb8b977294502ea5a09e7bcb"
+      },
+      "protected": false
+    },
+    {
+      "name": "review/0010-pa006-controller-20261114",
+      "commit": {
+        "sha": "b6a0cb863f52cbbf512b23dceafc4231ff9c7d74",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/b6a0cb863f52cbbf512b23dceafc4231ff9c7d74"
+      },
+      "protected": false
+    },
+    {
+      "name": "review/0010-pa006-controller-20261115",
+      "commit": {
+        "sha": "2f2416b3ebda64bf45d6f305c153ac0418db3b0c",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/2f2416b3ebda64bf45d6f305c153ac0418db3b0c"
+      },
+      "protected": false
+    },
+    {
+      "name": "review/0010-pa006-submission-check-20261112",
+      "commit": {
+        "sha": "17901fc439199ad70082942832d88fd7214f391c",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/17901fc439199ad70082942832d88fd7214f391c"
+      },
+      "protected": false
+    },
+    {
+      "name": "session/2026-11-06-billing-docs",
+      "commit": {
+        "sha": "43946354715de5391b86765eb5cad3d0da938562",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/43946354715de5391b86765eb5cad3d0da938562"
+      },
+      "protected": false
+    },
+    {
+      "name": "session/2026-11-06-bootstrap-inrepo",
+      "commit": {
+        "sha": "8f6b173464270d77be93da70775d1fc367fac2d2",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/8f6b173464270d77be93da70775d1fc367fac2d2"
+      },
+      "protected": false
+    },
+    {
+      "name": "session/2026-11-06-tk604-billing-ui",
+      "commit": {
+        "sha": "5d902e361526b6b35bda5d0f75984ffacea28ab9",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/5d902e361526b6b35bda5d0f75984ffacea28ab9"
+      },
+      "protected": false
+    },
+    {
+      "name": "session/2026-11-06-wg-e2e",
+      "commit": {
+        "sha": "b07504a2a3455348ba05f1aabd5550246c088dec",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/b07504a2a3455348ba05f1aabd5550246c088dec"
+      },
+      "protected": false
+    },
+    {
+      "name": "session/2026-11-07-sstp-phase2",
+      "commit": {
+        "sha": "d7fa35e5583bc36848e3b45497d2511739298c8a",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/d7fa35e5583bc36848e3b45497d2511739298c8a"
+      },
+      "protected": false
+    },
+    {
+      "name": "session/2026-11-07-wg-onboarding",
+      "commit": {
+        "sha": "4ed21454d8e37bdc58bd61575031765dfa6b47c7",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/4ed21454d8e37bdc58bd61575031765dfa6b47c7"
+      },
+      "protected": false
+    },
+    {
+      "name": "session/2026-11-11-pa001-payment-concurrency",
+      "commit": {
+        "sha": "482602ecad6616167d14f2b30cd60e2039093fe9",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/482602ecad6616167d14f2b30cd60e2039093fe9"
+      },
+      "protected": false
+    },
+    {
+      "name": "session/2026-11-13-pa006-idempotency",
+      "commit": {
+        "sha": "7480c80e2c27b8b06048b77132d235efe6b3a3c2",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/7480c80e2c27b8b06048b77132d235efe6b3a3c2"
+      },
+      "protected": false
+    },
+    {
+      "name": "session/2026-11-14-pa006-idempotency",
+      "commit": {
+        "sha": "37a87291ae66a0fa9167f0c72d1e8340aa5fd245",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/37a87291ae66a0fa9167f0c72d1e8340aa5fd245"
+      },
+      "protected": false
+    },
+    {
+      "name": "session/2026-11-15-pa006-idempotency",
+      "commit": {
+        "sha": "9e9bf2d42002a00a69d54fc355b77384897b9478",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/9e9bf2d42002a00a69d54fc355b77384897b9478"
+      },
+      "protected": false
+    }
+  ],
+  "open_prs": [
+    {
+      "number": 20,
+      "title": "docs(review): PR19 PA-006 changes requested; retain closed findings and reopen task0010",
+      "head": "review/0010-pa006-controller-20261115",
+      "head_sha": "2f2416b3ebda64bf45d6f305c153ac0418db3b0c",
+      "base": "session/2026-11-15-pa006-idempotency",
+      "base_sha": "9e9bf2d42002a00a69d54fc355b77384897b9478",
+      "state": "open",
+      "updated_at": "2026-11-14T21:50:20Z"
+    },
+    {
+      "number": 19,
+      "title": "fix(idempotency): task0010/PA-006 — tutup REV-1311-01/02/03 + REV-1411-04 (penyerahan ketiga)",
+      "head": "session/2026-11-15-pa006-idempotency",
+      "head_sha": "9e9bf2d42002a00a69d54fc355b77384897b9478",
+      "base": "main",
+      "base_sha": "9903d9b0cf09d737b553da3c21067b4810e956c0",
+      "state": "open",
+      "updated_at": "2026-11-14T16:54:46Z"
+    },
+    {
+      "number": 18,
+      "title": "docs(review): PA-006 PR17 changes requested; reopen task0010",
+      "head": "review/0010-pa006-controller-20261114",
+      "head_sha": "b6a0cb863f52cbbf512b23dceafc4231ff9c7d74",
+      "base": "session/2026-11-14-pa006-idempotency",
+      "base_sha": "37a87291ae66a0fa9167f0c72d1e8340aa5fd245",
+      "state": "open",
+      "updated_at": "2026-11-14T15:53:51Z"
+    },
+    {
+      "number": 17,
+      "title": "fix(idempotency): task0010/PA-006 — HTTP idempotency aman terhadap scope dan race",
+      "head": "session/2026-11-14-pa006-idempotency",
+      "head_sha": "37a87291ae66a0fa9167f0c72d1e8340aa5fd245",
+      "base": "main",
+      "base_sha": "9903d9b0cf09d737b553da3c21067b4810e956c0",
+      "state": "open",
+      "updated_at": "2026-11-14T15:22:36Z"
+    },
+    {
+      "number": 16,
+      "title": "docs(review): PA-006 changes requested; reopen task0010",
+      "head": "review/0010-pa006-controller-20261113",
+      "head_sha": "5da0d801c71b020fbb8b977294502ea5a09e7bcb",
+      "base": "session/2026-11-13-pa006-idempotency",
+      "base_sha": "7480c80e2c27b8b06048b77132d235efe6b3a3c2",
+      "state": "open",
+      "updated_at": "2026-11-13T12:00:14Z"
+    },
+    {
+      "number": 15,
+      "title": "PA-006 (task 0010): HTTP idempotency aman terhadap scope dan race",
+      "head": "session/2026-11-13-pa006-idempotency",
+      "head_sha": "7480c80e2c27b8b06048b77132d235efe6b3a3c2",
+      "base": "main",
+      "base_sha": "9903d9b0cf09d737b553da3c21067b4810e956c0",
+      "state": "open",
+      "updated_at": "2026-11-13T00:25:09Z"
+    },
+    {
+      "number": 14,
+      "title": "docs: plan future DANA Payment Point add-on (non-blocking Beta)",
+      "head": "docs/payment-point-planning-20261113",
+      "head_sha": "2a9803593c328ab014bab6695b298072ed4c1886",
+      "base": "main",
+      "base_sha": "9903d9b0cf09d737b553da3c21067b4810e956c0",
+      "state": "open",
+      "updated_at": "2026-11-12T23:11:03Z"
+    },
+    {
+      "number": 13,
+      "title": "docs(review): catat PA-006 belum diserahkan dan next actor",
+      "head": "review/0010-pa006-submission-check-20261112",
+      "head_sha": "17901fc439199ad70082942832d88fd7214f391c",
+      "base": "main",
+      "base_sha": "9903d9b0cf09d737b553da3c21067b4810e956c0",
+      "state": "open",
+      "updated_at": "2026-11-12T07:33:19Z"
+    },
+    {
+      "number": 8,
+      "title": "docs: finalisasi planning audit modularitas dan upgrade safety MicroTix",
+      "head": "docs/planning-audit-20261110",
+      "head_sha": "6bb57c9251f3a7a67b71b9523c01e507fdb1b601",
+      "base": "main",
+      "base_sha": "16085f825fef25ee4112d74b729c57e623b0bb05",
+      "state": "open",
+      "updated_at": "2026-11-09T21:29:33Z"
+    },
+    {
+      "number": 7,
+      "title": "feat(network): Phase-2 SSTP — kanal manajemen komplementer WireGuard (v6+v7)",
+      "head": "session/2026-11-07-sstp-phase2",
+      "head_sha": "d7fa35e5583bc36848e3b45497d2511739298c8a",
+      "base": "main",
+      "base_sha": "16085f825fef25ee4112d74b729c57e623b0bb05",
+      "state": "open",
+      "updated_at": "2026-11-07T15:55:52Z"
+    }
+  ],
+  "candidate_ci": [
+    {
+      "id": 43618187731,
+      "head_sha": "9e9bf2d42002a00a69d54fc355b77384897b9478",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/smahud/MicroTix_Project/actions/runs/43618187731"
+    }
+  ],
+  "decision_ci": [
+    {
+      "id": 43644712277,
+      "head_sha": "2f2416b3ebda64bf45d6f305c153ac0418db3b0c",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/smahud/MicroTix_Project/actions/runs/43644712277"
+    }
+  ]
+}
