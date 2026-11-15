@@ -1,0 +1,77 @@
+{
+  "observed_at_utc": "2026-11-15T10:21:34.791Z",
+  "checkpoint_sha": "d6add6a1cbfcea2e903ded7db9e1fc0220d88681",
+  "tree_sha": "68b3d497c1d67c057a15c44df22cee3033d850a6",
+  "parent_sha": "1bc84a44e6aacb3a436f7f99a203b6e43dbfbe59",
+  "branch": "review/0010-pa006-controller-r4-20261115",
+  "pr": 23,
+  "remote_update": "success, expected-head lease, fast-forward, force=false",
+  "pr_readback": {
+    "state": "open",
+    "head": "d6add6a1cbfcea2e903ded7db9e1fc0220d88681",
+    "base": "session/2026-11-15-pa006-idempotency-correction"
+  },
+  "file_readback": [
+    {
+      "path": "docs/progress.md",
+      "blob_sha": "984a297204f2377c04d5340f9abd419f218fa925",
+      "verified": true
+    },
+    {
+      "path": "report/LATEST_HANDOFF.md",
+      "blob_sha": "7398624b01692df05f25af1052361465a26ce6a8",
+      "verified": true
+    },
+    {
+      "path": "report/controller-evidence/20261115T101333Z-pa006-state/check_records.py",
+      "blob_sha": "04c5c7b9ca12437ded2a64f193c6a9cedb5a58d0",
+      "verified": true
+    },
+    {
+      "path": "report/controller-evidence/20261115T101333Z-pa006-state/checks.json",
+      "blob_sha": "edd47cb7d01626a71c9223c798c1f4e7c8a2ed35",
+      "verified": true
+    },
+    {
+      "path": "report/controller-evidence/20261115T101333Z-pa006-state/docs.log",
+      "blob_sha": "5985c0db028c2e859fe1d8764b47fb4955f3a66c",
+      "verified": true
+    },
+    {
+      "path": "report/controller-evidence/20261115T101333Z-pa006-state/remote-state.json",
+      "blob_sha": "e815d9d745ff744a263fcc47a5314dc42220084c",
+      "verified": true
+    },
+    {
+      "path": "report/controller/20261115T101333Z-0010-pa006-state-review.md",
+      "blob_sha": "14139177bdf3e72d9e857c10150c0d661842b2d0",
+      "verified": true
+    },
+    {
+      "path": "report/reviewer/20261115T101317Z-0010-pa006-state-review.md",
+      "blob_sha": "d0f7c0cb2e22b9b599e2440fb4361a357962b271",
+      "verified": true
+    },
+    {
+      "path": "task/0010-pa006-idempotency.md",
+      "blob_sha": "0711a24b6849495b29e767f7f04e13778aabab6b",
+      "verified": true
+    }
+  ],
+  "local_fetch": {
+    "exit": 0,
+    "head": "d6add6a1cbfcea2e903ded7db9e1fc0220d88681",
+    "tree": "68b3d497c1d67c057a15c44df22cee3033d850a6",
+    "clean": true
+  },
+  "main_unchanged": "9903d9b0cf09d737b553da3c21067b4810e956c0",
+  "candidate_unchanged": "634da4224f15dd6a5a4e9010fe1811dec8c7954d",
+  "ci_at_observation": {
+    "runs": [],
+    "result": "NO_RUN_OBSERVED_YET",
+    "note": "Previous candidate/decision success is not checkpoint CI. Final head result belongs to PR23 description after final readback."
+  },
+  "verdict": "changes_requested",
+  "next_actor": "coding_agent",
+  "beta": "NOT_READY"
+}
