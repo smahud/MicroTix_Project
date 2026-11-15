@@ -106,3 +106,27 @@ checkpoint to existing PR20 using a fast-forward update with the observed
 head as lease, then verify remote tree/content and exact-head CI. A later
 publication record may cite an already-existing commit; no future self-SHA
 is invented.
+
+## Publication verified — existing PR20
+
+Initial checkpoint commit **25f96a6f7a56f427e26ee3f77e67727fef5d5c7b**
+is **PUBLISHED** on `review/0010-pa006-controller-20261115` in existing
+[PR20](https://github.com/smahud/MicroTix_Project/pull/20), whose base stays
+the reviewed PR19 branch at9e9bf2d. Remote tree
+**27500dba43144b9dad6287c25d3f5d5f2b61ddec** exactly matches the validated
+local index. Connector commit/ref/report readback, local fetch and clean
+detached checkout confirm publication. The update fast-forwarded from
+2f2416b with an expected-head lease; no force push or new PR was used.
+
+Exact-head initial checkpoint CI
+[43661329292](https://github.com/smahud/MicroTix_Project/actions/runs/43661329292)
+completed **success**. This is GitHub CI for a records-only descendant;
+it does not close the application findings or represent newly run local
+PostgreSQL acceptance probes. Final metadata records this already verified
+publication and is checked again through PR20 before handoff.
+
+Session publication changes ten files at the initial commit: three existing
+pointer/checkpoint files, two new reviewer/controller reports and five new
+evidence files. The final publication record only appends existing facts.
+Protected delta stays empty; main9903d9b and input PR19@9e9bf2d unchanged.
+Task0010 remains ready/changes_requested; coding_agent is the next actor.

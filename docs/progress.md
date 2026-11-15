@@ -17,6 +17,12 @@ check ditautkan pada laporan. Checkpoint dipublikasikan pada branch PR20
 yang sama; PA-002/003 tetap belum eligible, tidak ada task/PR baru,
 merge/deploy/tag. Beta **NOT_READY**.
 
+Publikasi checkpoint terverifikasi pada existing PR20, initial commit
+**25f96a6f7a56f427e26ee3f77e67727fef5d5c7b**, remote tree27500dba cocok
+dengan index lokal dan checkout bersih. Exact-head CI43661329292 completed
+success. Metadata descendant hanya mencatat publikasi; source tetap identik,
+keputusan aplikasi dan next actor tidak berubah.
+
 ## Checkpoint 2026-11-15 — controller PR19 changes_requested; task0010 reopened
 
 Exact reviewed candidate **9e9bf2d42002a00a69d54fc355b77384897b9478**, source

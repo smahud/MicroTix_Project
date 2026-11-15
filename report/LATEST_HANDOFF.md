@@ -18,6 +18,15 @@ pada PR20 existing, tanpa PR/task dependent baru. Temuan01/03/05 masih
 OPEN dan02/04 tetap CLOSED; detail dan evidence milik keputusan di bawah.
 Tes runtime lama tidak diulang atau diklaim sebagai hasil sesi ini.
 
+Checkpoint **PUBLISHED** pada existing PR20, initial verified commit
+**25f96a6f7a56f427e26ee3f77e67727fef5d5c7b**, tree
+27500dba43144b9dad6287c25d3f5d5f2b61ddec; remote content dan clean local
+fetch/checkout cocok. Exact-head CI
+[43661329292](https://github.com/smahud/MicroTix_Project/actions/runs/43661329292)
+completed **success**. Final metadata descendant hanya mencatat fakta
+publikasi ini; head/CI aktual dapat diverifikasi pada PR20. Source dan
+reviewed application SHA tetap9e9bf2d; tidak mengubah finding/dependency.
+
 | Field | Status / pointer |
 |---|---|
 | Canonical main teramati | **9903d9b0cf09d737b553da3c21067b4810e956c0**, tidak berubah |
