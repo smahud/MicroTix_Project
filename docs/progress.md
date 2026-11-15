@@ -10,6 +10,8 @@ Koreksi atas keputusan [PR20 changes_requested](https://github.com/smahud/MicroT
 
 **Bukti (PG 17.11 nyata, role non-superuser, FreeRADIUS aktif)**: **probe controller PR20 dijalankan ulang UTUH** dari worktree baseline main9903d9b — 15/15 langkah live upgrade exit 0: URN completed **201 replay submission semula (submission/file 1)**, URN ambiguous **409 aman (submission/file 1)** (dua kasus yang dulu FAIL); review-edges 2 passed (nested alias replay; plaintext false×3); review-effects 5 passed (selected canonical payload; 4 wait-graph query/blocker). Suite penuh **452 passed**, targeted 93, `manage.py check` 0, `makemigrations --check` bersih, docs PASS, frontend typecheck/lint/Vitest 66/i18n/contrast/live-build sukses. Review internal independen [PASS_WITH_NOTES](../report/reviewer/20261115T044616Z-0010-pa006-r4-review.md); temuan F-01 P2 (braced-URN) + F-02/F-03 P3 ditutup pada kandidat. Laporan: [executor keempat](../report/orchestrator/20261115T044621Z-0010-pa006-idempotency.md). Next actor **controller_reviewer**. Beta tetap NOT_READY; PA-002/003 menunggu accepted.
 
+Publikasi terverifikasi: [PR21](https://github.com/smahud/MicroTix_Project/pull/21) base main, head `0372dc4c0a6f3c238e69276bf0f02579ae646d44` (implementation `b71574d` + delivery `0372dc4`); required CI run [43678518336](https://github.com/smahud/MicroTix_Project/actions/runs/43678518336) exact-head backend/frontend/docs **success**. CI hijau bukan acceptance.
+
 ## Checkpoint 2026-11-15, 07:58 WIB — koreksi task0010 belum diserahkan
 
 [Controller submission check](../report/controller/20261115T005847Z-0010-pa006-resubmission-review.md)

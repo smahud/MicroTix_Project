@@ -28,13 +28,26 @@ tidak diimplementasikan ulang). **Implementation `b71574d8b6ba1dc30d132551684791
 | Active task | [0010 / PA-006](../task/0010-pa006-idempotency_done.md) — penyerahan keempat |
 | Execution / review | **done / pending** — menunggu controller review exact SHA keempat |
 | Candidate branch / implementation SHA | `session/2026-11-15-pa006-idempotency-correction`; **implementation `b71574d`** (pohon uji seluruh verification run); base decision head `e507175` |
-| Published SHA / PR / CI | Publikasi diverifikasi setelah push; record publikasi ditambahkan metadata descendant — tidak dikarang di sini |
+| Published SHA / PR / CI | [PR21](https://github.com/smahud/MicroTix_Project/pull/21) base main; head **`0372dc4c0a6f3c238e69276bf0f02579ae646d44`**; required CI run [43678518336](https://github.com/smahud/MicroTix_Project/actions/runs/43678518336) exact-head **backend/frontend/docs success** |
 | Execution report / internal reviewer | [Executor keempat](orchestrator/20261115T044621Z-0010-pa006-idempotency.md); [independent review r4](reviewer/20261115T044616Z-0010-pa006-r4-review.md) — PASS_WITH_NOTES, tiga temuan (F-01 P2 braced-URN parser, F-02/F-03 P3) DITUTUP pada kandidat |
 | Evidence executor | [executor-evidence/20261115T044338Z-0010-pa006](executor-evidence/20261115T044338Z-0010-pa006/) — probe controller PR20 dijalankan ulang utuh dari worktree baseline main: 15/15 langkah upgrade live exit 0 (URN completed 201 replay / ambiguous 409 aman; submission+file tetap 1), review-edges 2 passed (nested alias replay; plaintext false×3), review-effects 5 passed (selected canonical; 4 wait-graph query/blocker), targeted 93, full-suite **452 passed** |
 | Controller decision (input kandidat ini) | [15 November review](controller/20261114T212816Z-0010-pa006-review.md) + [resubmission check](controller/20261115T005847Z-0010-pa006-resubmission-review.md) pada PR20 |
 | Next actor | **controller_reviewer** |
 | Exact next action | Review exact SHA kandidat keempat atas matriks finding→perubahan→closing test→actual evidence (report executor §2) dan acceptance matrix (§5); changes_requested membuka kembali ID0010 yang sama; accepted membuka penyiapan PA-002/PA-003 |
 | Dependencies | PA-002/003 belum eligible sampai accepted; tidak ada task0020; tanpa merge/deploy/tag/aktivasi fitur oleh penyerahan ini |
+
+## Publication record — PR21
+
+**PUBLISHED.** [PR21](https://github.com/smahud/MicroTix_Project/pull/21)
+base main, branch `session/2026-11-15-pa006-idempotency-correction`, head
+**`0372dc4c0a6f3c238e69276bf0f02579ae646d44`** = implementation `b71574d`
+(fix + tes + executor-evidence) + delivery `0372dc4` (report/packet `_done`
+/handoff/progress). Remote push diverifikasi; required CI
+[43678518336](https://github.com/smahud/MicroTix_Project/actions/runs/43678518336)
+pada exact head **completed/success** (backend, frontend, docs — GitHub
+results, bukan rerun lokal). CI hijau bukan acceptance; keputusan tetap
+milik controller_reviewer pada exact SHA. Metadata descendant ini hanya
+mencatat fakta publikasi yang sudah ada; tidak ada source delta.
 
 ## 1. Hasil penyerahan keempat (ringkas)
 
