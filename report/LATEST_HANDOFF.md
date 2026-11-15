@@ -5,7 +5,21 @@ CONTRACT §6A. Fetch remote refs/PR sebelum bertindak. Status ini berada pada
 branch keputusan sampai integrasi; filename unfinished pada main tidak
 membuktikan belum ada kandidat. Tanggal Asia/Jakarta; evidence filename UTC.
 
-## Resume verification — 15 November 2026, mulai13:56 WIB
+## Latest state verification — 15 November 2026, 17:13 WIB
+
+[Controller checkpoint](controller/20261115T101333Z-0010-pa006-state-review.md)
+dan [independent review](reviewer/20261115T101317Z-0010-pa006-state-review.md):
+25 branch /13 open PR; main9903d9b, candidate PR21@634da42 dan starting
+decision PR23@1bc84a44 terkonfirmasi. **Belum ada kandidat koreksi baru.**
+Correction delivery `not_submitted`; task0010 tetap **ready /
+changes_requested**, next **coding_agent** menutup REV-1311-01 saja.
+Semua closure R4 dipertahankan. Source/config identik; docs validator
+PASS24files/106links. Tidak ada runtime acceptance ulang. Checkpoint pada
+existing PR23; PA-002/003 tetap ineligible, Beta **NOT_READY**.
+Publikasi/CI checkpoint ini mengikuti report dan deskripsi PR23; hasil CI
+head lama tidak dianggap sebagai hasil head baru.
+
+## Prior resume verification — 15 November 2026, mulai13:56 WIB
 
 [Controller resume](controller/20261115T065656Z-0010-pa006-resume-review.md)
 dan [independent state check](reviewer/20261115T065656Z-0010-reviewer-resume-state.md)

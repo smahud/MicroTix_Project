@@ -1,0 +1,371 @@
+{
+  "observed_at_utc": "2026-11-15T10:14:35.997Z",
+  "canonical_main": "9903d9b0cf09d737b553da3c21067b4810e956c0",
+  "reviewed_candidate": "634da4224f15dd6a5a4e9010fe1811dec8c7954d",
+  "starting_decision": "1bc84a44e6aacb3a436f7f99a203b6e43dbfbe59",
+  "branches": [
+    {
+      "name": "docs/default-agent-prompts-20261112",
+      "sha": "776099e10def9c6922a105f0e7b6ca278a47c025"
+    },
+    {
+      "name": "docs/payment-point-planning-20261113",
+      "sha": "2a9803593c328ab014bab6695b298072ed4c1886"
+    },
+    {
+      "name": "docs/planning-audit-20261110",
+      "sha": "6bb57c9251f3a7a67b71b9523c01e507fdb1b601"
+    },
+    {
+      "name": "docs/task-communication-loop-20261112",
+      "sha": "4f807e77484babf71550ede3bd2aa65a990aa877"
+    },
+    {
+      "name": "docs/task-workflow-20261112",
+      "sha": "826672ee3fbebd48eddc833a3a9e29282ccbaec1"
+    },
+    {
+      "name": "integration/beta-0.1",
+      "sha": "0eb01d2e5baaa6511e0b2145f05850df18a1bdc0"
+    },
+    {
+      "name": "main",
+      "sha": "9903d9b0cf09d737b553da3c21067b4810e956c0"
+    },
+    {
+      "name": "parallel/beta-be2",
+      "sha": "c9023e6d9bb1e5e1b2ef18685d94bc82f6c6eb02"
+    },
+    {
+      "name": "review/0010-pa006-controller-20261113",
+      "sha": "5da0d801c71b020fbb8b977294502ea5a09e7bcb"
+    },
+    {
+      "name": "review/0010-pa006-controller-20261114",
+      "sha": "b6a0cb863f52cbbf512b23dceafc4231ff9c7d74"
+    },
+    {
+      "name": "review/0010-pa006-controller-20261115",
+      "sha": "e507175cb2982b6a974eee8bf437d0b6de5879c6"
+    },
+    {
+      "name": "review/0010-pa006-controller-r4-20261115",
+      "sha": "1bc84a44e6aacb3a436f7f99a203b6e43dbfbe59"
+    },
+    {
+      "name": "review/0010-pa006-submission-check-20261112",
+      "sha": "17901fc439199ad70082942832d88fd7214f391c"
+    },
+    {
+      "name": "session/2026-11-06-billing-docs",
+      "sha": "43946354715de5391b86765eb5cad3d0da938562"
+    },
+    {
+      "name": "session/2026-11-06-bootstrap-inrepo",
+      "sha": "8f6b173464270d77be93da70775d1fc367fac2d2"
+    },
+    {
+      "name": "session/2026-11-06-tk604-billing-ui",
+      "sha": "5d902e361526b6b35bda5d0f75984ffacea28ab9"
+    },
+    {
+      "name": "session/2026-11-06-wg-e2e",
+      "sha": "b07504a2a3455348ba05f1aabd5550246c088dec"
+    },
+    {
+      "name": "session/2026-11-07-sstp-phase2",
+      "sha": "d7fa35e5583bc36848e3b45497d2511739298c8a"
+    },
+    {
+      "name": "session/2026-11-07-wg-onboarding",
+      "sha": "4ed21454d8e37bdc58bd61575031765dfa6b47c7"
+    },
+    {
+      "name": "session/2026-11-11-pa001-payment-concurrency",
+      "sha": "482602ecad6616167d14f2b30cd60e2039093fe9"
+    },
+    {
+      "name": "session/2026-11-13-pa006-idempotency",
+      "sha": "7480c80e2c27b8b06048b77132d235efe6b3a3c2"
+    },
+    {
+      "name": "session/2026-11-14-pa006-idempotency",
+      "sha": "37a87291ae66a0fa9167f0c72d1e8340aa5fd245"
+    },
+    {
+      "name": "session/2026-11-15-pa006-executor-state-check",
+      "sha": "b645797974a3921e04518a06af756d888e0a8d10"
+    },
+    {
+      "name": "session/2026-11-15-pa006-idempotency",
+      "sha": "9e9bf2d42002a00a69d54fc355b77384897b9478"
+    },
+    {
+      "name": "session/2026-11-15-pa006-idempotency-correction",
+      "sha": "634da4224f15dd6a5a4e9010fe1811dec8c7954d"
+    }
+  ],
+  "open_prs": [
+    {
+      "number": 23,
+      "title": "docs(review): PR21 PA-006 changes requested; one legacy-migration finding remains",
+      "head": "review/0010-pa006-controller-r4-20261115",
+      "head_sha": "1bc84a44e6aacb3a436f7f99a203b6e43dbfbe59",
+      "base": "session/2026-11-15-pa006-idempotency-correction",
+      "draft": false,
+      "url": "https://github.com/smahud/MicroTix_Project/pull/23"
+    },
+    {
+      "number": 22,
+      "title": "docs(task0010): executor state check — kandidat keempat PR21 menunggu controller review",
+      "head": "session/2026-11-15-pa006-executor-state-check",
+      "head_sha": "b645797974a3921e04518a06af756d888e0a8d10",
+      "base": "main",
+      "draft": false,
+      "url": "https://github.com/smahud/MicroTix_Project/pull/22"
+    },
+    {
+      "number": 21,
+      "title": "fix(idempotency): task0010/PA-006 — tutup REV-1311-01/03/05 (penyerahan keempat)",
+      "head": "session/2026-11-15-pa006-idempotency-correction",
+      "head_sha": "634da4224f15dd6a5a4e9010fe1811dec8c7954d",
+      "base": "main",
+      "draft": false,
+      "url": "https://github.com/smahud/MicroTix_Project/pull/21"
+    },
+    {
+      "number": 20,
+      "title": "docs(review): PR19 PA-006 changes requested; retain closed findings and reopen task0010",
+      "head": "review/0010-pa006-controller-20261115",
+      "head_sha": "e507175cb2982b6a974eee8bf437d0b6de5879c6",
+      "base": "session/2026-11-15-pa006-idempotency",
+      "draft": false,
+      "url": "https://github.com/smahud/MicroTix_Project/pull/20"
+    },
+    {
+      "number": 19,
+      "title": "fix(idempotency): task0010/PA-006 — tutup REV-1311-01/02/03 + REV-1411-04 (penyerahan ketiga)",
+      "head": "session/2026-11-15-pa006-idempotency",
+      "head_sha": "9e9bf2d42002a00a69d54fc355b77384897b9478",
+      "base": "main",
+      "draft": false,
+      "url": "https://github.com/smahud/MicroTix_Project/pull/19"
+    },
+    {
+      "number": 18,
+      "title": "docs(review): PA-006 PR17 changes requested; reopen task0010",
+      "head": "review/0010-pa006-controller-20261114",
+      "head_sha": "b6a0cb863f52cbbf512b23dceafc4231ff9c7d74",
+      "base": "session/2026-11-14-pa006-idempotency",
+      "draft": false,
+      "url": "https://github.com/smahud/MicroTix_Project/pull/18"
+    },
+    {
+      "number": 17,
+      "title": "fix(idempotency): task0010/PA-006 — HTTP idempotency aman terhadap scope dan race",
+      "head": "session/2026-11-14-pa006-idempotency",
+      "head_sha": "37a87291ae66a0fa9167f0c72d1e8340aa5fd245",
+      "base": "main",
+      "draft": false,
+      "url": "https://github.com/smahud/MicroTix_Project/pull/17"
+    },
+    {
+      "number": 16,
+      "title": "docs(review): PA-006 changes requested; reopen task0010",
+      "head": "review/0010-pa006-controller-20261113",
+      "head_sha": "5da0d801c71b020fbb8b977294502ea5a09e7bcb",
+      "base": "session/2026-11-13-pa006-idempotency",
+      "draft": false,
+      "url": "https://github.com/smahud/MicroTix_Project/pull/16"
+    },
+    {
+      "number": 15,
+      "title": "PA-006 (task 0010): HTTP idempotency aman terhadap scope dan race",
+      "head": "session/2026-11-13-pa006-idempotency",
+      "head_sha": "7480c80e2c27b8b06048b77132d235efe6b3a3c2",
+      "base": "main",
+      "draft": false,
+      "url": "https://github.com/smahud/MicroTix_Project/pull/15"
+    },
+    {
+      "number": 14,
+      "title": "docs: plan future DANA Payment Point add-on (non-blocking Beta)",
+      "head": "docs/payment-point-planning-20261113",
+      "head_sha": "2a9803593c328ab014bab6695b298072ed4c1886",
+      "base": "main",
+      "draft": true,
+      "url": "https://github.com/smahud/MicroTix_Project/pull/14"
+    },
+    {
+      "number": 13,
+      "title": "docs(review): catat PA-006 belum diserahkan dan next actor",
+      "head": "review/0010-pa006-submission-check-20261112",
+      "head_sha": "17901fc439199ad70082942832d88fd7214f391c",
+      "base": "main",
+      "draft": false,
+      "url": "https://github.com/smahud/MicroTix_Project/pull/13"
+    },
+    {
+      "number": 8,
+      "title": "docs: finalisasi planning audit modularitas dan upgrade safety MicroTix",
+      "head": "docs/planning-audit-20261110",
+      "head_sha": "6bb57c9251f3a7a67b71b9523c01e507fdb1b601",
+      "base": "main",
+      "draft": true,
+      "url": "https://github.com/smahud/MicroTix_Project/pull/8"
+    },
+    {
+      "number": 7,
+      "title": "feat(network): Phase-2 SSTP — kanal manajemen komplementer WireGuard (v6+v7)",
+      "head": "session/2026-11-07-sstp-phase2",
+      "head_sha": "d7fa35e5583bc36848e3b45497d2511739298c8a",
+      "base": "main",
+      "draft": false,
+      "url": "https://github.com/smahud/MicroTix_Project/pull/7"
+    }
+  ],
+  "ci": {
+    "ci_candidate": [
+      {
+        "run_id": 43679221142,
+        "head_sha": "634da4224f15dd6a5a4e9010fe1811dec8c7954d",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/smahud/MicroTix_Project/actions/runs/43679221142"
+      }
+    ],
+    "ci_decision": [
+      {
+        "run_id": 43688411664,
+        "head_sha": "1bc84a44e6aacb3a436f7f99a203b6e43dbfbe59",
+        "status": "completed",
+        "conclusion": "success",
+        "html_url": "https://github.com/smahud/MicroTix_Project/actions/runs/43688411664"
+      }
+    ]
+  },
+  "source_comparison": {
+    "method": "recursive Git trees: same blob SHA+mode for every path outside report/, task/, docs/progress.md",
+    "candidate_truncated": false,
+    "decision_truncated": false,
+    "protected_delta": [],
+    "all_changed_paths": [
+      "docs/progress.md",
+      "report/LATEST_HANDOFF.md",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/before-publish-refs.json",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/check.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/consistency.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/docs-records.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/docs.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/edges.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/effects.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/environment.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/exit-codes.txt",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/full.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/initdb.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/live_upgrade_aliases.py",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/parser-matrix.json",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/parser_matrix.py",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/prior-probes.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/record-checks.json",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/remote-inputs-ci.json",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/rls.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/run_checks.sh",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/run_upgrade_aliases.sh",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/setup-role.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/targeted.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/upgrade-canonical-after-http.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/upgrade-canonical-after-migrate.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/upgrade-canonical-before-http.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/upgrade-canonical-before-migrate.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/upgrade-exit-codes.txt",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/upgrade-urn-after-http.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/upgrade-urn-after-migrate.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/upgrade-urn-before-http.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/upgrade-urn-before-migrate.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/upgrade-urn_ambiguous-after-http.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/upgrade-urn_ambiguous-after-migrate.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/upgrade-urn_ambiguous-before-http.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/upgrade-urn_ambiguous-before-migrate.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/upgrade-urn_only-after-http.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/upgrade-urn_only-after-migrate.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/upgrade-urn_only-before-http.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/upgrade-urn_only-before-migrate.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/upgrade-uuid_only-after-http.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/upgrade-uuid_only-after-migrate.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/upgrade-uuid_only-before-http.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/upgrade-uuid_only-before-migrate.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/upgrade-uuid_only_ambiguous-after-http.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/upgrade-uuid_only_ambiguous-after-migrate.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/upgrade-uuid_only_ambiguous-before-http.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/upgrade-uuid_only_ambiguous-before-migrate.log",
+      "report/controller-evidence/20261115T053138Z-pa006-r4/versions.log",
+      "report/controller-evidence/20261115T065656Z-pa006-resume/checks.json",
+      "report/controller-evidence/20261115T065656Z-pa006-resume/docs.log",
+      "report/controller-evidence/20261115T065656Z-pa006-resume/parser-matrix.json",
+      "report/controller-evidence/20261115T065656Z-pa006-resume/publication.json",
+      "report/controller-evidence/20261115T065656Z-pa006-resume/remote-heads.txt",
+      "report/controller-evidence/20261115T065656Z-pa006-resume/remote-inputs-ci.json",
+      "report/controller/20261115T053138Z-0010-pa006-r4-review.md",
+      "report/controller/20261115T065656Z-0010-pa006-resume-review.md",
+      "report/reviewer/20261115T053213Z-0010-r4-upgrade-security.md",
+      "report/reviewer/20261115T053229Z-0010-r4-http-identity.md",
+      "report/reviewer/20261115T054115Z-0010-r4-handoff-qa.md",
+      "report/reviewer/20261115T065656Z-0010-reviewer-resume-state.md",
+      "task/0010-pa006-idempotency.md",
+      "task/0010-pa006-idempotency_done.md"
+    ],
+    "protected_blob_mode_check": "PASS"
+  },
+  "result": {
+    "execution": "ready",
+    "review": "changes_requested",
+    "correction_delivery": "not_submitted",
+    "next_actor": "coding_agent",
+    "open_finding": "REV-1311-01",
+    "beta": "NOT_READY"
+  },
+  "evidence_limits": "State/discovery checks only. No new application runtime acceptance or HTTP/PG/file-effect test. R4 runtime evidence remains attributed to that prior review.",
+  "ci_jobs": {
+    "43679221142": [
+      {
+        "name": "docs",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "634da4224f15dd6a5a4e9010fe1811dec8c7954d"
+      },
+      {
+        "name": "frontend",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "634da4224f15dd6a5a4e9010fe1811dec8c7954d"
+      },
+      {
+        "name": "backend",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "634da4224f15dd6a5a4e9010fe1811dec8c7954d"
+      }
+    ],
+    "43688411664": [
+      {
+        "name": "frontend",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "1bc84a44e6aacb3a436f7f99a203b6e43dbfbe59"
+      },
+      {
+        "name": "backend",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "1bc84a44e6aacb3a436f7f99a203b6e43dbfbe59"
+      },
+      {
+        "name": "docs",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "1bc84a44e6aacb3a436f7f99a203b6e43dbfbe59"
+      }
+    ]
+  }
+}
