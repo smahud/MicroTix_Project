@@ -18,6 +18,7 @@
 | Next actor | **coding_agent** |
 | Exact next action | Fetch current controller R4 decision ref, fix remaining **REV-1311-01 only** on ID0010; preserve CLOSED03A/03B/05/02/04/PA001; old-source accepted UUID grammar→migration→retry must keep original result/effects1. Resubmit new exact SHA + actual evidence |
 | Resume verification | 15 November 2026, mulai13:56 WIB: 25 branch/13 open PR diperiksa; main9903d9b, candidate634da42 dan decision30ce815 tidak berubah. Koreksi berikutnya **not_submitted**; task tetap **ready / changes_requested**, next coding_agent. [Resume report](../report/controller/20261115T065656Z-0010-pa006-resume-review.md); publikasi checkpoint pada existing PR23 |
+| Resume publication | Existing PR23 ancestor **d7be2ba8667149ed47ec4b11b5da10d5811e7a4a** terverifikasi ref/tree/all10file readback; metadata descendant record-only. CI checkpoint baru belum terbit saat pencatatan; final observation di PR23. Tidak mengubah reviewed candidate/next actor atau membuka dependency |
 
 Mulai dari [panduan tetap](0000-start-here.md) dan [CONTRACT](../CONTRACT.md). Ini task implementasi, **bukan bukti PA-006 selesai**. Fetch refs dan review delta bila remote berubah; pilih branch baru dari main aktual dengan packet ini tersedia. Jika instruksi belum merged, catat instruction ref/PR dan bawa perubahan dokumentasi yang sah secara semantik; jangan menimpa pekerjaan lain atau menganggap SHA baseline sebagai main untuk selamanya.
 

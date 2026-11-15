@@ -24,6 +24,13 @@ untuk checkpoint baru. Publikasi checkpoint dilanjutkan pada **existing PR23**.
 Tidak ada task/PR baru atau dependency yang dibuka. Next action tetap
 koreksi REV-1311-01 pada0010, lalu serahkan SHA baru untuk review.
 
+Checkpoint publication verified: **d7be2ba8667149ed47ec4b11b5da10d5811e7a4a**,
+treeefed9596, existing PR23; ref/PR/all10file readback dan clean local
+fetch/checkout cocok. Metadata descendant hanya mencatat publikasi ini.
+CI checkpoint baru belum terbit saat pencatatan (0 check-runs, belum ada
+workflow untuk head baru); final observation ada pada deskripsi PR23.
+Keberhasilan CI634da42/30ce815 tetap terikat pada SHA historis masing-masing.
+
 ## 0. Task aktif dan exact next action
 
 **Review penyerahan keempat PR21 selesai: changes_requested.**

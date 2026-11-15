@@ -15,6 +15,11 @@ docs PASS24files/106links, existing exact-head CI3/3 success dikonfirmasi.
 Checkpoint pada existing PR23; tidak ada packet/PR baru, PA-002/003 masih
 ineligible, Beta **NOT_READY**. Lihat report untuk publication verification.
 
+Checkpoint published ancestor **d7be2ba8667149ed47ec4b11b5da10d5811e7a4a**
+pada existing PR23: matching tree/ref dan10file readback verified; source
+tetap634da42. CI head baru belum terbit saat pencatatan; final observation
+di PR23, tanpa menganggap success head lama sebagai CI checkpoint baru.
+
 ## Checkpoint 2026-11-15 — controller PR21 changes_requested; hanya REV-1311-01 tersisa
 
 Exact reviewed **634da4224f15dd6a5a4e9010fe1811dec8c7954d**, implementation
