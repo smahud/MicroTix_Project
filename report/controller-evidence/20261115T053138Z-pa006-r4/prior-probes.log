@@ -1,0 +1,21 @@
+2026-11-15 12:33:49,279 WARNING django.request Unauthorized: /api/v1/auth/session
+jobs.0004 idempotency identity backfill: kept_with_response=0 kept_no_response=0 platform_remapped=0 legacy_opaque_group=0 unparsed_retained=0 duplicate_deleted=0
+jobs.0005 idempotency secret-preview scrub: scanned=0 scrubbed=0 guards_deleted=0
+OBSERVED per-session decisions after 204/204: [2, 2]
+.2026-11-15 12:33:49,622 WARNING django.request Unauthorized: /api/v1/auth/session
+2026-11-15 12:33:49,671 WARNING django.request Unprocessable Content: /api/v1/tenants/5eedf1d6-ea25-493a-bd1a-6755f0ded879/migrations/not-a-uuid/identity-conflicts/9de2aa7c2cedae61
+OBSERVED cached resolution with invalid parent: not-a-uuid 422
+.2026-11-15 12:33:49,898 WARNING django.request Unauthorized: /api/v1/auth/session
+2026-11-15 12:33:49,947 WARNING django.request Not Found: /api/v1/tenants/1d73ab1a-9536-4dfd-b1a3-79241796bbfe/migrations/8bf959d8-c798-42c0-8d78-18f6ab2c7967/identity-conflicts/9de2aa7c2cedae61
+OBSERVED cached resolution with invalid parent: 8bf959d8-c798-42c0-8d78-18f6ab2c7967 404
+.2026-11-15 12:33:50,259 WARNING django.request Unauthorized: /api/v1/auth/session
+OBSERVED equivalent package UUID body alias: 200 200 b'{"service_id":"4c92f846-74ed-4608-8249-279965fcd2dc","billing_package_id":"b0468623-9d5b-458f-aed0-a510b8793ae6"}'
+.2026-11-15 12:33:50,533 WARNING django.request Unauthorized: /api/v1/auth/session
+OBSERVED legacy proof 201 {'state': 'submitted', 'submission_id': 'f7575689-ed4b-4f58-a680-aa6cddaa2963'} original {'submission_id': 'f7575689-ed4b-4f58-a680-aa6cddaa2963', 'state': PaymentSubmission.State.SUBMITTED} submission_count 1 legacy_preserved True
+.2026-11-15 12:33:51,043 WARNING django.request Unauthorized: /api/v1/auth/session
+2026-11-15 12:33:51,061 WARNING django.request Conflict: /api/v1/tenants/201dd54b-671b-49e4-8060-4dc0400d9c6c/quotations
+jobs.0005 reverse: no-op (secret scrub tidak dipulihkan)
+jobs.0004 idempotency identity backfill: kept_with_response=0 kept_no_response=1 platform_remapped=0 legacy_opaque_group=0 unparsed_retained=0 duplicate_deleted=0
+OBSERVED ambiguous migration guard_count 1 retry_status 409 invoice_count 1 original_invoice 63d19f19-0115-4716-b7de-908a9ea8eb95
+.
+6 passed in 6.24s

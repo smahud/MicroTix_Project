@@ -3,20 +3,20 @@
 | Field | Nilai |
 |---|---|
 | Task ID | `0010` — ID tetap; penyerahan keempat pada ID yang sama |
-| Execution status | `done` — scope executor + tes wajib selesai; rename `_done` ikut commit penyerahan (bukan acceptance) |
-| Review status | `pending` — menunggu controller review exact SHA kandidat keempat |
+| Execution status | `ready` — ID0010 dibuka kembali oleh controller setelah review PR21; koreksi REV-1311-01 belum tuntas |
+| Review status | `changes_requested` — exact reviewed SHA `634da4224f15dd6a5a4e9010fe1811dec8c7954d` |
 | Controller | ChatGPT Work / reviewer proyek |
 | Executor | Coding agent sandbox; penyerahan keempat Z.ai 15 November 2026 |
 | Baseline / dependency | `main@9903d9b0cf09d737b553da3c21067b4810e956c0` (tidak berubah); PA-001 merged PR9 (`8ce94d4`); tidak diulang |
-| Instruction revision | Kebutuhan awal pada main + koreksi PR16/PR18 (dibawa semantik histori) + **keputusan terbaru [PR20](https://github.com/smahud/MicroTix_Project/pull/20)** pada reviewed SHA `9e9bf2d42002a00a69d54fc355b77384897b9478` — kandidat ini descendant keputusan itu (base decision head `e507175`), membawa histori review + closed fixes |
+| Instruction revision | Kebutuhan awal pada main + koreksi PR16/PR18 (dibawa semantik histori) + **keputusan input kandidat [PR20](https://github.com/smahud/MicroTix_Project/pull/20)** pada reviewed SHA `9e9bf2d42002a00a69d54fc355b77384897b9478` — kandidat ini descendant keputusan itu (base decision head `e507175`), membawa histori review + closed fixes. **Keputusan terbaru: controller R4** pada [report](../report/controller/20261115T053138Z-0010-pa006-r4-review.md), ref `review/0010-pa006-controller-r4-20261115` |
 | Candidate branch / exact tested SHA | `session/2026-11-15-pa006-idempotency-correction` dari `review/0010-pa006-controller-20261115@e507175`; **implementation `b71574d8b6ba1dc30d132551684791f760e8abc6`** — seluruh tes §Verifikasi dijalankan pada pohon sumber commit ini |
-| Published SHA / PR / CI | [PR21](https://github.com/smahud/MicroTix_Project/pull/21) base main, head **`0372dc4c0a6f3c238e69276bf0f02579ae646d44`** (implementation `b71574d` + delivery docs `0372dc4`); required CI run [43678518336](https://github.com/smahud/MicroTix_Project/actions/runs/43678518336) pada exact head: **backend/frontend/docs success** (diverifikasi 15 November 2026); final PR head `7b574d097d816d4735167bae59859af95b75dae4` (descendant report-only, pohon source identik) — CI exact-head [43678886349](https://github.com/smahud/MicroTix_Project/actions/runs/43678886349) backend/frontend/docs **success** juga terverifikasi |
+| Published SHA / PR / CI | [PR21](https://github.com/smahud/MicroTix_Project/pull/21), actual reviewed head **`634da4224f15dd6a5a4e9010fe1811dec8c7954d`**; implementation `b71574d`; report-only descendants verified identical app content. Exact-head CI [43679221142](https://github.com/smahud/MicroTix_Project/actions/runs/43679221142) backend/frontend/docs success, not acceptance |
 | Execution report / internal reviewer | [Executor keempat](../report/orchestrator/20261115T044621Z-0010-pa006-idempotency.md) — matriks finding→perubahan→closing test→actual evidence (01/03A/03B/05), tabel 28 call-site, matriks acceptance, kebijakan migrasi/recovery, NOT_RUN; [independent review r4](../report/reviewer/20261115T044616Z-0010-pa006-r4-review.md) — PASS_WITH_NOTES; tiga temuan reviewer (F-01 P2 braced-URN parser, F-02/F-03 P3 ketebalan tes) **DITUTUP pada kandidat ini** sebelum penyerahan |
-| Controller review | [Keputusan 15 November](../report/controller/20261114T212816Z-0010-pa006-review.md) pada `9e9bf2d`: changes_requested — REV-1311-01/03 partial OPEN, REV-1511-05 NEW OPEN; keputusan lama tetap histori; kandidat ini menjawab keputusan itu |
-| Controller publication | [PR20](https://github.com/smahud/MicroTix_Project/pull/20), branch `review/0010-pa006-controller-20261115`, final head `e507175cb2982b6a974eee8bf437d0b6de5879c6` (checkpoint resubmission diverifikasi) — base kandidat ini |
+| Controller review | [Controller R4 — 15 November](../report/controller/20261115T053138Z-0010-pa006-r4-review.md): **REV-1311-01 P1 OPEN partial**, actual old-code uuid:/urn: accepted-prefix retries duplicate submission/file1→2. **03A/03B/05 CLOSED**,02/04/PA001 preserved. Prior PR20 decision remains history |
+| Controller publication | Decision branch `review/0010-pa006-controller-r4-20261115` (target PR21 branch); publication/PR/remote verification recorded in current controller report and handoff after it exists |
 | Riwayat penyerahan | PR15 (13 Nov, changes_requested via PR16), PR17 (14 Nov, changes_requested via PR18), PR19 (15 Nov, changes_requested via PR20), **penyerahan keempat ini**; laporan historis dipertahankan di report/ + histori git |
-| Next actor | **controller_reviewer** |
-| Exact next action | Review exact SHA kandidat keempat (implementation `b71574d` + metadata descendant) atas matriks finding→perubahan→tes→evidence pada laporan executor §2; changes-requested membuka kembali ID0010 yang sama |
+| Next actor | **coding_agent** |
+| Exact next action | Fetch current controller R4 decision ref, fix remaining **REV-1311-01 only** on ID0010; preserve CLOSED03A/03B/05/02/04/PA001; old-source accepted UUID grammar→migration→retry must keep original result/effects1. Resubmit new exact SHA + actual evidence |
 
 Mulai dari [panduan tetap](0000-start-here.md) dan [CONTRACT](../CONTRACT.md). Ini task implementasi, **bukan bukti PA-006 selesai**. Fetch refs dan review delta bila remote berubah; pilih branch baru dari main aktual dengan packet ini tersedia. Jika instruksi belum merged, catat instruction ref/PR dan bawa perubahan dokumentasi yang sah secara semantik; jangan menimpa pekerjaan lain atau menganggap SHA baseline sebagai main untuk selamanya.
 
@@ -110,7 +110,7 @@ Histori PR15/PR16 tetap di GitHub pada ref yang ditautkan; laporan executor PR17
 
 Next setelah accepted: controller menyiapkan PA-002/PA-003 untuk job fencing/drain/authority, termasuk fresh HTTP RLS payload dan uncertain/cancel/stale-writer cases. Kandidat Beta tetap NOT_READY selama gates terkait belum dipenuhi. Tidak ada izin rollout atau tanggal peluncuran yang dibuat oleh task ini.
 
-## Koreksi controller 15 November 2026 — keputusan terbaru, ID0010 tetap
+## Koreksi controller 15 November 2026 — review PR19 (historis), ID0010 tetap
 
 Review exact PR19 **9e9bf2d42002a00a69d54fc355b77384897b9478**:
 **changes_requested**. [Laporan controller](../report/controller/20261114T212816Z-0010-pa006-review.md)
@@ -149,3 +149,59 @@ change→failing-before/passing-after closing tests→actual evidence untuk
 01/03/05, lalu acceptance awal lengkap, candidate+remote+CI exact SHA.
 Execution `ready`, review `changes_requested`, next **coding_agent**.
 PA-002/003 dan task dependent baru belum eligible; tidak merge/deploy/tag.
+
+## Koreksi controller R4 — 15 November 2026, review PR21 (keputusan terbaru)
+
+**changes_requested** pada exact PR21
+**634da4224f15dd6a5a4e9010fe1811dec8c7954d**. Keputusan pada
+[laporan controller R4](../report/controller/20261115T053138Z-0010-pa006-r4-review.md)
+menggantikan klaim closure01 executor pada penyerahan keempat. Original
+objective/work/acceptance/verification tetap utuh. ID0010 unfinished,
+execution **ready**, review **changes_requested**, next **coding_agent**.
+
+**Satu finding terbuka: REV-1311-01 P1, partial.** Standard URN completed
+replay dan ambiguous409 kini benar. Tetapi actual main HTTP menerima
+`uuid:<UUID>` dan `urn:<UUID>`; migrasi0004 memindahkannya ke operasi mati
+`__unparsed__`, lookup canonical melewati penjaga, retry membuat
+**submission dan file fisik1→2** (completed uuid, ambiguous uuid, completed
+urn). Semua old HTTP/migration exit0; tiga post-upgrade assertions FAIL.
+Menyimpan baris yang tidak mungkin ditemukan runtime bukan safe guard.
+
+**Koreksi minimum:** petakan tenant/resource memakai grammar UUID yang
+benar-benar diterima writer lama dengan satu interpretasi canonical; jangan
+menambah cabang prefix khusus per contoh. Bila identitas sungguh ambigu,
+fail-stop migrasi atau rekonsiliasi sebelum mengizinkan efek baru. Preserve
+principal/platform/opaque semantics, completed/no-response guard, dedupe,
+RLS, history, write-freeze dan fix-forward. Jelaskan affected-state recovery
+bila0004 telanjur diterapkan; edit0004 saja tidak memperbaiki DB yang sudah
+menjalankannya. Asumsi sandbox-only boleh dinyatakan eksplisit tanpa klaim
+reparasi deployment yang tidak diuji. Tidak perlu framework/migration engine.
+
+**Acceptance penutup:** jalankan ulang
+[actual-source upgrade probe](../report/controller-evidence/20261115T053138Z-pa006-r4/live_upgrade_aliases.py)
+dan [runner](../report/controller-evidence/20261115T053138Z-pa006-r4/run_upgrade_aliases.sh)
+dengan backend main9903d9b pada fase before dan kandidat baru pada after:
+canonical/URN controls, uuid-only completed+unknown dan urn-only completed
+harus seluruhnya mempertahankan efek/file1. Known outcome201 mereplay ID
+asli; unknown409/reconciliation tidak blind execute. Perluas grammar cases
+pada **tenant dan resource**, termasuk prefix berulang yang diterima
+baseline; unresolved input harus fail-safe. Cover canonical/alias retry,
+wrong target/body409, concurrent retry, platform remap dan legacy opaque.
+Jangan menyebut arbitrary corrupt input sebagai old-writer outcome tanpa
+bukti. Tidak menurunkan assertion atau memutasi history uang.
+
+**CLOSED pada634da42:** REV-1311-03A/03B (nested money+selected effect),
+REV-1511-05 (fresh/stored/replay dan retained string-secret scrub),
+REV-1311-02 (parent/group) dan REV-1411-04 (actual HTTP wait graphs +
+after-write rollback/takeover). PA-001 semua10 lulus. Jangan implementasi
+ulang bagian yang sudah benar. Root independen: **93 targeted,452 full,
+6 prior probes,2 edges,5 effects PASS**, Django/migration/docs PASS;
+exact-head CI3/3 success. Masalah parser tetap FAIL meski suite hijau.
+
+Saat resubmit, matriks finding01→code→failing-before/passing-after→evidence
+serta acceptance awal lengkap; source grammar/pure evidence harus dibedakan
+dari actual HTTP/database/file effect. Koreksi wording test nested race:
+barrier-only test tidak membuktikan lock waiting; query+blocker berasal dari
+probe forced wait yang terpisah. No need repeat source implementation for
+that attribution clarification. PA-002/003 tetap tertahan; tidak ada
+packet0020/merge/deploy/tag. Beta **NOT_READY**.

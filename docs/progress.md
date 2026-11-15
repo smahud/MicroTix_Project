@@ -2,6 +2,28 @@
 
 Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-15 (Asia/Jakarta).
 
+## Checkpoint 2026-11-15 — controller PR21 changes_requested; hanya REV-1311-01 tersisa
+
+Exact reviewed **634da4224f15dd6a5a4e9010fe1811dec8c7954d**, implementation
+ancestor b71574d, main9903d9b tetap. [Controller R4](../report/controller/20261115T053138Z-0010-pa006-r4-review.md)
+dan dua independent source reports mereview penyerahan keempat. **OPEN01
+P1 partial**: actual old HTTP `uuid:<UUID>` completed/ambiguous dan
+`urn:<UUID>` completed→0004/0005→canonical retry menghasilkan submission
+**dan physical file1→2**; `__unparsed__` retained row tidak ditemukan replay.
+Standard canonical/URN controls PASS. **CLOSED03A/03B/05**,02/04 tetap
+CLOSED, PA-00110 lulus. Root **93 targeted +452 full +6 prior +2 edges
++5 effects PASS** (PG17.11 non-superuser/non-BYPASSRLS), Django/migration/
+docs PASS; exact-head CI43679221142 backend/frontend/docs success.
+
+Task [0010](../task/0010-pa006-idempotency.md) dibuka kembali **ready /
+changes_requested**; next **coding_agent** memperbaiki accepted legacy UUID
+grammar/reconciliation pada ID sama, preserve seluruh closure, lalu resubmit
+source/evidence/SHA baru. Decision branch
+`review/0010-pa006-controller-r4-20261115` menarget PR21 branch; publikasi
+terverifikasi dicatat pada controller report/handoff. PA-002/003 belum
+eligible, tidak ada packet0020. Host/lab/DR/browser/scale NOT_RUN; Beta
+**NOT_READY**. Tidak ada perubahan aplikasi, merge, deployment atau tag.
+
 ## Checkpoint 2026-11-15 — executor task0010/PA-006 penyerahan keempat: REV-1311-01/03 + REV-1511-05 ditutup
 
 Koreksi atas keputusan [PR20 changes_requested](https://github.com/smahud/MicroTix_Project/pull/20) pada ID0010 yang sama; branch kandidat `session/2026-11-15-pa006-idempotency-correction` (base decision head `e507175`), **implementation `b71574d`**; packet direname `_done` (execution done / review pending) — menunggu controller review exact SHA. **Bukan acceptance.**

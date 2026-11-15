@@ -1,0 +1,14 @@
+{
+  "original_packet_sections_byte_identical": {
+    "## Tujuan dan bukti masalah": true,
+    "## Scope dan ownership": true,
+    "## Pekerjaan wajib": true,
+    "## Acceptance yang wajib dibuktikan": true,
+    "## Verifikasi dan review": true
+  },
+  "relative_links_checked": 61,
+  "missing_links": [],
+  "protected_diff_empty": true,
+  "candidate": "634da4224f15dd6a5a4e9010fe1811dec8c7954d",
+  "logs_normalization": "trailing whitespace removed only; actual assertions/values/exit status preserved"
+}
