@@ -1,0 +1,56 @@
+{
+  "initial_decision_commit": "6201ae959a2d84556c9a54ec2d552d996e8063c9",
+  "tree": "31731ba56482e7805c9c9d134d08687ae9556b75",
+  "expected_tree": "31731ba56482e7805c9c9d134d08687ae9556b75",
+  "reviewed_code": "a301a94c2b3268679065e85bbef66f35949483f7",
+  "branch": "review/0010-pa006-controller-r5-20261116",
+  "pr": 25,
+  "base_branch": "session/2026-11-16-pa006-rev1311-01-correction",
+  "ref_head_confirmed": "6201ae959a2d84556c9a54ec2d552d996e8063c9",
+  "remote_file_readbacks": [
+    {
+      "path": "report/controller/20261116T101809Z-0010-pa006-r5-review.md",
+      "sha": "278d934f31749b54c573284d6a202f012237b05d",
+      "byte_identical": true
+    },
+    {
+      "path": "task/0010-pa006-idempotency_done.md",
+      "sha": "b89a00fef3f5531f329f65af145eacf4aefb063c",
+      "byte_identical": true
+    },
+    {
+      "path": "report/LATEST_HANDOFF.md",
+      "sha": "03e29e5a3ec8b099356fdb49b566ec84824af5ab",
+      "byte_identical": true
+    },
+    {
+      "path": "docs/progress.md",
+      "sha": "f38c86744e17800278399dbc8f0e0752ee299133",
+      "byte_identical": true
+    },
+    {
+      "path": "report/reviewer/20261116T101809Z-0010-r5-acceptance-independent.md",
+      "sha": "79541b61b00ab9cd6c75b2e359b115ab42cdb90d",
+      "byte_identical": true
+    },
+    {
+      "path": "report/reviewer/20261116T101809Z-0010-r5-migration-independent.md",
+      "sha": "feb7d90fe1b92b920da44a0dca5caf5769d1b07a",
+      "byte_identical": true
+    },
+    {
+      "path": "report/reviewer/20261116T101809Z-0010-r5-records-qa.md",
+      "sha": "371917df0b340d621b2f037de02cf9d57037e828",
+      "byte_identical": true
+    }
+  ],
+  "initial_ci": [
+    {
+      "id": 43849546365,
+      "head_sha": "6201ae959a2d84556c9a54ec2d552d996e8063c9",
+      "status": "in_progress",
+      "conclusion": null
+    }
+  ],
+  "limits": "Initial publication facts only. Metadata descendant and its CI verified separately; no main merge/deployment/tag."
+}

@@ -15,9 +15,11 @@ CI43846763713 **success3/3**. Dua reviewer independen tidak menemukan
 blocker baru. P3 test-completion note nonblocking, evidence gap ditutup
 probe root dengan assertion kedua thread/hasil. Laporan [controller R5](../report/controller/20261116T101809Z-0010-pa006-r5-review.md).
 
-Decision branch **review/0010-pa006-controller-r5-20261116** record-only;
-publikasi/ref/file readback dan publication CI dicatat setelah observasi
-pada report/PR keputusan. Main **9903d9b** dan PR24 belum berubah;
+Decision **[PR25](https://github.com/smahud/MicroTix_Project/pull/25)**, branch
+**review/0010-pa006-controller-r5-20261116** record-only; initial commit
+**6201ae959a2d84556c9a54ec2d552d996e8063c9**/tree31731ba5 verified via
+remote ref/commit/PR,7file byte readback dan clean local fetch. Metadata
+descendant source identik; final-head publication CI tercatat di PR25. Main **9903d9b** dan PR24 belum berubah;
 **integration pending**. Next **controller_reviewer** menyelesaikan integrasi
 PR24 + keputusan sesuai CONTRACT §11; baru setelah prasyarat integrasi
 terpenuhi menyiapkan packet PA-002 bersama authority PA-003. Tidak ada
