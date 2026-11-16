@@ -1,0 +1,51 @@
+{
+  "checked_at_utc": "2026-11-16T06:53:45.825146+00:00",
+  "starting_decision": "82b2216b608b4cb502c80f6fb6f12a4a8155bc04",
+  "candidate": "634da4224f15dd6a5a4e9010fe1811dec8c7954d",
+  "result": "PASS",
+  "changed_paths": [
+    "docs/progress.md",
+    "report/LATEST_HANDOFF.md",
+    "report/controller-evidence/20261116T065005Z-pa006-state/checks.json",
+    "report/controller-evidence/20261116T065005Z-pa006-state/docs.log",
+    "report/controller-evidence/20261116T065005Z-pa006-state/remote-state.json",
+    "report/controller/20261116T065005Z-0010-pa006-state-review.md",
+    "report/reviewer/20261116T065005Z-0010-pa006-state-review.md",
+    "task/0010-pa006-idempotency.md"
+  ],
+  "protected_source_config_contract_manifest_delta": [],
+  "packet_unchanged_except_one_latest_state_row": true,
+  "relative_markdown_targets_checked": 71,
+  "broken_relative_targets": [],
+  "unfinished_task0010_only": true,
+  "native_docs": {
+    "result": "PASS",
+    "scope": "documentation_static_only",
+    "files": 24,
+    "internal_links": 106,
+    "tasks": 85,
+    "dependency_edges": 240,
+    "designed_cases": 256,
+    "designed_assertions": 662,
+    "referenced_requirement_ids": 172,
+    "technical_defaults": 115,
+    "application_runtime_tests_executed": 0,
+    "production_readiness": "NOT_EVALUATED"
+  },
+  "runtime_tests_executed_this_session": 0,
+  "git_diff_check_exit": 0,
+  "commands": [
+    "python3 docs/tools/check_docs.py",
+    "python3 inline record scope, packet preservation and relative link QA",
+    "git diff --check"
+  ],
+  "publication_status": "not yet pushed at QA time; final receipt in PR23 description",
+  "final_prepared_record_qa": {
+    "checked_at_utc": "2026-11-16T06:55:37.748934+00:00",
+    "result": "PASS",
+    "relative_markdown_targets": 72,
+    "independent_qa": "APPROVED",
+    "permitted_paths": 8,
+    "runtime_tests_executed": 0
+  }
+}
