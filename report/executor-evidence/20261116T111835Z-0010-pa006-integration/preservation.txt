@@ -1,0 +1,4 @@
+=== preservation check (PR lain tak tersentuh) ===
+PR7: state=open head=d7fa35e5583b base=main
+PR8: state=open head=6bb57c9251f3 base=main
+PR14: state=open head=2a9803593c32 base=main

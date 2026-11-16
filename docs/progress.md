@@ -2,6 +2,27 @@
 
 Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-16 (Asia/Jakarta).
 
+## Checkpoint 2026-11-16, ~18:25 WIB — integrasi task0010/PA-006 selesai: PR24+PR25 merged ke main
+
+**Task0010 done / accepted / integrated.** Integrator executor (Z.ai sandbox,
+[wewenang eksplisit pemilik repo atas PAT "commit, merge, atau push" — preseden
+PR9; approval = R5 accepted pada exact a301a94]) menyelesaikan integrasi
+sesuai CONTRACT §11: main `9903d9b` → merge **PR24** `532862b` (tree
+`bec63b5` = tree reviewed a301a94 persis) → merge **PR25** (keputusan R5)
+`fd0f3fa` (tree `f283fe9` = tree head keputusan c352bce persis). Pra-merge:
+locked head terverifikasi, delta main nol, CI 3/3 pada kedua exact head,
+PR7/8/14 tak tersentuh. Regresi gabungan pada tree final di sandbox dari
+nol: **514 passed** (PG 17.11 nyata non-superuser, FreeRADIUS 3.2.7 real
+binary), check 0 issue, makemigrations no-change, docs PASS 24/106,
+bootstrap migrasi bersih termasuk jobs.0004/0005. Remote readback SHA/tree/
+PR-state diverifikasi pasca-merge. Laporan:
+[integrasi](../report/orchestrator/20261116T111835Z-0010-pa006-integration.md)
++ [evidence](../report/executor-evidence/20261116T111835Z-0010-pa006-integration/).
+Merge ≠ deploy; Beta **NOT_READY** (bloker register tidak berubah);
+REV-1611-TEST-01 P3 tetap nonblocking follow-up. Next **controller_reviewer**
+menyiapkan packet PA-002 + authority PA-003 dari main terintegrasi.
+Checkpoint di bawah adalah histori.
+
 ## Checkpoint 2026-11-16, 17:25 WIB — controller menerima PA-006 PR24
 
 **Task0010 done / accepted** pada exact **a301a94c2b3268679065e85bbef66f35949483f7**

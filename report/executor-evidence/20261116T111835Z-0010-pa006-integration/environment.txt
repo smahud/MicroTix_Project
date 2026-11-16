@@ -1,0 +1,9 @@
+=== environment 20261116T111910Z ===
+worktree: /tmp/mtx-integration @ c352bce (tree f283fe9 = final integrated main tree)
+Python 3.12.16
+Python 3.13.5
+postgres (PostgreSQL) 17.11 (Debian 17.11-0+deb13u1)
+freeradius 3.2.7 (deb-extract; via LD_LIBRARY_PATH reconciler)
+pytest 9.2.0
+Django 5.2.19
+psycopg 3.2.13

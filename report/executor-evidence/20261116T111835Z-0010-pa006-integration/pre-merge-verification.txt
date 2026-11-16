@@ -1,0 +1,7 @@
+=== PRE-MERGE VERIFICATION 20261116T111703Z ===
+--- main HEAD ---
+9903d9b0cf09d737b553da3c21067b4810e956c0
+--- PR24 head (expect a301a94c2b3268679065e85bbef66f35949483f7) ---
+a301a94c2b3268679065e85bbef66f35949483f7 | state: open | mergeable: True clean
+--- PR25 head (expect c352bce4e3f4cfe87ae62ee23e3c1e2a4cfbb450) ---
+c352bce4e3f4cfe87ae62ee23e3c1e2a4cfbb450 | state: open | mergeable: True clean

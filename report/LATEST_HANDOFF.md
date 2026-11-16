@@ -1,11 +1,34 @@
-# LATEST_HANDOFF — 16 November 2026: controller menerima PA-006 PR24; integrasi pending
+# LATEST_HANDOFF — 16 November 2026: PA-006 task0010 terintegrasi ke main (PR24+PR25); next packet PA-002/PA-003
 
 Pintu masuk tetap: [task/0000-start-here.md](../task/0000-start-here.md),
-CONTRACT §6A. Fetch remote refs/PR sebelum bertindak. Status ini berada pada
-branch kandidat sampai integrasi; filename unfinished pada main tidak
-membuktikan belum ada kandidat. Tanggal Asia/Jakarta; evidence filename UTC.
+CONTRACT §6A. Fetch remote refs/PR sebelum bertindak. Status integrasi di
+bawah kini ada pada **main aktual** (bukan lagi branch kandidat); commit
+record menaikkan main setelah merge — fetch HEAD aktual setiap sesi. Tanggal
+Asia/Jakarta; evidence filename UTC.
 
-## Latest controller decision — 16 November 2026, 17:25 WIB
+## Latest state — 16 November 2026, ~18:25 WIB: integrasi task0010 selesai
+
+**Task0010 / PA-006 done / accepted / integrated.** PR24 (kode exact
+a301a94) dan PR25 (keputusan R5) merged ke main atas wewenang eksplisit
+pemilik repo (PAT "commit, merge, atau push" — preseden PR9; approval =
+R5 accepted; merge ≠ deploy). Bagian setelah tabel ini histori; status
+current mengikuti tabel ini dan [laporan integrasi](orchestrator/20261116T111835Z-0010-pa006-integration.md).
+
+| Field handoff | Status / pointer |
+|---|---|
+| Canonical main | **fd0f3faa84ea87c142d37da5dacf01e22a493f90** (merge PR25) setelah merge PR24 `532862be2711f26d537ae1df540258bbdcae2052`; tree final `f283fe9` byte-identik dengan head keputusan R5 `c352bce` yang diuji; record commit sesi ini menaikkan main lagi — fetch HEAD aktual |
+| Active task | [ID0010 / PA-006](../task/0010-pa006-idempotency_done.md) — **integrated** |
+| Execution / review / integration | **done / accepted / integrated**; merge bukan deployment/aktivasi/release |
+| Integrasi | PR24 merged 11:17:20Z (parents 9903d9b+a301a94, tree bec63b5 = tree reviewed); PR25 retarget base main + merged 11:17:44Z (parents 532862b+c352bce, tree f283fe9 = tree teruji); remote readback SHA/tree/PR-state diverifikasi; PR7/8/14 tak tersentuh |
+| Verifikasi integrasi (executor) | Full suite **514 passed** (PG 17.11 nyata non-superuser + FreeRADIUS 3.2.7 real binary) + check 0 issue + makemigrations no-change + docs PASS 24 files/106 links pada tree final; bootstrap migrasi bersih dari initdb (termasuk jobs.0004/0005); [laporan integrasi](orchestrator/20261116T111835Z-0010-pa006-integration.md) + [evidence](executor-evidence/20261116T111835Z-0010-pa006-integration/) |
+| Candidate CI (exact tree) | [43846763713](https://github.com/smahud/MicroTix_Project/actions/runs/43846763713) success 3/3 pada a301a94; CI c352bce 3/3 success (tree = main final); CI head record commit diamati/dicatat pada laporan/commit lanjutan |
+| Keputusan controller | R5 accepted pada exact a301a94 — [review](controller/20261116T101809Z-0010-pa006-r5-review.md), publikasi PR25 (tabel histori di bawah); tetap verdict pemilik acceptance |
+| Nonblocking follow-up | REV-1611-TEST-01 P3 (assert completion thread/hasil tes R5) tetap terbuka untuk hardening test-only di packet berikutnya; tidak membuka kembali PA-006 |
+| Next actor | **controller_reviewer** |
+| Exact next action | Siapkan packet **PA-002 bersama authority PA-003** (job lifecycle fencing/drain/authority) dari main terintegrasi, menautkan accepted a301a94 + R5 review; REV-1611-TEST-01 P3 dapat dibundel. Jangan minta submission keenam PA-006 atau buka task0020 sebelum packet itu dibuat |
+| Batas / Beta | Production Beta **NOT_READY**; bloker register [review 11 Nov §4](controller/20261111T074225Z-repo-handoff-review.md) tidak berubah (installer/upgrade/worker/restore/DEC01/DEC02/scheduler/REV-1111-11/kapasitas + gates host/lab). OS install/upgrade/restore/DR, real drain, CHR/GNS3/router/pilot, E2E browser, benchmark NOT_RUN |
+
+## Prior controller decision — 16 November 2026, 17:25 WIB (acceptance; selesai diintegrasikan di atas)
 
 **Task0010 / PA-006 accepted pada exact PR24 a301a94. REV-1311-01 CLOSED.**
 Seluruh closure R4 dipertahankan; tidak ada blocker baru dalam scope.
