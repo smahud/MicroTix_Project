@@ -1,0 +1,10 @@
+         relname          | relrowsecurity | relforcerowsecurity
+--------------------------+----------------+---------------------
+ subs_payment_submission  | t              | t
+ customers_access_account | t              | t
+(2 rows)
+
+     conname      |                      pg_get_constraintdef
+------------------+-----------------------------------------------------------------
+ uq_idem_identity | UNIQUE (principal, tenant_scope, operation, resource, idem_key)
+(1 row)

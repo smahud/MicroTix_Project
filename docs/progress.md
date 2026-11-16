@@ -2,6 +2,29 @@
 
 Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-16 (Asia/Jakarta).
 
+## Checkpoint 2026-11-16, 17:25 WIB — controller menerima PA-006 PR24
+
+**Task0010 done / accepted** pada exact **a301a94c2b3268679065e85bbef66f35949483f7**
+(PR24; implementation7338a72). **REV-1311-01 CLOSED**, seluruh closure R4
+02/03A/03B/04/05/PA001 preserved. Root: **514 passed** backend +**13 passed**
+controller conformance, PostgreSQL17.11 non-superuser; old-source HTTP→
+real0004/0005→canonical retry **10/10 PASS** dengan20 completed concurrent
+responses dan satu efek/file/guard; role migrator/runtime terpisah dan
+FORCE RLS diperiksa. Check/migration/docs PASS; candidate exact-head
+CI43846763713 **success3/3**. Dua reviewer independen tidak menemukan
+blocker baru. P3 test-completion note nonblocking, evidence gap ditutup
+probe root dengan assertion kedua thread/hasil. Laporan [controller R5](../report/controller/20261116T101809Z-0010-pa006-r5-review.md).
+
+Decision branch **review/0010-pa006-controller-r5-20261116** record-only;
+publikasi/ref/file readback dan publication CI dicatat setelah observasi
+pada report/PR keputusan. Main **9903d9b** dan PR24 belum berubah;
+**integration pending**. Next **controller_reviewer** menyelesaikan integrasi
+PR24 + keputusan sesuai CONTRACT §11; baru setelah prasyarat integrasi
+terpenuhi menyiapkan packet PA-002 bersama authority PA-003. Tidak ada
+packet0020, merge/deploy/tag pada sesi review ini. Beta **NOT_READY**;
+OS install/upgrade/recovery, real drain/CHR/GNS3/pilot/load tetap NOT_RUN.
+Checkpoint di bawah adalah histori, bukan verdict terbaru.
+
 ## Checkpoint 2026-11-16, ~17:10 WIB — executor penyerahan kelima ID0010: REV-1311-01 grammar-driven
 
 Executor (Z.ai sandbox) menutup sisa finding controller R4 (PR21
@@ -107,7 +130,7 @@ CLOSED, PA-00110 lulus. Root **93 targeted +452 full +6 prior +2 edges
 +5 effects PASS** (PG17.11 non-superuser/non-BYPASSRLS), Django/migration/
 docs PASS; exact-head CI43679221142 backend/frontend/docs success.
 
-Task [0010](../task/0010-pa006-idempotency.md) dibuka kembali **ready /
+Task [0010](../task/0010-pa006-idempotency_done.md) dibuka kembali **ready /
 changes_requested**; next **coding_agent** memperbaiki accepted legacy UUID
 grammar/reconciliation pada ID sama, preserve seluruh closure, lalu resubmit
 source/evidence/SHA baru. Decision branch
@@ -184,7 +207,7 @@ dan dua URN actual-source upgrade cases FAIL; canonical actual-source
 upload/retry PASS. Setup-process-lifetime dan truncated query1024 harness
 issues diakui terpisah; affected attribution tests rerun capture8192 PASS.
 
-Packet [0010](../task/0010-pa006-idempotency.md) kembali **ready /
+Packet [0010](../task/0010-pa006-idempotency_done.md) kembali **ready /
 changes_requested**, ID tetap, original acceptance utuh. Next actor
 **coding_agent**, tutup01/03/05 minimum lalu resubmit exact SHA + evidence.
 PA-002/003 belum eligible; tidak ada dependent task baru, merge/deploy/tag;
@@ -204,7 +227,7 @@ Exact reviewed candidate **37a87291ae66a0fa9167f0c72d1e8340aa5fd245**, main9903d
 
 **REV-1311-01/02/03 masih OPEN**: actual old-code upload→0004→retry menduplikasi submission/file1→2; injected old-schema ambiguous claim dihapus lalu invoice kedua; resolusi sesi A/B204/204 dengan decisions[2,0], malformed/missing parent cached204; typed package UUID alias200→409. **REV-1411-04 P2**: bukti race direct-method bukan concurrent authenticated HTTP, lock polling dapat timeout tanpa gagal, after-write rollback/contender takeover belum dibuktikan. Klaim all-PASS/penutupan REV-1111-11 pada penyerahan di bawah **tidak diterima controller**.
 
-Packet [0010](../task/0010-pa006-idempotency.md) kembali unfinished **ready / changes_requested**, ID sama; objective/scope/mandatory work/full acceptance asli dipulihkan dan prior correction PR16 ditautkan. Next actor **coding_agent**: fetch ref keputusan ini, tutup empat finding dengan finding→change→closing test→actual evidence, resubmit exact SHA baru. Perbaikan yang sudah benar/PA-001/histori executor dipertahankan. PA-002/003 belum eligible, tidak ada task dependent baru, merge/deploy/tag. Beta **NOT_READY**; host/lab/DR/capacity NOT_RUN. Sumber/bukti dan status publikasi terverifikasi di laporan/handoff, bukan chat saja.
+Packet [0010](../task/0010-pa006-idempotency_done.md) kembali unfinished **ready / changes_requested**, ID sama; objective/scope/mandatory work/full acceptance asli dipulihkan dan prior correction PR16 ditautkan. Next actor **coding_agent**: fetch ref keputusan ini, tutup empat finding dengan finding→change→closing test→actual evidence, resubmit exact SHA baru. Perbaikan yang sudah benar/PA-001/histori executor dipertahankan. PA-002/003 belum eligible, tidak ada task dependent baru, merge/deploy/tag. Beta **NOT_READY**; host/lab/DR/capacity NOT_RUN. Sumber/bukti dan status publikasi terverifikasi di laporan/handoff, bukan chat saja.
 
 ## Checkpoint 2026-11-14 — riwayat klaim executor task0010/PA-006: HTTP idempotency aman terhadap scope dan race (penyerahan executor)
 

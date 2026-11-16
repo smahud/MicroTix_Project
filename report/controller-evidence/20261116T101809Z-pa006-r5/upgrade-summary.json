@@ -1,0 +1,481 @@
+{
+  "reviewed_sha": "a301a94c2b3268679065e85bbef66f35949483f7",
+  "variants_passed": 10,
+  "recorded_checks": 61,
+  "all_exit_zero": true,
+  "completed_concurrent_responses": 20,
+  "variants": {
+    "canonical": {
+      "result": "PASS",
+      "old_status": 201,
+      "new_status": 201,
+      "after": {
+        "phase": "after",
+        "proof_file_count": 1,
+        "response": {
+          "state": "submitted",
+          "submission_id": "a8248f76-d5d5-4565-81c7-efb789468c4c"
+        },
+        "retained_keys": [
+          {
+            "idem_key": "r5-upgrade-canonical",
+            "operation": "payment_submission",
+            "principal": "4f27a5c0-107c-435f-a068-3cdfa59b499f",
+            "resource": "",
+            "response_status": 201,
+            "tenant_scope": "87e7848c-6b0d-4550-9288-5483ebfb26ab"
+          }
+        ],
+        "status": 201,
+        "submission_count": 1,
+        "variant": "canonical"
+      },
+      "concurrent": {
+        "concurrent_retries": {
+          "A": {
+            "response": {
+              "state": "submitted",
+              "submission_id": "a8248f76-d5d5-4565-81c7-efb789468c4c"
+            },
+            "status": 201
+          },
+          "B": {
+            "response": {
+              "state": "submitted",
+              "submission_id": "a8248f76-d5d5-4565-81c7-efb789468c4c"
+            },
+            "status": 201
+          }
+        },
+        "effect_count": 1,
+        "record_count": 1,
+        "threads_complete": true
+      }
+    },
+    "urn": {
+      "result": "PASS",
+      "old_status": 201,
+      "new_status": 201,
+      "after": {
+        "phase": "after",
+        "proof_file_count": 1,
+        "response": {
+          "state": "submitted",
+          "submission_id": "c27fe22b-8a24-4537-a9bb-45a51da3e02e"
+        },
+        "retained_keys": [
+          {
+            "idem_key": "r5-upgrade-urn",
+            "operation": "payment_submission",
+            "principal": "d83ae26c-4e2a-4a1d-aa30-fb5e13db1c8d",
+            "resource": "",
+            "response_status": 201,
+            "tenant_scope": "45575e49-9305-4882-b70f-4278ec62f3e3"
+          }
+        ],
+        "status": 201,
+        "submission_count": 1,
+        "variant": "urn"
+      },
+      "concurrent": {
+        "concurrent_retries": {
+          "A": {
+            "response": {
+              "state": "submitted",
+              "submission_id": "c27fe22b-8a24-4537-a9bb-45a51da3e02e"
+            },
+            "status": 201
+          },
+          "B": {
+            "response": {
+              "state": "submitted",
+              "submission_id": "c27fe22b-8a24-4537-a9bb-45a51da3e02e"
+            },
+            "status": 201
+          }
+        },
+        "effect_count": 1,
+        "record_count": 1,
+        "threads_complete": true
+      }
+    },
+    "urn_ambiguous": {
+      "result": "PASS",
+      "old_status": 201,
+      "new_status": 409,
+      "after": {
+        "phase": "after",
+        "proof_file_count": 1,
+        "response": {
+          "code": "idempotency_conflict",
+          "locale": "id",
+          "message": "Idempotency-Key sama dipakai untuk isi permintaan berbeda",
+          "request_id": "88a3caf8692a4b9b"
+        },
+        "retained_keys": [
+          {
+            "idem_key": "r5-upgrade-urn_ambiguous",
+            "operation": "payment_submission",
+            "principal": "b8d71fc0-dffe-4964-8676-b8c02307b191",
+            "resource": "",
+            "response_status": null,
+            "tenant_scope": "c2193167-0f13-491a-a00d-99bd7119169b"
+          }
+        ],
+        "status": 409,
+        "submission_count": 1,
+        "variant": "urn_ambiguous"
+      },
+      "concurrent": {
+        "concurrent_retries": {
+          "A": {
+            "response": {
+              "code": "idempotency_conflict",
+              "locale": "id",
+              "message": "Idempotency-Key sama dipakai untuk isi permintaan berbeda",
+              "request_id": "17046dc101194603"
+            },
+            "status": 409
+          },
+          "B": {
+            "response": {
+              "code": "idempotency_conflict",
+              "locale": "id",
+              "message": "Idempotency-Key sama dipakai untuk isi permintaan berbeda",
+              "request_id": "428b7fa435684b00"
+            },
+            "status": 409
+          }
+        },
+        "effect_count": 1,
+        "record_count": 1,
+        "threads_complete": true
+      }
+    },
+    "uuid_only": {
+      "result": "PASS",
+      "old_status": 201,
+      "new_status": 201,
+      "after": {
+        "phase": "after",
+        "proof_file_count": 1,
+        "response": {
+          "state": "submitted",
+          "submission_id": "f0c716f0-b60b-4b1a-bd02-cb04d0833ba9"
+        },
+        "retained_keys": [
+          {
+            "idem_key": "r5-upgrade-uuid_only",
+            "operation": "payment_submission",
+            "principal": "a8fbfea5-fa1e-4ce1-8d78-883ec19d9a52",
+            "resource": "",
+            "response_status": 201,
+            "tenant_scope": "5bbe44ff-ec8b-4e2c-b60f-77ac2c90e8f9"
+          }
+        ],
+        "status": 201,
+        "submission_count": 1,
+        "variant": "uuid_only"
+      },
+      "concurrent": {
+        "concurrent_retries": {
+          "A": {
+            "response": {
+              "state": "submitted",
+              "submission_id": "f0c716f0-b60b-4b1a-bd02-cb04d0833ba9"
+            },
+            "status": 201
+          },
+          "B": {
+            "response": {
+              "state": "submitted",
+              "submission_id": "f0c716f0-b60b-4b1a-bd02-cb04d0833ba9"
+            },
+            "status": 201
+          }
+        },
+        "effect_count": 1,
+        "record_count": 1,
+        "threads_complete": true
+      }
+    },
+    "uuid_only_ambiguous": {
+      "result": "PASS",
+      "old_status": 201,
+      "new_status": 409,
+      "after": {
+        "phase": "after",
+        "proof_file_count": 1,
+        "response": {
+          "code": "idempotency_conflict",
+          "locale": "id",
+          "message": "Idempotency-Key sama dipakai untuk isi permintaan berbeda",
+          "request_id": "25ff67aeebe349ad"
+        },
+        "retained_keys": [
+          {
+            "idem_key": "r5-upgrade-uuid_only_ambiguous",
+            "operation": "payment_submission",
+            "principal": "e4f9f4bc-fa5e-4d08-a5c4-eb555a6e15f1",
+            "resource": "",
+            "response_status": null,
+            "tenant_scope": "60d0d178-1d3a-4f88-8403-04b1085967a7"
+          }
+        ],
+        "status": 409,
+        "submission_count": 1,
+        "variant": "uuid_only_ambiguous"
+      },
+      "concurrent": {
+        "concurrent_retries": {
+          "A": {
+            "response": {
+              "code": "idempotency_conflict",
+              "locale": "id",
+              "message": "Idempotency-Key sama dipakai untuk isi permintaan berbeda",
+              "request_id": "7e0a51821c8b4895"
+            },
+            "status": 409
+          },
+          "B": {
+            "response": {
+              "code": "idempotency_conflict",
+              "locale": "id",
+              "message": "Idempotency-Key sama dipakai untuk isi permintaan berbeda",
+              "request_id": "c8ea5956d16e4e05"
+            },
+            "status": 409
+          }
+        },
+        "effect_count": 1,
+        "record_count": 1,
+        "threads_complete": true
+      }
+    },
+    "urn_only": {
+      "result": "PASS",
+      "old_status": 201,
+      "new_status": 201,
+      "after": {
+        "phase": "after",
+        "proof_file_count": 1,
+        "response": {
+          "state": "submitted",
+          "submission_id": "ea19a70b-a647-4204-8f67-0348a944275b"
+        },
+        "retained_keys": [
+          {
+            "idem_key": "r5-upgrade-urn_only",
+            "operation": "payment_submission",
+            "principal": "048b42a7-6e5f-4f06-ba44-0c93bd4603de",
+            "resource": "",
+            "response_status": 201,
+            "tenant_scope": "96e57cec-e946-45d8-9d49-28b8091c0c9b"
+          }
+        ],
+        "status": 201,
+        "submission_count": 1,
+        "variant": "urn_only"
+      },
+      "concurrent": {
+        "concurrent_retries": {
+          "A": {
+            "response": {
+              "state": "submitted",
+              "submission_id": "ea19a70b-a647-4204-8f67-0348a944275b"
+            },
+            "status": 201
+          },
+          "B": {
+            "response": {
+              "state": "submitted",
+              "submission_id": "ea19a70b-a647-4204-8f67-0348a944275b"
+            },
+            "status": 201
+          }
+        },
+        "effect_count": 1,
+        "record_count": 1,
+        "threads_complete": true
+      }
+    },
+    "repeat_uuid": {
+      "result": "PASS",
+      "old_status": 201,
+      "new_status": 201,
+      "after": {
+        "phase": "after",
+        "proof_file_count": 1,
+        "response": {
+          "state": "submitted",
+          "submission_id": "454af2aa-307e-407a-850b-1e066f836be9"
+        },
+        "retained_keys": [
+          {
+            "idem_key": "r5-upgrade-repeat_uuid",
+            "operation": "payment_submission",
+            "principal": "31b993ed-a902-4ba0-8d9e-67c48444d52e",
+            "resource": "",
+            "response_status": 201,
+            "tenant_scope": "0d2da067-3837-42b0-9922-866a587bdd7b"
+          }
+        ],
+        "status": 201,
+        "submission_count": 1,
+        "variant": "repeat_uuid"
+      },
+      "concurrent": {
+        "concurrent_retries": {
+          "A": {
+            "response": {
+              "state": "submitted",
+              "submission_id": "454af2aa-307e-407a-850b-1e066f836be9"
+            },
+            "status": 201
+          },
+          "B": {
+            "response": {
+              "state": "submitted",
+              "submission_id": "454af2aa-307e-407a-850b-1e066f836be9"
+            },
+            "status": 201
+          }
+        },
+        "effect_count": 1,
+        "record_count": 1,
+        "threads_complete": true
+      }
+    },
+    "repeat_uuid_ambiguous": {
+      "result": "PASS",
+      "old_status": 201,
+      "new_status": 409,
+      "after": {
+        "phase": "after",
+        "proof_file_count": 1,
+        "response": {
+          "code": "idempotency_conflict",
+          "locale": "id",
+          "message": "Idempotency-Key sama dipakai untuk isi permintaan berbeda",
+          "request_id": "4ed94c9873214262"
+        },
+        "retained_keys": [
+          {
+            "idem_key": "r5-upgrade-repeat_uuid_ambiguous",
+            "operation": "payment_submission",
+            "principal": "036fb985-e546-446f-8fcf-8e65d9863a31",
+            "resource": "",
+            "response_status": null,
+            "tenant_scope": "01b822a8-7859-43bc-9605-0197000b4587"
+          }
+        ],
+        "status": 409,
+        "submission_count": 1,
+        "variant": "repeat_uuid_ambiguous"
+      },
+      "concurrent": {
+        "concurrent_retries": {
+          "A": {
+            "response": {
+              "code": "idempotency_conflict",
+              "locale": "id",
+              "message": "Idempotency-Key sama dipakai untuk isi permintaan berbeda",
+              "request_id": "8e164da0c04d418d"
+            },
+            "status": 409
+          },
+          "B": {
+            "response": {
+              "code": "idempotency_conflict",
+              "locale": "id",
+              "message": "Idempotency-Key sama dipakai untuk isi permintaan berbeda",
+              "request_id": "49522cc6b69840b3"
+            },
+            "status": 409
+          }
+        },
+        "effect_count": 1,
+        "record_count": 1,
+        "threads_complete": true
+      }
+    },
+    "platform_uuid_resource": {
+      "result": "PASS",
+      "old_status": 204,
+      "new_status": 204,
+      "after": {
+        "approved_submission_count": 1,
+        "audit_approve_count": 1,
+        "outbox_approve_count": 1,
+        "phase": "after",
+        "response": null,
+        "retained_keys": [
+          {
+            "idem_key": "r5-upgrade-platform_uuid_resource",
+            "operation": "platform_submission_approve",
+            "principal": "e7818900-3770-4ad2-ae43-fc531360e961",
+            "resource": "bb6a19df-c6ba-4b49-b0a5-b22a4bea2434",
+            "response_status": 204,
+            "tenant_scope": "platform"
+          }
+        ],
+        "status": 204,
+        "variant": "platform_uuid_resource"
+      },
+      "concurrent": {
+        "concurrent_retries": {
+          "A": {
+            "response": null,
+            "status": 204
+          },
+          "B": {
+            "response": null,
+            "status": 204
+          }
+        },
+        "effect_count": 1,
+        "record_count": 1,
+        "threads_complete": true
+      }
+    },
+    "platform_repeat_uuid_resource": {
+      "result": "PASS",
+      "old_status": 204,
+      "new_status": 204,
+      "after": {
+        "approved_submission_count": 1,
+        "audit_approve_count": 1,
+        "outbox_approve_count": 1,
+        "phase": "after",
+        "response": null,
+        "retained_keys": [
+          {
+            "idem_key": "r5-upgrade-platform_repeat_uuid_resource",
+            "operation": "platform_submission_approve",
+            "principal": "fdf55d0b-26f8-4df8-918d-766925a26b60",
+            "resource": "e9defa24-bb76-4be9-a9e3-430cf0acea31",
+            "response_status": 204,
+            "tenant_scope": "platform"
+          }
+        ],
+        "status": 204,
+        "variant": "platform_repeat_uuid_resource"
+      },
+      "concurrent": {
+        "concurrent_retries": {
+          "A": {
+            "response": null,
+            "status": 204
+          },
+          "B": {
+            "response": null,
+            "status": 204
+          }
+        },
+        "effect_count": 1,
+        "record_count": 1,
+        "threads_complete": true
+      }
+    }
+  }
+}

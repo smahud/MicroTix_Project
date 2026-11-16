@@ -1,0 +1,20 @@
+2026-11-16 17:22:15,167 WARNING django.request Unauthorized: /api/v1/auth/session
+jobs.0005 idempotency secret-preview scrub: scanned=0 scrubbed=0 guards_deleted=0
+OBSERVED per-session decisions after 204/204: [2, 2]
+.2026-11-16 17:22:15,402 WARNING django.request Unauthorized: /api/v1/auth/session
+2026-11-16 17:22:15,439 WARNING django.request Unprocessable Content: /api/v1/tenants/92a3b5fb-75a1-449a-b38a-f4b650f478dc/migrations/not-a-uuid/identity-conflicts/9de2aa7c2cedae61
+OBSERVED cached resolution with invalid parent: not-a-uuid 422
+.2026-11-16 17:22:15,611 WARNING django.request Unauthorized: /api/v1/auth/session
+2026-11-16 17:22:15,657 WARNING django.request Not Found: /api/v1/tenants/4b02b333-a295-4be2-856a-6cd6c48b80e7/migrations/e9a43f81-e0c6-49ba-8e6d-5509075bc90c/identity-conflicts/9de2aa7c2cedae61
+OBSERVED cached resolution with invalid parent: e9a43f81-e0c6-49ba-8e6d-5509075bc90c 404
+.2026-11-16 17:22:15,888 WARNING django.request Unauthorized: /api/v1/auth/session
+OBSERVED equivalent package UUID body alias: 200 200 b'{"service_id":"64cac3cb-4107-4a50-900b-701e03b5ccca","billing_package_id":"a4bf60bb-9a67-4f40-ad0b-65e41a549a1f"}'
+.2026-11-16 17:22:16,066 WARNING django.request Unauthorized: /api/v1/auth/session
+OBSERVED legacy proof 201 {'state': 'submitted', 'submission_id': 'a8be3b48-1b29-4497-ac4e-0182148fb8c7'} original {'submission_id': 'a8be3b48-1b29-4497-ac4e-0182148fb8c7', 'state': PaymentSubmission.State.SUBMITTED} submission_count 1 legacy_preserved True
+.2026-11-16 17:22:16,498 WARNING django.request Unauthorized: /api/v1/auth/session
+2026-11-16 17:22:16,572 WARNING django.request Conflict: /api/v1/tenants/ac447709-6059-4ce3-a6b4-0190a89aba57/quotations
+jobs.0005 reverse: no-op (secret scrub tidak dipulihkan)
+jobs.0004 idempotency identity backfill: kept_with_response=0 kept_no_response=1 platform_remapped=0 legacy_opaque_group=0 unparsed_retained=0 duplicate_deleted=0
+OBSERVED ambiguous migration guard_count 1 retry_status 409 invoice_count 1 original_invoice 3fb518e5-729c-4789-a1da-d44587f6af67
+.
+6 passed in 2.07s

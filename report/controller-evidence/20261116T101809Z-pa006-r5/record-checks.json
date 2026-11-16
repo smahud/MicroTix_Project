@@ -1,0 +1,16 @@
+{
+  "relative_links_checked": 104,
+  "broken_links": [],
+  "protected_delta": [],
+  "original_task_blocks_unchanged": {
+    "Tujuan dan bukti masalah": true,
+    "Scope dan ownership": true,
+    "Pekerjaan wajib": true,
+    "Acceptance yang wajib dibuktikan": true,
+    "Verifikasi dan review": true
+  },
+  "task_files": [
+    "0000-start-here.md",
+    "0010-pa006-idempotency_done.md"
+  ]
+}

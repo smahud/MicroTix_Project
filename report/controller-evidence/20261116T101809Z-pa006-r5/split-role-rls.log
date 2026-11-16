@@ -1,0 +1,16 @@
+ current_user | rolsuper | rolbypassrls
+--------------+----------+--------------
+ mtx_app      | f        | f
+(1 row)
+
+         relname          |   relowner   | relrowsecurity | relforcerowsecurity
+--------------------------+--------------+----------------+---------------------
+ billing_internet_payment | mtx_migrator | t              | t
+ subs_payment_submission  | mtx_migrator | t              | t
+ subs_saas_invoice        | mtx_migrator | t              | t
+(3 rows)
+
+     conname      |                      pg_get_constraintdef
+------------------+-----------------------------------------------------------------
+ uq_idem_identity | UNIQUE (principal, tenant_scope, operation, resource, idem_key)
+(1 row)

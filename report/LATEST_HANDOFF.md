@@ -1,11 +1,34 @@
-# LATEST_HANDOFF — 16 November 2026: executor menyerahkan koreksi kelima ID0010 (REV-1311-01)
+# LATEST_HANDOFF — 16 November 2026: controller menerima PA-006 PR24; integrasi pending
 
 Pintu masuk tetap: [task/0000-start-here.md](../task/0000-start-here.md),
 CONTRACT §6A. Fetch remote refs/PR sebelum bertindak. Status ini berada pada
 branch kandidat sampai integrasi; filename unfinished pada main tidak
 membuktikan belum ada kandidat. Tanggal Asia/Jakarta; evidence filename UTC.
 
-## Latest state — 16 November 2026, ~17:10 WIB: penyerahan kelima PA-006
+## Latest controller decision — 16 November 2026, 17:25 WIB
+
+**Task0010 / PA-006 accepted pada exact PR24 a301a94. REV-1311-01 CLOSED.**
+Seluruh closure R4 dipertahankan; tidak ada blocker baru dalam scope.
+Bagian setelah tabel ini menyimpan histori penyerahan/keputusan lama;
+status current mengikuti tabel ini dan ref keputusan R5 yang diverifikasi.
+
+| Field handoff | Status / pointer |
+|---|---|
+| Canonical main | **9903d9b0cf09d737b553da3c21067b4810e956c0**, tidak berubah; PR24 belum merged |
+| Active task | [ID0010 / PA-006](../task/0010-pa006-idempotency_done.md) |
+| Execution / review / integration | **done / accepted / pending**; acceptance kode bukan release/merge |
+| Candidate / exact reviewed SHA | [PR24](https://github.com/smahud/MicroTix_Project/pull/24), `session/2026-11-16-pa006-rev1311-01-correction` **a301a94c2b3268679065e85bbef66f35949483f7**, source ancestor7338a72 |
+| Controller decision ref | `review/0010-pa006-controller-r5-20261116` dari a301a94; record-only. [R5 review](controller/20261116T101809Z-0010-pa006-r5-review.md); publikasi/readback/CI dicatat setelah observasi di report/PR keputusan |
+| Root evidence | **514 passed** backend +**13 passed** retained controller probes; actual old-code HTTP→0004/0005→canonical retry **10/10 PASS**,20 complete concurrent responses, submission/file/decision tetap1; split-role FORCE RLS; [summary](controller-evidence/20261116T101809Z-pa006-r5/upgrade-summary.json) |
+| Candidate CI | [43846763713](https://github.com/smahud/MicroTix_Project/actions/runs/43846763713), exacta301a94, **success backend/frontend/docs3/3** |
+| Independent reviewers | [migration](reviewer/20261116T101809Z-0010-r5-migration-independent.md), [acceptance](reviewer/20261116T101809Z-0010-r5-acceptance-independent.md); source/pure probes terpisah dari root PG/HTTP |
+| Nonblocking follow-up | REV-1611-TEST-01 P3: assert kedua thread/hasil pada tes R5; acceptance dibuktikan probe root lengkap. Opaque-garbage>64 fail-stop tetap ops note |
+| Next actor | **controller_reviewer** |
+| Exact next action | Selesaikan integrasi PR24 + keputusan R5 sesuai CONTRACT §11 (authority/approval, current-main delta, locked head, CI, remote readback); setelah integration prerequisite terpenuhi, siapkan packet PA-002 bersama authority PA-003. Jangan minta submission keenam PA-006 atau buka0020 sebelum prasyarat terpenuhi |
+| Batas / Beta | Production Beta **NOT_READY**; installer/recovery/scheduler/job lifecycle, DEC01/DEC02 dan host/GNS3 gates masih ada. Tidak ada merge/deploy/tag; install/OS/real service drain/DR/perangkat/pilot/benchmark NOT_RUN |
+
+## Prior executor delivery — 16 November 2026, ~17:10 WIB
+
 
 Executor (Z.ai sandbox) menyerahkan koreksi REV-1311-01 — satu-satunya
 finding terbuka keputusan controller R4 (PR21 `634da42`, PR23) — pada ID
@@ -101,7 +124,7 @@ CI checkpoint baru belum terbit saat pencatatan (0 check-runs, belum ada
 workflow untuk head baru); final observation ada pada deskripsi PR23.
 Keberhasilan CI634da42/30ce815 tetap terikat pada SHA historis masing-masing.
 
-## 0. Task aktif dan exact next action
+## 0. Histori keputusan R4 — digantikan verdict R5 di atas
 
 **Review penyerahan keempat PR21 selesai: changes_requested.**
 **Satu finding terbuka REV-1311-01 P1 (partial)**: migrasi belum menangani
@@ -114,7 +137,7 @@ known/unknown sudah PASS. **03A/03B/05 CLOSED**;02/04 dan PA-001 tetap lulus.
 | Field | Status / pointer |
 |---|---|
 | Canonical main teramati | **9903d9b0cf09d737b553da3c21067b4810e956c0**; belum berubah/merged |
-| Active task | [0010 / PA-006](../task/0010-pa006-idempotency.md), ID sama dibuka kembali unfinished |
+| Active task | [0010 / PA-006](../task/0010-pa006-idempotency_done.md), ID sama dibuka kembali unfinished |
 | Execution / review | **ready / changes_requested** |
 | Candidate / exact reviewed SHA | [PR21](https://github.com/smahud/MicroTix_Project/pull/21), branch `session/2026-11-15-pa006-idempotency-correction` @ **634da4224f15dd6a5a4e9010fe1811dec8c7954d** |
 | Tested source ancestry | Executor implementation **b71574d8b6ba1dc30d132551684791f760e8abc6**; root tests on exact634da42. Later delivery commits metadata only; app/config diff empty |

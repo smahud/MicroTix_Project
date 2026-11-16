@@ -1,0 +1,2 @@
+{"phase": "before", "proof_file_count": 1, "response": {"state": "submitted", "submission_id": "b00cc703-e0f8-414d-901c-294556cfd9d0"}, "retained_keys": [{"idem_key": "r5-upgrade-uuid_only_ambiguous", "principal": "e4f9f4bc-fa5e-4d08-a5c4-eb555a6e15f1", "response_status": null, "scope": "payment_submission:uuid:60d0d178-1d3a-4f88-8403-04b1085967a7:"}], "status": 201, "submission_count": 1, "variant": "uuid_only_ambiguous"}
+PROBE before uuid_only_ambiguous: PASS

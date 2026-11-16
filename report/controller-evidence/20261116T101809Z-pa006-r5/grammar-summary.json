@@ -1,0 +1,194 @@
+{
+  "python": "3.12.14",
+  "seed": 16112026,
+  "inspected_candidate": "a301a94c2b3268679065e85bbef66f35949483f7",
+  "baseline_writer": "9903d9b0cf09d737b553da3c21067b4810e956c0",
+  "parser_source": "backend/domains/jobs/migrations/0004_idempotency_identity.py",
+  "parser_blob_sha": "22a4de68292bad4952bb8d34f960b43911f2b5a3",
+  "tenant_spellings": 413,
+  "resource_spellings": 408,
+  "counts": {
+    "pairs": 168504,
+    "valid_scopes": 505512,
+    "uuid": 168504,
+    "empty": 168504,
+    "opaque": 168504,
+    "platform": 408
+  },
+  "mismatch_count": 0,
+  "first_mismatches": [],
+  "malformed_cases_passed": 6,
+  "injected_ambiguity_passed": true,
+  "baseline_callsite_count": 28,
+  "baseline_callsites": [
+    {
+      "path": "backend/domains/backups/views.py",
+      "line": 114,
+      "operation": "backup_run",
+      "decorator": "idempotent(\"backup_run\", resource_from=lambda request, kwargs: kwargs.get(\"router_id\", \"\"))"
+    },
+    {
+      "path": "backend/domains/billing/views.py",
+      "line": 199,
+      "operation": "billing_package_create",
+      "decorator": "idempotent(\"billing_package_create\")"
+    },
+    {
+      "path": "backend/domains/billing/views.py",
+      "line": 209,
+      "operation": "billing_package_update",
+      "decorator": "idempotent(\"billing_package_update\", resource_from=lambda request, kwargs: kwargs.get(\"package_id\", \"\"))"
+    },
+    {
+      "path": "backend/domains/billing/views.py",
+      "line": 221,
+      "operation": "service_billing_package",
+      "decorator": "idempotent(\"service_billing_package\", resource_from=lambda request, kwargs: kwargs.get(\"service_id\", \"\"))"
+    },
+    {
+      "path": "backend/domains/billing/views.py",
+      "line": 258,
+      "operation": "service_charge_create",
+      "decorator": "idempotent(\"service_charge_create\", resource_from=lambda request, kwargs: kwargs.get(\"service_id\", \"\"))"
+    },
+    {
+      "path": "backend/domains/billing/views.py",
+      "line": 287,
+      "operation": "service_charge_update",
+      "decorator": "idempotent(\"service_charge_update\", resource_from=lambda request, kwargs: kwargs.get(\"charge_id\", \"\"))"
+    },
+    {
+      "path": "backend/domains/billing/views.py",
+      "line": 401,
+      "operation": "internet_payment_record",
+      "decorator": "idempotent(\"internet_payment_record\")"
+    },
+    {
+      "path": "backend/domains/billing/views.py",
+      "line": 425,
+      "operation": "internet_payment_verify",
+      "decorator": "idempotent(\n        \"internet_payment_verify\",\n        resource_from=lambda request, kwargs: str(kwargs.get(\"payment_id\", \"\")),\n    )"
+    },
+    {
+      "path": "backend/domains/billing/views.py",
+      "line": 442,
+      "operation": "internet_payment_reject",
+      "decorator": "idempotent(\n        \"internet_payment_reject\",\n        resource_from=lambda request, kwargs: str(kwargs.get(\"payment_id\", \"\")),\n    )"
+    },
+    {
+      "path": "backend/domains/customers/views.py",
+      "line": 277,
+      "operation": "service_provision",
+      "decorator": "idempotent(\"service_provision\")"
+    },
+    {
+      "path": "backend/domains/customers/views.py",
+      "line": 366,
+      "operation": "access_account_state",
+      "decorator": "idempotent(\"access_account_state\", resource_from=lambda request, kwargs: str(kwargs.get(\"account_id\", \"\")))"
+    },
+    {
+      "path": "backend/domains/customers/views.py",
+      "line": 386,
+      "operation": "csv_import_create",
+      "decorator": "idempotent(\"csv_import_create\")"
+    },
+    {
+      "path": "backend/domains/customers/views.py",
+      "line": 429,
+      "operation": "csv_import_validate",
+      "decorator": "idempotent(\"csv_import_validate\", resource_from=lambda request, kwargs: str(kwargs.get(\"import_id\", \"\")))"
+    },
+    {
+      "path": "backend/domains/customers/views.py",
+      "line": 441,
+      "operation": "csv_import_commit",
+      "decorator": "idempotent(\"csv_import_commit\", resource_from=lambda request, kwargs: str(kwargs.get(\"import_id\", \"\")))"
+    },
+    {
+      "path": "backend/domains/customers/views.py",
+      "line": 478,
+      "operation": "migration_start",
+      "decorator": "idempotent(\"migration_start\", resource_from=lambda request, kwargs: str(kwargs.get(\"router_id\", \"\")))"
+    },
+    {
+      "path": "backend/domains/customers/views.py",
+      "line": 572,
+      "operation": "identity_conflict_resolve",
+      "decorator": "idempotent(\"identity_conflict_resolve\", resource_from=lambda request, kwargs: str(kwargs.get(\"group_id\", \"\")))"
+    },
+    {
+      "path": "backend/domains/customers/views.py",
+      "line": 586,
+      "operation": "migration_commit",
+      "decorator": "idempotent(\"migration_commit\", resource_from=lambda request, kwargs: str(kwargs.get(\"migration_id\", \"\")))"
+    },
+    {
+      "path": "backend/domains/customers/views.py",
+      "line": 625,
+      "operation": "password_harvest",
+      "decorator": "idempotent(\"password_harvest\", resource_from=lambda request, kwargs: str(kwargs.get(\"router_id\", \"\")))"
+    },
+    {
+      "path": "backend/domains/network/views.py",
+      "line": 102,
+      "operation": "router_enrollment_create",
+      "decorator": "idempotent(\"router_enrollment_create\")"
+    },
+    {
+      "path": "backend/domains/network/views.py",
+      "line": 158,
+      "operation": "router_discovery",
+      "decorator": "idempotent(\"router_discovery\", resource_from=lambda request, kwargs: str(kwargs.get(\"router_id\", \"\")))"
+    },
+    {
+      "path": "backend/domains/network/views.py",
+      "line": 182,
+      "operation": "router_release",
+      "decorator": "idempotent(\"router_release\", resource_from=lambda request, kwargs: str(kwargs.get(\"router_id\", \"\")))"
+    },
+    {
+      "path": "backend/domains/network/views.py",
+      "line": 203,
+      "operation": "router_replace",
+      "decorator": "idempotent(\"router_replace\", resource_from=lambda request, kwargs: str(kwargs.get(\"router_id\", \"\")))"
+    },
+    {
+      "path": "backend/domains/radius/views.py",
+      "line": 48,
+      "operation": "radius_cutover",
+      "decorator": "idempotent(\"radius_cutover\", resource_from=lambda request, kwargs: str(kwargs.get(\"router_id\", \"\")))"
+    },
+    {
+      "path": "backend/domains/subscriptions/views.py",
+      "line": 75,
+      "operation": "quotation",
+      "decorator": "idempotent(\"quotation\")"
+    },
+    {
+      "path": "backend/domains/subscriptions/views.py",
+      "line": 99,
+      "operation": "payment_submission",
+      "decorator": "idempotent(\"payment_submission\")"
+    },
+    {
+      "path": "backend/domains/subscriptions/views.py",
+      "line": 185,
+      "operation": "platform_submission_approve",
+      "decorator": "idempotent(\"platform_submission_approve\", resource_from=lambda request, kwargs: kwargs.get(\"submission_id\", \"\"))"
+    },
+    {
+      "path": "backend/domains/subscriptions/views.py",
+      "line": 198,
+      "operation": "platform_submission_reject",
+      "decorator": "idempotent(\"platform_submission_reject\", resource_from=lambda request, kwargs: kwargs.get(\"submission_id\", \"\"))"
+    },
+    {
+      "path": "backend/domains/subscriptions/views.py",
+      "line": 212,
+      "operation": "platform_submission_revision",
+      "decorator": "idempotent(\"platform_submission_revision\", resource_from=lambda request, kwargs: kwargs.get(\"submission_id\", \"\"))"
+    }
+  ],
+  "limits": "Pure Python and source inventory only; no DB, HTTP, filesystem effects, CI or deployment verification."
+}

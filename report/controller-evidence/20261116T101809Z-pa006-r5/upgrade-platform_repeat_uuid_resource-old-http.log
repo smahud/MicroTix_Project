@@ -1,0 +1,2 @@
+{"approved_submission_count": 1, "audit_approve_count": 1, "outbox_approve_count": 1, "phase": "before", "response": null, "retained_keys": [{"idem_key": "r5-upgrade-platform_repeat_uuid_resource", "principal": "fdf55d0b-26f8-4df8-918d-766925a26b60", "response_status": 204, "scope": "platform_submission_approve:9808a23b-3acc-49f1-8572-24b35703df22:urn:uuid:uuid:e9defa24-bb76-4be9-a9e3-430cf0acea31"}], "status": 204, "variant": "platform_repeat_uuid_resource"}
+PROBE before platform_repeat_uuid_resource: PASS
