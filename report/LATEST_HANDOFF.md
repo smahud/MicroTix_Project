@@ -1,4 +1,30 @@
-# LATEST_HANDOFF — 16 November 2026: PA-006 task0010 terintegrasi ke main (PR24+PR25); next packet PA-002/PA-003
+# LATEST_HANDOFF — 17 November 2026: task0020 ready, PA-006 tetap integrated
+
+Pintu masuk tetap: [task/0000-start-here.md](../task/0000-start-here.md).
+Fetch remote refs/PR dan baca CONTRACT §6A sebelum bertindak. Tanggal pengguna Asia/Jakarta, filename evidence UTC.
+
+## Current state — task0020 disiapkan controller
+
+| Field | Current state / pointer |
+|---|---|
+| Canonical main observed | **41d1f33f16508491a34f66b767830b9dd3e5954e**; exact CI [43857508367](https://github.com/smahud/MicroTix_Project/actions/runs/43857508367) backend/frontend/docs3/3 success |
+| Instruction ref | **`review/0020-job-lifecycle-authority-20261117`** — record/task branch belum merged saat disiapkan; fetch current head dan gunakan ref ini, bukan instruksi lama main |
+| Active task | **[0020 — PA-002 + PA-003](../task/0020-job-lifecycle-authority.md)**, current jobs lifecycle/fencing/drain/authority |
+| Execution / review / implementation | **ready / not_submitted**; belum ada kandidat kode, hasil tes atau acceptance0020 |
+| Accepted predecessor | [0010_done](../task/0010-pa006-idempotency_done.md): **done / accepted / integrated**; R5 exacta301a94, PR24+PR25 merged. Tidak dibuka ulang |
+| Controller decision | [Review current main + packet](controller/20261116T231131Z-0020-job-lifecycle-review.md), [remote state](controller-evidence/20261116T231131Z-0020-discovery/remote-state.json) |
+| Scope / evidence | A01–A09: all-write fencing, short RLS DB units, external sender/cancel/readback, early-crash recovery, current authority, HTTP permissions/verifier, real-process drain, legacy compatibility. Dua independent source/prerequisite reviews + packet QA pada controller report |
+| Main CI actual | Backend **513 passed,1 skipped,3 warnings** (FreeRADIUS binary unavailable); frontend66 tests; docs PASS24/106. Integrator historical514 real-binary tetap attributed; root tidak menjalankan ulang aplikasi |
+| Publication | Branch/PR/head readback dan CI publikasi dicatat setelah benar-benar teramati pada controller report/evidence/PR; green main tidak dianggap CI head baru |
+| Next actor | **coding_agent** |
+| Exact next action | Fetch instruction ref ini atau descendant yang sudah terintegrasi; jalankan task0020 dengan PG/race/process evidence, submit exact SHA+PR+report untuk controller. File tidak otomatis menjalankan external coding agent |
+| Beta / remaining gates | **NOT_READY**; installer/upgrade/restore/secret/scheduler/topology DEC-01/DEC-02 dan host/CHR/GNS3/pilot/capacity belum ditutup. Tidak ada merge/deploy/aktivasi/tag dalam sesi reviewer ini |
+
+Root environment lokal tidak tersedia: shell/PG/process/docs validator lokal NOT_RUN; source/refs/CI diperiksa langsung dari GitHub. Publication branch records hanya dokumen, bukan perbaikan aplikasi. PA-001 financial atomic locks dan PA-006 replay/security tetap preserved. PR7/8/14 serta historical branches dipertahankan.
+
+## Historical handoff — superseded current pointers; audit trail retained
+
+### LATEST_HANDOFF — 16 November 2026: PA-006 task0010 terintegrasi ke main (PR24+PR25); next packet PA-002/PA-003
 
 Pintu masuk tetap: [task/0000-start-here.md](../task/0000-start-here.md),
 CONTRACT §6A. Fetch remote refs/PR sebelum bertindak. Status integrasi di
@@ -238,3 +264,4 @@ controller reviews the new exact SHA. Controller verdict and task evidence
 must be versioned/verified before dependent work. `_done` and green CI are
 not acceptance, integration, deployment or release authorization. Reports and
 packet files do not automatically start an external coding agent.
+

@@ -1,6 +1,28 @@
 # MicroTix — checkpoint kemajuan
 
-Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-16 (Asia/Jakarta).
+Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-17 (Asia/Jakarta).
+
+## Checkpoint 2026-11-17 — PA-006 integrated terverifikasi, task0020 ready untuk coding agent
+
+Controller menjalankan default reviewer dari GitHub pada main **41d1f33**:
+PR24/25 merged; decision headc352bce→main delta17record paths tanpa aplikasi/config/test.
+PA-006 tetap **done / accepted / integrated**, tanpa submission keenam.
+Exact main CI43857508367 success3/3; decoded log backend **513 passed,1 skipped,3 warnings**
+(FreeRADIUS binary unavailable), frontend66, docs PASS24/106.
+Ini bukti CI existing; root runtime lokal unavailable, tidak mengklaim rerun514.
+
+[Task0020 PA-002+PA-003](../task/0020-job-lifecycle-authority.md) disiapkan
+**ready / not_submitted** pada instruction ref
+`review/0020-job-lifecycle-authority-20261117`: lifecycle fencing seluruh write,
+short RLS DB/I/O boundary, cancel/uncertain/readback/per-router writer,
+early crash recovery/deadline, current authority/HTTP permission/verifier,
+real-process drain dan legacy compatibility. PA-001/PA-006 preserved;
+P3 REV-1611-TEST-01 hanya test hardening. Tidak mengadopsi PR8 draft
+atau memperluas fitur R2/R3/R4. [Controller report](../report/controller/20261116T231131Z-0020-job-lifecycle-review.md)
+menautkan dua reviewer independen, packet QA dan remote evidence.
+Publikasi/CI instruction branch dicatat setelah remote readback; belum ada hasil implementasi0020.
+Next **coding_agent** fetch instruction ref dan eksekusi packet, lalu submit SHA baru.
+Production Beta **NOT_READY**; tidak ada merge/deploy/aktivasi/tag. Checkpoint berikut histori.
 
 ## Checkpoint 2026-11-16, ~18:25 WIB — integrasi task0010/PA-006 selesai: PR24+PR25 merged ke main
 
