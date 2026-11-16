@@ -1,0 +1,9 @@
+Conflict: /api/v1/tenants/c2193167-0f13-491a-a00d-99bd7119169b/saas-invoices/1db0b626-973f-4d8f-ba0e-9c0d02d5ba4c/payment-submissions
+2026-11-16 17:23:35,053 WARNING django.request Conflict: /api/v1/tenants/c2193167-0f13-491a-a00d-99bd7119169b/saas-invoices/1db0b626-973f-4d8f-ba0e-9c0d02d5ba4c/payment-submissions
+{"phase": "after", "proof_file_count": 1, "response": {"code": "idempotency_conflict", "locale": "id", "message": "Idempotency-Key sama dipakai untuk isi permintaan berbeda", "request_id": "88a3caf8692a4b9b"}, "retained_keys": [{"idem_key": "r5-upgrade-urn_ambiguous", "operation": "payment_submission", "principal": "b8d71fc0-dffe-4964-8676-b8c02307b191", "resource": "", "response_status": null, "tenant_scope": "c2193167-0f13-491a-a00d-99bd7119169b"}], "status": 409, "submission_count": 1, "variant": "urn_ambiguous"}
+Conflict: /api/v1/tenants/c2193167-0f13-491a-a00d-99bd7119169b/saas-invoices/1db0b626-973f-4d8f-ba0e-9c0d02d5ba4c/payment-submissions
+2026-11-16 17:23:35,096 WARNING django.request Conflict: /api/v1/tenants/c2193167-0f13-491a-a00d-99bd7119169b/saas-invoices/1db0b626-973f-4d8f-ba0e-9c0d02d5ba4c/payment-submissions
+Conflict: /api/v1/tenants/c2193167-0f13-491a-a00d-99bd7119169b/saas-invoices/1db0b626-973f-4d8f-ba0e-9c0d02d5ba4c/payment-submissions
+2026-11-16 17:23:35,101 WARNING django.request Conflict: /api/v1/tenants/c2193167-0f13-491a-a00d-99bd7119169b/saas-invoices/1db0b626-973f-4d8f-ba0e-9c0d02d5ba4c/payment-submissions
+{"concurrent_retries": {"A": {"response": {"code": "idempotency_conflict", "locale": "id", "message": "Idempotency-Key sama dipakai untuk isi permintaan berbeda", "request_id": "17046dc101194603"}, "status": 409}, "B": {"response": {"code": "idempotency_conflict", "locale": "id", "message": "Idempotency-Key sama dipakai untuk isi permintaan berbeda", "request_id": "428b7fa435684b00"}, "status": 409}}, "effect_count": 1, "record_count": 1, "threads_complete": true}
+PROBE after urn_ambiguous: PASS

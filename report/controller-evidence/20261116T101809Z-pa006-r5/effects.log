@@ -1,0 +1,63 @@
+2026-11-16 17:22:20,114 WARNING django.request Unauthorized: /api/v1/auth/session
+OBSERVED selected alias effect {"actual_alias_to_create": 1, "actual_alias_unchanged": 0, "canonical_expected_to_create": 1, "payload_selected_is_canonical": true, "same_job": true, "statuses": [202, 202]}
+.2026-11-16 17:22:20,375 WARNING django.request Unauthorized: /api/v1/auth/session
+2026-11-16 17:22:20,425 WARNING django.request Unauthorized: /api/v1/auth/session
+OBSERVED forced HTTP wait graph {"case": "test_concurrent_http_same_identity_waits_then_replays_single_effect", "edges": [{"blockers": [27548], "pid": 27615, "query_kind": "domain SELECT FOR UPDATE", "role": "leader"}, {"blockers": [27615], "pid": 27617, "query_kind": "claim INSERT ON CONFLICT", "role": "contender"}]}
+.2026-11-16 17:22:20,799 WARNING django.request Unauthorized: /api/v1/auth/session
+2026-11-16 17:22:20,875 WARNING django.request Unauthorized: /api/v1/auth/session
+2026-11-16 17:22:20,959 WARNING django.request Conflict: /api/v1/tenants/0854127c-c06a-4b3f-80ec-d1cda5aa3dad/quotations
+OBSERVED forced HTTP wait graph {"case": "test_concurrent_http_same_key_different_body_conflict", "edges": [{"blockers": [27618], "pid": 27685, "query_kind": "domain SELECT FOR UPDATE", "role": "leader"}, {"blockers": [27685], "pid": 27687, "query_kind": "claim INSERT ON CONFLICT", "role": "contender"}]}
+.2026-11-16 17:22:21,235 WARNING django.request Unauthorized: /api/v1/auth/session
+2026-11-16 17:22:21,310 WARNING django.request Unauthorized: /api/v1/auth/session
+OBSERVED forced HTTP wait graph {"case": "test_concurrent_http_platform_decision_replay_204_single_effect", "edges": [{"blockers": [27688], "pid": 27819, "query_kind": "domain SELECT FOR UPDATE", "role": "leader"}, {"blockers": [27819], "pid": 27821, "query_kind": "claim INSERT ON CONFLICT", "role": "contender"}]}
+.2026-11-16 17:22:21,574 WARNING django.request Unauthorized: /api/v1/auth/session
+2026-11-16 17:22:21,650 WARNING django.request Unauthorized: /api/v1/auth/session
+2026-11-16 17:22:21,729 ERROR django.request Internal Server Error: /api/v1/platform/payment-submissions/ef7dfb0f-d0a1-427e-958e-fad045c5117e/approve
+Traceback (most recent call last):
+  File "/workspace/scratch/2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/workspace/scratch/2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/workspace/scratch/2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/views/decorators/csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "/workspace/scratch/2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/views/generic/base.py", line 105, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/rest_framework/views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+  File "/workspace/scratch/2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/rest_framework/views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/workspace/scratch/2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/rest_framework/views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "/workspace/scratch/2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/rest_framework/views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "/workspace/scratch/a17cbf44829f/MicroTix_Project/backend/domains/common/idempotency.py", line 360, in wrapper
+    response = func(self, request, *args, **kwargs)
+  File "/workspace/scratch/a17cbf44829f/MicroTix_Project/backend/domains/subscriptions/views.py", line 231, in post
+    services.decide_platform_submission(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        submission_id,
+        ^^^^^^^^^^^^^^
+    ...<2 lines>...
+        request_id=getattr(request, "mt_request_id", "") or "",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/lib/python3.13/unittest/mock.py", line 1169, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/unittest/mock.py", line 1173, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/unittest/mock.py", line 1234, in _execute_mock_call
+    result = effect(*args, **kwargs)
+  File "/workspace/scratch/a17cbf44829f/MicroTix_Project/backend/tests/integration/test_idempotency_pa006.py", line 920, in flaky_decide
+    raise RuntimeError(
+    ...<2 lines>...
+    )
+RuntimeError: injected: kegagalan setelah domain/audit/outbox writes, sebelum respons idempotency dipersist
+2026-11-16 17:22:21,754 WARNING django.request Unauthorized: /api/v1/auth/session
+OBSERVED forced HTTP wait graph {"case": "test_http_leader_rollback_after_writes_contender_takes_over", "edges": [{"blockers": [27822], "pid": 27953, "query_kind": "domain SELECT FOR UPDATE", "role": "leader"}, {"blockers": [27953], "pid": 27955, "query_kind": "claim INSERT ON CONFLICT", "role": "contender"}]}
+.
+5 passed in 2.26s

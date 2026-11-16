@@ -1,0 +1,2 @@
+{"phase": "before", "proof_file_count": 1, "response": {"state": "submitted", "submission_id": "f7d53ab3-7ca7-4986-9236-941976c569ed"}, "retained_keys": [{"idem_key": "r5-upgrade-urn_ambiguous", "principal": "b8d71fc0-dffe-4964-8676-b8c02307b191", "response_status": null, "scope": "payment_submission:urn:uuid:c2193167-0f13-491a-a00d-99bd7119169b:"}], "status": 201, "submission_count": 1, "variant": "urn_ambiguous"}
+PROBE before urn_ambiguous: PASS

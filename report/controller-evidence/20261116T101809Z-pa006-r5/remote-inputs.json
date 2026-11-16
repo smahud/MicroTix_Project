@@ -1,0 +1,893 @@
+{
+  "repo": "smahud/MicroTix_Project",
+  "main": "9903d9b0cf09d737b553da3c21067b4810e956c0",
+  "pr": 24,
+  "candidate": "a301a94c2b3268679065e85bbef66f35949483f7",
+  "body": "## Penyerahan kelima task0010 / PA-006 — koreksi REV-1311-01 (ID tetap)\n\nMenjawab keputusan controller R4 ([laporan](../blob/session/2026-11-16-pa006-rev1311-01-correction/report/controller/20261115T053138Z-0010-pa006-r4-review.md), PR23): **changes_requested** pada PR21 exact `634da42` — satu-satunya finding terbuka **REV-1311-01 P1 partial**.\n\n### Defect\nParser migrasi `jobs/0004` versi lama hanya mengenali `urn:uuid:` tetap / dua segmen polos. Writer baseline menyimpan kwargs URL MENTAH dan view baseline memvalidasi dengan stdlib `uuid.UUID` — yang juga menerima `uuid:<hex>`, `urn:<hex>`, prefix berulang (`urn:uuid:uuid:<hex>`, `urn:urn:uuid:<hex>`) di posisi tenant MAUPUN resource. Baris valid itu jatuh ke baris mati `__unparsed__` → penjaga hilang → retry pasca-upgrade menduplikasi submission + file fisik 1→2 (bukti live controller R4: 3 varian FAIL).\n\n### Koreksi (minimum, sesuai R4 — bukan pengecualian prefix per ejaan)\nSatu file source berubah: `backend/domains/jobs/migrations/0004_idempotency_identity.py`\n- Parser **grammar-driven**: kandidat pemisahan = semua posisi kolon; validitas tenant/resource menurut stdlib `uuid.UUID` yang sama persis dengan writer baseline; tenant boleh literal `platform` **exact-case**; resource `''`/UUID/sisa verbatim untuk operasi opaque.\n- **Keunikan interpretasi** dibuktikan (docstring) + diverifikasi brute-force reviewer; >1 interpretasi = data asing → **fail-stop `AmbiguousLegacyScope`** (rollback atomik migrasi), bukan tebak/baris mati.\n- Kebijakan **affected-state eksplisit**: 0004 belum dirilis (ranta PA-006 masih di PR); environment yang telanjur menjalankan versi cacat dipulihkan fix-forward snapshot pra-0004 / rekonsiliasi manual — tanpa klaim reparasi in-place.\n\n### Bukti (PostgreSQL 17.11 nyata, peran non-superuser, klien HTTP independen)\n- **Live upgrade 7/7 PASS** (metodologi probe controller R4): old `main@9903d9b` HTTP nyata ejaan prefix → migrasi 0004/0005 → retry kanonik: completed mereplay respons semula (submission/file/keputusan tetap 1), unknown 409 aman, platform resource replay 204. Parser cacat **direproduksi GAGAL dulu** (3 varian controller: submission 2, file 2).\n- **62 tes r5 baru** (matriks grammar 12 ejaan × 2 posisi, crash-window tenant ×6 + resource ×6, konkuren, wrong-body, target lain, opaque, platform literal, dedupe alias, fail-stop rollback atomik, exact-case platform). **Failing-before: 21 GAGAL** pada parser PR21.\n- **Full suite 514 passed** (FreeRADIUS real-binary); family PA006 139 passed; `manage.py check` 0 issue; `makemigrations --check` bersih; docs PASS.\n- **Review internal independen APPROVE_WITH_NOTES** (CONTRACT §5): brute-force 33.674 pasangan ejaan valid writer → 0 tombstone/salah-split/ambiguitas; fuzz 400.000 string adversarial → 0 fail-stop palsu; tidak ada counterexample. REV-R5-01/03 ditutup pada kandidat; REV-R5-02 (pre-existing P3) dicatat untuk runbook ops.\n- Closure R4 lain dipertahankan tanpa implementasi ulang: REV-1311-02, 03A, 03B, REV-1411-04, REV-1511-05, PA-001.\n\n### Pointer\n- Implementation/tested SHA: `7338a720b5d64a4ccb47b9abe7d3dc6feca0a476` (delivery docs report-only di atasnya)\n- Laporan executor: `report/orchestrator/20261116T100420Z-0010-pa006-idempotency.md` (matriks acceptance R4 §4)\n- Independent review: `report/reviewer/20261116T100420Z-0010-pa006-r5-independent.md`\n- Evidence: `report/executor-evidence/20261116T090000Z-0010-pa006-r5/`\n- Packet: `task/0010-pa006-idempotency_done.md` — execution `done`, review `pending`, next actor **controller_reviewer**\n\n### Batas\nNOT_RUN: install/upgrade/restore produksi nyata, perangkat/lab, deployment, E2E browser, benchmark kapasitas. Transisi DB lokal old→new bukan rehearsal installer. `_done` bukan acceptance. PA-002/003 belum eligible; Beta NOT_READY; tidak ada merge/deploy/tag oleh PR ini.",
+  "branches": [
+    {
+      "name": "docs/default-agent-prompts-20261112",
+      "commit": {
+        "sha": "776099e10def9c6922a105f0e7b6ca278a47c025",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/776099e10def9c6922a105f0e7b6ca278a47c025"
+      },
+      "protected": false
+    },
+    {
+      "name": "docs/payment-point-planning-20261113",
+      "commit": {
+        "sha": "2a9803593c328ab014bab6695b298072ed4c1886",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/2a9803593c328ab014bab6695b298072ed4c1886"
+      },
+      "protected": false
+    },
+    {
+      "name": "docs/planning-audit-20261110",
+      "commit": {
+        "sha": "6bb57c9251f3a7a67b71b9523c01e507fdb1b601",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/6bb57c9251f3a7a67b71b9523c01e507fdb1b601"
+      },
+      "protected": false
+    },
+    {
+      "name": "docs/task-communication-loop-20261112",
+      "commit": {
+        "sha": "4f807e77484babf71550ede3bd2aa65a990aa877",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/4f807e77484babf71550ede3bd2aa65a990aa877"
+      },
+      "protected": false
+    },
+    {
+      "name": "docs/task-workflow-20261112",
+      "commit": {
+        "sha": "826672ee3fbebd48eddc833a3a9e29282ccbaec1",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/826672ee3fbebd48eddc833a3a9e29282ccbaec1"
+      },
+      "protected": false
+    },
+    {
+      "name": "integration/beta-0.1",
+      "commit": {
+        "sha": "0eb01d2e5baaa6511e0b2145f05850df18a1bdc0",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/0eb01d2e5baaa6511e0b2145f05850df18a1bdc0"
+      },
+      "protected": false
+    },
+    {
+      "name": "main",
+      "commit": {
+        "sha": "9903d9b0cf09d737b553da3c21067b4810e956c0",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/9903d9b0cf09d737b553da3c21067b4810e956c0"
+      },
+      "protected": false
+    },
+    {
+      "name": "parallel/beta-be2",
+      "commit": {
+        "sha": "c9023e6d9bb1e5e1b2ef18685d94bc82f6c6eb02",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/c9023e6d9bb1e5e1b2ef18685d94bc82f6c6eb02"
+      },
+      "protected": false
+    },
+    {
+      "name": "review/0010-pa006-controller-20261113",
+      "commit": {
+        "sha": "5da0d801c71b020fbb8b977294502ea5a09e7bcb",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/5da0d801c71b020fbb8b977294502ea5a09e7bcb"
+      },
+      "protected": false
+    },
+    {
+      "name": "review/0010-pa006-controller-20261114",
+      "commit": {
+        "sha": "b6a0cb863f52cbbf512b23dceafc4231ff9c7d74",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/b6a0cb863f52cbbf512b23dceafc4231ff9c7d74"
+      },
+      "protected": false
+    },
+    {
+      "name": "review/0010-pa006-controller-20261115",
+      "commit": {
+        "sha": "e507175cb2982b6a974eee8bf437d0b6de5879c6",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/e507175cb2982b6a974eee8bf437d0b6de5879c6"
+      },
+      "protected": false
+    },
+    {
+      "name": "review/0010-pa006-controller-r4-20261115",
+      "commit": {
+        "sha": "4bb726106f2dea1949dc737eb8c81dae6fd8d341",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/4bb726106f2dea1949dc737eb8c81dae6fd8d341"
+      },
+      "protected": false
+    },
+    {
+      "name": "review/0010-pa006-submission-check-20261112",
+      "commit": {
+        "sha": "17901fc439199ad70082942832d88fd7214f391c",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/17901fc439199ad70082942832d88fd7214f391c"
+      },
+      "protected": false
+    },
+    {
+      "name": "session/2026-11-06-billing-docs",
+      "commit": {
+        "sha": "43946354715de5391b86765eb5cad3d0da938562",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/43946354715de5391b86765eb5cad3d0da938562"
+      },
+      "protected": false
+    },
+    {
+      "name": "session/2026-11-06-bootstrap-inrepo",
+      "commit": {
+        "sha": "8f6b173464270d77be93da70775d1fc367fac2d2",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/8f6b173464270d77be93da70775d1fc367fac2d2"
+      },
+      "protected": false
+    },
+    {
+      "name": "session/2026-11-06-tk604-billing-ui",
+      "commit": {
+        "sha": "5d902e361526b6b35bda5d0f75984ffacea28ab9",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/5d902e361526b6b35bda5d0f75984ffacea28ab9"
+      },
+      "protected": false
+    },
+    {
+      "name": "session/2026-11-06-wg-e2e",
+      "commit": {
+        "sha": "b07504a2a3455348ba05f1aabd5550246c088dec",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/b07504a2a3455348ba05f1aabd5550246c088dec"
+      },
+      "protected": false
+    },
+    {
+      "name": "session/2026-11-07-sstp-phase2",
+      "commit": {
+        "sha": "d7fa35e5583bc36848e3b45497d2511739298c8a",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/d7fa35e5583bc36848e3b45497d2511739298c8a"
+      },
+      "protected": false
+    },
+    {
+      "name": "session/2026-11-07-wg-onboarding",
+      "commit": {
+        "sha": "4ed21454d8e37bdc58bd61575031765dfa6b47c7",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/4ed21454d8e37bdc58bd61575031765dfa6b47c7"
+      },
+      "protected": false
+    },
+    {
+      "name": "session/2026-11-11-pa001-payment-concurrency",
+      "commit": {
+        "sha": "482602ecad6616167d14f2b30cd60e2039093fe9",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/482602ecad6616167d14f2b30cd60e2039093fe9"
+      },
+      "protected": false
+    },
+    {
+      "name": "session/2026-11-13-pa006-idempotency",
+      "commit": {
+        "sha": "7480c80e2c27b8b06048b77132d235efe6b3a3c2",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/7480c80e2c27b8b06048b77132d235efe6b3a3c2"
+      },
+      "protected": false
+    },
+    {
+      "name": "session/2026-11-14-pa006-idempotency",
+      "commit": {
+        "sha": "37a87291ae66a0fa9167f0c72d1e8340aa5fd245",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/37a87291ae66a0fa9167f0c72d1e8340aa5fd245"
+      },
+      "protected": false
+    },
+    {
+      "name": "session/2026-11-15-pa006-executor-state-check",
+      "commit": {
+        "sha": "b645797974a3921e04518a06af756d888e0a8d10",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/b645797974a3921e04518a06af756d888e0a8d10"
+      },
+      "protected": false
+    },
+    {
+      "name": "session/2026-11-15-pa006-idempotency",
+      "commit": {
+        "sha": "9e9bf2d42002a00a69d54fc355b77384897b9478",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/9e9bf2d42002a00a69d54fc355b77384897b9478"
+      },
+      "protected": false
+    },
+    {
+      "name": "session/2026-11-15-pa006-idempotency-correction",
+      "commit": {
+        "sha": "634da4224f15dd6a5a4e9010fe1811dec8c7954d",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/634da4224f15dd6a5a4e9010fe1811dec8c7954d"
+      },
+      "protected": false
+    },
+    {
+      "name": "session/2026-11-16-pa006-rev1311-01-correction",
+      "commit": {
+        "sha": "a301a94c2b3268679065e85bbef66f35949483f7",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/commits/a301a94c2b3268679065e85bbef66f35949483f7"
+      },
+      "protected": false
+    }
+  ],
+  "openPRs": [
+    {
+      "number": 24,
+      "head": "a301a94c2b3268679065e85bbef66f35949483f7",
+      "base": "main",
+      "title": "fix(idempotency): task0010/PA-006 — tutup sisa REV-1311-01 grammar-driven (penyerahan kelima)"
+    },
+    {
+      "number": 23,
+      "head": "4bb726106f2dea1949dc737eb8c81dae6fd8d341",
+      "base": "session/2026-11-15-pa006-idempotency-correction",
+      "title": "docs(review): PR21 PA-006 changes requested; one legacy-migration finding remains"
+    },
+    {
+      "number": 22,
+      "head": "b645797974a3921e04518a06af756d888e0a8d10",
+      "base": "main",
+      "title": "docs(task0010): executor state check — kandidat keempat PR21 menunggu controller review"
+    },
+    {
+      "number": 21,
+      "head": "634da4224f15dd6a5a4e9010fe1811dec8c7954d",
+      "base": "main",
+      "title": "fix(idempotency): task0010/PA-006 — tutup REV-1311-01/03/05 (penyerahan keempat)"
+    },
+    {
+      "number": 20,
+      "head": "e507175cb2982b6a974eee8bf437d0b6de5879c6",
+      "base": "session/2026-11-15-pa006-idempotency",
+      "title": "docs(review): PR19 PA-006 changes requested; retain closed findings and reopen task0010"
+    },
+    {
+      "number": 19,
+      "head": "9e9bf2d42002a00a69d54fc355b77384897b9478",
+      "base": "main",
+      "title": "fix(idempotency): task0010/PA-006 — tutup REV-1311-01/02/03 + REV-1411-04 (penyerahan ketiga)"
+    },
+    {
+      "number": 18,
+      "head": "b6a0cb863f52cbbf512b23dceafc4231ff9c7d74",
+      "base": "session/2026-11-14-pa006-idempotency",
+      "title": "docs(review): PA-006 PR17 changes requested; reopen task0010"
+    },
+    {
+      "number": 17,
+      "head": "37a87291ae66a0fa9167f0c72d1e8340aa5fd245",
+      "base": "main",
+      "title": "fix(idempotency): task0010/PA-006 — HTTP idempotency aman terhadap scope dan race"
+    },
+    {
+      "number": 16,
+      "head": "5da0d801c71b020fbb8b977294502ea5a09e7bcb",
+      "base": "session/2026-11-13-pa006-idempotency",
+      "title": "docs(review): PA-006 changes requested; reopen task0010"
+    },
+    {
+      "number": 15,
+      "head": "7480c80e2c27b8b06048b77132d235efe6b3a3c2",
+      "base": "main",
+      "title": "PA-006 (task 0010): HTTP idempotency aman terhadap scope dan race"
+    },
+    {
+      "number": 14,
+      "head": "2a9803593c328ab014bab6695b298072ed4c1886",
+      "base": "main",
+      "title": "docs: plan future DANA Payment Point add-on (non-blocking Beta)"
+    },
+    {
+      "number": 13,
+      "head": "17901fc439199ad70082942832d88fd7214f391c",
+      "base": "main",
+      "title": "docs(review): catat PA-006 belum diserahkan dan next actor"
+    },
+    {
+      "number": 8,
+      "head": "6bb57c9251f3a7a67b71b9523c01e507fdb1b601",
+      "base": "main",
+      "title": "docs: finalisasi planning audit modularitas dan upgrade safety MicroTix"
+    },
+    {
+      "number": 7,
+      "head": "d7fa35e5583bc36848e3b45497d2511739298c8a",
+      "base": "main",
+      "title": "feat(network): Phase-2 SSTP — kanal manajemen komplementer WireGuard (v6+v7)"
+    }
+  ],
+  "runs": {
+    "total_count": 1,
+    "workflow_runs": [
+      {
+        "id": 43846763713,
+        "name": "ci",
+        "node_id": "WFR_kwLOVjL4n88AAAAKNXiEwQ",
+        "head_branch": "session/2026-11-16-pa006-rev1311-01-correction",
+        "head_sha": "a301a94c2b3268679065e85bbef66f35949483f7",
+        "path": ".github/workflows/ci.yml",
+        "display_title": "fix(idempotency): task0010/PA-006 — tutup sisa REV-1311-01 grammar-driven (penyerahan kelima)",
+        "run_number": 78,
+        "event": "pull_request",
+        "status": "completed",
+        "conclusion": "success",
+        "workflow_id": 408032501,
+        "check_suite_id": 118698090185,
+        "check_suite_node_id": "CS_kwDOVjL4n88AAAAbovUeyQ",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/actions/runs/43846763713",
+        "html_url": "https://github.com/smahud/MicroTix_Project/actions/runs/43846763713",
+        "pull_requests": [
+          {
+            "url": "https://api.github.com/repos/smahud/MicroTix_Project/pulls/24",
+            "id": 5335020736,
+            "number": 24,
+            "head": {
+              "ref": "session/2026-11-16-pa006-rev1311-01-correction",
+              "sha": "a301a94c2b3268679065e85bbef66f35949483f7",
+              "repo": {
+                "id": 1446181023,
+                "url": "https://api.github.com/repos/smahud/MicroTix_Project",
+                "name": "MicroTix_Project"
+              }
+            },
+            "base": {
+              "ref": "main",
+              "sha": "9903d9b0cf09d737b553da3c21067b4810e956c0",
+              "repo": {
+                "id": 1446181023,
+                "url": "https://api.github.com/repos/smahud/MicroTix_Project",
+                "name": "MicroTix_Project"
+              }
+            }
+          }
+        ],
+        "created_at": "2026-11-16T10:12:38Z",
+        "updated_at": "2026-11-16T10:14:41Z",
+        "actor": {
+          "login": "smahud",
+          "id": 35734598,
+          "node_id": "MDQ6VXNlcjM1NzM0NTk4",
+          "avatar_url": "https://avatars.githubusercontent.com/u/35734598?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/smahud",
+          "html_url": "https://github.com/smahud",
+          "followers_url": "https://api.github.com/users/smahud/followers",
+          "following_url": "https://api.github.com/users/smahud/following{/other_user}",
+          "gists_url": "https://api.github.com/users/smahud/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/smahud/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/smahud/subscriptions",
+          "organizations_url": "https://api.github.com/users/smahud/orgs",
+          "repos_url": "https://api.github.com/users/smahud/repos",
+          "events_url": "https://api.github.com/users/smahud/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/smahud/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "run_attempt": 1,
+        "referenced_workflows": [],
+        "run_started_at": "2026-11-16T10:12:38Z",
+        "triggering_actor": {
+          "login": "smahud",
+          "id": 35734598,
+          "node_id": "MDQ6VXNlcjM1NzM0NTk4",
+          "avatar_url": "https://avatars.githubusercontent.com/u/35734598?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/smahud",
+          "html_url": "https://github.com/smahud",
+          "followers_url": "https://api.github.com/users/smahud/followers",
+          "following_url": "https://api.github.com/users/smahud/following{/other_user}",
+          "gists_url": "https://api.github.com/users/smahud/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/smahud/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/smahud/subscriptions",
+          "organizations_url": "https://api.github.com/users/smahud/orgs",
+          "repos_url": "https://api.github.com/users/smahud/repos",
+          "events_url": "https://api.github.com/users/smahud/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/smahud/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "jobs_url": "https://api.github.com/repos/smahud/MicroTix_Project/actions/runs/43846763713/jobs",
+        "logs_url": "https://api.github.com/repos/smahud/MicroTix_Project/actions/runs/43846763713/logs",
+        "check_suite_url": "https://api.github.com/repos/smahud/MicroTix_Project/check-suites/118698090185",
+        "artifacts_url": "https://api.github.com/repos/smahud/MicroTix_Project/actions/runs/43846763713/artifacts",
+        "cancel_url": "https://api.github.com/repos/smahud/MicroTix_Project/actions/runs/43846763713/cancel",
+        "rerun_url": "https://api.github.com/repos/smahud/MicroTix_Project/actions/runs/43846763713/rerun",
+        "previous_attempt_url": null,
+        "workflow_url": "https://api.github.com/repos/smahud/MicroTix_Project/actions/workflows/408032501",
+        "head_commit": {
+          "id": "a301a94c2b3268679065e85bbef66f35949483f7",
+          "tree_id": "bec63b5c97de0b1e8c71d60e94bd6065d7261035",
+          "message": "docs(task0010): catat publikasi kandidat kelima terverifikasi — PR24, CI hijau 3/3 pada exact head a21624f\n\nReport-only descendant: PR24 head a21624f4b9e72a721be2fb4ab14b669dff9c14c6\n(implementation 7338a72 + delivery docs); remote ref readback diverifikasi;\nCI run 43846332048 backend/frontend/docs success pada exact head.\nPohon source identik dengan yang diuji executor (7338a72); acceptance\ntetap milik controller. Packet/handoff metadata diperbarui.",
+          "timestamp": "2026-11-16T10:12:31Z",
+          "author": {
+            "name": "Z User",
+            "email": "z@container"
+          },
+          "committer": {
+            "name": "Z User",
+            "email": "z@container"
+          }
+        },
+        "repository": {
+          "id": 1446181023,
+          "node_id": "R_kgDOVjL4nw",
+          "name": "MicroTix_Project",
+          "full_name": "smahud/MicroTix_Project",
+          "private": false,
+          "owner": {
+            "login": "smahud",
+            "id": 35734598,
+            "node_id": "MDQ6VXNlcjM1NzM0NTk4",
+            "avatar_url": "https://avatars.githubusercontent.com/u/35734598?v=4",
+            "gravatar_id": "",
+            "url": "https://api.github.com/users/smahud",
+            "html_url": "https://github.com/smahud",
+            "followers_url": "https://api.github.com/users/smahud/followers",
+            "following_url": "https://api.github.com/users/smahud/following{/other_user}",
+            "gists_url": "https://api.github.com/users/smahud/gists{/gist_id}",
+            "starred_url": "https://api.github.com/users/smahud/starred{/owner}{/repo}",
+            "subscriptions_url": "https://api.github.com/users/smahud/subscriptions",
+            "organizations_url": "https://api.github.com/users/smahud/orgs",
+            "repos_url": "https://api.github.com/users/smahud/repos",
+            "events_url": "https://api.github.com/users/smahud/events{/privacy}",
+            "received_events_url": "https://api.github.com/users/smahud/received_events",
+            "type": "User",
+            "user_view_type": "public",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/smahud/MicroTix_Project",
+          "description": "MicroTix — documentation-first SaaS RTRWNet / ISP management platform",
+          "fork": false,
+          "url": "https://api.github.com/repos/smahud/MicroTix_Project",
+          "forks_url": "https://api.github.com/repos/smahud/MicroTix_Project/forks",
+          "keys_url": "https://api.github.com/repos/smahud/MicroTix_Project/keys{/key_id}",
+          "collaborators_url": "https://api.github.com/repos/smahud/MicroTix_Project/collaborators{/collaborator}",
+          "teams_url": "https://api.github.com/repos/smahud/MicroTix_Project/teams",
+          "hooks_url": "https://api.github.com/repos/smahud/MicroTix_Project/hooks",
+          "issue_events_url": "https://api.github.com/repos/smahud/MicroTix_Project/issues/events{/number}",
+          "events_url": "https://api.github.com/repos/smahud/MicroTix_Project/events",
+          "assignees_url": "https://api.github.com/repos/smahud/MicroTix_Project/assignees{/user}",
+          "branches_url": "https://api.github.com/repos/smahud/MicroTix_Project/branches{/branch}",
+          "tags_url": "https://api.github.com/repos/smahud/MicroTix_Project/tags",
+          "blobs_url": "https://api.github.com/repos/smahud/MicroTix_Project/git/blobs{/sha}",
+          "git_tags_url": "https://api.github.com/repos/smahud/MicroTix_Project/git/tags{/sha}",
+          "git_refs_url": "https://api.github.com/repos/smahud/MicroTix_Project/git/refs{/sha}",
+          "trees_url": "https://api.github.com/repos/smahud/MicroTix_Project/git/trees{/sha}",
+          "statuses_url": "https://api.github.com/repos/smahud/MicroTix_Project/statuses/{sha}",
+          "languages_url": "https://api.github.com/repos/smahud/MicroTix_Project/languages",
+          "stargazers_url": "https://api.github.com/repos/smahud/MicroTix_Project/stargazers",
+          "contributors_url": "https://api.github.com/repos/smahud/MicroTix_Project/contributors",
+          "subscribers_url": "https://api.github.com/repos/smahud/MicroTix_Project/subscribers",
+          "subscription_url": "https://api.github.com/repos/smahud/MicroTix_Project/subscription",
+          "commits_url": "https://api.github.com/repos/smahud/MicroTix_Project/commits{/sha}",
+          "git_commits_url": "https://api.github.com/repos/smahud/MicroTix_Project/git/commits{/sha}",
+          "comments_url": "https://api.github.com/repos/smahud/MicroTix_Project/comments{/number}",
+          "issue_comment_url": "https://api.github.com/repos/smahud/MicroTix_Project/issues/comments{/number}",
+          "contents_url": "https://api.github.com/repos/smahud/MicroTix_Project/contents/{+path}",
+          "compare_url": "https://api.github.com/repos/smahud/MicroTix_Project/compare/{base}...{head}",
+          "merges_url": "https://api.github.com/repos/smahud/MicroTix_Project/merges",
+          "archive_url": "https://api.github.com/repos/smahud/MicroTix_Project/{archive_format}{/ref}",
+          "downloads_url": "https://api.github.com/repos/smahud/MicroTix_Project/downloads",
+          "issues_url": "https://api.github.com/repos/smahud/MicroTix_Project/issues{/number}",
+          "pulls_url": "https://api.github.com/repos/smahud/MicroTix_Project/pulls{/number}",
+          "milestones_url": "https://api.github.com/repos/smahud/MicroTix_Project/milestones{/number}",
+          "notifications_url": "https://api.github.com/repos/smahud/MicroTix_Project/notifications{?since,all,participating}",
+          "labels_url": "https://api.github.com/repos/smahud/MicroTix_Project/labels{/name}",
+          "releases_url": "https://api.github.com/repos/smahud/MicroTix_Project/releases{/id}",
+          "deployments_url": "https://api.github.com/repos/smahud/MicroTix_Project/deployments"
+        },
+        "head_repository": {
+          "id": 1446181023,
+          "node_id": "R_kgDOVjL4nw",
+          "name": "MicroTix_Project",
+          "full_name": "smahud/MicroTix_Project",
+          "private": false,
+          "owner": {
+            "login": "smahud",
+            "id": 35734598,
+            "node_id": "MDQ6VXNlcjM1NzM0NTk4",
+            "avatar_url": "https://avatars.githubusercontent.com/u/35734598?v=4",
+            "gravatar_id": "",
+            "url": "https://api.github.com/users/smahud",
+            "html_url": "https://github.com/smahud",
+            "followers_url": "https://api.github.com/users/smahud/followers",
+            "following_url": "https://api.github.com/users/smahud/following{/other_user}",
+            "gists_url": "https://api.github.com/users/smahud/gists{/gist_id}",
+            "starred_url": "https://api.github.com/users/smahud/starred{/owner}{/repo}",
+            "subscriptions_url": "https://api.github.com/users/smahud/subscriptions",
+            "organizations_url": "https://api.github.com/users/smahud/orgs",
+            "repos_url": "https://api.github.com/users/smahud/repos",
+            "events_url": "https://api.github.com/users/smahud/events{/privacy}",
+            "received_events_url": "https://api.github.com/users/smahud/received_events",
+            "type": "User",
+            "user_view_type": "public",
+            "site_admin": false
+          },
+          "html_url": "https://github.com/smahud/MicroTix_Project",
+          "description": "MicroTix — documentation-first SaaS RTRWNet / ISP management platform",
+          "fork": false,
+          "url": "https://api.github.com/repos/smahud/MicroTix_Project",
+          "forks_url": "https://api.github.com/repos/smahud/MicroTix_Project/forks",
+          "keys_url": "https://api.github.com/repos/smahud/MicroTix_Project/keys{/key_id}",
+          "collaborators_url": "https://api.github.com/repos/smahud/MicroTix_Project/collaborators{/collaborator}",
+          "teams_url": "https://api.github.com/repos/smahud/MicroTix_Project/teams",
+          "hooks_url": "https://api.github.com/repos/smahud/MicroTix_Project/hooks",
+          "issue_events_url": "https://api.github.com/repos/smahud/MicroTix_Project/issues/events{/number}",
+          "events_url": "https://api.github.com/repos/smahud/MicroTix_Project/events",
+          "assignees_url": "https://api.github.com/repos/smahud/MicroTix_Project/assignees{/user}",
+          "branches_url": "https://api.github.com/repos/smahud/MicroTix_Project/branches{/branch}",
+          "tags_url": "https://api.github.com/repos/smahud/MicroTix_Project/tags",
+          "blobs_url": "https://api.github.com/repos/smahud/MicroTix_Project/git/blobs{/sha}",
+          "git_tags_url": "https://api.github.com/repos/smahud/MicroTix_Project/git/tags{/sha}",
+          "git_refs_url": "https://api.github.com/repos/smahud/MicroTix_Project/git/refs{/sha}",
+          "trees_url": "https://api.github.com/repos/smahud/MicroTix_Project/git/trees{/sha}",
+          "statuses_url": "https://api.github.com/repos/smahud/MicroTix_Project/statuses/{sha}",
+          "languages_url": "https://api.github.com/repos/smahud/MicroTix_Project/languages",
+          "stargazers_url": "https://api.github.com/repos/smahud/MicroTix_Project/stargazers",
+          "contributors_url": "https://api.github.com/repos/smahud/MicroTix_Project/contributors",
+          "subscribers_url": "https://api.github.com/repos/smahud/MicroTix_Project/subscribers",
+          "subscription_url": "https://api.github.com/repos/smahud/MicroTix_Project/subscription",
+          "commits_url": "https://api.github.com/repos/smahud/MicroTix_Project/commits{/sha}",
+          "git_commits_url": "https://api.github.com/repos/smahud/MicroTix_Project/git/commits{/sha}",
+          "comments_url": "https://api.github.com/repos/smahud/MicroTix_Project/comments{/number}",
+          "issue_comment_url": "https://api.github.com/repos/smahud/MicroTix_Project/issues/comments{/number}",
+          "contents_url": "https://api.github.com/repos/smahud/MicroTix_Project/contents/{+path}",
+          "compare_url": "https://api.github.com/repos/smahud/MicroTix_Project/compare/{base}...{head}",
+          "merges_url": "https://api.github.com/repos/smahud/MicroTix_Project/merges",
+          "archive_url": "https://api.github.com/repos/smahud/MicroTix_Project/{archive_format}{/ref}",
+          "downloads_url": "https://api.github.com/repos/smahud/MicroTix_Project/downloads",
+          "issues_url": "https://api.github.com/repos/smahud/MicroTix_Project/issues{/number}",
+          "pulls_url": "https://api.github.com/repos/smahud/MicroTix_Project/pulls{/number}",
+          "milestones_url": "https://api.github.com/repos/smahud/MicroTix_Project/milestones{/number}",
+          "notifications_url": "https://api.github.com/repos/smahud/MicroTix_Project/notifications{?since,all,participating}",
+          "labels_url": "https://api.github.com/repos/smahud/MicroTix_Project/labels{/name}",
+          "releases_url": "https://api.github.com/repos/smahud/MicroTix_Project/releases{/id}",
+          "deployments_url": "https://api.github.com/repos/smahud/MicroTix_Project/deployments"
+        }
+      }
+    ]
+  },
+  "ci": {
+    "total_count": 3,
+    "jobs": [
+      {
+        "id": 133228760912,
+        "run_id": 43846763713,
+        "workflow_name": "ci",
+        "head_branch": "session/2026-11-16-pa006-rev1311-01-correction",
+        "run_url": "https://api.github.com/repos/smahud/MicroTix_Project/actions/runs/43846763713",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOVjL4n88AAAAfBQ2PUA",
+        "head_sha": "a301a94c2b3268679065e85bbef66f35949483f7",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/actions/jobs/133228760912",
+        "html_url": "https://github.com/smahud/MicroTix_Project/actions/runs/43846763713/job/133228760912",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-16T10:12:38Z",
+        "started_at": "2026-11-16T10:12:40Z",
+        "completed_at": "2026-11-16T10:13:18Z",
+        "name": "frontend",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-16T10:12:41Z",
+            "completed_at": "2026-11-16T10:12:41Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-16T10:12:41Z",
+            "completed_at": "2026-11-16T10:12:42Z"
+          },
+          {
+            "name": "Run pnpm/action-setup@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-16T10:12:42Z",
+            "completed_at": "2026-11-16T10:12:50Z"
+          },
+          {
+            "name": "Run actions/setup-node@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-16T10:12:50Z",
+            "completed_at": "2026-11-16T10:12:52Z"
+          },
+          {
+            "name": "Install",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-16T10:12:52Z",
+            "completed_at": "2026-11-16T10:12:54Z"
+          },
+          {
+            "name": "Typecheck",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-16T10:12:54Z",
+            "completed_at": "2026-11-16T10:13:00Z"
+          },
+          {
+            "name": "Lint",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-16T10:13:00Z",
+            "completed_at": "2026-11-16T10:13:03Z"
+          },
+          {
+            "name": "Vitest",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-16T10:13:03Z",
+            "completed_at": "2026-11-16T10:13:14Z"
+          },
+          {
+            "name": "i18n parity",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-16T10:13:14Z",
+            "completed_at": "2026-11-16T10:13:14Z"
+          },
+          {
+            "name": "Build (produksi live — mock DITOLAK gate §5)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-11-16T10:13:14Z",
+            "completed_at": "2026-11-16T10:13:16Z"
+          },
+          {
+            "name": "Post Run actions/setup-node@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 18,
+            "started_at": "2026-11-16T10:13:16Z",
+            "completed_at": "2026-11-16T10:13:16Z"
+          },
+          {
+            "name": "Post Run pnpm/action-setup@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-11-16T10:13:16Z",
+            "completed_at": "2026-11-16T10:13:16Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 20,
+            "started_at": "2026-11-16T10:13:16Z",
+            "completed_at": "2026-11-16T10:13:17Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 21,
+            "started_at": "2026-11-16T10:13:17Z",
+            "completed_at": "2026-11-16T10:13:17Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/smahud/MicroTix_Project/check-runs/133228760912",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000000438,
+        "runner_name": "GitHub Actions 1000000438",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 133228761257,
+        "run_id": 43846763713,
+        "workflow_name": "ci",
+        "head_branch": "session/2026-11-16-pa006-rev1311-01-correction",
+        "run_url": "https://api.github.com/repos/smahud/MicroTix_Project/actions/runs/43846763713",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOVjL4n88AAAAfBQ2QqQ",
+        "head_sha": "a301a94c2b3268679065e85bbef66f35949483f7",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/actions/jobs/133228761257",
+        "html_url": "https://github.com/smahud/MicroTix_Project/actions/runs/43846763713/job/133228761257",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-16T10:12:38Z",
+        "started_at": "2026-11-16T10:12:40Z",
+        "completed_at": "2026-11-16T10:12:45Z",
+        "name": "docs",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-16T10:12:41Z",
+            "completed_at": "2026-11-16T10:12:41Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-16T10:12:41Z",
+            "completed_at": "2026-11-16T10:12:42Z"
+          },
+          {
+            "name": "Static docs check",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-16T10:12:42Z",
+            "completed_at": "2026-11-16T10:12:43Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-16T10:12:43Z",
+            "completed_at": "2026-11-16T10:12:43Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-16T10:12:43Z",
+            "completed_at": "2026-11-16T10:12:43Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/smahud/MicroTix_Project/check-runs/133228761257",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000000439,
+        "runner_name": "GitHub Actions 1000000439",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 133228761303,
+        "run_id": 43846763713,
+        "workflow_name": "ci",
+        "head_branch": "session/2026-11-16-pa006-rev1311-01-correction",
+        "run_url": "https://api.github.com/repos/smahud/MicroTix_Project/actions/runs/43846763713",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOVjL4n88AAAAfBQ2Q1w",
+        "head_sha": "a301a94c2b3268679065e85bbef66f35949483f7",
+        "url": "https://api.github.com/repos/smahud/MicroTix_Project/actions/jobs/133228761303",
+        "html_url": "https://github.com/smahud/MicroTix_Project/actions/runs/43846763713/job/133228761303",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-16T10:12:38Z",
+        "started_at": "2026-11-16T10:12:40Z",
+        "completed_at": "2026-11-16T10:14:41Z",
+        "name": "backend",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-16T10:12:41Z",
+            "completed_at": "2026-11-16T10:12:41Z"
+          },
+          {
+            "name": "Initialize containers",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-16T10:12:41Z",
+            "completed_at": "2026-11-16T10:12:56Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-16T10:12:56Z",
+            "completed_at": "2026-11-16T10:12:57Z"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-16T10:12:57Z",
+            "completed_at": "2026-11-16T10:12:58Z"
+          },
+          {
+            "name": "Peran runtime non-privilege (RLS diuji sungguhan)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-16T10:12:58Z",
+            "completed_at": "2026-11-16T10:12:58Z"
+          },
+          {
+            "name": "Install dependensi pinned",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-16T10:12:58Z",
+            "completed_at": "2026-11-16T10:13:12Z"
+          },
+          {
+            "name": "Django system check",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-16T10:13:12Z",
+            "completed_at": "2026-11-16T10:13:14Z"
+          },
+          {
+            "name": "Unit + integrasi + kontrak (PostgreSQL nyata)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-16T10:13:14Z",
+            "completed_at": "2026-11-16T10:14:38Z"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 14,
+            "started_at": "2026-11-16T10:14:38Z",
+            "completed_at": "2026-11-16T10:14:38Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 15,
+            "started_at": "2026-11-16T10:14:38Z",
+            "completed_at": "2026-11-16T10:14:39Z"
+          },
+          {
+            "name": "Stop containers",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-16T10:14:39Z",
+            "completed_at": "2026-11-16T10:14:39Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-16T10:14:39Z",
+            "completed_at": "2026-11-16T10:14:39Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/smahud/MicroTix_Project/check-runs/133228761303",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000000440,
+        "runner_name": "GitHub Actions 1000000440",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      }
+    ]
+  }
+}

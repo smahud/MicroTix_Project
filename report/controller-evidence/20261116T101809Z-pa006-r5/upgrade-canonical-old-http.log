@@ -1,0 +1,2 @@
+{"phase": "before", "proof_file_count": 1, "response": {"state": "submitted", "submission_id": "a8248f76-d5d5-4565-81c7-efb789468c4c"}, "retained_keys": [{"idem_key": "r5-upgrade-canonical", "principal": "4f27a5c0-107c-435f-a068-3cdfa59b499f", "response_status": 201, "scope": "payment_submission:87e7848c-6b0d-4550-9288-5483ebfb26ab:"}], "status": 201, "submission_count": 1, "variant": "canonical"}
+PROBE before canonical: PASS

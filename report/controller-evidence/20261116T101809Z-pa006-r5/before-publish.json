@@ -1,0 +1,31 @@
+{
+  "observed_at": "2026-11-16T10:24:36Z",
+  "canonical_main": "9903d9b0cf09d737b553da3c21067b4810e956c0",
+  "candidate": {
+    "pr": 24,
+    "head": "a301a94c2b3268679065e85bbef66f35949483f7",
+    "base": "9903d9b0cf09d737b553da3c21067b4810e956c0",
+    "state": "open",
+    "mergeable": true,
+    "mergeable_state": "clean"
+  },
+  "candidate_ci": {
+    "id": 43846763713,
+    "head_sha": "a301a94c2b3268679065e85bbef66f35949483f7",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "frontend",
+        "conclusion": "success"
+      },
+      {
+        "name": "docs",
+        "conclusion": "success"
+      },
+      {
+        "name": "backend",
+        "conclusion": "success"
+      }
+    ]
+  }
+}
