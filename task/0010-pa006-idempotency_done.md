@@ -2,21 +2,21 @@
 
 | Field | Nilai |
 |---|---|
-| Task ID | `0010` — ID tetap; penyerahan keempat pada ID yang sama |
-| Execution status | `ready` — ID0010 dibuka kembali oleh controller setelah review PR21; koreksi REV-1311-01 belum tuntas |
-| Review status | `changes_requested` — exact reviewed SHA `634da4224f15dd6a5a4e9010fe1811dec8c7954d` |
+| Task ID | `0010` — ID tetap; **penyerahan kelima** pada ID yang sama (koreksi REV-1311-01 atas keputusan R4) |
+| Execution status | `done` — scope executor koreksi kelima + tes wajib selesai; rename `_done` ikut commit penyerahan (bukan acceptance) |
+| Review status | `pending` — menunggu controller review exact SHA kandidat kelima |
 | Controller | ChatGPT Work / reviewer proyek |
-| Executor | Coding agent sandbox; penyerahan keempat Z.ai 15 November 2026 |
+| Executor | Coding agent sandbox; **penyerahan kelima Z.ai 16 November 2026** (koreksi R4 atas PR21) |
 | Baseline / dependency | `main@9903d9b0cf09d737b553da3c21067b4810e956c0` (tidak berubah); PA-001 merged PR9 (`8ce94d4`); tidak diulang |
 | Instruction revision | Kebutuhan awal pada main + koreksi PR16/PR18 (dibawa semantik histori) + **keputusan input kandidat [PR20](https://github.com/smahud/MicroTix_Project/pull/20)** pada reviewed SHA `9e9bf2d42002a00a69d54fc355b77384897b9478` — kandidat ini descendant keputusan itu (base decision head `e507175`), membawa histori review + closed fixes. **Keputusan terbaru: controller R4** pada [report](../report/controller/20261115T053138Z-0010-pa006-r4-review.md), ref `review/0010-pa006-controller-r4-20261115` |
-| Candidate branch / exact tested SHA | `session/2026-11-15-pa006-idempotency-correction` dari `review/0010-pa006-controller-20261115@e507175`; **implementation `b71574d8b6ba1dc30d132551684791f760e8abc6`** — seluruh tes §Verifikasi dijalankan pada pohon sumber commit ini |
-| Published SHA / PR / CI | [PR21](https://github.com/smahud/MicroTix_Project/pull/21), actual reviewed head **`634da4224f15dd6a5a4e9010fe1811dec8c7954d`**; implementation `b71574d`; report-only descendants verified identical app content. Exact-head CI [43679221142](https://github.com/smahud/MicroTix_Project/actions/runs/43679221142) backend/frontend/docs success, not acceptance |
-| Execution report / internal reviewer | [Executor keempat](../report/orchestrator/20261115T044621Z-0010-pa006-idempotency.md) — matriks finding→perubahan→closing test→actual evidence (01/03A/03B/05), tabel 28 call-site, matriks acceptance, kebijakan migrasi/recovery, NOT_RUN; [independent review r4](../report/reviewer/20261115T044616Z-0010-pa006-r4-review.md) — PASS_WITH_NOTES; tiga temuan reviewer (F-01 P2 braced-URN parser, F-02/F-03 P3 ketebalan tes) **DITUTUP pada kandidat ini** sebelum penyerahan |
+| Candidate branch / exact tested SHA | `session/2026-11-16-pa006-rev1311-01-correction` dari `review/0010-pa006-controller-r4-20261115@4bb7261` (head keputusan R4 — kode PR21 + packet reopened + checkpoint 16 Nov dibawa bersama); **implementation `7338a720b5d64a4ccb47b9abe7d3dc6feca0a476`** — seluruh tes §Verifikasi dijalankan pada pohon sumber commit ini |
+| Published SHA / PR / CI | Penyerahan kelima 16 November 2026: implementation `7338a72` + delivery docs; published candidate/PR/CI dicatat pada metadata final setelah push/PR/remote readback diverifikasi (bukan klaim sebelum verifikasi) |
+| Execution report / internal reviewer | [Executor kelima](../report/orchestrator/20261116T100420Z-0010-pa006-idempotency.md) — matriks finding01→perubahan→failing-before/passing-after→actual evidence (grammar-driven), matriks acceptance R4 §4, kebijakan affected-state, NOT_RUN; [independent review r5](../report/reviewer/20261116T100420Z-0010-pa006-r5-independent.md) — **APPROVE_WITH_NOTES**: brute-force 33.674 pasangan ejaan valid writer → 0 tombstone/salah-split/ambiguitas; fuzz 400.000 string adversarial → 0 fail-stop palsu; tidak ada counterexample. REV-R5-01/03 **ditutup pada kandidat**, REV-R5-02 (pre-existing P3) dicatat untuk runbook ops |
 | Controller review | [Controller R4 — 15 November](../report/controller/20261115T053138Z-0010-pa006-r4-review.md): **REV-1311-01 P1 OPEN partial**, actual old-code uuid:/urn: accepted-prefix retries duplicate submission/file1→2. **03A/03B/05 CLOSED**,02/04/PA001 preserved. Prior PR20 decision remains history |
 | Controller publication | [PR23](https://github.com/smahud/MicroTix_Project/pull/23), branch `review/0010-pa006-controller-r4-20261115`, target PR21 branch; initial decision ancestor **`5c31ed63b5e88e2e6c92565c47e60d947dd81666`** remote tree/ref/files verified. Publication metadata descendant preserves source; see current controller report §7 |
-| Riwayat penyerahan | PR15 (13 Nov, changes_requested via PR16), PR17 (14 Nov, changes_requested via PR18), PR19 (15 Nov, changes_requested via PR20), **penyerahan keempat ini**; laporan historis dipertahankan di report/ + histori git |
-| Next actor | **coding_agent** |
-| Exact next action | Fetch current controller R4 decision ref, fix remaining **REV-1311-01 only** on ID0010; preserve CLOSED03A/03B/05/02/04/PA001; old-source accepted UUID grammar→migration→retry must keep original result/effects1. Resubmit new exact SHA + actual evidence |
+| Riwayat penyerahan | PR15 (13 Nov, changes_requested via PR16), PR17 (14 Nov, changes_requested via PR18), PR19 (15 Nov, changes_requested via PR20), PR21 (15 Nov, changes_requested via PR23/R4), **penyerahan kelima ini**; laporan historis dipertahankan di report/ + histori git |
+| Next actor | **controller_reviewer** |
+| Exact next action | Review exact SHA implementation `7338a72` (atau head PR kandidat kelima; pohon source identik — delivery docs report-only) atas matriks koreksi R4 pada laporan executor §4; changes-requested membuka kembali ID0010 yang sama |
 | Resume verification | 15 November 2026, mulai13:56 WIB: 25 branch/13 open PR diperiksa; main9903d9b, candidate634da42 dan decision30ce815 tidak berubah. Koreksi berikutnya **not_submitted**; task tetap **ready / changes_requested**, next coding_agent. [Resume report](../report/controller/20261115T065656Z-0010-pa006-resume-review.md); publikasi checkpoint pada existing PR23 |
 | Resume publication | Existing PR23 ancestor **d7be2ba8667149ed47ec4b11b5da10d5811e7a4a** terverifikasi ref/tree/all10file readback; metadata descendant record-only. CI checkpoint baru belum terbit saat pencatatan; final observation di PR23. Tidak mengubah reviewed candidate/next actor atau membuka dependency |
 | Latest state verification | 16 November 2026,13:50 WIB:25 branch /13 open PR; main9903d9b,candidate634da42 dan starting decision82b2216 tetap. Koreksi berikutnya **not_submitted**; task **ready / changes_requested**, next **coding_agent**, hanya REV-1311-01 OPEN. [Controller checkpoint](../report/controller/20261116T065005Z-0010-pa006-state-review.md), existing PR23; semua closure R4 dipertahankan. Existing exact-head CI43679221142/43715610125 masing-masing success3/3; runtime tidak diulang; publication-head CI dicatat terpisah di PR23 |
@@ -208,3 +208,56 @@ barrier-only test tidak membuktikan lock waiting; query+blocker berasal dari
 probe forced wait yang terpisah. No need repeat source implementation for
 that attribution clarification. PA-002/003 tetap tertahan; tidak ada
 packet0020/merge/deploy/tag. Beta **NOT_READY**.
+
+## Penyerahan kelima — 16 November 2026 (ringkasan hasil executor)
+
+Menjawab keputusan controller R4 (changes_requested PR21 `634da42`; satu
+finding terbuka REV-1311-01 P1 partial). **Perubahan: satu file source**
+`backend/domains/jobs/migrations/0004_idempotency_identity.py` — parser
+scope legacy ditulis ulang **grammar-driven** (koreksi minimum R4, bukan
+pengecualian prefix per ejaan): kandidat pemisahan = semua posisi kolon;
+validitas tenant/resource menurut stdlib `uuid.UUID` yang sama persis
+dengan writer baseline (tenant boleh literal `platform` exact-case;
+resource `''`/UUID/sisa verbatim opaque); interpretasi sah terbukti unik;
+>1 interpretasi = data asing → `AmbiguousLegacyScope` **fail-stop**
+(rollback atomik migrasi); 0 interpretasi = baris mati seperti kebijakan
+lama (hanya input yang tidak pernah bisa ditulis writer sah). Docstring
+memuat bukti keunikan + kebijakan affected-state eksplisit (0004 belum
+dirilis; environment yang telanjur menjalankan 0004 cacat dipulihkan
+fix-forward snapshot pra-0004 / rekonsiliasi manual; tanpa klaim
+reparasi in-place).
+
+**Acceptance yang sudah dibuktikan** (matriks lengkap + evidence pada
+[laporan executor §4](../report/orchestrator/20261116T100420Z-0010-pa006-idempotency.md)):
+- **Live upgrade 7/7 PASS** (metodologi probe controller R4, DB+storage
+  terpisah per varian): old `main@9903d9b` HTTP nyata (ejaan prefix
+  tenant/resource) → migrasi 0004/0005 → retry kanonik — completed mereplay
+  respons semula (submission/file/keputusan tetap 1), unknown 409 aman,
+  platform resource replay 204 tanpa outbox/audit baru. Parser cacat
+  direproduksi GAGAL dulu (3 varian controller: submission 2, file 2).
+- **62 tes r5** (PostgreSQL nyata, migrasi nyata MigrationExecutor, klien
+  HTTP independen): matriks grammar 12 ejaan × 2 posisi, crash-window
+  tenant ×6 + resource ×6, konkuren, wrong-body, target lain, opaque
+  prefix, platform literal, dedupe alias, fail-stop rollback atomik,
+  exact-case platform. Failing-before: 21 GAGAL pada parser PR21.
+- **Full suite 514 passed** (PG 17.11 nyata, peran runtime non-superuser,
+  FreeRADIUS real-binary); family PA006 139 passed; `manage.py check` 0
+  issue; `makemigrations --check` bersih; docs check PASS.
+- **Review internal independen APPROVE_WITH_NOTES** (CONTRACT §5):
+  brute-force 33.674 pasangan ejaan valid writer → 0 tombstone penjaga
+  sah / 0 salah-split / 0 ambiguitas; fuzz 400.000 string adversarial →
+  0 fail-stop palsu; **tidak ada counterexample**. REV-R5-01/03 ditutup
+  pada kandidat; REV-R5-02 (pre-existing P3, cabang opaque) dicatat
+  sebagai kandidat runbook ops — bukan blocker.
+- Semua closure R4 dipertahankan tanpa implementasi ulang: REV-1311-02,
+  03A, 03B, REV-1411-04, REV-1511-05, PA-001 (10 tes konkurensi).
+
+**Belum dibuktikan (NOT_RUN, di luar scope):** install/upgrade/restore
+produksi nyata, perangkat/lab, deployment, browser E2E, benchmark
+kapasitas. Transisi DB lokal old→new bukan rehearsal installer OS.
+
+**Pointer:** implementation `7338a720b5d64a4ccb47b9abe7d3dc6feca0a476`;
+laporan executor + review internal + evidence
+([executor-evidence](../report/executor-evidence/20261116T090000Z-0010-pa006-r5/))
+pada branch kandidat; published candidate/PR/CI pada metadata final
+setelah verifikasi remote. Next actor **controller_reviewer**.

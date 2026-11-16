@@ -2,6 +2,42 @@
 
 Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-16 (Asia/Jakarta).
 
+## Checkpoint 2026-11-16, ~17:10 WIB — executor penyerahan kelima ID0010: REV-1311-01 grammar-driven
+
+Executor (Z.ai sandbox) menutup sisa finding controller R4 (PR21
+`634da42`, PR23) pada ID0010 yang sama. Branch
+`session/2026-11-16-pa006-rev1311-01-correction` dari head keputusan R4
+`4bb7261`; **implementation `7338a720b5d64a4ccb47b9abe7d3dc6feca0a476`**
+(delivery docs report-only di atasnya). Perubahan source SATU file:
+parser migrasi `jobs/0004` grammar-driven — semua posisi kolon,
+validitas tenant/resource menurut stdlib uuid.UUID yang sama dengan
+writer baseline (literal `platform` exact-case), interpretasi sah unik
+(bukti di docstring + brute-force reviewer), ambiguity → fail-stop
+`AmbiguousLegacyScope` rollback atomik, 0 interpretasi → baris mati
+seperti kebijakan lama; kebijakan affected-state eksplisit (0004 belum
+dirilis; fix-forward snapshot pra-0004 / rekonsiliasi manual untuk
+environment yang telanjur menjalankan versi cacat).
+
+Bukti: **live upgrade 7/7 PASS** (old main@9903d9b HTTP nyata → migrasi
+0004/0005 → retry kanonik; 3 varian FAIL controller direproduksi GAGAL
+dulu pada parser cacat — submission/file 1→2); **62 tes r5** baru
+(failing-before 21 GAGAL pada parser PR21); **full suite 514 passed**
+(PostgreSQL 17.11 nyata, peran non-superuser, FreeRADIUS real-binary);
+family PA006 139 passed; `manage.py check` 0 issue;
+`makemigrations --check` bersih; docs PASS. Review internal independen
+**APPROVE_WITH_NOTES**: brute-force 33.674 pasangan ejaan valid writer
+→ 0 tombstone/salah-split/ambiguitas; fuzz 400.000 string adversarial →
+0 fail-stop palsu; tidak ada counterexample; REV-R5-01/03 ditutup,
+REV-R5-02 (pre-existing P3, opaque >64 char DataError fail-stop aman)
+dicatat sebagai kandidat runbook ops.
+
+Laporan: [executor](../report/orchestrator/20261116T100420Z-0010-pa006-idempotency.md),
+[independent review](../report/reviewer/20261116T100420Z-0010-pa006-r5-independent.md),
+[evidence](../report/executor-evidence/20261116T090000Z-0010-pa006-r5/);
+packet `0010-pa006-idempotency_done.md` (execution done, review
+**pending**, next **controller_reviewer**). NOT_RUN: produksi/host/lab/
+E2E/benchmark. PA-002/003 belum eligible; Beta **NOT_READY**.
+
 ## Checkpoint 2026-11-16, 13:50 WIB — koreksi ID0010 belum diserahkan
 
 [Controller checkpoint](../report/controller/20261116T065005Z-0010-pa006-state-review.md):
