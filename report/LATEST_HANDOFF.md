@@ -23,13 +23,13 @@ mati seperti kebijakan lama) + kebijakan affected-state eksplisit.
 |---|---|
 | Active task | ID0010 / PA-006 — **penyerahan kelima** |
 | Execution / review | `done` (scope executor + tes wajib) / `pending` — menunggu controller review exact SHA |
-| Candidate branch / tested SHA | `session/2026-11-16-pa006-rev1311-01-correction`; implementation **`7338a72`**; published head/PR/CI pada metadata final packet setelah verifikasi remote |
+| Candidate branch / tested SHA | **[PR24](https://github.com/smahud/MicroTix_Project/pull/24)** `session/2026-11-16-pa006-rev1311-01-correction`; implementation **`7338a72`**, published head **`a21624f`** (readback diverifikasi); CI [43846332048](https://github.com/smahud/MicroTix_Project/actions/runs/43846332048) exact-head **success 3/3** (backend/frontend/docs) — bukan acceptance |
 | Bukti kunci | **Live upgrade 7/7 PASS** (old main@9903d9b HTTP → migrasi 0004/0005 → retry kanonik; parser cacat direproduksi GAGAL dulu 3 varian); **62 tes r5** (failing-before 21 GAGAL pada parser PR21); **full suite 514 passed** (PG nyata, non-superuser, FreeRADIUS real-binary); family 139 passed; check/makemigrations/docs PASS |
 | Review internal | [Independent r5](reviewer/20261116T100420Z-0010-pa006-r5-independent.md) — **APPROVE_WITH_NOTES**; brute-force 33.674 pasangan ejaan valid writer 0 anomali, fuzz 400.000 string 0 fail-stop palsu, tidak ada counterexample; REV-R5-01/03 ditutup, REV-R5-02 (pre-existing P3) dicatat runbook ops |
 | Execution report | [Executor kelima](orchestrator/20261116T100420Z-0010-pa006-idempotency.md) — matriks acceptance R4 §4 + evidence; [executor-evidence](executor-evidence/20261116T090000Z-0010-pa006-r5/) |
 | Packet | [0010-pa006-idempotency_done.md](../task/0010-pa006-idempotency_done.md) — metadata penyerahan kelima + ringkasan hasil |
 | Next actor | **controller_reviewer** |
-| Exact next action | Review exact SHA `7338a72` (atau head PR kandidat; pohon source identik) atas matriks koreksi R4 laporan executor §4; changes-requested membuka kembali ID0010 yang sama |
+| Exact next action | Review exact head PR24 `a21624f` (pohon source identik `7338a72`) atas matriks koreksi R4 laporan executor §4; changes-requested membuka kembali ID0010 yang sama |
 | Batas | NOT_RUN: install/upgrade/restore produksi, perangkat/lab, deployment, E2E browser, benchmark. Internal review ≠ acceptance. PA-002/003 belum eligible; Beta **NOT_READY**; tidak ada merge/deploy/tag |
 
 ## Prior state verification — 16 November 2026, 13:50 WIB
