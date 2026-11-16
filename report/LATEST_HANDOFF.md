@@ -16,12 +16,12 @@ current mengikuti tabel ini dan [laporan integrasi](orchestrator/20261116T111835
 
 | Field handoff | Status / pointer |
 |---|---|
-| Canonical main | **fd0f3faa84ea87c142d37da5dacf01e22a493f90** (merge PR25) setelah merge PR24 `532862be2711f26d537ae1df540258bbdcae2052`; tree final `f283fe9` byte-identik dengan head keputusan R5 `c352bce` yang diuji; record commit sesi ini menaikkan main lagi — fetch HEAD aktual |
+| Canonical main | **022e9d05f02e5a1f17de8ea7fe59adcea9a5f9fe** — commit record integrasi; remote readback terverifikasi + CI exact head **3/3 success** — di atas merge PR24 `532862be2711f26d537ae1df540258bbdcae2052` → merge PR25 `fd0f3faa84ea87c142d37da5dacf01e22a493f90`; tree aplikasi `f283fe9` byte-identik dengan head keputusan R5 `c352bce` yang diuji; fetch HEAD aktual setiap sesi |
 | Active task | [ID0010 / PA-006](../task/0010-pa006-idempotency_done.md) — **integrated** |
 | Execution / review / integration | **done / accepted / integrated**; merge bukan deployment/aktivasi/release |
 | Integrasi | PR24 merged 11:17:20Z (parents 9903d9b+a301a94, tree bec63b5 = tree reviewed); PR25 retarget base main + merged 11:17:44Z (parents 532862b+c352bce, tree f283fe9 = tree teruji); remote readback SHA/tree/PR-state diverifikasi; PR7/8/14 tak tersentuh |
 | Verifikasi integrasi (executor) | Full suite **514 passed** (PG 17.11 nyata non-superuser + FreeRADIUS 3.2.7 real binary) + check 0 issue + makemigrations no-change + docs PASS 24 files/106 links pada tree final; bootstrap migrasi bersih dari initdb (termasuk jobs.0004/0005); [laporan integrasi](orchestrator/20261116T111835Z-0010-pa006-integration.md) + [evidence](executor-evidence/20261116T111835Z-0010-pa006-integration/) |
-| Candidate CI (exact tree) | [43846763713](https://github.com/smahud/MicroTix_Project/actions/runs/43846763713) success 3/3 pada a301a94; CI c352bce 3/3 success (tree = main final); CI head record commit diamati/dicatat pada laporan/commit lanjutan |
+| Candidate CI (exact tree) | [43846763713](https://github.com/smahud/MicroTix_Project/actions/runs/43846763713) success 3/3 pada a301a94; CI c352bce 3/3 success (tree = main final aplikasi); CI record commit `022e9d0` **3/3 success terverifikasi** (teramati 11:24Z; [evidence](executor-evidence/20261116T111835Z-0010-pa006-integration/ci-record-commit.txt)) |
 | Keputusan controller | R5 accepted pada exact a301a94 — [review](controller/20261116T101809Z-0010-pa006-r5-review.md), publikasi PR25 (tabel histori di bawah); tetap verdict pemilik acceptance |
 | Nonblocking follow-up | REV-1611-TEST-01 P3 (assert completion thread/hasil tes R5) tetap terbuka untuk hardening test-only di packet berikutnya; tidak membuka kembali PA-006 |
 | Next actor | **controller_reviewer** |
