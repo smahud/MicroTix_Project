@@ -1,0 +1,198 @@
+2026-11-14 22:41:49,671 WARNING django.request Unauthorized: /api/v1/auth/session
+jobs.0004 idempotency identity backfill: kept=0 no_response_deleted=0 malformed_deleted=0 duplicate_canonical_deleted=0
+OBSERVED per-session decisions after 204/204: [2, 0]
+F2026-11-14 22:41:49,897 WARNING django.request Unauthorized: /api/v1/auth/session
+OBSERVED cached resolution with invalid parent: not-a-uuid 204
+F2026-11-14 22:41:50,120 WARNING django.request Unauthorized: /api/v1/auth/session
+OBSERVED cached resolution with invalid parent: 6e0efc5f-a287-4fa4-8832-650c71672006 204
+F2026-11-14 22:41:50,314 WARNING django.request Unauthorized: /api/v1/auth/session
+2026-11-14 22:41:50,340 WARNING django.request Conflict: /api/v1/tenants/9c3ad495-7649-420d-ba90-e610411bbd3a/services/5408ab6c-1c6d-4c06-8145-7e5640e467a3/billing-package
+OBSERVED equivalent package UUID body alias: 200 409 b'{"code":"idempotency_conflict","message":"Idempotency-Key sama dipakai untuk isi permintaan berbeda","request_id":"183bbca63f1249d3","locale":"id"}'
+F2026-11-14 22:41:50,478 WARNING django.request Unauthorized: /api/v1/auth/session
+OBSERVED legacy proof 201 {'submission_id': '6753a92b-193b-440a-aa73-6ca625e365dd', 'state': 'submitted'} original {'submission_id': '9ee1a20a-7096-42ee-97a9-8c0d98f81b7e', 'state': PaymentSubmission.State.SUBMITTED} submission_count 2 legacy_preserved True
+F2026-11-14 22:41:50,763 WARNING django.request Unauthorized: /api/v1/auth/session
+jobs.0004 idempotency identity backfill: kept=0 no_response_deleted=1 malformed_deleted=0 duplicate_canonical_deleted=0
+OBSERVED ambiguous migration guard_count 0 retry_status 201 invoice_count 2 original_invoice db137bfd-389b-493f-9495-fc67e47a45d4
+F
+=================================== FAILURES ===================================
+___ test_same_key_same_group_different_session_must_apply_second_resolution ____
+
+    def test_same_key_same_group_different_session_must_apply_second_resolution():
+        world, client, sessions, group_id = _migration_world("scope-parent")
+        body = {"resolution": "merge"}
+        headers = {"Idempotency-Key": "scope-parent-key"}
+        base = f"/api/v1/tenants/{world.tenant.id}/migrations"
+        first = client.post(f"{base}/{sessions[0].id}/identity-conflicts/{group_id}", body, format="json", headers=headers)
+        assert first.status_code == 204, first.content
+        second = client.post(f"{base}/{sessions[1].id}/identity-conflicts/{group_id}", body, format="json", headers=headers)
+        assert second.status_code == 204, second.content
+        with tenant_scope(world.tenant.id):
+            counts = [MigrationAccountDecision.objects.filter(session=s).count() for s in sessions]
+            print("OBSERVED per-session decisions after 204/204:", counts)
+>           assert counts == [2, 2], "second 204 replayed first session; second session remained unresolved"
+E           AssertionError: second 204 replayed first session; second session remained unresolved
+E           assert [2, 0] == [2, 2]
+E
+E             At index 1 diff: 0 != 2
+E             Use -v to get more diff
+
+../report/controller-evidence/20261114T153739Z-pa006/test_scope_review.py:50: AssertionError
+__ test_cached_group_must_not_skip_invalid_or_missing_parent[not-a-uuid-422] ___
+
+bad_parent = 'not-a-uuid', expected = 422
+
+    @pytest.mark.parametrize("bad_parent,expected", [("not-a-uuid",422), (str(uuid4()),404)])
+    def test_cached_group_must_not_skip_invalid_or_missing_parent(bad_parent, expected):
+        world, client, sessions, group_id = _migration_world("scope-bad-parent"+str(expected))
+        body = {"resolution": "merge"}
+        headers = {"Idempotency-Key": "scope-bad-parent-key"}
+        base = f"/api/v1/tenants/{world.tenant.id}/migrations"
+        valid = client.post(f"{base}/{sessions[0].id}/identity-conflicts/{group_id}", body, format="json", headers=headers)
+        assert valid.status_code == 204, valid.content
+        invalid = client.post(f"{base}/{bad_parent}/identity-conflicts/{group_id}", body, format="json", headers=headers)
+        print("OBSERVED cached resolution with invalid parent:", bad_parent, invalid.status_code)
+>       assert invalid.status_code == expected, "cached group response bypassed parent identity validation/lookup"
+E       AssertionError: cached group response bypassed parent identity validation/lookup
+E       assert 204 == 422
+E        +  where 204 = <Response status_code=204>.status_code
+
+../report/controller-evidence/20261114T153739Z-pa006/test_scope_review.py:63: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  django.request:log.py:293 Unauthorized: /api/v1/auth/session
+_ test_cached_group_must_not_skip_invalid_or_missing_parent[6e0efc5f-a287-4fa4-8832-650c71672006-404] _
+
+bad_parent = '6e0efc5f-a287-4fa4-8832-650c71672006', expected = 404
+
+    @pytest.mark.parametrize("bad_parent,expected", [("not-a-uuid",422), (str(uuid4()),404)])
+    def test_cached_group_must_not_skip_invalid_or_missing_parent(bad_parent, expected):
+        world, client, sessions, group_id = _migration_world("scope-bad-parent"+str(expected))
+        body = {"resolution": "merge"}
+        headers = {"Idempotency-Key": "scope-bad-parent-key"}
+        base = f"/api/v1/tenants/{world.tenant.id}/migrations"
+        valid = client.post(f"{base}/{sessions[0].id}/identity-conflicts/{group_id}", body, format="json", headers=headers)
+        assert valid.status_code == 204, valid.content
+        invalid = client.post(f"{base}/{bad_parent}/identity-conflicts/{group_id}", body, format="json", headers=headers)
+        print("OBSERVED cached resolution with invalid parent:", bad_parent, invalid.status_code)
+>       assert invalid.status_code == expected, "cached group response bypassed parent identity validation/lookup"
+E       AssertionError: cached group response bypassed parent identity validation/lookup
+E       assert 204 == 404
+E        +  where 204 = <Response status_code=204>.status_code
+
+../report/controller-evidence/20261114T153739Z-pa006/test_scope_review.py:63: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  django.request:log.py:293 Unauthorized: /api/v1/auth/session
+_____________ test_body_uuid_alias_must_replay_canonical_identity ______________
+
+    def test_body_uuid_alias_must_replay_canonical_identity():
+        sub_services.seed_plans()
+        world = _setup_world("scope-body-alias")
+        client = _client(world.owner, active_tenant=world.tenant.id)
+        with tenant_scope(world.tenant.id):
+            customer = Customer.objects.create(tenant=world.tenant, display_name="Scope alias", customer_code="C-SCOPE")
+            service = Service.objects.create(tenant=world.tenant, customer=customer, service_code="S-SCOPE")
+            package = BillingPackage.objects.create(tenant=world.tenant, name="Scope alias package", monthly_price=Decimal("50000"))
+        url = f"/api/v1/tenants/{world.tenant.id}/services/{service.id}/billing-package"
+        headers = {"Idempotency-Key":"scope-body-alias-key"}
+        first = client.post(url, {"package_id":str(package.id)}, format="json", headers=headers)
+        assert first.status_code == 200, first.content
+        alias = client.post(url, {"package_id":package.id.hex.upper()}, format="json", headers=headers)
+        print("OBSERVED equivalent package UUID body alias:", first.status_code, alias.status_code, alias.content)
+>       assert alias.status_code == 200, "structured identity in body was hashed before UUID canonicalization"
+E       AssertionError: structured identity in body was hashed before UUID canonicalization
+E       assert 409 == 200
+E        +  where 409 = <Response status_code=409, "application/json">.status_code
+
+../report/controller-evidence/20261114T153739Z-pa006/test_scope_review.py:80: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  django.request:log.py:293 Unauthorized: /api/v1/auth/session
+WARNING  django.request:log.py:293 Conflict: /api/v1/tenants/9c3ad495-7649-420d-ba90-e610411bbd3a/services/5408ab6c-1c6d-4c06-8145-7e5640e467a3/billing-package
+_____ test_retained_old_proof_scope_must_replay_without_second_submission ______
+
+    def test_retained_old_proof_scope_must_replay_without_second_submission():
+        services.seed_plans()
+        world = _world("review-old-proof")
+        invoice = _make_invoice(world)
+        with tenant_scope(world.tenant.id):
+            original = PaymentSubmission.objects.create(
+                tenant=world.tenant, invoice=invoice, amount=invoice.amount,
+                proof_path="payment-proofs/synthetic-old", proof_mime="image/png",
+                proof_size=64, submitted_by=world.owner,
+            )
+        response_old = {"submission_id": str(original.id), "state": original.state}
+        # Exactly the result of migration0004 on a successful main-format row:
+        # old scope payment_submission:<tenant>: becomes resource=''.
+        old_record = IdempotencyKey.objects.create(
+            principal=str(world.owner.id), tenant_scope=str(world.tenant.id),
+            operation="payment_submission", resource="", idem_key="review-old-proof-key",
+            body_hash=_body_hash(_PROOF_BODY), response_status=201,
+            response_body=response_old, created_at=timezone.now(),
+        )
+        client = _client_for(world.owner, world.tenant.id, reauth_until=REAUTH_FAR_FUTURE)
+        response = client.post(
+            f"/api/v1/tenants/{world.tenant.id}/saas-invoices/{invoice.id}/payment-submissions",
+            _PROOF_BODY, headers={"Idempotency-Key": "review-old-proof-key"},
+        )
+        with tenant_scope(world.tenant.id):
+            count = PaymentSubmission.objects.filter(invoice=invoice).count()
+        print("OBSERVED legacy proof", response.status_code, response.json(),
+              "original", response_old, "submission_count", count,
+              "legacy_preserved", IdempotencyKey.objects.filter(pk=old_record.pk).exists())
+>       assert response.status_code == 201 and response.json() == response_old and count == 1
+E       assert (201 == 201 and {'state': 'su...6ca625e365dd'} == {'state': Pay...8c0d98f81b7e'}
+E        +  where 201 = <Response status_code=201, "application/json">.status_code
+E
+E         Omitting 1 identical items, use -vv to show
+E         Differing items:
+E         {'submission_id': '6753a92b-193b-440a-aa73-6ca625e365dd'} != {'submission_id': '9ee1a20a-7096-42ee-97a9-8c0d98f81b7e'}
+E         Use -v to get more diff)
+
+../report/controller-evidence/20261114T153739Z-pa006/test_legacy_review.py:52: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  django.request:log.py:293 Unauthorized: /api/v1/auth/session
+____ test_actual_migration_must_not_erase_ambiguous_committed_effect_guard _____
+
+    def test_actual_migration_must_not_erase_ambiguous_committed_effect_guard():
+        services.seed_plans()
+        world = _world("review-ambiguous-migration")
+        body = {"plan_code": "gold", "term": "monthly"}
+        # Emulate main's crash window: business effect committed, response absent.
+        with tenant_scope(world.tenant.id):
+            invoice, _ = services.create_quotation(world.tenant.id, "gold", "monthly")
+        IdempotencyKey.objects.all().delete()  # reverse0004 requires empty cache
+        executor = MigrationExecutor(connection)
+        executor.migrate([("jobs", "0003_alter_job_kind")])
+        old_apps = executor.loader.project_state(("jobs", "0003_alter_job_kind")).apps
+        old_model = old_apps.get_model("jobs", "IdempotencyKey")
+        old_model.objects.create(
+            principal=str(world.owner.id), scope=f"quotation:{world.tenant.id}:",
+            idem_key="review-ambiguous-key", body_hash=_body_hash(body),
+            response_status=None, response_body=None, created_at=timezone.now(),
+        )
+        # Actual Django/PostgreSQL migration, then a real authenticated HTTP retry.
+        MigrationExecutor(connection).migrate([("jobs", "0004_idempotency_identity")])
+        guard_count = IdempotencyKey.objects.filter(idem_key="review-ambiguous-key").count()
+        client = _client_for(world.owner, world.tenant.id, reauth_until=REAUTH_FAR_FUTURE)
+        response = client.post(
+            f"/api/v1/tenants/{world.tenant.id}/quotations", body,
+            headers={"Idempotency-Key": "review-ambiguous-key"},
+        )
+        with tenant_scope(world.tenant.id):
+            invoice_count = SaaSInvoice.objects.filter(tenant=world.tenant).count()
+        print("OBSERVED ambiguous migration", "guard_count", guard_count,
+              "retry_status", response.status_code, "invoice_count", invoice_count,
+              "original_invoice", str(invoice.id))
+>       assert invoice_count == 1, "migration erased unknown-effect guard and retry wrote a second invoice"
+E       AssertionError: migration erased unknown-effect guard and retry wrote a second invoice
+E       assert 2 == 1
+
+../report/controller-evidence/20261114T153739Z-pa006/test_legacy_review.py:85: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  django.request:log.py:293 Unauthorized: /api/v1/auth/session
+=========================== short test summary info ============================
+FAILED ::test_same_key_same_group_different_session_must_apply_second_resolution
+FAILED ::test_cached_group_must_not_skip_invalid_or_missing_parent[not-a-uuid-422]
+FAILED ::test_cached_group_must_not_skip_invalid_or_missing_parent[6e0efc5f-a287-4fa4-8832-650c71672006-404]
+FAILED ::test_body_uuid_alias_must_replay_canonical_identity - AssertionError...
+FAILED ::test_retained_old_proof_scope_must_replay_without_second_submission
+FAILED ::test_actual_migration_must_not_erase_ambiguous_committed_effect_guard
+6 failed in 3.69s

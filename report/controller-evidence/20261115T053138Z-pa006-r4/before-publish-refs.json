@@ -1,0 +1,70 @@
+{
+  "main": "9903d9b0cf09d737b553da3c21067b4810e956c0",
+  "candidate": {
+    "sha": "634da4224f15dd6a5a4e9010fe1811dec8c7954d",
+    "branch": "session/2026-11-15-pa006-idempotency-correction",
+    "state": "open"
+  },
+  "prs": [
+    {
+      "number": 22,
+      "head": "b645797974a3921e04518a06af756d888e0a8d10",
+      "branch": "session/2026-11-15-pa006-executor-state-check"
+    },
+    {
+      "number": 21,
+      "head": "634da4224f15dd6a5a4e9010fe1811dec8c7954d",
+      "branch": "session/2026-11-15-pa006-idempotency-correction"
+    },
+    {
+      "number": 20,
+      "head": "e507175cb2982b6a974eee8bf437d0b6de5879c6",
+      "branch": "review/0010-pa006-controller-20261115"
+    },
+    {
+      "number": 19,
+      "head": "9e9bf2d42002a00a69d54fc355b77384897b9478",
+      "branch": "session/2026-11-15-pa006-idempotency"
+    },
+    {
+      "number": 18,
+      "head": "b6a0cb863f52cbbf512b23dceafc4231ff9c7d74",
+      "branch": "review/0010-pa006-controller-20261114"
+    },
+    {
+      "number": 17,
+      "head": "37a87291ae66a0fa9167f0c72d1e8340aa5fd245",
+      "branch": "session/2026-11-14-pa006-idempotency"
+    },
+    {
+      "number": 16,
+      "head": "5da0d801c71b020fbb8b977294502ea5a09e7bcb",
+      "branch": "review/0010-pa006-controller-20261113"
+    },
+    {
+      "number": 15,
+      "head": "7480c80e2c27b8b06048b77132d235efe6b3a3c2",
+      "branch": "session/2026-11-13-pa006-idempotency"
+    },
+    {
+      "number": 14,
+      "head": "2a9803593c328ab014bab6695b298072ed4c1886",
+      "branch": "docs/payment-point-planning-20261113"
+    },
+    {
+      "number": 13,
+      "head": "17901fc439199ad70082942832d88fd7214f391c",
+      "branch": "review/0010-pa006-submission-check-20261112"
+    },
+    {
+      "number": 8,
+      "head": "6bb57c9251f3a7a67b71b9523c01e507fdb1b601",
+      "branch": "docs/planning-audit-20261110"
+    },
+    {
+      "number": 7,
+      "head": "d7fa35e5583bc36848e3b45497d2511739298c8a",
+      "branch": "session/2026-11-07-sstp-phase2"
+    }
+  ]
+}

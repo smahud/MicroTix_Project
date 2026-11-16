@@ -1,0 +1,13 @@
+environment 0
+versions 0
+targeted 0
+full 1
+probes 1
+check 0
+consistency 0
+upgrade-before-migrate 0
+upgrade-before-http 0
+upgrade-after-migrate 0
+upgrade-after-http 1
+rls 0
+docs 0

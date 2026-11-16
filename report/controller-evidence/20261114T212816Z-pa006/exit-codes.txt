@@ -1,0 +1,11 @@
+environment 0
+versions 0
+targeted 0
+full 0
+prior-probes 0
+check 0
+consistency 0
+new-probes 1
+docs 0
+effects 1
+lock-attribution-corrected 0

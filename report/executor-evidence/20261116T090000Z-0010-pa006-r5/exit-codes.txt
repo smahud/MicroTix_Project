@@ -1,0 +1,16 @@
+# Executor r5 verification exit codes — 16 November 2026 (UTC), final code
+# Environment: sandbox Z.ai; PostgreSQL 17.11 user-space (port 55432),
+# runtime role mtx_app NOSUPERUSER/NOBYPASSRLS, migrator mtx_migrator;
+# Python 3.13.5 (uv venv), Django 5.2.19, DRF 3.16.1, psycopg 3.2.13,
+# pytest 8.4.2 (pin CI); FreeRADIUS 3.2.7 deb-extract (real-binary test).
+targeted-r5 (pytest tests/integration/test_idempotency_pa006_r5.py -q) = 0 ; 62 passed
+failing-before-r5 (same file, defective 0004 from PR21@634da42, -k Prefix) = 1 ; 21 failed, 3 passed (prefix tests only, before reviewer-note additions)
+targeted-pa006-family (pa006 + r4 + r5 + quota + billing_payment_concurrency) = 0 ; 139 passed
+full-suite (pytest tests -q, real-binary radius via MT_FREERADIUS_BIN/ROOT) = 0 ; 514 passed
+manage.py check (DATABASE_URL unset) = 0 ; System check identified no issues
+makemigrations --check --dry-run (migrator) = 0 ; No changes detected
+docs/tools/check_docs.py = 0 ; PASS (docs scope only; report/ not validated)
+live-upgrade-after-fix FINAL (7 variants, old main@9903d9b HTTP -> migrate 0004/0005 -> new retry) = 0 ; 7/7 PASS
+live-upgrade-before-defective (3 controller-FAIL variants, defective 0004) = 1 ; uuid_only/uuid_only_ambiguous/urn_only FAIL (submission 2, file 2)
+parser-matrix-r5 (AST grammar probe, 12 spellings x 2 positions + opaque + exact-case platform + unresolvable + ambiguity) = 0 ; FAILS: 0
+internal-review (read-only sub-agent, CONTRACT §5) = APPROVE_WITH_NOTES ; REV-R5-01 closed (exact-case platform + test), REV-R5-03 closed (crash-window resource x6 + RLS-scoped refresh), REV-R5-02 pre-existing noted for ops runbook

@@ -1,0 +1,12 @@
+           relname           | relrowsecurity | relforcerowsecurity
+-----------------------------+----------------+---------------------
+ customers_migration_session | t              | t
+ billing_internet_payment    | t              | t
+ subs_payment_submission     | t              | t
+ subs_saas_invoice           | t              | t
+(4 rows)
+
+     conname      |                      pg_get_constraintdef
+------------------+-----------------------------------------------------------------
+ uq_idem_identity | UNIQUE (principal, tenant_scope, operation, resource, idem_key)
+(1 row)

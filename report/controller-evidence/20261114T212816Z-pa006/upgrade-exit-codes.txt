@@ -1,0 +1,13 @@
+upgrade-canonical-before-migrate 0
+upgrade-canonical-before-http 0
+upgrade-canonical-after-migrate 0
+upgrade-canonical-after-http 0
+upgrade-urn-before-migrate 0
+upgrade-urn-before-http 0
+upgrade-urn-after-migrate 0
+upgrade-urn-after-http 1
+upgrade-urn_ambiguous-before-migrate 0
+upgrade-urn_ambiguous-before-http 0
+upgrade-urn_ambiguous-after-migrate 0
+upgrade-urn_ambiguous-after-http 1
+rls 0

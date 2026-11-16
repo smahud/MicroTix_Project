@@ -1,0 +1,74 @@
+{
+  "verified_at_utc": "2026-11-15T07:05:15.634Z",
+  "published_checkpoint": "d7be2ba8667149ed47ec4b11b5da10d5811e7a4a",
+  "parent": "30ce815a2d7e2f634be10678b153d007c9569576",
+  "tree": "efed9596f5bdee5b393b336e2b9ca7e1c6bed1ff",
+  "branch": "review/0010-pa006-controller-r4-20261115",
+  "pr": 23,
+  "base": "634da4224f15dd6a5a4e9010fe1811dec8c7954d",
+  "remote_ref": "d7be2ba8667149ed47ec4b11b5da10d5811e7a4a",
+  "remote_pr_head": "d7be2ba8667149ed47ec4b11b5da10d5811e7a4a",
+  "remote_tree_matches_local_staged_tree": true,
+  "file_readback": [
+    {
+      "path": "docs/progress.md",
+      "matched": true
+    },
+    {
+      "path": "report/LATEST_HANDOFF.md",
+      "matched": true
+    },
+    {
+      "path": "report/controller-evidence/20261115T065656Z-pa006-resume/checks.json",
+      "matched": true
+    },
+    {
+      "path": "report/controller-evidence/20261115T065656Z-pa006-resume/docs.log",
+      "matched": true
+    },
+    {
+      "path": "report/controller-evidence/20261115T065656Z-pa006-resume/parser-matrix.json",
+      "matched": true
+    },
+    {
+      "path": "report/controller-evidence/20261115T065656Z-pa006-resume/remote-heads.txt",
+      "matched": true
+    },
+    {
+      "path": "report/controller-evidence/20261115T065656Z-pa006-resume/remote-inputs-ci.json",
+      "matched": true
+    },
+    {
+      "path": "report/controller/20261115T065656Z-0010-pa006-resume-review.md",
+      "matched": true
+    },
+    {
+      "path": "report/reviewer/20261115T065656Z-0010-reviewer-resume-state.md",
+      "matched": true
+    },
+    {
+      "path": "task/0010-pa006-idempotency.md",
+      "matched": true
+    }
+  ],
+  "ci_observation": {
+    "head": "d7be2ba8667149ed47ec4b11b5da10d5811e7a4a",
+    "total_count": 0,
+    "check_runs": [],
+    "workflow_runs_for_branch": [
+      {
+        "id": 43682458871,
+        "head_sha": "30ce815a2d7e2f634be10678b153d007c9569576",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 43682294037,
+        "head_sha": "5c31ed63b5e88e2e6c92565c47e60d947dd81666",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "interpretation": "No workflow/check on new checkpoint head as of observation; earlier-head success not carried forward"
+  }
+}

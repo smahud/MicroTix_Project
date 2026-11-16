@@ -1,0 +1,32 @@
+{
+  "candidate": "37a87291ae66a0fa9167f0c72d1e8340aa5fd245",
+  "run": [
+    {
+      "id": 43609853986,
+      "head_sha": "37a87291ae66a0fa9167f0c72d1e8340aa5fd245",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/smahud/MicroTix_Project/actions/runs/43609853986"
+    }
+  ],
+  "jobs": [
+    {
+      "id": 132492275312,
+      "name": "backend",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 132492275487,
+      "name": "docs",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 132492275527,
+      "name": "frontend",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ]
+}

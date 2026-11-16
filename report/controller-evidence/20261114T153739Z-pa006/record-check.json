@@ -1,0 +1,12 @@
+{
+  "original_requirement_block_byte_identical": true,
+  "local_links_checked": 48,
+  "invalid_links": [],
+  "application_config_contract_manifest_delta": "EMPTY",
+  "credential_pattern_hits": [],
+  "task_files": [
+    "0010-pa006-idempotency.md"
+  ],
+  "candidate": "37a87291ae66a0fa9167f0c72d1e8340aa5fd245",
+  "review_status": "changes_requested"
+}

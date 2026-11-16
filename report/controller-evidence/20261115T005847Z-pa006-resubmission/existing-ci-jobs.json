@@ -1,0 +1,48 @@
+{
+  "candidate_jobs": [
+    {
+      "id": 132517763573,
+      "name": "frontend",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "9e9bf2d42002a00a69d54fc355b77384897b9478"
+    },
+    {
+      "id": 132517763715,
+      "name": "docs",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "9e9bf2d42002a00a69d54fc355b77384897b9478"
+    },
+    {
+      "id": 132517763716,
+      "name": "backend",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "9e9bf2d42002a00a69d54fc355b77384897b9478"
+    }
+  ],
+  "decision_jobs": [
+    {
+      "id": 132599792766,
+      "name": "frontend",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "2f2416b3ebda64bf45d6f305c153ac0418db3b0c"
+    },
+    {
+      "id": 132599792903,
+      "name": "backend",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "2f2416b3ebda64bf45d6f305c153ac0418db3b0c"
+    },
+    {
+      "id": 132599793103,
+      "name": "docs",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "2f2416b3ebda64bf45d6f305c153ac0418db3b0c"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{"phase": "after", "proof_file_count": 2, "response": {"state": "submitted", "submission_id": "762f86c6-f98b-41c7-9589-b3a6f2e0da82"}, "retained_scopes": [{"idem_key": "review-live-upgrade-key", "operation": "payment_submission", "principal": "4f6b4090-94b6-4c48-988d-a9aa93f00c19", "resource": "", "response_status": 201, "tenant_scope": "c48870d9-4fa8-4f0d-a685-ef00cac7883f"}, {"idem_key": "review-live-upgrade-key", "operation": "payment_submission", "principal": "4f6b4090-94b6-4c48-988d-a9aa93f00c19", "resource": "79cfb3f7-bb97-405c-90cc-396860e2e266", "response_status": 201, "tenant_scope": "c48870d9-4fa8-4f0d-a685-ef00cac7883f"}], "status": 201, "submission_count": 2}
+Traceback (most recent call last):
+  File "/workspace/scratch/6d59f64531e9/MicroTix_Project/report/controller-evidence/20261114T153739Z-pa006/live_upgrade_probe.py", line 64, in <module>
+    assert response.status_code == 201 and response.json() == state["original_response"] and len(submissions) == 1, "legacy retry created a second logical proof submission after actual migration"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: legacy retry created a second logical proof submission after actual migration

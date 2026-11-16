@@ -1,0 +1,6 @@
+{"phase": "after", "proof_file_count": 2, "response": {"state": "submitted", "submission_id": "c96f88bb-71fd-4c5b-8e70-21ce6095aea9"}, "retained_keys": [{"idem_key": "edge-upgrade-key", "operation": "payment_submission", "principal": "0e73743b-a0c5-4450-9071-cc0286d52674", "resource": "2121f40d-ee5c-456f-ac95-83fd78406e07", "response_status": 201, "tenant_scope": "cb168b10-e5dd-4608-9710-c9b34803e0ec"}], "status": 201, "submission_count": 2, "variant": "urn"}
+Traceback (most recent call last):
+  File "/workspace/scratch/2fa1f5475b19/MicroTix_Project/report/controller-evidence/20261114T212816Z-pa006/live_upgrade_edges.py", line 71, in <module>
+    assert len(submissions) == 1 and observed["proof_file_count"] == 1, "migration/retry duplicated a real proof submission and physical file"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: migration/retry duplicated a real proof submission and physical file

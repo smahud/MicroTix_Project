@@ -1,0 +1,55 @@
+2026-11-15 04:35:26,603 WARNING django.request Unauthorized: /api/v1/auth/session
+2026-11-15 04:35:26,689 WARNING django.request Unauthorized: /api/v1/auth/session
+jobs.0004 idempotency identity backfill: kept_with_response=0 kept_no_response=0 platform_remapped=0 legacy_opaque_group=0 malformed_deleted=0 duplicate_deleted=0
+OBSERVED forced HTTP wait graph {"case": "test_concurrent_http_platform_decision_replay_204_single_effect", "edges": [{"blockers": [18], "pid": 149, "query_kind": "domain SELECT FOR UPDATE", "role": "leader"}, {"blockers": [149], "pid": 151, "query_kind": "claim INSERT ON CONFLICT", "role": "contender"}]}
+.2026-11-15 04:35:27,301 WARNING django.request Unauthorized: /api/v1/auth/session
+2026-11-15 04:35:27,746 WARNING django.request Unauthorized: /api/v1/auth/session
+2026-11-15 04:35:27,973 ERROR django.request Internal Server Error: /api/v1/platform/payment-submissions/3b97a246-4ea8-4af8-ad55-60329c213ec3/approve
+Traceback (most recent call last):
+  File "/workspace/scratch/2fa1f5475b19/review-venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/workspace/scratch/2fa1f5475b19/review-venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/workspace/scratch/2fa1f5475b19/review-venv/lib/python3.13/site-packages/django/views/decorators/csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "/workspace/scratch/2fa1f5475b19/review-venv/lib/python3.13/site-packages/django/views/generic/base.py", line 105, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/2fa1f5475b19/review-venv/lib/python3.13/site-packages/rest_framework/views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+  File "/workspace/scratch/2fa1f5475b19/review-venv/lib/python3.13/site-packages/rest_framework/views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/workspace/scratch/2fa1f5475b19/review-venv/lib/python3.13/site-packages/rest_framework/views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "/workspace/scratch/2fa1f5475b19/review-venv/lib/python3.13/site-packages/rest_framework/views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "/workspace/scratch/2fa1f5475b19/MicroTix_Project/backend/domains/common/idempotency.py", line 323, in wrapper
+    response = func(self, request, *args, **kwargs)
+  File "/workspace/scratch/2fa1f5475b19/MicroTix_Project/backend/domains/subscriptions/views.py", line 231, in post
+    services.decide_platform_submission(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        submission_id,
+        ^^^^^^^^^^^^^^
+    ...<2 lines>...
+        request_id=getattr(request, "mt_request_id", "") or "",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/lib/python3.13/unittest/mock.py", line 1169, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/unittest/mock.py", line 1173, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/unittest/mock.py", line 1234, in _execute_mock_call
+    result = effect(*args, **kwargs)
+  File "/workspace/scratch/2fa1f5475b19/MicroTix_Project/backend/tests/integration/test_idempotency_pa006.py", line 920, in flaky_decide
+    raise RuntimeError(
+    ...<2 lines>...
+    )
+RuntimeError: injected: kegagalan setelah domain/audit/outbox writes, sebelum respons idempotency dipersist
+2026-11-15 04:35:28,023 WARNING django.request Unauthorized: /api/v1/auth/session
+OBSERVED forced HTTP wait graph {"case": "test_http_leader_rollback_after_writes_contender_takes_over", "edges": [{"blockers": [152], "pid": 283, "query_kind": "domain SELECT FOR UPDATE", "role": "leader"}, {"blockers": [283], "pid": 285, "query_kind": "claim INSERT ON CONFLICT", "role": "contender"}]}
+.
+2 passed, 3 deselected in 6.70s

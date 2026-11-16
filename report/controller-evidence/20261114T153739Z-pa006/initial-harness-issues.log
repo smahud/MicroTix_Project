@@ -1,0 +1,35 @@
+Initial probes had independent assertion failures plus teardown failures due to the harness omitting available_apps; corrected to the candidate test module available_apps marker. Final probes.log is authoritative.
+jobs.0004 idempotency identity backfill: kept=0 no_response_deleted=0 malformed_deleted=0 duplicate_canonical_deleted=0
+OBSERVED per-session decisions after 204/204: [2, 0]
+OBSERVED cached resolution with invalid parent: not-a-uuid 204
+OBSERVED cached resolution with invalid parent: 17842bf7-db82-4d36-890f-c0a9ae827a4f 204
+OBSERVED equivalent package UUID body alias: 200 409 b'{"code":"idempotency_conflict","message":"Idempotency-Key sama dipakai untuk isi permintaan berbeda","request_id":"8d1eef994c8f4c6e","locale":"id"}'
+OBSERVED legacy proof 201 {'submission_id': '416f9235-0523-4a2c-9f43-311d9892f934', 'state': 'submitted'} original {'submission_id': '730473c5-6a6f-4f54-99e7-37af8f4b9e13', 'state': PaymentSubmission.State.SUBMITTED} submission_count 2 legacy_preserved True
+jobs.0004 idempotency identity backfill: kept=0 no_response_deleted=1 malformed_deleted=0 duplicate_canonical_deleted=0
+OBSERVED ambiguous migration guard_count 0 retry_status 201 invoice_count 2 original_invoice 6eee6ae1-ad78-4510-8b75-c68d0d791515
+E           psycopg.errors.FeatureNotSupported: cannot truncate a table referenced in a foreign key constraint
+E           DETAIL:  Table "nas" references "tenancy_tenant".
+E           DETAIL:  Table "nas" references "tenancy_tenant".
+E           psycopg.errors.FeatureNotSupported: cannot truncate a table referenced in a foreign key constraint
+E           DETAIL:  Table "nas" references "tenancy_tenant".
+E           DETAIL:  Table "nas" references "tenancy_tenant".
+E           psycopg.errors.FeatureNotSupported: cannot truncate a table referenced in a foreign key constraint
+E           DETAIL:  Table "nas" references "tenancy_tenant".
+E           DETAIL:  Table "nas" references "tenancy_tenant".
+E           psycopg.errors.FeatureNotSupported: cannot truncate a table referenced in a foreign key constraint
+E           DETAIL:  Table "nas" references "tenancy_tenant".
+E           DETAIL:  Table "nas" references "tenancy_tenant".
+E           psycopg.errors.FeatureNotSupported: cannot truncate a table referenced in a foreign key constraint
+E           DETAIL:  Table "nas" references "tenancy_tenant".
+E           DETAIL:  Table "nas" references "tenancy_tenant".
+E           psycopg.errors.FeatureNotSupported: cannot truncate a table referenced in a foreign key constraint
+E           DETAIL:  Table "nas" references "tenancy_tenant".
+E           DETAIL:  Table "nas" references "tenancy_tenant".
+            print("OBSERVED per-session decisions after 204/204:", counts)
+        print("OBSERVED cached resolution with invalid parent:", bad_parent, invalid.status_code)
+        print("OBSERVED cached resolution with invalid parent:", bad_parent, invalid.status_code)
+        print("OBSERVED equivalent package UUID body alias:", first.status_code, alias.status_code, alias.content)
+        print("OBSERVED legacy proof", response.status_code, response.json(),
+        print("OBSERVED ambiguous migration", "guard_count", guard_count,
+6 failed, 6 errors in 3.57s
+Initial full suite:400 passed,1 failed because MT_FREERADIUS_ROOT was not set; full-initial.log preserves the failure. Corrected environment only; no app/assertion edits.

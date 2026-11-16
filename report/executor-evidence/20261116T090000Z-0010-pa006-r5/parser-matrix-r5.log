@@ -1,0 +1,30 @@
+canonical    tenant   OK   -> ('payment_submission', 'abcdef12-2345-6789-abcd-ef1234567890', '')
+canonical    resource OK   -> ('router_backup', 'fedcba98-7654-3210-abcd-ef1234567890', 'abcdef12-2345-6789-abcd-ef1234567890')
+upper        tenant   OK   -> ('payment_submission', 'ABCDEF12-2345-6789-ABCD-EF1234567890', '')
+upper        resource OK   -> ('router_backup', 'fedcba98-7654-3210-abcd-ef1234567890', 'ABCDEF12-2345-6789-ABCD-EF1234567890')
+compact      tenant   OK   -> ('payment_submission', 'abcdef1223456789abcdef1234567890', '')
+compact      resource OK   -> ('router_backup', 'fedcba98-7654-3210-abcd-ef1234567890', 'abcdef1223456789abcdef1234567890')
+braced       tenant   OK   -> ('payment_submission', '{abcdef12-2345-6789-abcd-ef1234567890}', '')
+braced       resource OK   -> ('router_backup', 'fedcba98-7654-3210-abcd-ef1234567890', '{abcdef12-2345-6789-abcd-ef1234567890}')
+urn          tenant   OK   -> ('payment_submission', 'urn:uuid:abcdef12-2345-6789-abcd-ef1234567890', '')
+urn          resource OK   -> ('router_backup', 'fedcba98-7654-3210-abcd-ef1234567890', 'urn:uuid:abcdef12-2345-6789-abcd-ef1234567890')
+braced_urn   tenant   OK   -> ('payment_submission', '{urn:uuid:abcdef12-2345-6789-abcd-ef1234567890}', '')
+braced_urn   resource OK   -> ('router_backup', 'fedcba98-7654-3210-abcd-ef1234567890', '{urn:uuid:abcdef12-2345-6789-abcd-ef1234567890}')
+uuid_only    tenant   OK   -> ('payment_submission', 'uuid:abcdef12-2345-6789-abcd-ef1234567890', '')
+uuid_only    resource OK   -> ('router_backup', 'fedcba98-7654-3210-abcd-ef1234567890', 'uuid:abcdef12-2345-6789-abcd-ef1234567890')
+urn_only     tenant   OK   -> ('payment_submission', 'urn:abcdef12-2345-6789-abcd-ef1234567890', '')
+urn_only     resource OK   -> ('router_backup', 'fedcba98-7654-3210-abcd-ef1234567890', 'urn:abcdef12-2345-6789-abcd-ef1234567890')
+repeat_uuid  tenant   OK   -> ('payment_submission', 'urn:uuid:uuid:abcdef12-2345-6789-abcd-ef1234567890', '')
+repeat_uuid  resource OK   -> ('router_backup', 'fedcba98-7654-3210-abcd-ef1234567890', 'urn:uuid:uuid:abcdef12-2345-6789-abcd-ef1234567890')
+repeat_urn   tenant   OK   -> ('payment_submission', 'urn:urn:uuid:abcdef12-2345-6789-abcd-ef1234567890', '')
+repeat_urn   resource OK   -> ('router_backup', 'fedcba98-7654-3210-abcd-ef1234567890', 'urn:urn:uuid:abcdef12-2345-6789-abcd-ef1234567890')
+mixed        tenant   OK   -> ('payment_submission', 'uuid:urn:uuid:abcdef12-2345-6789-abcd-ef1234567890', '')
+mixed        resource OK   -> ('router_backup', 'fedcba98-7654-3210-abcd-ef1234567890', 'uuid:urn:uuid:abcdef12-2345-6789-abcd-ef1234567890')
+uuid_repeat  tenant   OK   -> ('payment_submission', 'uuid:uuid:abcdef12-2345-6789-abcd-ef1234567890', '')
+uuid_repeat  resource OK   -> ('router_backup', 'fedcba98-7654-3210-abcd-ef1234567890', 'uuid:uuid:abcdef12-2345-6789-abcd-ef1234567890')
+opaque uuid tenant   -> ('identity_conflict_resolve', 'uuid:abcdef12-2345-6789-abcd-ef1234567890', '0f1e2d3c4b5a6978')
+garbage              -> None
+no colon             -> None
+upper URN (rejected) -> None
+ambiguity injection  -> raised OK
+FAILS: 0

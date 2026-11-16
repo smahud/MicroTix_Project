@@ -1,0 +1,5 @@
+Operations to perform:
+  Apply all migrations: admin, audit, auth, backups, billing, contenttypes, customers, documents, identity, jobs, network, radius, sessions, subscriptions, tenancy
+Running migrations:
+  Applying jobs.0004_idempotency_identity...jobs.0004 idempotency identity backfill: kept_with_response=0 kept_no_response=0 platform_remapped=0 legacy_opaque_group=0 malformed_deleted=1 duplicate_deleted=0
+ OK

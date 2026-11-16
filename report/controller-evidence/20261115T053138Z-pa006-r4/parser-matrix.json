@@ -1,0 +1,201 @@
+{
+  "candidate": "634da4224f15dd6a5a4e9010fe1811dec8c7954d",
+  "rows": [
+    {
+      "spelling": "canonical",
+      "position": "tenant",
+      "baseline_uuid_accepts": true,
+      "parsed": [
+        "payment_submission",
+        "abcdef12-2345-6789-abcd-ef1234567890",
+        ""
+      ],
+      "canonical_identity_matches": true
+    },
+    {
+      "spelling": "canonical",
+      "position": "resource",
+      "baseline_uuid_accepts": true,
+      "parsed": [
+        "router_backup",
+        "fedcba98-7654-3210-abcd-ef1234567890",
+        "abcdef12-2345-6789-abcd-ef1234567890"
+      ],
+      "canonical_identity_matches": true
+    },
+    {
+      "spelling": "upper",
+      "position": "tenant",
+      "baseline_uuid_accepts": true,
+      "parsed": [
+        "payment_submission",
+        "ABCDEF12-2345-6789-ABCD-EF1234567890",
+        ""
+      ],
+      "canonical_identity_matches": true
+    },
+    {
+      "spelling": "upper",
+      "position": "resource",
+      "baseline_uuid_accepts": true,
+      "parsed": [
+        "router_backup",
+        "fedcba98-7654-3210-abcd-ef1234567890",
+        "ABCDEF12-2345-6789-ABCD-EF1234567890"
+      ],
+      "canonical_identity_matches": true
+    },
+    {
+      "spelling": "compact",
+      "position": "tenant",
+      "baseline_uuid_accepts": true,
+      "parsed": [
+        "payment_submission",
+        "abcdef1223456789abcdef1234567890",
+        ""
+      ],
+      "canonical_identity_matches": true
+    },
+    {
+      "spelling": "compact",
+      "position": "resource",
+      "baseline_uuid_accepts": true,
+      "parsed": [
+        "router_backup",
+        "fedcba98-7654-3210-abcd-ef1234567890",
+        "abcdef1223456789abcdef1234567890"
+      ],
+      "canonical_identity_matches": true
+    },
+    {
+      "spelling": "braced",
+      "position": "tenant",
+      "baseline_uuid_accepts": true,
+      "parsed": [
+        "payment_submission",
+        "{abcdef12-2345-6789-abcd-ef1234567890}",
+        ""
+      ],
+      "canonical_identity_matches": true
+    },
+    {
+      "spelling": "braced",
+      "position": "resource",
+      "baseline_uuid_accepts": true,
+      "parsed": [
+        "router_backup",
+        "fedcba98-7654-3210-abcd-ef1234567890",
+        "{abcdef12-2345-6789-abcd-ef1234567890}"
+      ],
+      "canonical_identity_matches": true
+    },
+    {
+      "spelling": "urn",
+      "position": "tenant",
+      "baseline_uuid_accepts": true,
+      "parsed": [
+        "payment_submission",
+        "urn:uuid:abcdef12-2345-6789-abcd-ef1234567890",
+        ""
+      ],
+      "canonical_identity_matches": true
+    },
+    {
+      "spelling": "urn",
+      "position": "resource",
+      "baseline_uuid_accepts": true,
+      "parsed": [
+        "router_backup",
+        "fedcba98-7654-3210-abcd-ef1234567890",
+        "urn:uuid:abcdef12-2345-6789-abcd-ef1234567890"
+      ],
+      "canonical_identity_matches": true
+    },
+    {
+      "spelling": "braced_urn",
+      "position": "tenant",
+      "baseline_uuid_accepts": true,
+      "parsed": [
+        "payment_submission",
+        "{urn:uuid:abcdef12-2345-6789-abcd-ef1234567890}",
+        ""
+      ],
+      "canonical_identity_matches": true
+    },
+    {
+      "spelling": "braced_urn",
+      "position": "resource",
+      "baseline_uuid_accepts": true,
+      "parsed": [
+        "router_backup",
+        "fedcba98-7654-3210-abcd-ef1234567890",
+        "{urn:uuid:abcdef12-2345-6789-abcd-ef1234567890}"
+      ],
+      "canonical_identity_matches": true
+    },
+    {
+      "spelling": "uuid_only",
+      "position": "tenant",
+      "baseline_uuid_accepts": true,
+      "parsed": null,
+      "canonical_identity_matches": false
+    },
+    {
+      "spelling": "uuid_only",
+      "position": "resource",
+      "baseline_uuid_accepts": true,
+      "parsed": null,
+      "canonical_identity_matches": false
+    },
+    {
+      "spelling": "urn_only",
+      "position": "tenant",
+      "baseline_uuid_accepts": true,
+      "parsed": null,
+      "canonical_identity_matches": false
+    },
+    {
+      "spelling": "urn_only",
+      "position": "resource",
+      "baseline_uuid_accepts": true,
+      "parsed": null,
+      "canonical_identity_matches": false
+    },
+    {
+      "spelling": "repeat_uuid",
+      "position": "tenant",
+      "baseline_uuid_accepts": true,
+      "parsed": [
+        "payment_submission",
+        "urn:uuid:uuid",
+        "abcdef12-2345-6789-abcd-ef1234567890:"
+      ],
+      "canonical_identity_matches": false
+    },
+    {
+      "spelling": "repeat_uuid",
+      "position": "resource",
+      "baseline_uuid_accepts": true,
+      "parsed": null,
+      "canonical_identity_matches": false
+    },
+    {
+      "spelling": "repeat_urn",
+      "position": "tenant",
+      "baseline_uuid_accepts": true,
+      "parsed": null,
+      "canonical_identity_matches": false
+    },
+    {
+      "spelling": "repeat_urn",
+      "position": "resource",
+      "baseline_uuid_accepts": true,
+      "parsed": [
+        "router_backup",
+        "fedcba98-7654-3210-abcd-ef1234567890:urn",
+        "urn:uuid:abcdef12-2345-6789-abcd-ef1234567890"
+      ],
+      "canonical_identity_matches": false
+    }
+  ]
+}

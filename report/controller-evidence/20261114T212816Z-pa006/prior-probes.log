@@ -1,0 +1,19 @@
+2026-11-15 04:33:17,429 WARNING django.request Unauthorized: /api/v1/auth/session
+jobs.0004 idempotency identity backfill: kept_with_response=0 kept_no_response=0 platform_remapped=0 legacy_opaque_group=0 malformed_deleted=0 duplicate_deleted=0
+OBSERVED per-session decisions after 204/204: [2, 2]
+.2026-11-15 04:33:17,847 WARNING django.request Unauthorized: /api/v1/auth/session
+2026-11-15 04:33:17,914 WARNING django.request Unprocessable Content: /api/v1/tenants/0fd82372-440f-4767-a46b-6cbadbd74d4c/migrations/not-a-uuid/identity-conflicts/9de2aa7c2cedae61
+OBSERVED cached resolution with invalid parent: not-a-uuid 422
+.2026-11-15 04:33:18,149 WARNING django.request Unauthorized: /api/v1/auth/session
+2026-11-15 04:33:18,194 WARNING django.request Not Found: /api/v1/tenants/cd6b7d67-8b66-46d5-be7a-bdee1b2672d1/migrations/0c0b43bb-217e-4bbb-b488-1fd809553d6e/identity-conflicts/9de2aa7c2cedae61
+OBSERVED cached resolution with invalid parent: 0c0b43bb-217e-4bbb-b488-1fd809553d6e 404
+.2026-11-15 04:33:18,426 WARNING django.request Unauthorized: /api/v1/auth/session
+OBSERVED equivalent package UUID body alias: 200 200 b'{"service_id":"8683de8e-be1a-420f-a0d2-a2e86fd095cc","billing_package_id":"2846ffbf-f2c7-4ad9-9f81-0ebb79fa24ed"}'
+.2026-11-15 04:33:18,769 WARNING django.request Unauthorized: /api/v1/auth/session
+OBSERVED legacy proof 201 {'state': 'submitted', 'submission_id': '0a0b23e2-52b8-4bfd-b0d6-4c3458adf7ec'} original {'submission_id': '0a0b23e2-52b8-4bfd-b0d6-4c3458adf7ec', 'state': PaymentSubmission.State.SUBMITTED} submission_count 1 legacy_preserved True
+.2026-11-15 04:33:19,207 WARNING django.request Unauthorized: /api/v1/auth/session
+2026-11-15 04:33:19,224 WARNING django.request Conflict: /api/v1/tenants/cad79c98-9724-481d-a980-fbdd194728f6/quotations
+jobs.0004 idempotency identity backfill: kept_with_response=0 kept_no_response=1 platform_remapped=0 legacy_opaque_group=0 malformed_deleted=0 duplicate_deleted=0
+OBSERVED ambiguous migration guard_count 1 retry_status 409 invoice_count 1 original_invoice 611d5260-bd6a-4470-9805-a6083a9ced58
+.
+6 passed in 6.15s

@@ -201,14 +201,25 @@ class OutboxEvent(models.Model):
 
 
 class IdempotencyKey(models.Model):
-    """Idempotency-Key — scope principal+tenant+operation+resource+key (§5).
+    """Idempotency-Key — scope principal+tenant/platform+operation+resource+key (§5).
 
-    Retensi 7 hari; body dibandingkan HMAC; respons disimpan untuk replay.
+    Retensi 7 hari; body dibandingkan HMAC (v2: field UUID dideklarasikan
+    dinormalkan; kompatibel hash v1 raw); respons disimpan untuk replay.
+    Kolom identitas menyimpan bentuk canonical (UUID lowercase / 'platform');
+    ejaan alias URL/body tidak pernah membuat scope baru.
+
+    Protokol claim/replay baru (PA-006) menyimpan respons dalam transaksi yang
+    sama dengan efek → record terkomit SELALU punya respons. Record TANPA
+    respons hanyalah sisa protokol lama pra-migrasi 0004 (efek tak terbukti):
+    dipertahankan sebagai penjaga dan ditolak aman (409) saat retry sampai
+    ops merekonsiliasi respons sesuai outcome.
     """
 
     id = models.BigAutoField(primary_key=True)
     principal = models.CharField(max_length=64)  # user id / 'anonymous'
-    scope = models.CharField(max_length=256)
+    tenant_scope = models.CharField(max_length=64)  # UUID tenant canonical / 'platform'
+    operation = models.CharField(max_length=64)
+    resource = models.CharField(max_length=64)  # UUID canonical / '' (operasi penciptaan)
     idem_key = models.CharField(max_length=128)
     body_hash = models.CharField(max_length=64)
     response_status = models.IntegerField(null=True, blank=True)
@@ -218,6 +229,9 @@ class IdempotencyKey(models.Model):
     class Meta:
         db_table = "jobs_idempotency_key"
         constraints = [
-            models.UniqueConstraint(fields=["scope", "idem_key"], name="uq_idem_scope_key"),
+            models.UniqueConstraint(
+                fields=["principal", "tenant_scope", "operation", "resource", "idem_key"],
+                name="uq_idem_identity",
+            ),
         ]
         indexes = [models.Index(fields=["created_at"], name="ix_idem_created")]

@@ -1,140 +1,194 @@
-# LATEST_HANDOFF — Kanonis (12 November 2026: default role prompts; PA-006 siap ditugaskan)
+# LATEST_HANDOFF — 16 November 2026: executor menyerahkan koreksi kelima ID0010 (REV-1311-01)
 
-Pintu masuk tetap: [task/0000-start-here.md](../task/0000-start-here.md), wajib menurut CONTRACT §6A. Handoff ini menyimpan status sesi aktual; docs/AGENT_HANDOFF.md hanya panduan navigasi/bootstrap.
+Pintu masuk tetap: [task/0000-start-here.md](../task/0000-start-here.md),
+CONTRACT §6A. Fetch remote refs/PR sebelum bertindak. Status ini berada pada
+branch kandidat sampai integrasi; filename unfinished pada main tidak
+membuktikan belum ada kandidat. Tanggal Asia/Jakarta; evidence filename UTC.
 
-## 0. Prompt default dan jalur komunikasi aktif — 12 November 2026
+## Latest state — 16 November 2026, ~17:10 WIB: penyerahan kelima PA-006
 
-PR10 workflow dan PR11 komunikasi sudah MERGED; main teramati `2278b7741bb5ec38757cc7d3659b9099c31341ea` saat mulai sesi ini. Entry/CONTRACT/task0010 tersedia, tetapi belum ditemukan hasil kode task0010 yang dipublikasikan pada refs/PR/report yang diperiksa. Jangan menyamakan file instruksi dengan hasil implementasi.
-
-Prompt permanen untuk setiap sesi: [executor](../docs/MASTER_PROMPT_EXECUTOR.md) dan [controller reviewer](../docs/MASTER_PROMPT_REVIEWER.md); [MASTER_PROMPT](../docs/MASTER_PROMPT.md) menjadi indeks kompatibel. Pilih peran, fetch GitHub, lalu temukan packet/candidate aktual. Prompt tidak mengunci sesi berikutnya pada ID/SHA di snapshot handoff ini. Scope produk berikutnya tetap task0010; penambahan prompt bukan implementasinya.
+Executor (Z.ai sandbox) menyerahkan koreksi REV-1311-01 — satu-satunya
+finding terbuka keputusan controller R4 (PR21 `634da42`, PR23) — pada ID
+yang sama. Branch kandidat `session/2026-11-16-pa006-rev1311-01-correction`
+dari head keputusan R4 `4bb7261` (kode PR21 + packet reopened dibawa
+bersama); **implementation `7338a720b5d64a4ccb47b9abe7d3dc6feca0a476`**
+(delivery docs report-only di atasnya). Perubahan source: satu file —
+parser migrasi `jobs/0004` ditulis ulang grammar-driven (semua posisi
+kolon; validitas menurut stdlib uuid.UUID yang sama dengan writer
+baseline; literal `platform` exact-case; interpretasi unik; ambiguity →
+fail-stop `AmbiguousLegacyScope` rollback atomik; 0 interpretasi → baris
+mati seperti kebijakan lama) + kebijakan affected-state eksplisit.
 
 | Field handoff | Status / pointer |
 |---|---|
-| Active task | ID0010 / PA-006; cari filename unfinished atau _done pada ref kandidat aktual |
-| Execution / review | ready / not_submitted; belum ada penyerahan implementasi |
-| Candidate branch / PR / tested-published SHA | Belum diserahkan untuk PA006; PR7/PR8 adalah pekerjaan berbeda |
-| Execution report / acceptance evidence | Belum diserahkan; executor wajib memetakan acceptance→actual result→evidence |
-| Controller review / reviewed SHA | Belum ada untuk implementasi0010; review dokumen workflow tidak menggantikannya |
+| Active task | ID0010 / PA-006 — **penyerahan kelima** |
+| Execution / review | `done` (scope executor + tes wajib) / `pending` — menunggu controller review exact SHA |
+| Candidate branch / tested SHA | **[PR24](https://github.com/smahud/MicroTix_Project/pull/24)** `session/2026-11-16-pa006-rev1311-01-correction`; implementation **`7338a72`**, published head **`a21624f`** (readback diverifikasi); CI [43846332048](https://github.com/smahud/MicroTix_Project/actions/runs/43846332048) exact-head **success 3/3** (backend/frontend/docs) — bukan acceptance |
+| Bukti kunci | **Live upgrade 7/7 PASS** (old main@9903d9b HTTP → migrasi 0004/0005 → retry kanonik; parser cacat direproduksi GAGAL dulu 3 varian); **62 tes r5** (failing-before 21 GAGAL pada parser PR21); **full suite 514 passed** (PG nyata, non-superuser, FreeRADIUS real-binary); family 139 passed; check/makemigrations/docs PASS |
+| Review internal | [Independent r5](reviewer/20261116T100420Z-0010-pa006-r5-independent.md) — **APPROVE_WITH_NOTES**; brute-force 33.674 pasangan ejaan valid writer 0 anomali, fuzz 400.000 string 0 fail-stop palsu, tidak ada counterexample; REV-R5-01/03 ditutup, REV-R5-02 (pre-existing P3) dicatat runbook ops |
+| Execution report | [Executor kelima](orchestrator/20261116T100420Z-0010-pa006-idempotency.md) — matriks acceptance R4 §4 + evidence; [executor-evidence](executor-evidence/20261116T090000Z-0010-pa006-r5/) |
+| Packet | [0010-pa006-idempotency_done.md](../task/0010-pa006-idempotency_done.md) — metadata penyerahan kelima + ringkasan hasil |
+| Next actor | **controller_reviewer** |
+| Exact next action | Review exact head PR24 `a21624f` (pohon source identik `7338a72`) atas matriks koreksi R4 laporan executor §4; changes-requested membuka kembali ID0010 yang sama |
+| Batas | NOT_RUN: install/upgrade/restore produksi, perangkat/lab, deployment, E2E browser, benchmark. Internal review ≠ acceptance. PA-002/003 belum eligible; Beta **NOT_READY**; tidak ada merge/deploy/tag |
+
+## Prior state verification — 16 November 2026, 13:50 WIB
+
+[Controller checkpoint](controller/20261116T065005Z-0010-pa006-state-review.md)
+memeriksa25 branch /13 open PR dan exact-head CI: main9903d9b,
+candidate PR21@634da42 serta starting decision PR23@82b2216 tidak berubah.
+**Belum ada kandidat koreksi baru**; delivery **not_submitted**, task0010
+**ready / changes_requested**, next **coding_agent** menutup REV-1311-01
+pada ID yang sama. Semua closure R4 dipertahankan; PA-002/003 belum eligible,
+Beta **NOT_READY**. Current source/config identik; hasil runtime R4 tidak
+diulang. Existing CI43679221142 dan43715610125 masing-masing success3/3;
+bukan acceptance atau CI publikasi baru. [Independent review](reviewer/20261116T065005Z-0010-pa006-state-review.md), record QA,
+commit/ref/file readback dan CI publikasi berada pada report/PR23.
+
+## Prior state verification — 15 November 2026, sesi19:39 WIB
+
+[Controller checkpoint](controller/20261115T123944Z-0010-pa006-state-review.md)
+dan [independent review](reviewer/20261115T123939Z-0010-pa006-state-review.md):
+25 branch /13 open PR, main9903d9b dan candidate PR21@634da42 tetap;
+starting decision PR23@80dfc89. **Belum ada kandidat koreksi baru**;
+delivery `not_submitted`, task0010 **ready / changes_requested**, next
+**coding_agent** memperbaiki REV-1311-01 saja pada ID sama. Seluruh closure
+R4 dipertahankan. Source/config delta kosong; docs PASS24files/106links;
+runtime acceptance tidak diulang. Existing candidate CI43679221142 dan
+starting-decision CI43703894306 masing-masing success backend/frontend/docs.
+Hasil80dfc89 ini menggantikan observasi lama17:23 WIB yang belum melihat
+run; bukan CI checkpoint baru atau acceptance. Publikasi tetap existing
+PR23, dengan remote readback dan final-head CI pada report/deskripsi PR.
+PA-002/003 belum eligible; Beta **NOT_READY**.
+
+## Prior state verification — 15 November 2026, 17:13 WIB
+
+[Controller checkpoint](controller/20261115T101333Z-0010-pa006-state-review.md)
+dan [independent review](reviewer/20261115T101317Z-0010-pa006-state-review.md):
+25 branch /13 open PR; main9903d9b, candidate PR21@634da42 dan starting
+decision PR23@1bc84a44 terkonfirmasi. **Belum ada kandidat koreksi baru.**
+Correction delivery `not_submitted`; task0010 tetap **ready /
+changes_requested**, next **coding_agent** menutup REV-1311-01 saja.
+Semua closure R4 dipertahankan. Source/config identik; docs validator
+PASS24files/106links. Tidak ada runtime acceptance ulang. Checkpoint pada
+existing PR23; PA-002/003 tetap ineligible, Beta **NOT_READY**.
+Publikasi/CI checkpoint ini mengikuti report dan deskripsi PR23; hasil CI
+head lama tidak dianggap sebagai hasil head baru.
+
+## Prior resume verification — 15 November 2026, mulai13:56 WIB
+
+[Controller resume](controller/20261115T065656Z-0010-pa006-resume-review.md)
+dan [independent state check](reviewer/20261115T065656Z-0010-reviewer-resume-state.md)
+memeriksa25 branch/13 PR terbuka: main9903d9b, candidate PR21@634da42 dan
+starting decision PR23@30ce815 tetap sama. **Belum ada kandidat koreksi baru**;
+correction delivery `not_submitted`, existing task tetap **ready /
+changes_requested**, next **coding_agent**. Keputusan R4 dan semua closure
+di bawah tetap berlaku. PR22 state check mendahului PR23, bukan instruksi
+untuk mengulang review634da42.
+
+Pure parser probe20 kasus kembali menunjukkan8 pemetaan legacy gagal;
+bukan tes HTTP/PG/file baru. Protected source/config identik dengan634da42;
+docs validator PASS24files/106links. Existing candidate dan starting-decision
+CI backend/frontend/docs success diverifikasi ulang dari GitHub; bukan CI
+untuk checkpoint baru. Publikasi checkpoint dilanjutkan pada **existing PR23**.
+Tidak ada task/PR baru atau dependency yang dibuka. Next action tetap
+koreksi REV-1311-01 pada0010, lalu serahkan SHA baru untuk review.
+
+Checkpoint publication verified: **d7be2ba8667149ed47ec4b11b5da10d5811e7a4a**,
+treeefed9596, existing PR23; ref/PR/all10file readback dan clean local
+fetch/checkout cocok. Metadata descendant hanya mencatat publikasi ini.
+CI checkpoint baru belum terbit saat pencatatan (0 check-runs, belum ada
+workflow untuk head baru); final observation ada pada deskripsi PR23.
+Keberhasilan CI634da42/30ce815 tetap terikat pada SHA historis masing-masing.
+
+## 0. Task aktif dan exact next action
+
+**Review penyerahan keempat PR21 selesai: changes_requested.**
+**Satu finding terbuka REV-1311-01 P1 (partial)**: migrasi belum menangani
+seluruh UUID prefix yang benar-benar diterima kode lama. Actual old HTTP
+`uuid:<UUID>` completed/ambiguous dan `urn:<UUID>` completed→0004/0005→
+canonical retry membuat submission **dan physical proof file1→2**.
+Retained `__unparsed__` row tidak ditemukan lookup runtime. Standard URN
+known/unknown sudah PASS. **03A/03B/05 CLOSED**;02/04 dan PA-001 tetap lulus.
+
+| Field | Status / pointer |
+|---|---|
+| Canonical main teramati | **9903d9b0cf09d737b553da3c21067b4810e956c0**; belum berubah/merged |
+| Active task | [0010 / PA-006](../task/0010-pa006-idempotency.md), ID sama dibuka kembali unfinished |
+| Execution / review | **ready / changes_requested** |
+| Candidate / exact reviewed SHA | [PR21](https://github.com/smahud/MicroTix_Project/pull/21), branch `session/2026-11-15-pa006-idempotency-correction` @ **634da4224f15dd6a5a4e9010fe1811dec8c7954d** |
+| Tested source ancestry | Executor implementation **b71574d8b6ba1dc30d132551684791f760e8abc6**; root tests on exact634da42. Later delivery commits metadata only; app/config diff empty |
+| Instruction ancestry | PR20 `e507175`→b71574d→delivery0372dc4→metadata7b574d0→634da42; preserve all prior valid work |
+| Execution/internal reports | [Executor R4](orchestrator/20261115T044621Z-0010-pa006-idempotency.md), [internal review](reviewer/20261115T044616Z-0010-pa006-r4-review.md); executor closure claims are history, not controller acceptance |
+| Latest controller decision | [Controller R4](controller/20261115T053138Z-0010-pa006-r4-review.md); [upgrade/security reviewer](reviewer/20261115T053213Z-0010-r4-upgrade-security.md), [HTTP identity reviewer](reviewer/20261115T053229Z-0010-r4-http-identity.md) |
+| Decision ref / publication | [PR23](https://github.com/smahud/MicroTix_Project/pull/23), `review/0010-pa006-controller-r4-20261115`, targeting PR21 branch. Initial published ancestor **5c31ed63b5e88e2e6c92565c47e60d947dd81666**, tree0031a9ed, remote ref/files/local clean fetch verified; metadata descendant preserves source, controller report §7 |
+| Candidate CI | [43679221142](https://github.com/smahud/MicroTix_Project/actions/runs/43679221142), exact634da42 backend/frontend/docs **success**; does not close failing upgrade acceptance |
 | Next actor | **coding_agent** |
-| Exact next action | Fetch refs/PR, baca task/0000-start-here.md lalu implementasikan/resume task0010/PA006 di sandbox; serahkan candidate+report dan alihkan ke controller_reviewer |
-| Instruction ref sesi ini | [PR12](https://github.com/smahud/MicroTix_Project/pull/12), branch `docs/default-agent-prompts-20261112`; publikasi awal terverifikasi `639dca9d7d9c1d8509cdc3dd0aa43597b37af9fc`. PR11 sudah merged; fetch final main/PR aktual. Record hasil/review dapat ada pada PR yang belum merged |
+| Exact next action | Fetch this controller decision ref, fix remaining **REV-1311-01** accepted legacy UUID grammar/reconciliation on task0010, preserve CLOSED03A/03B/05/02/04/PA001, prove old-source migration/retry effects1 and resubmit new exact SHA + report + CI |
+| Dependencies | PA-002/003 remain ineligible; no task0020, merge, deployment, activation or release tag |
 
-Protokol lengkap ada pada panduan tetap §6 dan CONTRACT §6A. Controller publishes instructions→executor publishes code/tests/report→controller publishes exact-SHA review→same-ID corrections atau accepted→prepare dependent task. Verdict/corrections dan next actor/action harus dipush/verified di GitHub sebelum berganti peran; tidak ditinggalkan hanya di chat. Internal executor review bukan controller acceptance.
+## 1. Verified scope and evidence limits
 
-Sesi ini hanya dokumentasi. Laporan: [default prompts](controller/20261112T065349Z-default-agent-prompts.md), dengan independent review pada path yang dirujuk; protokol sebelumnya pada [communication loop](controller/20261112T051809Z-task-communication-loop.md). Task0010 belum done; task0020 belum dibuka. Beta tetap NOT_READY; riwayat implementasi PR9 di bawah tetap berlaku.
+Root independent PostgreSQL17.11 runtime NOSUPERUSER/NOBYPASSRLS:
+**93 targeted +452 full +6 prior controller probes +2 conformance edges
++5 selected/wait-graph probes PASS**. All ten PA-001 cases pass. Django
+system/migration/docs checks PASS. Four actual wait graphs assert query and
+blocker, including after-write rollback/contender takeover. Secret presence
+fresh/stored/replayed false×3; real retained cache scrub/replay test PASS.
+Source-reviewed normalizer preserves opaque values/order and selected IDs
+reach preview/durable payload/domain effects consistently.
 
-## 1. Status kanonis SAAT INI
+Actual old-source upload+schema transition: canonical completed, URN
+completed and URN ambiguous **PASS**; uuid-only completed/ambiguous and
+urn-only completed **FAIL** with submission/file1→2. Unknown state explicitly
+injected by clearing response after completed upload, not claimed OS crash.
+Evidence [directory](controller-evidence/20261115T053138Z-pa006-r4/),
+[runner](controller-evidence/20261115T053138Z-pa006-r4/run_upgrade_aliases.sh)
+and controller report contain commands/exits/environment/assertions.
 
-| Item | Nilai |
-|---|---|
-| **Branch kanonis** | `main` @ **`2278b7741bb5ec38757cc7d3659b9099c31341ea`** (snapshot sebelum default prompts sesi ini; PR11 merged). Instruksi baru pada branch docs/default-agent-prompts-20261112 sampai integrasi; fetch HEAD aktual, bukan menganggap snapshot selalu terbaru |
-| **PR sesi sebelumnya** | **#9 MERGED** (`session/2026-11-11-pa001-payment-concurrency`; kandidat pertama `3b20b56` REQUEST CHANGES → kandidat kedua `482602e` diverifikasi independen 2× + CI hijau → merge commit `8ce94d4` atas wewenang pemilik repo; lihat `report/orchestrator/20261111T145417Z-pr9-merge-integration.md`) |
-| PR lain terbuka | **#7** SSTP Phase-2 (head `d7fa35e`; CI backend/frontend success, docs FAIL **manifest mismatch** — bukan bukti SSTP gagal runtime; disposition = packet terpisah) · **#8** docs planning-audit DRAFT (head `6bb57c9`; CI docs FAIL manifest mismatch = pekerjaan DEC-02, branch itu pemilik file manifest — jaga ownership disjoint) |
-| Rilis kandidat | `v0.1.0-beta.1` tetap **NOT_READY** — bloker = code blockers (§3) + environment blockers; klaim lama "penahan tunggal host / BUKAN pekerjaan kode" SUDAH DICABUT (REV-1111-10) |
-| CONTRACT.md | §6A task workflow/komunikasi tetap berlaku, ditambah kewajiban default prompts per peran dan context checkpoint atas permintaan pemilik 12 November 2026; lihat laporan keputusan sesi ini |
-| Prioritas aktif | Next actor **coding_agent**, task **0010 / PA-006**; hasil implementasi belum diserahkan. PA-001 merged; PA-002/PA-003 baru setelah dependency/review terpenuhi |
+NOT_RUN: production install/reinstall/upgrade/restore/DR, real service drain,
+GNS3/CHR/router actions, live deployment RADIUS auth/accounting, browser E2E,
+scale/soak/one-million-client benchmark. Local PG schema transition and
+FreeRADIUS binary test do not establish those gates. Full suite has three
+pre-existing adapter-thread warnings. External/file effects not claimed
+exactly-once; rollback-orphan FUP-002 remains separate.
 
-## 2. Riwayat implementasi terakhir — PR9 (bukti di laporan orchestrator)
+## 2. Beta blockers and subsequent priority
 
-Sesi 2026-11-11 terdiri dari tiga tahap (semua laporan persist di `report/`):
+**Production Beta NOT_READY.** Register:
+[11 November review](controller/20261111T074225Z-repo-handoff-review.md) §4.
 
-1. **PA-001 + PR #9 kandidat pertama** (`3b20b56`; laporan
-   `20261111T060010Z-pa001-payment-allocation-concurrency.md`): kunci baris invoice
-   FOR UPDATE urutan deterministik + 4 tes konkurensi PostgreSQL; 376 passed.
-2. **Koreksi REV-1111** (`47d1bf7`+`482602e`; laporan
-   `20261111T092854Z-pa001-canonical-identity-corrections.md`): identitas UUID kanonik
-   sebelum merge/urutan lock (REV-1111-01), hasil urutan permintaan semula — kwitansi
-   I18N-01 kompatibel (REV-1111-02), +6 tes termasuk rollback pasca-tulis dan kontensi
-   terkontrol pg_stat_activity+NOWAIT (REV-1111-03), handoff/progress dikoreksi + 3 laporan
-   review dipersist (REV-1111-10). Verifikasi ulang independen sandbox segar 13:29Z
-   (komentar PR #9): 10 passed file konkurensi; 5/6 tes baru gagal pada kode kandidat
-   pertama termasuk deadlock nyata PostgreSQL; 383 passed suite penuh.
-3. **Verifikasi independen + merge** (laporan
-   `20261111T145417Z-pr9-merge-integration.md`): sandbox dibangun ulang dari nol
-   (setup_env.sh PG 17.11 + FreeRADIUS 3.2.7 deb-extract); 10 passed stabil 3×;
-   sensitivitas dikonfirmasi (5/6 gagal pada `3b20b56`, deadlock nyata); suite penuh
-   **383 passed** (termasuk radius real-binary); `manage.py check` 0 issue; docs PASS;
-   CI `482602e` 3 job success; scan credential diff bersih; **merge PR #9** atas
-   wewenang eksplisit pemilik repo (PAT "commit, merge, atau push") — merge ≠ deploy.
+- Current **PA-006 / REV-1311-01** compatibility correction first; no repeat
+  implementation of the newly closed03A/03B/05 or prior02/04/PA001.
+- After accepted and required integration: PA-002 + authority PA-003 for
+  job lifecycle fencing/drain/current authority, including invoice-lock
+  duration and uncertain/cancel/stale-writer cases. Not yet an executable packet.
+- DEC-01 native-vs-Compose topology decision before S4 rehearsal; DEC-02
+  PR8 docs/manifest ownership; PR7 SSTP disposition remain separate.
+- Installer/upgrade/restore/scheduler code blockers REV-1111-04/05/06/07/08/09
+  remain; capacity evidence REV-1111-12 unverified.
+- Gate A/G Debian13 host+root/domain/DNS, G1 MikroTik CHR/physical and
+  licensed reproducible GNS3 lab remain environment prerequisites.
 
-## 3. Bloker beta — CODE blockers (jujur; BUKAN hanya host/environment)
+## 3. Open branches and preservation
 
-Register lengkap + baris bukti: `report/controller/20261111T074225Z-repo-handoff-review.md` §4.
+PR21 is reviewed fourth submission, not accepted/integrated. PR22 is executor
+report-only state check; it does not supersede this controller decision.
+PR15/16/17/18/19/20 and PR13 preserve task0010 history. PR7 SSTP, PR8 planning
+(draft), PR14 DANA planning (draft) and archived branches belong to other
+work; do not overwrite/force-push/close/merge them as part of this task.
 
-| Code blocker (defect source, terbuka) | Temuan | Packet |
-|---|---|---|
-| Installer gagal clean-install (argumen ter-join satu string; dependensi duplikat tanpa `xhtml2pdf`) | REV-1111-04 (P1; reviewer ops P0) | S4 / pekerjaan installer |
-| Upgrade/repair bisa exit sukses palsu; repair dapat menurunkan HTTPS ke :80; readiness hanya SELECT 1 | REV-1111-05 (P1) | S4 |
-| Worker tanpa drain/fencing; upgrade overwrite+migrate saat proses aktif | REV-1111-06 (P1) | PA-002/PA-003 (S2) |
-| Restore end-to-end + pemisahan secret migrator belum terbukti | REV-1111-07 (P1) | S4 |
-| Topology deployment belum konsisten dengan ARCHITECTURE (native vs Compose) — **DEC-01 belum resolved** | REV-1111-08 (P1) | keputusan pemilik |
-| Scheduler invoice BELUM diimplementasikan (command ada; timer/unit tidak ditemukan) | REV-1111-09 (P1) | S4 |
-| Security/idempotency/seleksi kontrak terbuka (permission operasi, principal-scoped idempotency, selected-set, scanner fail-closed) | REV-1111-11 (P1) | PA-006/S1, S2, S3 |
-| Kapasitas target 1.000×1.000 belum dibuktikan benchmark | REV-1111-12 (P2) | S6/G4-G5 |
+Current correction must fetch this decision branch; starting from stale
+main packet alone loses newer fixes. Original requirements remain intact.
+Affected deployments which already ran0004 need an explicit repair/fix-forward
+policy or honest sandbox-only assumption; editing applied0004 alone cannot
+be represented as a repair of their rows. Keep write-freeze/atomicity/RLS,
+principal/platform and business history. No credentials in repository/task.
 
-Environment blockers (prasyarat eksternal, TETAP ADA):
+## 4. Role handoff
 
-| Environment blocker | Butuh |
-|---|---|
-| **Gate A/G** | Host Debian 13 nyata + root + `MT_DOMAIN` + DNS → `sudo bash instalasi.sh install` → `INSTALL_SUCCESS` (SETELAH code blocker installer ditutup) |
-| **G1 lab MikroTik** (CHR/fisik) | Lab untuk T01/T16–T18/T20–T21 + bukti lab onboarding Phase-1; aktifkan `MT_ROUTEROS_ADAPTER=api_ssl`, cutover B3–B5 |
-| **Lab GNS3 API-driven** (CONTRACT §7) | Infrastruktur GNS3 + image CHR berlisensi; harness reproducible + profil topologi |
-
-## 4. Cabang kerja
-
-- `session/2026-11-11-pa001-payment-concurrency` — **MERGED ke main** (PR #9; branch
-  remote dibiarkan sebagai arsip riwayat).
-- Terbuka milik pihak lain (JANGAN ditimpa): `docs/planning-audit-20261110` (PR #8),
-  `session/2026-11-07-sstp-phase2` (PR #7).
-- Arsip riwayat (remote, tidak diubah): `parallel/beta-be2` (unmerged),
-  `integration/beta-0.1`, `session/2026-11-06/07-*`.
-
-## 5. Prioritas eksekusi berikutnya (urut)
-
-1. **PA-006 (P1)** — menuntaskan uang/idempotency: principal-scoped idempotency, HTTP
-   replay/race konkuren (rekomendasi review controller §8: "Packet selanjutnya sesudah
-   PR9 diterima: PA-006"). Rujukan: `common/idempotency.py` (scope tanpa principal),
-   jobs/models IdempotencyKey dan decorator scope pada views pemilik. Permission job lifecycle terpisah di PA-003, bukan perluasan PA-006.
-2. **PA-002 + authority PA-003 (P1)** — job lifecycle fencing/drain (termasuk risiko
-   tersisa PA-001: penahan kunci invoice selama render kwitansi PDF dalam transaksi;
-   runworker tanpa drain; write tanpa ownership check).
-3. **DEC-01** — keputusan topology (wajib sebelum menetapkan rehearsal S4; executor
-   menyiapkan proposal biaya/risiko/isolasi, BUKAN mengubah ARCHITECTURE/CONTRACT).
-4. **DEC-02** — PR #8 docs/manifest (branch itu pemilik file — jaga ownership disjoint).
-5. **PR #7 disposition** (SSTP Phase-2; docs CI fail = manifest mismatch, bukan bukti runtime).
-6. Installer/upgrade/restore/scheduler code blockers (REV-1111-04/05/07/09) — S4 setelah
-   DEC-01; ops host Gate A/G setelah code blocker ditutup.
-
-## 6. Contoh bootstrap sandbox — pilih scope dari task guide
-
-```bash
-git fetch origin --prune
-# Periksa status/worktree; gunakan branch task dari main aktual atau instruction ref yang sah.
-# Jangan switch/reset di atas perubahan pihak lain; baca task/0000-start-here.md.
-git log --oneline -5
-# Sandbox uji (PostgreSQL 17 user-space + Python 3.13; tanpa systemd di sandbox z.ai):
-MT_SANDBOX_BASE=/home/z/pgbase bash docs/tools/setup_env.sh   # PG 17.11 + FreeRADIUS 3.2.7 deb-extract
-cd backend && MT_PG_BIN=/home/z/pgbase/pgbin/pg17 bash scripts/dev_bootstrap.sh
-# (venv: uv venv .venv --python /usr/bin/python3.13 --seed bila python3.13-venv absen)
-MT_ENV=test .venv/bin/python -m pytest tests -q   # 382 tes + 1 skip radius (PostgreSQL nyata;
-#   tambah LD_LIBRARY_PATH/MT_FREERADIUS_BIN=…/frdeb/extracted/… untuk 383 penuh)
-env -u DATABASE_URL MT_ENV=test .venv/bin/python manage.py check   # 0 issue (hindari DATABASE_URL ambien sqlite)
-python3 docs/tools/check_docs.py
-```
-
-## 7. Risiko & keterbatasan yang diketahui
-
-- Penahan kunci baris invoice selama transaksi verifikasi (termasuk render PDF kwitansi)
-  — pemindahan I/O keluar transaksi = lingkup **PA-002**.
-- Tes konkurensi PA-001 di level service (bukan HTTP multi-request; DRF test client
-  tidak thread-safe); idempotency/principal scope HTTP = **PA-006**.
-- Mutasi router tetap jalur simulator (capability.source=simulator) — tidak ada klaim
-  perangkat nyata (G1). Gap G1 dan daftar lengkap risiko lama: handoff 2026-11-07 §7.
-- Kapasitas 1.000 tenant × 1.000 online tetap klaim desain, bukan benchmark.
-- xhtml2pdf 0.2.28 dipin — pantau advisori keamanan.
-- Verdict re-review controller pasca-merge belum diterbitkan — register REV-1111 tetap
-  rujukan temuan; temuan PA-001 spesifik ditutup via acceptance Lampiran A + bukti
-  (lihat `report/orchestrator/20261111T145417Z-pr9-merge-integration.md` §2–§3);
-  temuan REV-1111-04–09/11/12 TETAP TERBUKA.
-- **PAT GitHub hanya dipakai untuk fetch/push/merge dari sandbox (tidak pernah
-  di-commit; scan diff bersih). Rotasi PAT tetap disarankan** karena melewati kanal chat.
+Coding agent implements/tests/reports/publishes same-ID correction, then
+controller reviews the new exact SHA. Controller verdict and task evidence
+must be versioned/verified before dependent work. `_done` and green CI are
+not acceptance, integration, deployment or release authorization. Reports and
+packet files do not automatically start an external coding agent.

@@ -1,0 +1,50 @@
+2026-11-15 04:34:44,056 WARNING django.request Unauthorized: /api/v1/auth/session
+jobs.0004 idempotency identity backfill: kept_with_response=0 kept_no_response=0 platform_remapped=0 legacy_opaque_group=0 malformed_deleted=0 duplicate_deleted=0
+OBSERVED selected alias effect {"actual_alias_to_create": 0, "actual_alias_unchanged": 1, "canonical_expected_to_create": 1, "payload_selected_is_canonical": false, "same_job": true, "statuses": [202, 202]}
+F2026-11-15 04:34:44,481 WARNING django.request Unauthorized: /api/v1/auth/session
+2026-11-15 04:34:44,560 WARNING django.request Unauthorized: /api/v1/auth/session
+OBSERVED forced HTTP wait graph {"case": "test_concurrent_http_same_identity_waits_then_replays_single_effect", "edges": [{"blockers": [82], "pid": 149, "query_kind": "domain SELECT FOR UPDATE", "role": "leader"}, {"blockers": [149], "pid": 151, "query_kind": "claim INSERT ON CONFLICT", "role": "contender"}]}
+.2026-11-15 04:34:44,842 WARNING django.request Unauthorized: /api/v1/auth/session
+2026-11-15 04:34:44,867 WARNING django.request Unauthorized: /api/v1/auth/session
+2026-11-15 04:34:44,897 WARNING django.request Conflict: /api/v1/tenants/1aea2e55-350c-4741-bec2-8f619f22bea9/quotations
+OBSERVED forced HTTP wait graph {"case": "test_concurrent_http_same_key_different_body_conflict", "edges": [{"blockers": [152], "pid": 219, "query_kind": "domain SELECT FOR UPDATE", "role": "leader"}, {"blockers": [219], "pid": 221, "query_kind": "claim INSERT ON CONFLICT", "role": "contender"}]}
+.2026-11-15 04:34:45,228 WARNING django.request Unauthorized: /api/v1/auth/session
+F2026-11-15 04:34:45,725 WARNING django.request Unauthorized: /api/v1/auth/session
+F
+=================================== FAILURES ===================================
+________ test_selected_uuid_alias_must_select_same_target_before_replay ________
+../report/controller-evidence/20261114T212816Z-pa006/test_review_effects.py:49: in test_selected_uuid_alias_must_select_same_target_before_replay
+    assert session.counts["to_create"] == 1 and detail.payload["selected_account_ids"] == [str(obj.id)], "hash-equivalent UUID must select the same logical target in preview and job payload"
+E   AssertionError: hash-equivalent UUID must select the same logical target in preview and job payload
+E   assert (0 == 1)
+_ test_concurrency_evidence_asserts_query_and_actual_blocker[test_concurrent_http_platform_decision_replay_204_single_effect] _
+../report/controller-evidence/20261114T212816Z-pa006/test_review_effects.py:85: in test_concurrency_evidence_asserts_query_and_actual_blocker
+    getattr(candidate_tests.TestConcurrentHttpClaimReplay(), method_name)()
+tests/integration/test_idempotency_pa006.py:791: in test_concurrent_http_platform_decision_replay_204_single_effect
+    _assert_lock_wait(observer, _wait_pid(pids, "A"),
+../report/controller-evidence/20261114T212816Z-pa006/test_review_effects.py:76: in stronger_assert
+    assert "FOR UPDATE" in query.upper(), (context, "expected domain row lock")
+E   AssertionError: ('A (HTTP platform) menunggu kunci submission', 'expected domain row lock')
+E   assert 'FOR UPDATE' in 'SELECT "SUBS_PAYMENT_SUBMISSION"."ID", "SUBS_PAYMENT_SUBMISSION"."TENANT_ID", "SUBS_PAYMENT_SUBMISSION"."SAAS_INVOICE...INVOICE"."AMOUNT", "SUBS_SAAS_INVOICE"."CURRENCY", "SUBS_SAAS_INVOICE"."PERIOD_START", "SUBS_SAAS_INVOICE"."PERIOD_END'
+E    +  where 'SELECT "SUBS_PAYMENT_SUBMISSION"."ID", "SUBS_PAYMENT_SUBMISSION"."TENANT_ID", "SUBS_PAYMENT_SUBMISSION"."SAAS_INVOICE...INVOICE"."AMOUNT", "SUBS_SAAS_INVOICE"."CURRENCY", "SUBS_SAAS_INVOICE"."PERIOD_START", "SUBS_SAAS_INVOICE"."PERIOD_END' = <built-in method upper of str object at 0x4021300>()
+E    +    where <built-in method upper of str object at 0x4021300> = 'SELECT "subs_payment_submission"."id", "subs_payment_submission"."tenant_id", "subs_payment_submission"."saas_invoice...invoice"."amount", "subs_saas_invoice"."currency", "subs_saas_invoice"."period_start", "subs_saas_invoice"."period_end'.upper
+------------------------------ Captured log call -------------------------------
+WARNING  django.request:log.py:293 Unauthorized: /api/v1/auth/session
+_ test_concurrency_evidence_asserts_query_and_actual_blocker[test_http_leader_rollback_after_writes_contender_takes_over] _
+../report/controller-evidence/20261114T212816Z-pa006/test_review_effects.py:85: in test_concurrency_evidence_asserts_query_and_actual_blocker
+    getattr(candidate_tests.TestConcurrentHttpClaimReplay(), method_name)()
+tests/integration/test_idempotency_pa006.py:943: in test_http_leader_rollback_after_writes_contender_takes_over
+    _assert_lock_wait(observer, _wait_pid(pids, "A"),
+../report/controller-evidence/20261114T212816Z-pa006/test_review_effects.py:76: in stronger_assert
+    assert "FOR UPDATE" in query.upper(), (context, "expected domain row lock")
+E   AssertionError: ('A terblokir di dalam handler (dispatch HTTP)', 'expected domain row lock')
+E   assert 'FOR UPDATE' in 'SELECT "SUBS_PAYMENT_SUBMISSION"."ID", "SUBS_PAYMENT_SUBMISSION"."TENANT_ID", "SUBS_PAYMENT_SUBMISSION"."SAAS_INVOICE...INVOICE"."AMOUNT", "SUBS_SAAS_INVOICE"."CURRENCY", "SUBS_SAAS_INVOICE"."PERIOD_START", "SUBS_SAAS_INVOICE"."PERIOD_END'
+E    +  where 'SELECT "SUBS_PAYMENT_SUBMISSION"."ID", "SUBS_PAYMENT_SUBMISSION"."TENANT_ID", "SUBS_PAYMENT_SUBMISSION"."SAAS_INVOICE...INVOICE"."AMOUNT", "SUBS_SAAS_INVOICE"."CURRENCY", "SUBS_SAAS_INVOICE"."PERIOD_START", "SUBS_SAAS_INVOICE"."PERIOD_END' = <built-in method upper of str object at 0x46277a0>()
+E    +    where <built-in method upper of str object at 0x46277a0> = 'SELECT "subs_payment_submission"."id", "subs_payment_submission"."tenant_id", "subs_payment_submission"."saas_invoice...invoice"."amount", "subs_saas_invoice"."currency", "subs_saas_invoice"."period_start", "subs_saas_invoice"."period_end'.upper
+------------------------------ Captured log call -------------------------------
+WARNING  django.request:log.py:293 Unauthorized: /api/v1/auth/session
+=========================== short test summary info ============================
+FAILED ::test_selected_uuid_alias_must_select_same_target_before_replay - Ass...
+FAILED ::test_concurrency_evidence_asserts_query_and_actual_blocker[test_concurrent_http_platform_decision_replay_204_single_effect]
+FAILED ::test_concurrency_evidence_asserts_query_and_actual_blocker[test_http_leader_rollback_after_writes_contender_takes_over]
+3 failed, 2 passed in 6.27s

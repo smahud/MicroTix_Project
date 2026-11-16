@@ -1,0 +1,83 @@
+{
+  "checked_at_utc": "2026-11-15T07:01:30.601243+00:00",
+  "python": "3.12.14",
+  "git": "git version 2.52.0",
+  "starting_decision": "30ce815a2d7e2f634be10678b153d007c9569576",
+  "reviewed_candidate": "634da4224f15dd6a5a4e9010fe1811dec8c7954d",
+  "commands": [
+    {
+      "command": [
+        "git",
+        "diff",
+        "--exit-code",
+        "634da4224f15dd6a5a4e9010fe1811dec8c7954d",
+        "HEAD",
+        "--",
+        "backend",
+        "apps",
+        "locales",
+        "scripts",
+        ".github",
+        "instalasi.sh",
+        "Makefile",
+        "CONTRACT.md",
+        "AGENTS.md",
+        "docs/repository-manifest.json"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "merge-base",
+        "--is-ancestor",
+        "634da4224f15dd6a5a4e9010fe1811dec8c7954d",
+        "HEAD"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "docs/tools/check_docs.py"
+      ],
+      "exit": 0,
+      "stdout": "{\n  \"result\": \"PASS\",\n  \"scope\": \"documentation_static_only\",\n  \"files\": 24,\n  \"internal_links\": 106,\n  \"tasks\": 85,\n  \"dependency_edges\": 240,\n  \"designed_cases\": 256,\n  \"designed_assertions\": 662,\n  \"referenced_requirement_ids\": 172,\n  \"technical_defaults\": 115,\n  \"application_runtime_tests_executed\": 0,\n  \"production_readiness\": \"NOT_EVALUATED\"\n}\n",
+      "stderr": ""
+    }
+  ],
+  "original_packet_blocks_byte_identical": {
+    "Tujuan dan bukti masalah": true,
+    "Scope dan ownership": true,
+    "Pekerjaan wajib": true,
+    "Acceptance yang wajib dibuktikan": true,
+    "Verifikasi dan review": true
+  },
+  "runtime_tests_executed": 0,
+  "pure_parser_probe": {
+    "command": "python3 report/controller-evidence/20261115T053138Z-pa006-r4/parser_matrix.py",
+    "exit": 0,
+    "cases": 20,
+    "known_discrepancies": 8,
+    "interpretation": "expected discrepancy asserted; not application acceptance"
+  },
+  "local_links": {
+    "checked": 61,
+    "missing": []
+  },
+  "scope": "record-only; original mandatory acceptance preserved"
+}

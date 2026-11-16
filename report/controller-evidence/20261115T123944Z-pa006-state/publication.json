@@ -1,0 +1,63 @@
+{
+  "observed_at_utc": "2026-11-15T12:46:11Z",
+  "branch": "review/0010-pa006-controller-r4-20261115",
+  "pr": 23,
+  "published_checkpoint_commit": "13ae219e9fa6af7ea4f754c3a9d25b988bb5de3d",
+  "published_tree": "51088983df944eb72c2bd59d47d80ed13553a3fb",
+  "expected_previous_head": "80dfc892dba16703b1c0e5a2f59ab713fe1cc6bf",
+  "fast_forward_without_force": true,
+  "remote_branch_head_matches": true,
+  "pr_head_matches": true,
+  "pr_base": "634da4224f15dd6a5a4e9010fe1811dec8c7954d",
+  "remote_file_readback": [
+    {
+      "path": "docs/progress.md",
+      "blob_sha": "f59cc2e24f719abfe264bcdcbd6acd752f56ac20",
+      "bytes_match": true
+    },
+    {
+      "path": "report/LATEST_HANDOFF.md",
+      "blob_sha": "658fe80827c5895bebf1cae36badf3feceaaf6d9",
+      "bytes_match": true
+    },
+    {
+      "path": "report/controller-evidence/20261115T123944Z-pa006-state/checks.json",
+      "blob_sha": "1deee9fc2fbb2626ccd5542bc5c3e82bc769bb0c",
+      "bytes_match": true
+    },
+    {
+      "path": "report/controller-evidence/20261115T123944Z-pa006-state/docs.log",
+      "blob_sha": "5985c0db028c2e859fe1d8764b47fb4955f3a66c",
+      "bytes_match": true
+    },
+    {
+      "path": "report/controller-evidence/20261115T123944Z-pa006-state/remote-state.json",
+      "blob_sha": "77467a9c5615efecde0219a8660258b0e7f99758",
+      "bytes_match": true
+    },
+    {
+      "path": "report/controller/20261115T123944Z-0010-pa006-state-review.md",
+      "blob_sha": "f4b77f6da27998ebbfd7989c5a1f2dc5bf032bfe",
+      "bytes_match": true
+    },
+    {
+      "path": "report/reviewer/20261115T123939Z-0010-pa006-state-review.md",
+      "blob_sha": "ce37bf404f0e1aaefffce5eb550686cfe58ab7e1",
+      "bytes_match": true
+    },
+    {
+      "path": "task/0010-pa006-idempotency.md",
+      "blob_sha": "9b4a1ecb5d3d5640c4b3162a2c49b3a062830f1d",
+      "bytes_match": true
+    }
+  ],
+  "local_fetch_checkout": {
+    "head": "13ae219e9fa6af7ea4f754c3a9d25b988bb5de3d",
+    "tree": "51088983df944eb72c2bd59d47d80ed13553a3fb",
+    "status": "clean",
+    "protected_delta_from_reviewed_candidate": []
+  },
+  "application_acceptance_tests_run_locally": 0,
+  "packaging_note": "Two initial local packaging attempts stopped before remote mutation: a case-sensitive report-heading assertion and an oversized whole-payload JSON output. Corrected with the actual QA heading and bounded file reads; resulting remote tree equals the staged local tree.",
+  "final_head_rule": "This receipt is recorded by a metadata descendant. Root verifies its exact final branch/PR/files/tree and records final-head CI in PR23, without guessing a file's own commit SHA."
+}

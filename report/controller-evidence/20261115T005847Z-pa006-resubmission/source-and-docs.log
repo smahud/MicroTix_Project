@@ -1,0 +1,210 @@
+Actual command: rg/nl source excerpts; git diff --exit-code tested ancestor -> PR19 and PR19 -> PR20 on backend/apps/.github/installer/CONTRACT/manifest; python3 docs/tools/check_docs.py
+Exit code: 0
+backend/domains/jobs/migrations/0002_rls_composite.py
+backend/domains/jobs/migrations/__init__.py
+backend/domains/jobs/migrations/0004_idempotency_identity.py
+backend/domains/jobs/migrations/0001_initial.py
+backend/domains/jobs/migrations/0003_alter_job_kind.py
+    87	        "legacy_opaque": 0,
+    88	        "malformed_deleted": 0,
+    89	        "duplicate_deleted": 0,
+    90	    }
+    91	    # Tahap 1: materialisasi seluruh baris (tanpa mutasi sambil iterasi).
+    92	    rows = list(
+    93	        IdempotencyKey.objects.all()
+    94	        .order_by("-created_at", "-id")
+    95	        .values_list("id", "principal", "scope", "idem_key", "response_status", "created_at")
+    96	    )
+    97	    # best[identity] = dict kandidat yang dipertahankan. Kandidat dipilih
+    98	    # berdasarkan rank = (punya_respons, created_at, id): utamakan bukti aksi
+    99	    # selesai, lalu yang terbaru. Baris lain dengan identitas canonical sama
+   100	    # adalah duplikat alias → dihapus.
+   101	    best: dict[tuple, dict] = {}
+   102	    delete_ids: list[int] = []
+   103	    for pk, principal, scope, idem_key, response_status, created_at in rows:
+   104	        parts = str(scope or "").split(":")
+   105	        if len(parts) != 3 or not parts[0]:
+   106	            delete_ids.append(pk)
+   107	            stats["malformed_deleted"] += 1
+   108	            continue
+   109	        operation, tenant_raw, resource_raw = parts
+   110	        if operation in _PLATFORM_OPERATIONS:
+   111	            tenant_c = "platform"
+   112	            if tenant_raw and tenant_raw.lower() != "platform":
+   113	                stats["platform_remapped"] += 1
+   114	        elif str(tenant_raw).lower() == "platform":
+   115	            tenant_c = "platform"
+   116	        else:
+   117	            # UUID canonical; nilai mentah yang tidak valid tetap disimpan
+   118	            # (baris mati yang tak pernah cocok — bukan dihapus).
+   119	            tenant_c = _canonical_uuid(tenant_raw) or str(tenant_raw)
+   120	        if operation in _OPAQUE_RESOURCE_OPERATIONS:
+   121	            # Bentuk lama group-only TIDAK dapat diikat ke migration UUID —
+   122	            # dipertahankan apa adanya; runtime menolak aman (REV-1311-02).
+   123	            resource_c = resource_raw
+   124	            stats["legacy_opaque"] += 1
+   125	        else:
+   126	            resource_c = _canonical_uuid(resource_raw) if resource_raw else ""
+   127	            if resource_raw and resource_c is None:
+   128	                resource_c = resource_raw  # baris mati, dipertahankan
+   129	        identity = (str(principal), tenant_c, operation, resource_c, str(idem_key))
+   130	        rank = (1 if response_status is not None else 0, created_at, pk)
+   131	        candidate = {
+   132	            "rank": rank,
+   133	            "pk": pk,
+   134	            "tenant": tenant_c,
+   135	            "operation": operation,
+   136	            "resource": resource_c,
+   137	            "has_response": response_status is not None,
+   138	        }
+   139	        prev = best.get(identity)
+   140	        if prev is None:
+   141	            best[identity] = candidate
+   142	        elif rank > prev["rank"]:
+   143	            delete_ids.append(prev["pk"])
+   144	            stats["duplicate_deleted"] += 1
+   145	            best[identity] = candidate
+   146	        else:
+   147	            delete_ids.append(pk)
+   148	            stats["duplicate_deleted"] += 1
+   149	    stats["kept"] = sum(1 for c in best.values() if c["has_response"])
+   150	    stats["kept_no_response"] = sum(1 for c in best.values() if not c["has_response"])
+   151	    if delete_ids:
+   152	        IdempotencyKey.objects.filter(id__in=delete_ids).delete()
+   153	    for candidate in best.values():
+   154	        IdempotencyKey.objects.filter(id=candidate["pk"]).update(
+   155	            tenant_scope=candidate["tenant"],
+   156	            operation=candidate["operation"],
+   157	            resource=candidate["resource"],
+   158	        )
+   159	    print(
+   160	        "jobs.0004 idempotency identity backfill: "
+   161	        f"kept_with_response={stats['kept']} kept_no_response={stats['kept_no_response']} "
+   162	        f"platform_remapped={stats['platform_remapped']} "
+   163	        f"legacy_opaque_group={stats['legacy_opaque']} "
+   164	        f"malformed_deleted={stats['malformed_deleted']} "
+   165	        f"duplicate_deleted={stats['duplicate_deleted']}"
+   401	        # Mode fase berikutnya — jujur 503, bukan validasi palsu (§5).
+   402	        raise ApiError.unavailable()
+   403	    rows = csv_import.rows if isinstance(csv_import.rows, list) else []
+   404	    if csv_import.mode == CsvImport.Mode.LINK:
+   405	        valid_idx, errors = _validate_link_rows(str(csv_import.tenant_id), rows)
+   406	    else:
+   407	        valid_idx, errors = _validate_create_rows(str(csv_import.tenant_id), rows)
+   408	    result = {
+   409	        "total_rows": len(rows),
+   410	        "valid_rows": len(valid_idx),
+   411	        "error_rows": len(errors),
+   412	        "row_errors": errors,
+   413	        "preview": [r for r in rows if isinstance(r, dict)][:CSV_PREVIEW_ROWS],
+   414	    }
+   415	    csv_import.validation = result
+   416	    csv_import.state = CsvImport.State.VALIDATED
+   417	    csv_import.save(update_fields=["validation", "state"])
+   418	    return result
+   419
+   420
+   421	@transaction.atomic
+   422	def commit_csv(csv_import: CsvImport) -> dict:
+   423	    """Commit draf tervalidasi (dipanggil job import_commit): DB-only.
+   653
+   654	@transaction.atomic
+   655	def preview_migration_summary(session: MigrationSession, selected_ids: list[str] | None = None) -> dict:
+   656	    """Ringkasan MigrationSummaryCounts TANPA efek samping (untuk wizard U07).
+   657
+   658	    Cermin logika penghitungan commit_migration (kategori sama); dipanggil
+   659	    endpoint commit sebelum job dibuat agar UI langsung mendapat angka.
+   660	    Job commit_migration menghitung ulang nilai aktual dan menimpa counts.
+   661	    """
+   662	    tenant_id = session.tenant_id
+   663	    selected_set = {str(s) for s in selected_ids} if selected_ids is not None else None
+   664	    decisions = {str(d.discovery_object_id): d for d in session.decisions.all()}
+   665	    groups = identity_conflict_groups(tenant_id)
+   666	    conflict_member_ids: set[str] = set()
+   667	    for group in groups.values():
+   668	        conflict_member_ids.update(str(obj.id) for obj in group["objects"])
+   669
+   670	    counts = {"to_create": 0, "to_merge": 0, "unchanged": 0, "conflicts": 0, "quota_used": 0, "quota_limit": 0}
+   671	    to_adopt: list[DiscoveryObject] = []
+   672	    if session.snapshot_id is not None:
+   673	        objects = list(session.snapshot.discovery_objects.select_related("router").order_by("username", "id"))
+   674	        merge_decisions = 0
+   675	        for obj in objects:
+   676	            obj_id = str(obj.id)
+   677	            if selected_set is not None and obj_id not in selected_set:
+   678	                counts["unchanged"] += 1
+   679	                continue
+   680	            decision = decisions.get(obj_id)
+   681	            if decision is not None and decision.decision == MigrationAccountDecision.Decision.IGNORED:
+   682	                continue
+   683	            if obj_id in conflict_member_ids and (
+   743	        MigrationSession.State.RESOLVING,
+   744	        MigrationSession.State.READY_TO_COMMIT,
+   745	    ):
+   746	        raise JobError(code="conflict", retryable=False, message=f"State sesi tidak sah untuk commit: {session.state}")
+   747
+   748	    tenant_id = session.tenant_id
+   749	    selected_set = {str(s) for s in selected_ids} if selected_ids is not None else None
+   750	    decisions = {str(d.discovery_object_id): d for d in session.decisions.all()}
+   751	    groups = identity_conflict_groups(tenant_id)
+   752	    # Objek mana pun yang masuk grup konflik (untuk pengecualian tanpa resolusi).
+   753	    conflict_member_ids: set[str] = set()
+   754	    for group in groups.values():
+   755	        conflict_member_ids.update(str(obj.id) for obj in group["objects"])
+   756
+   757	    objects = list(
+   758	        session.snapshot.discovery_objects.select_related("router").order_by("username", "id")
+   759	    )
+   760	    to_adopt: list[DiscoveryObject] = []
+   761	    counts = {"to_create": 0, "to_merge": 0, "unchanged": 0, "conflicts": 0, "quota_used": 0, "quota_limit": 0}
+   762	    merge_decisions = 0
+   763	    for obj in objects:
+   764	        obj_id = str(obj.id)
+   765	        if selected_set is not None and obj_id not in selected_set:
+   766	            counts["unchanged"] += 1  # tidak dipilih operator
+   767	            continue
+   768	        decision = decisions.get(obj_id)
+   769	        if decision is not None and decision.decision == MigrationAccountDecision.Decision.IGNORED:
+   770	            continue
+   771	        if obj_id in conflict_member_ids and (decision is None or decision.decision == MigrationAccountDecision.Decision.SELECTED):
+   772	            counts["conflicts"] += 1  # butuh resolusi — tidak diadopsi (needs_review)
+   419	            raise ApiError.not_found()
+   420	        allocations = payment.allocations.select_related("invoice").order_by("allocated_at", "id")
+   421	        return Response(payment_info(payment, allocations=allocations))
+   422
+   423
+   424	class InternetPaymentVerifyView(TenantApiView):
+   425	    """Verifikasi dana → alokasi + kwitansi (BIL-03/BIL-08)."""
+   426
+   427	    required_permission = "payments.verify"
+   428
+   429	    @idempotent(
+   430	        "internet_payment_verify",
+   431	        resource_from=lambda request, kwargs: str(kwargs.get("payment_id", "")),
+   432	    )
+   433	    @extend_schema(summary="Verifikasi dana: allocation ke invoice(s) + kwitansi")
+   434	    def post(self, request: Request, tenant_id: str, payment_id: str) -> Response:
+   435	        payment = services.verify_payment(
+   436	            tenant_id, _parse_uuid(payment_id, "payment_id"), _body(request),
+   437	            actor=request.user, request_id=getattr(request, "mt_request_id", ""),
+   438	        )
+   439	        allocations = payment.allocations.select_related("invoice").order_by("allocated_at", "id")
+   440	        return Response(payment_info(payment, allocations=allocations))
+   441
+   442
+   443	class InternetPaymentRejectView(TenantApiView):
+   444	    required_permission = "payments.verify"
+{
+  "result": "PASS",
+  "scope": "documentation_static_only",
+  "files": 24,
+  "internal_links": 106,
+  "tasks": 85,
+  "dependency_edges": 240,
+  "designed_cases": 256,
+  "designed_assertions": 662,
+  "referenced_requirement_ids": 172,
+  "technical_defaults": 115,
+  "application_runtime_tests_executed": 0,
+  "production_readiness": "NOT_EVALUATED"
+}

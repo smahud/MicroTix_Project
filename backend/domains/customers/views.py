@@ -7,6 +7,7 @@ kecuali reveal-credentials (rahasia tidak pernah di-cache, no-store).
 """
 from __future__ import annotations
 
+import re
 import uuid as uuid_mod
 
 from django.db.models import Exists, OuterRef, Prefetch, Q
@@ -274,7 +275,7 @@ class ServiceListView(TenantApiView):
         rows = [service_row(s, _first_account(s)) for s in services_page]
         return Response(page_response(rows, next_cursor))
 
-    @idempotent("service_provision")
+    @idempotent("service_provision", body_uuid_fields=("router_id",))
     @extend_schema(summary="Buat layanan: pelanggan + layanan draft + akun akses opsional")
     def post(self, request: Request, tenant_id: str) -> Response:
         service = services.provision_service_draft(request.mt_membership.tenant, _body(request), actor=request.user)
@@ -566,10 +567,46 @@ class IdentityConflictsView(TenantApiView):
         return Response(candidates)
 
 
+def _conflict_resolve_resource(request, kwargs) -> str:
+    """Identitas resource resolusi konflik: canonical migration UUID + group.
+
+    REV-1311-02: keputusan resolusi milik SESSION migrasi tertentu — group_id
+    saja tidak cukup karena group dipakai ulang lintas session. Validasi
+    parent (bentuk UUID → 422; session tidak ditemukan → 404) dilakukan di
+    sini SEBELUM klaim/replay, sehingga respons cache tidak dapat melewati
+    validasi parent maupun menyeberang antar session. group_id divalidasi
+    bentuknya (sha256[:16] lowercase — bentuk stabil conflict_group_id);
+    nilai lain → 404 generik, sekaligus menjaga resource ≤64 karakter agar
+    input URL panjang tidak menjadi DataError 500 pada klaim.
+    """
+    migration_c = _validate_uuid("migration_id", str(kwargs.get("migration_id", "")))
+    _get_session(str(kwargs.get("tenant_id", "")), migration_c)  # 404 bila parent tidak ada
+    group_id = str(kwargs.get("group_id", ""))
+    if not _GROUP_ID_RE.fullmatch(group_id):
+        raise ApiError.not_found()
+    return f"{migration_c}:{group_id}"
+
+
+def _legacy_group_shapes(resource: str) -> list[str]:
+    """Bentuk resource pra-migrasi-0004: group_id saja tanpa migration UUID."""
+    return [resource.split(":", 1)[1]] if ":" in resource else []
+
+
+# group_id = sha256(username terurut)[:16] lowercase — bentuk stabil
+# conflict_group_id (customers/services.py); bukan UUID.
+_GROUP_ID_RE = re.compile(r"[0-9a-f]{16}")
+
+
 class IdentityConflictResolveView(TenantApiView):
     required_permission = "migration.run"
 
-    @idempotent("identity_conflict_resolve", resource_from=lambda request, kwargs: str(kwargs.get("group_id", "")))
+    @idempotent(
+        "identity_conflict_resolve",
+        resource_from=_conflict_resolve_resource,
+        resource_uuid=False,  # <migration UUID canonical>:<group_id sha256[:16] opaque>
+        legacy_shapes=_legacy_group_shapes,
+        legacy_replay=False,  # group-only lama tak dapat diikat session → tolak aman
+    )
     @extend_schema(summary="Simpan resolusi konflik identitas (merge/keep_one/rename)")
     def post(self, request: Request, tenant_id: str, migration_id: str, group_id: str) -> Response:
         session = _get_session(tenant_id, _validate_uuid("migration_id", migration_id))
@@ -583,7 +620,11 @@ class IdentityConflictResolveView(TenantApiView):
 class MigrationCommitView(TenantApiView):
     required_permission = "migration.run"
 
-    @idempotent("migration_commit", resource_from=lambda request, kwargs: str(kwargs.get("migration_id", "")))
+    @idempotent(
+        "migration_commit",
+        resource_from=lambda request, kwargs: str(kwargs.get("migration_id", "")),
+        body_uuid_fields=("selected_account_ids",),  # daftar UUID objek discovery (REV-1311-03)
+    )
     @extend_schema(summary="Commit adopsi migrasi → job commit_migration (202)")
     def post(self, request: Request, tenant_id: str, migration_id: str) -> Response:
         session = _get_session(tenant_id, _validate_uuid("migration_id", migration_id))
@@ -596,12 +637,27 @@ class MigrationCommitView(TenantApiView):
             raise ApiError.validation(
                 {"selected_account_ids": [{"code": "invalid", "message": "Harus daftar id objek discovery"}]}
             )
+        # REV-1311-03B: identitas terpilih dikanonikalisasi SEKALI di sini —
+        # ejaan alias UUID (huruf besar/compact/URN/braced) adalah objek
+        # discovery logis yang sama, sehingga preview, payload job durable,
+        # dan konsumsi domain melihat identitas canonical yang sama dengan
+        # hash body (v2). Salah bentuk → 422 (input structured tidak sah).
+        if selected:
+            canonical_selected = []
+            for item in selected:
+                raw = str(item)
+                try:
+                    canonical_selected.append(str(uuid_mod.UUID(raw)))
+                except (ValueError, AttributeError, TypeError):
+                    raise ApiError.validation(
+                        {"selected_account_ids": [{"code": "invalid", "message": "Id objek discovery bukan UUID valid"}]}
+                    ) from None
+        else:
+            canonical_selected = None
         # Ringkasan sinkron (MigrationSummaryCounts) disimpan ke session.counts
         # sebelum job dibuat; job commit_migration menghitung ulang nilai aktual
         # dan menimpa. Respons tetap ketat {job_id, status_url} (kontrak §5).
-        session.counts = services.preview_migration_summary(
-            session, [str(s) for s in selected] if selected else None
-        )
+        session.counts = services.preview_migration_summary(session, canonical_selected)
         session.save(update_fields=["counts"])
         job = engine.create_job(
             tenant_id=tenant_id,
@@ -610,7 +666,7 @@ class MigrationCommitView(TenantApiView):
             router=session.router,
             payload={
                 "session_id": str(session.id),
-                "selected_account_ids": [str(s) for s in selected] if selected else None,
+                "selected_account_ids": canonical_selected,
             },
         )
         return Response(

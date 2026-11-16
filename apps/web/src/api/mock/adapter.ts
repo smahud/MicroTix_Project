@@ -857,7 +857,11 @@ export class MockApiClient implements ApiClient {
       valid_rows: valid,
       error_rows: rowErrors.length,
       row_errors: rowErrors,
-      preview: (draft.rows ?? []).slice(0, 5),
+      // Paritas kontrak backend (REV-1511-05): preview bebas plaintext
+      // credential — nilai password diganti penanda, bukan nilai mentah.
+      preview: (draft.rows ?? []).slice(0, 5).map((row) =>
+        row.password !== undefined ? { ...row, password: '********' } : row,
+      ),
     };
     draft.validation = result;
     return delay(result, 600);

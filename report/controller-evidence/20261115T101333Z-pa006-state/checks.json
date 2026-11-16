@@ -1,0 +1,96 @@
+{
+  "result": "PASS",
+  "scope": "state and review records only",
+  "command": "python3 report/controller-evidence/20261115T101333Z-pa006-state/check_records.py",
+  "environment": {
+    "python": "3.12.14",
+    "git": "git version 2.52.0"
+  },
+  "checks": [
+    {
+      "check": "protected source/config delta",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "candidate is decision ancestor",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "check": "Git refs match connector inventory",
+      "result": "PASS",
+      "detail": {
+        "branches": 25
+      }
+    },
+    {
+      "check": "prior branch-head comparison",
+      "result": "PASS",
+      "detail": {
+        "unchanged": 24,
+        "changed": {
+          "review/0010-pa006-controller-r4-20261115": {
+            "prior": "30ce815a2d7e2f634be10678b153d007c9569576",
+            "current": "1bc84a44e6aacb3a436f7f99a203b6e43dbfbe59"
+          }
+        }
+      }
+    },
+    {
+      "check": "original packet preserved except one metadata row",
+      "result": "PASS",
+      "detail": {
+        "body_sha256": "b6ec7190ede3c0a859d7430e3bc71c0179437b88eac869a35007d895fc99b303"
+      }
+    },
+    {
+      "check": "record-only scope and one unfinished packet",
+      "result": "PASS",
+      "detail": [
+        "docs/progress.md",
+        "report/LATEST_HANDOFF.md",
+        "report/controller-evidence/20261115T101333Z-pa006-state/check_records.py",
+        "report/controller-evidence/20261115T101333Z-pa006-state/checks.json",
+        "report/controller-evidence/20261115T101333Z-pa006-state/docs.log",
+        "report/controller-evidence/20261115T101333Z-pa006-state/remote-state.json",
+        "report/controller/20261115T101333Z-0010-pa006-state-review.md",
+        "report/reviewer/20261115T101317Z-0010-pa006-state-review.md",
+        "task/0010-pa006-idempotency.md"
+      ]
+    },
+    {
+      "check": "changed Markdown relative targets",
+      "result": "PASS",
+      "detail": {
+        "links": 63
+      }
+    },
+    {
+      "check": "python3 docs/tools/check_docs.py",
+      "result": "PASS",
+      "detail": {
+        "exit": 0,
+        "result": "PASS",
+        "scope": "documentation_static_only",
+        "files": 24,
+        "internal_links": 106,
+        "tasks": 85,
+        "dependency_edges": 240,
+        "designed_cases": 256,
+        "designed_assertions": 662,
+        "referenced_requirement_ids": 172,
+        "technical_defaults": 115,
+        "application_runtime_tests_executed": 0,
+        "production_readiness": "NOT_EVALUATED"
+      }
+    },
+    {
+      "check": "git diff --check HEAD",
+      "result": "PASS",
+      "detail": ""
+    }
+  ],
+  "runtime_acceptance_tests_executed_locally": 0,
+  "qa_note": "Initial validation preceded generation of checks.json and reported its pending link; output generation is now ordered and verified. No application test ran."
+}

@@ -218,7 +218,11 @@ class ServiceBillingPackageView(TenantApiView):
 
     required_permission = "services.provision"
 
-    @idempotent("service_billing_package", resource_from=lambda request, kwargs: kwargs.get("service_id", ""))
+    @idempotent(
+        "service_billing_package",
+        resource_from=lambda request, kwargs: kwargs.get("service_id", ""),
+        body_uuid_fields=("package_id",),  # identitas UUID di body (REV-1311-03)
+    )
     @extend_schema(summary="Pasang paket penagihan ke layanan")
     def post(self, request: Request, tenant_id: str, service_id: str) -> Response:
         from domains.billing.models import BillingPackage
@@ -425,6 +429,10 @@ class InternetPaymentVerifyView(TenantApiView):
     @idempotent(
         "internet_payment_verify",
         resource_from=lambda request, kwargs: str(kwargs.get("payment_id", "")),
+        # REV-1311-03: identitas uang bertingkat `allocations[].invoice_id`
+        # dinormalkan sebelum hash — ejaan alias UUID pada alokasi adalah
+        # invoice logis yang sama (replay), bukan 409 palsu.
+        body_uuid_fields=("allocations[].invoice_id",),
     )
     @extend_schema(summary="Verifikasi dana: allocation ke invoice(s) + kwitansi")
     def post(self, request: Request, tenant_id: str, payment_id: str) -> Response:

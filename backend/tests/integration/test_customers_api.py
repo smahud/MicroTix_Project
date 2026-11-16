@@ -355,7 +355,10 @@ class TestCsvImportFlow:
         assert draft["total_rows"] == 2
         assert draft["validation"] is None
 
-        # 2) Validasi sinkron.
+        # 2) Validasi sinkron. Preview bebas plaintext credential
+        #    (REV-1511-05; ARCHITECTURE §5 "jangan cache plaintext secret/
+        #    reveal response") — nilai password diganti penanda tetap,
+        #    kunci lain tetap utuh; koreksi ekspektasi raw-preview lama.
         resp = reauth_client.post(
             f"/api/v1/tenants/{tenant_a.id}/imports/{draft['id']}/validate", headers={"Idempotency-Key": "csv-1-v"}
         )
@@ -365,7 +368,11 @@ class TestCsvImportFlow:
         assert validation["total_rows"] == 2
         assert validation["valid_rows"] == 2
         assert validation["error_rows"] == 0
-        assert validation["preview"] == rows
+        expected_preview = [
+            {**row, "password": "********"} for row in rows
+        ]
+        assert validation["preview"] == expected_preview
+        assert all("pw-" not in str(entry["password"]) for entry in validation["preview"])
 
         # 3) Commit → 202 job; replay key sama → job sama.
         commit_resp = reauth_client.post(
