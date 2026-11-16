@@ -20,7 +20,8 @@ real-process drain dan legacy compatibility. PA-001/PA-006 preserved;
 P3 REV-1611-TEST-01 hanya test hardening. Tidak mengadopsi PR8 draft
 atau memperluas fitur R2/R3/R4. [Controller report](../report/controller/20261116T231131Z-0020-job-lifecycle-review.md)
 menautkan dua reviewer independen, packet QA dan remote evidence.
-Publikasi **[PR26](https://github.com/smahud/MicroTix_Project/pull/26)** initial ancestor\n**e11d48b4fdc0c1757c52af7d9e528437b5afa0bc**, tree653db3cf, ref/commit/PR dan10file content+blob readback MATCH;
+Publikasi **[PR26](https://github.com/smahud/MicroTix_Project/pull/26)** initial ancestor
+**e11d48b4fdc0c1757c52af7d9e528437b5afa0bc**, tree653db3cf, ref/commit/PR dan10file content+blob readback MATCH;
 metadata descendant hanya mencatat publikasi ini. Initial CI43978170214 docs PASS,
 backend/frontend masih berjalan pada readback pertama; final-head CI dicatat di PR26 setelah teramati.
 Belum ada hasil implementasi0020.
