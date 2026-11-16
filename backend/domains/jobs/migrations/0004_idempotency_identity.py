@@ -30,20 +30,41 @@ Kebijakan legacy record (PA-006 pekerjaan wajib no. 6; koreksi REV-1311-01):
   migrasi sengaja TIDAK membaca tabel tenant subs_payment_submission karena
   FORCE RLS berlaku juga bagi migrator tanpa konteks tenant.
 - Scope legacy menyimpan URL kwargs MENTAH: ejaan UUID apa pun yang diterima
-  router <str:...> bisa tersimpan, termasuk `urn:uuid:<hex>` yang mengandung
-  kolon (5+ segmen). Parser 0004 mengenali bentuk baseline yang sah itu
-  (tenant maupun resource) dan menormalkannya ke UUID canonical
-  (REV-1311-01: kegagalan parser delimiter lama pernah menghapus penjaga
-  record valid → retry pasca-upgrade menduplikasi submission).
-- Bentuk scope yang TIDAK dapat direkonstruksi (bukan pola baseline yang
-  sah, mis. sisa kolon yang tidak membentuk UUID) DIPERTAHANKAN sebagai
-  baris mati ber-penanda operasi khusus — BUKAN dihapus: kegagalan parser
-  bukan izin menghapus penjaga efek non-expired. Baris mati ini tidak akan
-  pernah cocok dengan identitas runtime baru (kolom operation memakai nilai
-  penanda yang bukan operasi decorator mana pun), sehingga tetap hanya
-  berfungsi sebagai bukti rekonsiliasi ops. Identitas yang terurai tetapi
-  tidak dapat dipetakan (tenant/resource bukan UUID padahal operasinya UUID)
-  juga dipertahankan dengan nilai mentah — baris mati yang tak pernah cocok.
+  konversi stdlib uuid.UUID pada view baseline bisa tersimpan — termasuk
+  `urn:uuid:<hex>`, `uuid:<hex>`, `urn:<hex>`, prefix berulang
+  (`urn:uuid:uuid:<hex>`, `urn:urn:uuid:<hex>`), berkurung, dan campuran
+  kolonnya (REV-1311-01: parser 0004 versi cacat hanya mengenali
+  `urn:uuid:` tetap/dua segmen polos, sehingga ejaan prefix lain jatuh ke
+  `__unparsed__` dan retry pasca-upgrade menduplikasi submission/file
+  1→2). Parser sekarang GRAMMAR-DRIVEN: kandidat pemisahan = semua posisi
+  kolon, validitas tenant/resource menurut uuid.UUID yang sama persis
+  (tenant boleh literal fallback `platform`); tanpa daftar pengecualian
+  prefix per ejaan. Interpretasi sah terbukti paling banyak satu; lebih
+  dari satu = keadaan mustahil/data asing → AmbiguousLegacyScope
+  menghentikan migrasi secara aman (rollback atomik), bukan menebak.
+- Bentuk scope yang TIDAK dapat direkonstruksi (tidak ada satu pun posisi
+  kolon yang menghasilkan tenant/resource sah menurut grammar writer)
+  DIPERTAHANKAN sebagai baris mati ber-penanda operasi khusus — BUKAN
+  dihapus: kegagalan parser bukan izin menghapus penjaga efek non-expired.
+  Baris mati ini tidak akan pernah cocok dengan identitas runtime baru
+  (kolom operation memakai nilai penanda yang bukan operasi decorator
+  mana pun), sehingga tetap hanya berfungsi sebagai bukti rekonsiliasi
+  ops. Baris mati hanya jatuh ke input yang TIDAK pernah bisa ditulis
+  writer baseline sah (view baseline menolak kwargs non-UUID SEBELUM efek
+  dijalankan, jadi keluaran writer valid selalu terurai — dibuktikan tes
+  matriks grammar); penjaga aksi-selesai tidak hilang ke baris mati.
+- Affected-state policy (REV-1311-01, tuntutan review R4): migrasi ini
+  BELUM DIRILIS — tidak ada pada main, installer, tag, maupun deployment
+  (kandidat Beta NOT_READY; seluruh rantai PA-006 masih di PR). Edit file
+  ini HANYA berlaku untuk upgrade yang menjalankan 0004 versi baru dari
+  state pra-0004. Environment yang TELANJUR menjalankan 0004 versi cacat
+  (sejauh ini hanya CI/sandbox/review yang disposabel) TIDAK diperbaiki
+  oleh edit ini: kolom `scope` asli sudah dihapus dan baris `__unparsed__`
+  hanya menyimpan potongan 64 karakter — pemulihannya adalah fix-forward
+  dari snapshot pra-0004 (restore lalu jalankan ulang upgrade), atau
+  rekonsiliasi manual baris `__unparsed__` berbasis bukti ops SEBELUM
+  efek baru diizinkan; tidak ada klaim reparasi in-place atas environment
+  tersebut.
 - Tabrakan identitas canonical setelah normalisasi alias (mis. ejaan huruf
   besar vs kecil): dipertahankan satu record TERBARU YANG PUNYA RESPONS
   (bukti aksi selesai); bila tidak ada yang punya respons, terbaru. Sisanya
@@ -85,52 +106,110 @@ _PLATFORM_OPERATIONS = frozenset(
 # mati tidak akan pernah cocok dengan klaim runtime baru.
 _UNPARSED_OPERATION = "__unparsed__"
 
+# Literal fallback writer lama pada posisi tenant (main:
+# kwargs.get("tenant_id") or session active_tenant_id or "platform").
+_PLATFORM_LITERAL = "platform"
+
+
+class AmbiguousLegacyScope(RuntimeError):
+    """Scope legacy mempunyai >1 interpretasi grammar baseline yang sah.
+
+    Tidak pernah terjadi pada grammar stdlib uuid.UUID (bukti keunikan
+    pada docstring _split_legacy_scope); dipertahankan sebagai fail-stop
+    defensif: seluruh migrasi dibatalkan (rollback atomik — schema+data
+    lama utuh) dan rekonsiliasi eksplisit diperlukan sebelum melanjutkan.
+    Menebak satu interpretasi dapat mengikat penjaga ke target salah;
+    menjadikannya baris mati menghapus penjaga aksi yang valid.
+    """
+
 
 def _canonical_uuid(value):
+    """Canonical lowercase bila value diterima grammar UUID writer baseline.
+
+    Grammar PERSIS stdlib uuid.UUID yang dipakai view baseline untuk
+    mengonversi kwargs URL (tenant_context._validate_uuid dan lookup
+    model ber-UUIDField): hapus SEMUA substring `urn:`/`uuid:` (case
+    sensitif), strip `{}` di ujung, hapus SEMUA `-`, lalu harus tepat 32
+    digit hex. Semua ejaan yang diterima writer lama — canonical/upper/
+    compact/braced/urn/braced-urn/`uuid:`/`urn:` tanpa `uuid`, bahkan
+    prefix berulang — diurai fungsi ini; ejaan yang DITOLAK uuid.UUID
+    (mis. `URN:UUID:` huruf besar) juga ditolak di sini. Tidak ada
+    reimplementasi grammar dan tidak ada pengecualian prefix per ejaan
+    (koreksi REV-1311-01).
+    """
     try:
         return str(_uuid.UUID(str(value)))
     except (ValueError, AttributeError, TypeError):
         return None
 
 
-def _seg_is_urn(seg: str) -> bool:
-    """Deteksi segmen 'urn'/'uuid' toleran kurung kurawal (braced-URN).
+def _split_legacy_scope(scope, *, tenant_valid=None, resource_valid=None):
+    """Uraikan scope lama `operation:tenant:resource` secara grammar-driven.
 
-    stdlib uuid.UUID menerima `{urn:uuid:<hex>}` (diverifikasi), sehingga
-    writer main dapat menyimpan ejaan itu pada kwargs URL. Stripping brace
-    hanya untuk DETEKSI; nilai yang direkonstruksi tetap verbatim lalu
-    dikanonikalisasi `_canonical_uuid` (ejaan asing yang tidak valid akan
-    gagal parse → tetap baris mati yang aman).
-    """
-    return str(seg).strip("{}").lower() == "urn"
+    Writer lama menyimpan kwargs URL MENTAH: scope =
+    f"{operation}:{tenant_part}:{resource}" (common/idempotency.py main).
+    Tenant/resource dapat berupa SEMUA ejaan UUID yang diterima konversi
+    view baseline — termasuk ejaan berkolon — plus literal `platform`
+    fallback pada posisi tenant; resource boleh kosong (operasi tanpa
+    resource URL) atau token opaque (operasi _OPAQUE_RESOURCE_OPERATIONS).
 
+    Metode (koreksi REV-1311-01): kandidat pemisahan = SETIAP posisi kolon
+    pada `rest`; kandidat sah bila tenant DAN resource keduanya sah
+    menurut grammar baseline. Tidak ada aturan prefix tetap per ejaan.
 
-def _split_legacy_scope(scope):
-    """Uraikan scope lama `operation:tenant:resource` toleran URN (REV-1311-01).
+    Interpretasi sah SELALU paling banyak satu (bukti): bila dua posisi
+    kolon berbeda i<j sama-sama sah maka tenant_j = tenant_i + ":" + sisa,
+    sehingga kolon batas i harus dihapus oleh replace('urn:'/'uuid:')
+    dalam transformasi tenant_j — itu menuntut tenant_i berakhir dengan
+    teks literal `urn`/`uuid`; teks itu bukan digit hex dan tidak pernah
+    dihapus oleh transformasi tenant_i sendiri (tidak ada kolon di
+    belakangnya di dalam tenant_i), jadi tenant_i tidak mungkin menjadi
+    32-hex yang valid. Kasus tenant kosong/`platform` serupa: kolon pada
+    posisi 0 atau tepat setelah `platform` tidak pernah menjadi bagian
+    prefix yang bisa dihapus. Karena itu >1 interpretasi mustahil pada
+    data writer yang sah — hanya terjadi pada data asing → fail-stop
+    AmbiguousLegacyScope (rollback atomik migrasi), BUKAN menebak atau
+    memindahkan penjaga valid ke baris mati.
 
-    Writer main menyimpan kwargs URL mentah: tenant/resource dapat berupa
-    ejaan UUID apa pun yang diterima router <str:...> dan stdlib uuid.UUID,
-    termasuk `urn:uuid:<hex>` dan `{urn:uuid:<hex>}` yang mengandung kolon.
-    Kembalikan tuple (operation, tenant_raw, resource_raw), atau None bila
-    bentuk tidak dapat direkonstruksi secara aman (pola kolon yang tidak
-    membentuk UUID/URN yang dikenal).
+    `tenant_valid`/`resource_valid` hanya untuk penyuntikan tes jalur
+    fail-stop; jalur produksi selalu memakai grammar baseline.
     """
     s = str(scope or "")
     operation, sep, rest = s.partition(":")
     if not sep or not operation:
         return None
-    segs = rest.split(":") if rest else []
-    # Tenant URN: `urn:uuid:<hex>` (± kurung) menempati 3 segmen pertama;
-    # sisanya resource.
-    if len(segs) >= 3 and _seg_is_urn(segs[0]) and str(segs[1]).strip("{}").lower() == "uuid":
-        return operation, ":".join(segs[:3]), ":".join(segs[3:])
-    # Resource URN: 3 segmen terakhir; sisanya tenant.
-    if len(segs) >= 4 and _seg_is_urn(segs[-3]) and str(segs[-2]).strip("{}").lower() == "uuid":
-        return operation, ":".join(segs[:-3]), ":".join(segs[-3:])
-    # Bentuk standar dua segmen (tenant, resource — keduanya boleh kosong).
-    if len(segs) == 2:
-        return operation, segs[0], segs[1]
-    return None
+    if tenant_valid is None:
+
+        def tenant_valid(part: str) -> bool:
+            # Ejaan UUID grammar baseline ATAU literal fallback writer
+            # (exact-case: writer lama hanya menulis "platform" lowercase
+            # — kwargs URL non-UUID ditolak view baseline sebelum efek;
+            # 'PLATFORM' huruf besar bukan keluaran writer sah dan tidak
+            # diberi split hidup — REV-R5-01).
+            return part == _PLATFORM_LITERAL or _canonical_uuid(part) is not None
+
+    if resource_valid is None:
+        opaque = operation in _OPAQUE_RESOURCE_OPERATIONS
+
+        def resource_valid(part: str) -> bool:
+            if opaque:
+                return True  # token opaque (group_id) — sisa verbatim
+            return part == "" or _canonical_uuid(part) is not None
+
+    matches = []
+    for i, ch in enumerate(rest):
+        if ch != ":":
+            continue
+        tenant_raw, resource_raw = rest[:i], rest[i + 1 :]
+        if tenant_valid(tenant_raw) and resource_valid(resource_raw):
+            matches.append((operation, tenant_raw, resource_raw))
+    if not matches:
+        return None
+    if len(matches) > 1:
+        raise AmbiguousLegacyScope(
+            f"jobs.0004: scope legacy ambigu — {len(matches)} interpretasi grammar sah: {scope!r}"
+        )
+    return matches[0]
 
 
 def _backfill_identity(apps, schema_editor):
@@ -170,14 +249,15 @@ def _backfill_identity(apps, schema_editor):
         else:
             operation, tenant_raw, resource_raw = parsed
             if operation in _PLATFORM_OPERATIONS:
-                tenant_c = "platform"
-                if tenant_raw and tenant_raw.lower() != "platform":
+                tenant_c = _PLATFORM_LITERAL
+                if tenant_raw and tenant_raw.lower() != _PLATFORM_LITERAL:
                     stats["platform_remapped"] += 1
-            elif str(tenant_raw).lower() == "platform":
-                tenant_c = "platform"
+            elif str(tenant_raw).lower() == _PLATFORM_LITERAL:
+                tenant_c = _PLATFORM_LITERAL
             else:
-                # UUID canonical (semua ejaan sah termasuk URN/braced/compact);
-                # nilai mentah yang tidak valid tetap disimpan (baris mati
+                # UUID canonical (grammar penuh writer: semua ejaan sah
+                # termasuk prefix berkolon/berkurung/berulang); nilai
+                # mentah yang tidak valid tetap disimpan (baris mati
                 # yang tak pernah cocok — bukan dihapus).
                 tenant_c = _canonical_uuid(tenant_raw) or str(tenant_raw)
             if operation in _OPAQUE_RESOURCE_OPERATIONS:

@@ -1,0 +1,2 @@
+pytest 8.4.2
+django 5.2.19 / drf 3.16.1 / psycopg 3.2.13 / python 3.13.5

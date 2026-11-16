@@ -1,0 +1,11 @@
+{
+  "variants": {
+    "canonical": "PASS",
+    "urn": "PASS",
+    "urn_ambiguous": "PASS",
+    "uuid_only": "PASS",
+    "uuid_only_ambiguous": "PASS",
+    "urn_only": "PASS",
+    "platform_uuid_resource": "PASS"
+  }
+}
