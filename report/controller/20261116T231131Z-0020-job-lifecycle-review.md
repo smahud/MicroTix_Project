@@ -83,3 +83,24 @@ Starting/parent commit:41d1f33. New branch: `review/0020-job-lifecycle-authority
 Next actor: **coding_agent**. Fetch this published instruction ref (or a verified integrated descendant), read task0000+CONTRACT+latest handoff and implement **0020**. Submit application/test/report evidence on that ID, then controller reviews exact tested/published SHA. Task0010 remains done/accepted/integrated. Neither packet publication nor CI starts an external coding agent automatically.
 
 Unresolved Beta blockers: existing installer/upgrade/readiness/secret separation/restore/scheduler, deployment topology DEC-01 and documentation ownership DEC-02, other scoped security gaps and host/GNS3/pilot/capacity evidence. This session does not close them from old reports or represent unavailable runtime testing as PASS. No new deployment access or credentials were published.
+
+## 6. Publication verified — PR26
+
+Initial record commit **`e11d48b4fdc0c1757c52af7d9e528437b5afa0bc`**, parent exact41d1f33,
+tree **`653db3cfc9c05e233004bbeae7e753b07b333938`**, is published on
+`review/0020-job-lifecycle-authority-20261117` in **[PR26](https://github.com/smahud/MicroTix_Project/pull/26)**,
+base main41d1f33. GitHub ref, commit/tree/parent, PR head/base and all
+**10 files** were read back at that immutable commit: every content and blob
+SHA matched the prepared file. Comparison to main contains only the declared
+records; source/config/tests remain unchanged. New task0020 stays
+**ready / not_submitted**; PA-006 stays accepted/integrated.
+
+[Publication evidence](../controller-evidence/20261116T231131Z-0020-discovery/publication.json)
+records exact refs, byte-content comparisons, independent packet-blob identity
+and initial CI snapshot. At first readback run **43978170214** on exacte11d48b:
+docs success; backend/frontend in_progress. This is not described as full
+success. This publication-evidence descendant changes records only; final
+head CI is separately checked and recorded in PR26 after observation.
+No local clone/readback was possible or claimed. No merge/deploy/tag occurred.
+Next actor remains **coding_agent**, executing task0020 on the published
+instruction ref or a verified integrated descendant.
