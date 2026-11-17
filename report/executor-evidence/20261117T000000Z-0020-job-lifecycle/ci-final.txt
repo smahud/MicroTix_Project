@@ -1,0 +1,6 @@
+=== CI exact head 6c8d9206a4a875dd07f3b1bc3b04cbb0d7758b76 (observed 2026-11-17T01:16:35Z) ===
+run: https://github.com/smahud/MicroTix_Project/actions/runs/43992981237 (fc6a425 backend FAIL — fixed by 7118cce test-infra)
+final run (6c8d920 tree = 7118cce + record docs):
+  frontend: completed/success  https://github.com/smahud/MicroTix_Project/actions/runs/43993939448/job/133741213746
+  docs: completed/success  https://github.com/smahud/MicroTix_Project/actions/runs/43993939448/job/133741213717
+  backend: completed/success  https://github.com/smahud/MicroTix_Project/actions/runs/43993939448/job/133741213414
