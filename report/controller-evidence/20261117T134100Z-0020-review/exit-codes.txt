@@ -1,0 +1,14 @@
+full-suite 0
+lifecycle-probes-initial-teardown 1
+authority-probes-initial-teardown 1
+check 0
+makemigrations 0
+rls 0
+source-authority 0
+docs 0
+split-migrate 0
+split-grant 0
+split-test-cleanup-grant 0
+split-roles-rls 0
+lifecycle-probes 1
+authority-probes 1

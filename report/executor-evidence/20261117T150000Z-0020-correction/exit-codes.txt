@@ -1,0 +1,10 @@
+split-migrate exit=0
+split-grant exit=0
+split-test-cleanup-grant exit=0
+split-roles-rls exit=0
+lifecycle-probes-after exit=0
+authority-probes-after exit=0
+check exit=0
+makemigrations exit=0
+full-suite exit=0
+full-suite exit=0

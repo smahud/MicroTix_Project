@@ -1,0 +1,453 @@
+{"http_status": 200, "job_count_after": 1, "job_count_before": 1, "job_router_in_membership_scope": false, "job_state_after": "queued", "job_state_before": "queued", "probe": "http_scope_detail"}
+FE{"http_status": 204, "job_count_after": 1, "job_count_before": 1, "job_router_in_membership_scope": false, "job_state_after": "cancelled", "job_state_before": "queued", "probe": "http_scope_cancel"}
+FE{"http_status": 202, "job_count_after": 2, "job_count_before": 1, "job_router_in_membership_scope": false, "job_state_after": "failed", "job_state_before": "failed", "probe": "http_scope_retry"}
+FEFE{"distinct_db_connections": true, "error_code": null, "probe": "after_preflight_demote", "router_released": true, "state": "succeeded"}
+FE{"calls": [{"autocommit": false, "in_atomic_block": true, "op": "apply", "pid": 30142}, {"autocommit": false, "in_atomic_block": true, "op": "verify", "pid": 30142}], "job_error": null, "job_state": "succeeded", "probe": "b6_negative_verifier", "readback_ok": false, "result": {"note": "state cutover tersimpan dengan evidence per fase", "ok": true, "phase": "B6", "state": "rolled_back"}, "router_enforcement": "local", "run_state": "rolled_back"}
+FE{"calls": [{"autocommit": false, "in_atomic_block": true, "op": "apply", "pid": 30142}, {"autocommit": false, "in_atomic_block": true, "op": "verify", "pid": 30142}], "job_error": null, "job_state": "succeeded", "probe": "b6_transaction_boundary", "readback_ok": true, "result": {"note": "state cutover tersimpan dengan evidence per fase", "ok": true, "phase": "B6", "state": "rolled_back"}, "router_enforcement": "local", "run_state": "rolled_back"}
+FE
+==================================== ERRORS ====================================
+_ ERROR at teardown of test_http_jobs_reject_router_outside_membership_scope[detail] _
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:103: in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/psycopg/cursor.py:97: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.FeatureNotSupported: cannot truncate a table referenced in a foreign key constraint
+E   DETAIL:  Table "nas" references "network_router".
+E   HINT:  Truncate table "nas" at the same time, or use TRUNCATE ... CASCADE.
+
+The above exception was the direct cause of the following exception:
+../.venv/lib/python3.13/site-packages/django/core/management/commands/flush.py:71: in handle
+    connection.ops.execute_sql_flush(sql_list)
+../.venv/lib/python3.13/site-packages/django/db/backends/base/operations.py:473: in execute_sql_flush
+    cursor.execute(sql)
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:79: in execute
+    return self._execute_with_wrappers(
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:92: in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:100: in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/db/utils.py:91: in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:103: in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/psycopg/cursor.py:97: in execute
+    raise ex.with_traceback(None)
+E   django.db.utils.NotSupportedError: cannot truncate a table referenced in a foreign key constraint
+E   DETAIL:  Table "nas" references "network_router".
+E   HINT:  Truncate table "nas" at the same time, or use TRUNCATE ... CASCADE.
+
+The above exception was the direct cause of the following exception:
+../.venv/lib/python3.13/site-packages/pytest_django/fixtures.py:305: in _django_db_helper
+    test_case._post_teardown()
+../.venv/lib/python3.13/site-packages/django/test/testcases.py:1231: in _post_teardown
+    self._fixture_teardown()
+../.venv/lib/python3.13/site-packages/django/test/testcases.py:1266: in _fixture_teardown
+    call_command(
+../.venv/lib/python3.13/site-packages/django/core/management/__init__.py:194: in call_command
+    return command.execute(*args, **defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/core/management/base.py:464: in execute
+    output = self.handle(*args, **options)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/core/management/commands/flush.py:73: in handle
+    raise CommandError(
+E   django.core.management.base.CommandError: Database test_microtix couldn't be flushed. Possible reasons:
+E     * The database isn't running or isn't configured correctly.
+E     * At least one of the expected database tables doesn't exist.
+E     * The SQL was invalid.
+E   Hint: Look at the output of 'django-admin sqlflush'. That's the SQL this command wasn't able to run.
+_ ERROR at teardown of test_http_jobs_reject_router_outside_membership_scope[cancel] _
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:103: in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/psycopg/cursor.py:97: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.FeatureNotSupported: cannot truncate a table referenced in a foreign key constraint
+E   DETAIL:  Table "nas" references "network_router".
+E   HINT:  Truncate table "nas" at the same time, or use TRUNCATE ... CASCADE.
+
+The above exception was the direct cause of the following exception:
+../.venv/lib/python3.13/site-packages/django/core/management/commands/flush.py:71: in handle
+    connection.ops.execute_sql_flush(sql_list)
+../.venv/lib/python3.13/site-packages/django/db/backends/base/operations.py:473: in execute_sql_flush
+    cursor.execute(sql)
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:79: in execute
+    return self._execute_with_wrappers(
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:92: in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:100: in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/db/utils.py:91: in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:103: in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/psycopg/cursor.py:97: in execute
+    raise ex.with_traceback(None)
+E   django.db.utils.NotSupportedError: cannot truncate a table referenced in a foreign key constraint
+E   DETAIL:  Table "nas" references "network_router".
+E   HINT:  Truncate table "nas" at the same time, or use TRUNCATE ... CASCADE.
+
+The above exception was the direct cause of the following exception:
+../.venv/lib/python3.13/site-packages/pytest_django/fixtures.py:305: in _django_db_helper
+    test_case._post_teardown()
+../.venv/lib/python3.13/site-packages/django/test/testcases.py:1231: in _post_teardown
+    self._fixture_teardown()
+../.venv/lib/python3.13/site-packages/django/test/testcases.py:1266: in _fixture_teardown
+    call_command(
+../.venv/lib/python3.13/site-packages/django/core/management/__init__.py:194: in call_command
+    return command.execute(*args, **defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/core/management/base.py:464: in execute
+    output = self.handle(*args, **options)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/core/management/commands/flush.py:73: in handle
+    raise CommandError(
+E   django.core.management.base.CommandError: Database test_microtix couldn't be flushed. Possible reasons:
+E     * The database isn't running or isn't configured correctly.
+E     * At least one of the expected database tables doesn't exist.
+E     * The SQL was invalid.
+E   Hint: Look at the output of 'django-admin sqlflush'. That's the SQL this command wasn't able to run.
+_ ERROR at teardown of test_http_jobs_reject_router_outside_membership_scope[retry] _
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:103: in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/psycopg/cursor.py:97: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.FeatureNotSupported: cannot truncate a table referenced in a foreign key constraint
+E   DETAIL:  Table "nas" references "network_router".
+E   HINT:  Truncate table "nas" at the same time, or use TRUNCATE ... CASCADE.
+
+The above exception was the direct cause of the following exception:
+../.venv/lib/python3.13/site-packages/django/core/management/commands/flush.py:71: in handle
+    connection.ops.execute_sql_flush(sql_list)
+../.venv/lib/python3.13/site-packages/django/db/backends/base/operations.py:473: in execute_sql_flush
+    cursor.execute(sql)
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:79: in execute
+    return self._execute_with_wrappers(
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:92: in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:100: in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/db/utils.py:91: in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:103: in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/psycopg/cursor.py:97: in execute
+    raise ex.with_traceback(None)
+E   django.db.utils.NotSupportedError: cannot truncate a table referenced in a foreign key constraint
+E   DETAIL:  Table "nas" references "network_router".
+E   HINT:  Truncate table "nas" at the same time, or use TRUNCATE ... CASCADE.
+
+The above exception was the direct cause of the following exception:
+../.venv/lib/python3.13/site-packages/pytest_django/fixtures.py:305: in _django_db_helper
+    test_case._post_teardown()
+../.venv/lib/python3.13/site-packages/django/test/testcases.py:1231: in _post_teardown
+    self._fixture_teardown()
+../.venv/lib/python3.13/site-packages/django/test/testcases.py:1266: in _fixture_teardown
+    call_command(
+../.venv/lib/python3.13/site-packages/django/core/management/__init__.py:194: in call_command
+    return command.execute(*args, **defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/core/management/base.py:464: in execute
+    output = self.handle(*args, **options)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/core/management/commands/flush.py:73: in handle
+    raise CommandError(
+E   django.core.management.base.CommandError: Database test_microtix couldn't be flushed. Possible reasons:
+E     * The database isn't running or isn't configured correctly.
+E     * At least one of the expected database tables doesn't exist.
+E     * The SQL was invalid.
+E   Hint: Look at the output of 'django-admin sqlflush'. That's the SQL this command wasn't able to run.
+_ ERROR at teardown of test_authority_change_after_real_preflight_prevents_router_release[revoke] _
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:103: in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/psycopg/cursor.py:97: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.FeatureNotSupported: cannot truncate a table referenced in a foreign key constraint
+E   DETAIL:  Table "nas" references "network_router".
+E   HINT:  Truncate table "nas" at the same time, or use TRUNCATE ... CASCADE.
+
+The above exception was the direct cause of the following exception:
+../.venv/lib/python3.13/site-packages/django/core/management/commands/flush.py:71: in handle
+    connection.ops.execute_sql_flush(sql_list)
+../.venv/lib/python3.13/site-packages/django/db/backends/base/operations.py:473: in execute_sql_flush
+    cursor.execute(sql)
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:79: in execute
+    return self._execute_with_wrappers(
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:92: in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:100: in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/db/utils.py:91: in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:103: in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/psycopg/cursor.py:97: in execute
+    raise ex.with_traceback(None)
+E   django.db.utils.NotSupportedError: cannot truncate a table referenced in a foreign key constraint
+E   DETAIL:  Table "nas" references "network_router".
+E   HINT:  Truncate table "nas" at the same time, or use TRUNCATE ... CASCADE.
+
+The above exception was the direct cause of the following exception:
+../.venv/lib/python3.13/site-packages/pytest_django/fixtures.py:305: in _django_db_helper
+    test_case._post_teardown()
+../.venv/lib/python3.13/site-packages/django/test/testcases.py:1231: in _post_teardown
+    self._fixture_teardown()
+../.venv/lib/python3.13/site-packages/django/test/testcases.py:1266: in _fixture_teardown
+    call_command(
+../.venv/lib/python3.13/site-packages/django/core/management/__init__.py:194: in call_command
+    return command.execute(*args, **defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/core/management/base.py:464: in execute
+    output = self.handle(*args, **options)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/core/management/commands/flush.py:73: in handle
+    raise CommandError(
+E   django.core.management.base.CommandError: Database test_microtix couldn't be flushed. Possible reasons:
+E     * The database isn't running or isn't configured correctly.
+E     * At least one of the expected database tables doesn't exist.
+E     * The SQL was invalid.
+E   Hint: Look at the output of 'django-admin sqlflush'. That's the SQL this command wasn't able to run.
+_ ERROR at teardown of test_authority_change_after_real_preflight_prevents_router_release[demote] _
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:103: in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/psycopg/cursor.py:97: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.FeatureNotSupported: cannot truncate a table referenced in a foreign key constraint
+E   DETAIL:  Table "nas" references "network_router".
+E   HINT:  Truncate table "nas" at the same time, or use TRUNCATE ... CASCADE.
+
+The above exception was the direct cause of the following exception:
+../.venv/lib/python3.13/site-packages/django/core/management/commands/flush.py:71: in handle
+    connection.ops.execute_sql_flush(sql_list)
+../.venv/lib/python3.13/site-packages/django/db/backends/base/operations.py:473: in execute_sql_flush
+    cursor.execute(sql)
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:79: in execute
+    return self._execute_with_wrappers(
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:92: in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:100: in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/db/utils.py:91: in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:103: in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/psycopg/cursor.py:97: in execute
+    raise ex.with_traceback(None)
+E   django.db.utils.NotSupportedError: cannot truncate a table referenced in a foreign key constraint
+E   DETAIL:  Table "nas" references "network_router".
+E   HINT:  Truncate table "nas" at the same time, or use TRUNCATE ... CASCADE.
+
+The above exception was the direct cause of the following exception:
+../.venv/lib/python3.13/site-packages/pytest_django/fixtures.py:305: in _django_db_helper
+    test_case._post_teardown()
+../.venv/lib/python3.13/site-packages/django/test/testcases.py:1231: in _post_teardown
+    self._fixture_teardown()
+../.venv/lib/python3.13/site-packages/django/test/testcases.py:1266: in _fixture_teardown
+    call_command(
+../.venv/lib/python3.13/site-packages/django/core/management/__init__.py:194: in call_command
+    return command.execute(*args, **defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/core/management/base.py:464: in execute
+    output = self.handle(*args, **options)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/core/management/commands/flush.py:73: in handle
+    raise CommandError(
+E   django.core.management.base.CommandError: Database test_microtix couldn't be flushed. Possible reasons:
+E     * The database isn't running or isn't configured correctly.
+E     * At least one of the expected database tables doesn't exist.
+E     * The SQL was invalid.
+E   Hint: Look at the output of 'django-admin sqlflush'. That's the SQL this command wasn't able to run.
+_____ ERROR at teardown of test_b6_negative_readback_never_reports_success _____
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:103: in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/psycopg/cursor.py:97: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.FeatureNotSupported: cannot truncate a table referenced in a foreign key constraint
+E   DETAIL:  Table "nas" references "network_router".
+E   HINT:  Truncate table "nas" at the same time, or use TRUNCATE ... CASCADE.
+
+The above exception was the direct cause of the following exception:
+../.venv/lib/python3.13/site-packages/django/core/management/commands/flush.py:71: in handle
+    connection.ops.execute_sql_flush(sql_list)
+../.venv/lib/python3.13/site-packages/django/db/backends/base/operations.py:473: in execute_sql_flush
+    cursor.execute(sql)
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:79: in execute
+    return self._execute_with_wrappers(
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:92: in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:100: in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/db/utils.py:91: in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:103: in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/psycopg/cursor.py:97: in execute
+    raise ex.with_traceback(None)
+E   django.db.utils.NotSupportedError: cannot truncate a table referenced in a foreign key constraint
+E   DETAIL:  Table "nas" references "network_router".
+E   HINT:  Truncate table "nas" at the same time, or use TRUNCATE ... CASCADE.
+
+The above exception was the direct cause of the following exception:
+../.venv/lib/python3.13/site-packages/pytest_django/fixtures.py:305: in _django_db_helper
+    test_case._post_teardown()
+../.venv/lib/python3.13/site-packages/django/test/testcases.py:1231: in _post_teardown
+    self._fixture_teardown()
+../.venv/lib/python3.13/site-packages/django/test/testcases.py:1266: in _fixture_teardown
+    call_command(
+../.venv/lib/python3.13/site-packages/django/core/management/__init__.py:194: in call_command
+    return command.execute(*args, **defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/core/management/base.py:464: in execute
+    output = self.handle(*args, **options)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/core/management/commands/flush.py:73: in handle
+    raise CommandError(
+E   django.core.management.base.CommandError: Database test_microtix couldn't be flushed. Possible reasons:
+E     * The database isn't running or isn't configured correctly.
+E     * At least one of the expected database tables doesn't exist.
+E     * The SQL was invalid.
+E   Hint: Look at the output of 'django-admin sqlflush'. That's the SQL this command wasn't able to run.
+_ ERROR at teardown of test_b6_adapter_calls_run_outside_real_database_transaction _
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:103: in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/psycopg/cursor.py:97: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.FeatureNotSupported: cannot truncate a table referenced in a foreign key constraint
+E   DETAIL:  Table "nas" references "network_router".
+E   HINT:  Truncate table "nas" at the same time, or use TRUNCATE ... CASCADE.
+
+The above exception was the direct cause of the following exception:
+../.venv/lib/python3.13/site-packages/django/core/management/commands/flush.py:71: in handle
+    connection.ops.execute_sql_flush(sql_list)
+../.venv/lib/python3.13/site-packages/django/db/backends/base/operations.py:473: in execute_sql_flush
+    cursor.execute(sql)
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:79: in execute
+    return self._execute_with_wrappers(
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:92: in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:100: in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/db/utils.py:91: in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+../.venv/lib/python3.13/site-packages/django/db/backends/utils.py:103: in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/psycopg/cursor.py:97: in execute
+    raise ex.with_traceback(None)
+E   django.db.utils.NotSupportedError: cannot truncate a table referenced in a foreign key constraint
+E   DETAIL:  Table "nas" references "network_router".
+E   HINT:  Truncate table "nas" at the same time, or use TRUNCATE ... CASCADE.
+
+The above exception was the direct cause of the following exception:
+../.venv/lib/python3.13/site-packages/pytest_django/fixtures.py:305: in _django_db_helper
+    test_case._post_teardown()
+../.venv/lib/python3.13/site-packages/django/test/testcases.py:1231: in _post_teardown
+    self._fixture_teardown()
+../.venv/lib/python3.13/site-packages/django/test/testcases.py:1266: in _fixture_teardown
+    call_command(
+../.venv/lib/python3.13/site-packages/django/core/management/__init__.py:194: in call_command
+    return command.execute(*args, **defaults)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/core/management/base.py:464: in execute
+    output = self.handle(*args, **options)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.venv/lib/python3.13/site-packages/django/core/management/commands/flush.py:73: in handle
+    raise CommandError(
+E   django.core.management.base.CommandError: Database test_microtix couldn't be flushed. Possible reasons:
+E     * The database isn't running or isn't configured correctly.
+E     * At least one of the expected database tables doesn't exist.
+E     * The SQL was invalid.
+E   Hint: Look at the output of 'django-admin sqlflush'. That's the SQL this command wasn't able to run.
+=================================== FAILURES ===================================
+________ test_http_jobs_reject_router_outside_membership_scope[detail] _________
+../report/controller-evidence/20261117T134100Z-0020-review/test_authority_review.py:86: in test_http_jobs_reject_router_outside_membership_scope
+    assert (response.status_code, actual.state, after) == (404, original_state, before), observed
+E   AssertionError: {'http_status': 200, 'job_count_after': 1, 'job_count_before': 1, 'job_router_in_membership_scope': False, ...}
+E   assert (200, 'queued', 1) == (404, 'queued', 1)
+E     
+E     At index 0 diff: 200 != 404
+E     Use -v to get more diff
+________ test_http_jobs_reject_router_outside_membership_scope[cancel] _________
+../report/controller-evidence/20261117T134100Z-0020-review/test_authority_review.py:86: in test_http_jobs_reject_router_outside_membership_scope
+    assert (response.status_code, actual.state, after) == (404, original_state, before), observed
+E   AssertionError: {'http_status': 204, 'job_count_after': 1, 'job_count_before': 1, 'job_router_in_membership_scope': False, ...}
+E   assert (204, 'cancelled', 1) == (404, 'queued', 1)
+E     
+E     At index 0 diff: 204 != 404
+E     Use -v to get more diff
+_________ test_http_jobs_reject_router_outside_membership_scope[retry] _________
+../report/controller-evidence/20261117T134100Z-0020-review/test_authority_review.py:86: in test_http_jobs_reject_router_outside_membership_scope
+    assert (response.status_code, actual.state, after) == (404, original_state, before), observed
+E   AssertionError: {'http_status': 202, 'job_count_after': 2, 'job_count_before': 1, 'job_router_in_membership_scope': False, ...}
+E   assert (202, 'failed', 2) == (404, 'failed', 1)
+E     
+E     At index 0 diff: 202 != 404
+E     Use -v to get more diff
+__ test_authority_change_after_real_preflight_prevents_router_release[revoke] __
+../report/controller-evidence/20261117T134100Z-0020-review/test_authority_review.py:95: in test_authority_change_after_real_preflight_prevents_router_release
+    assert claimed is not None and claimed.id == job.id
+E   AssertionError: assert (<Job: Job object (9d388c92-1951-4246-8d02-2a7567335dda)> is not None and UUID('9d388c92-1951-4246-8d02-2a7567335dda') == UUID('fd5c7f45-a1fd-4ac6-818d-324365e0fecc'))
+E    +  where UUID('9d388c92-1951-4246-8d02-2a7567335dda') = <Job: Job object (9d388c92-1951-4246-8d02-2a7567335dda)>.id
+E    +  and   UUID('fd5c7f45-a1fd-4ac6-818d-324365e0fecc') = <Job: Job object (fd5c7f45-a1fd-4ac6-818d-324365e0fecc)>.id
+__ test_authority_change_after_real_preflight_prevents_router_release[demote] __
+../report/controller-evidence/20261117T134100Z-0020-review/test_authority_review.py:145: in test_authority_change_after_real_preflight_prevents_router_release
+    assert (released, results["job"]["error_code"]) == (False, "authority_denied"), observed
+E   AssertionError: {'distinct_db_connections': True, 'error_code': None, 'probe': 'after_preflight_demote', 'router_released': True, ...}
+E   assert (True, None) == (False, 'authority_denied')
+E     
+E     At index 0 diff: True != False
+E     Use -v to get more diff
+_______________ test_b6_negative_readback_never_reports_success ________________
+../report/controller-evidence/20261117T134100Z-0020-review/test_authority_review.py:202: in test_b6_negative_readback_never_reports_success
+    assert (
+E   AssertionError: {'calls': [{'autocommit': False, 'in_atomic_block': True, 'op': 'apply', 'pid': 30142}, {'autocommit': False, 'in_atomic_block': True, 'op': 'verify', 'pid': 30142}], 'job_error': None, 'job_state': 'succeeded', 'readback_ok': False, ...}
+E   assert ('succeeded' != JobState.SUCCEEDED)
+E    +  where JobState.SUCCEEDED = JobState.SUCCEEDED
+_________ test_b6_adapter_calls_run_outside_real_database_transaction __________
+../report/controller-evidence/20261117T134100Z-0020-review/test_authority_review.py:213: in test_b6_adapter_calls_run_outside_real_database_transaction
+    assert all(not item["in_atomic_block"] and item["autocommit"] for item in observed["calls"]), observed
+E   AssertionError: {'calls': [{'autocommit': False, 'in_atomic_block': True, 'op': 'apply', 'pid': 30142}, {'autocommit': False, 'in_atomic_block': True, 'op': 'verify', 'pid': 30142}], 'job_error': None, 'job_state': 'succeeded', 'readback_ok': True, ...}
+E   assert False
+E    +  where False = all(<generator object test_b6_adapter_calls_run_outside_real_database_transaction.<locals>.<genexpr> at 0x7f5b4c48cc70>)
+=========================== short test summary info ============================
+ERROR ::test_http_jobs_reject_router_outside_membership_scope[detail] - djang...
+ERROR ::test_http_jobs_reject_router_outside_membership_scope[cancel] - djang...
+ERROR ::test_http_jobs_reject_router_outside_membership_scope[retry] - django...
+ERROR ::test_authority_change_after_real_preflight_prevents_router_release[revoke]
+ERROR ::test_authority_change_after_real_preflight_prevents_router_release[demote]
+ERROR ::test_b6_negative_readback_never_reports_success - django.core.managem...
+ERROR ::test_b6_adapter_calls_run_outside_real_database_transaction - django....
+FAILED ::test_http_jobs_reject_router_outside_membership_scope[detail] - Asse...
+FAILED ::test_http_jobs_reject_router_outside_membership_scope[cancel] - Asse...
+FAILED ::test_http_jobs_reject_router_outside_membership_scope[retry] - Asser...
+FAILED ::test_authority_change_after_real_preflight_prevents_router_release[revoke]
+FAILED ::test_authority_change_after_real_preflight_prevents_router_release[demote]
+FAILED ::test_b6_negative_readback_never_reports_success - AssertionError: {'...
+FAILED ::test_b6_adapter_calls_run_outside_real_database_transaction - Assert...
+7 failed, 7 errors in 3.12s

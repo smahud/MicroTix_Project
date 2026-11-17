@@ -26,6 +26,22 @@ def _run_jobs_until(kind: str, limit: int = 10):
         engine.run_claimed(claimed)
 
 
+def _tenant_owner(tenant):
+    """Aktor sah tenant (owner) — provenance job produksi (PA-003).
+
+    Job produksi kini membawa aktor; engine memeriksa ulang membership/izin
+    dari DB mutakhir sebelum efek, jadi tes yang mensimulasikan alur API
+    sah harus menyediakan provenance yang sama.
+    """
+    from domains.tenancy.models import Membership
+
+    membership = Membership.objects.filter(
+        tenant_id=tenant.id, role="owner", revoked_at=None
+    ).first()
+    assert membership is not None, "fixture tenant harus punya owner aktif"
+    return membership.user
+
+
 class TestEnrollmentFlow:
     def test_create_issues_token_once_and_reserves_ip(self, api_client, owner, tenant_a):
         api_client.force_login(owner)
@@ -174,6 +190,7 @@ class TestDiscoveryAndLifecycle:
             enr = services.create_enrollment(
                 str(tenant.id),
                 {"display_name": "R Discovery", "router_code": "RTR-DISC", "mode": "read_only"},
+                actor=_tenant_owner(tenant),
             )
             script = services.bootstrap_script(enr)["script"]
             token = script.split(':local token "')[1].split('"')[0]
@@ -210,6 +227,7 @@ class TestDiscoveryAndLifecycle:
         with tenant_scope(tenant_a.id):
             job = engine.create_job(
                 tenant_id=tenant_a.id, kind="router_release", router=router,
+                actor=_tenant_owner(tenant_a),
                 payload={"router_id": str(router.id)},
             )
         claimed = engine.claim_next()
@@ -459,6 +477,7 @@ class TestApiSslVerificationPath:
             enr = services.create_enrollment(
                 str(tenant.id),
                 {"display_name": "R ApiSSL", "router_code": "RTR-APISSL", "mode": "read_only"},
+                actor=_tenant_owner(tenant),
             )
             script = services.bootstrap_script(enr)["script"]
             token = script.split(':local token "')[1].split('"')[0]

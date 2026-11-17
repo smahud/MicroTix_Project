@@ -1,0 +1,312 @@
+{
+  "observed_at_utc": "2026-11-16T23:15:13.288Z",
+  "user_date": "2026-11-17",
+  "timezone": "Asia/Jakarta",
+  "repository": "smahud/MicroTix_Project",
+  "baseline": "41d1f33f16508491a34f66b767830b9dd3e5954e",
+  "tree": "9036b3e4ce473df39d569eabb11c813b14956bb2",
+  "main_ref": {
+    "ref": "refs/heads/main",
+    "node_id": "REF_kwDOVjL4n69yZWZzL2hlYWRzL21haW4",
+    "url": "https://api.github.com/repos/smahud/MicroTix_Project/git/refs/heads/main",
+    "object": {
+      "sha": "41d1f33f16508491a34f66b767830b9dd3e5954e",
+      "type": "commit",
+      "url": "https://api.github.com/repos/smahud/MicroTix_Project/git/commits/41d1f33f16508491a34f66b767830b9dd3e5954e"
+    }
+  },
+  "branches": [
+    {
+      "name": "docs/default-agent-prompts-20261112",
+      "sha": "776099e10def9c6922a105f0e7b6ca278a47c025"
+    },
+    {
+      "name": "docs/payment-point-planning-20261113",
+      "sha": "2a9803593c328ab014bab6695b298072ed4c1886"
+    },
+    {
+      "name": "docs/planning-audit-20261110",
+      "sha": "6bb57c9251f3a7a67b71b9523c01e507fdb1b601"
+    },
+    {
+      "name": "docs/task-communication-loop-20261112",
+      "sha": "4f807e77484babf71550ede3bd2aa65a990aa877"
+    },
+    {
+      "name": "docs/task-workflow-20261112",
+      "sha": "826672ee3fbebd48eddc833a3a9e29282ccbaec1"
+    },
+    {
+      "name": "integration/beta-0.1",
+      "sha": "0eb01d2e5baaa6511e0b2145f05850df18a1bdc0"
+    },
+    {
+      "name": "main",
+      "sha": "41d1f33f16508491a34f66b767830b9dd3e5954e"
+    },
+    {
+      "name": "parallel/beta-be2",
+      "sha": "c9023e6d9bb1e5e1b2ef18685d94bc82f6c6eb02"
+    },
+    {
+      "name": "review/0010-pa006-controller-20261113",
+      "sha": "5da0d801c71b020fbb8b977294502ea5a09e7bcb"
+    },
+    {
+      "name": "review/0010-pa006-controller-20261114",
+      "sha": "b6a0cb863f52cbbf512b23dceafc4231ff9c7d74"
+    },
+    {
+      "name": "review/0010-pa006-controller-20261115",
+      "sha": "e507175cb2982b6a974eee8bf437d0b6de5879c6"
+    },
+    {
+      "name": "review/0010-pa006-controller-r4-20261115",
+      "sha": "4bb726106f2dea1949dc737eb8c81dae6fd8d341"
+    },
+    {
+      "name": "review/0010-pa006-controller-r5-20261116",
+      "sha": "c352bce4e3f4cfe87ae62ee23e3c1e2a4cfbb450"
+    },
+    {
+      "name": "review/0010-pa006-submission-check-20261112",
+      "sha": "17901fc439199ad70082942832d88fd7214f391c"
+    },
+    {
+      "name": "session/2026-11-06-billing-docs",
+      "sha": "43946354715de5391b86765eb5cad3d0da938562"
+    },
+    {
+      "name": "session/2026-11-06-bootstrap-inrepo",
+      "sha": "8f6b173464270d77be93da70775d1fc367fac2d2"
+    },
+    {
+      "name": "session/2026-11-06-tk604-billing-ui",
+      "sha": "5d902e361526b6b35bda5d0f75984ffacea28ab9"
+    },
+    {
+      "name": "session/2026-11-06-wg-e2e",
+      "sha": "b07504a2a3455348ba05f1aabd5550246c088dec"
+    },
+    {
+      "name": "session/2026-11-07-sstp-phase2",
+      "sha": "d7fa35e5583bc36848e3b45497d2511739298c8a"
+    },
+    {
+      "name": "session/2026-11-07-wg-onboarding",
+      "sha": "4ed21454d8e37bdc58bd61575031765dfa6b47c7"
+    },
+    {
+      "name": "session/2026-11-11-pa001-payment-concurrency",
+      "sha": "482602ecad6616167d14f2b30cd60e2039093fe9"
+    },
+    {
+      "name": "session/2026-11-13-pa006-idempotency",
+      "sha": "7480c80e2c27b8b06048b77132d235efe6b3a3c2"
+    },
+    {
+      "name": "session/2026-11-14-pa006-idempotency",
+      "sha": "37a87291ae66a0fa9167f0c72d1e8340aa5fd245"
+    },
+    {
+      "name": "session/2026-11-15-pa006-executor-state-check",
+      "sha": "b645797974a3921e04518a06af756d888e0a8d10"
+    },
+    {
+      "name": "session/2026-11-15-pa006-idempotency",
+      "sha": "9e9bf2d42002a00a69d54fc355b77384897b9478"
+    },
+    {
+      "name": "session/2026-11-15-pa006-idempotency-correction",
+      "sha": "634da4224f15dd6a5a4e9010fe1811dec8c7954d"
+    },
+    {
+      "name": "session/2026-11-16-pa006-rev1311-01-correction",
+      "sha": "a301a94c2b3268679065e85bbef66f35949483f7"
+    }
+  ],
+  "open_pull_requests": [
+    {
+      "number": 23,
+      "title": "docs(review): PR21 PA-006 changes requested; one legacy-migration finding remains",
+      "draft": false,
+      "base": "session/2026-11-15-pa006-idempotency-correction",
+      "head": "review/0010-pa006-controller-r4-20261115",
+      "head_sha": "4bb726106f2dea1949dc737eb8c81dae6fd8d341"
+    },
+    {
+      "number": 22,
+      "title": "docs(task0010): executor state check — kandidat keempat PR21 menunggu controller review",
+      "draft": false,
+      "base": "main",
+      "head": "session/2026-11-15-pa006-executor-state-check",
+      "head_sha": "b645797974a3921e04518a06af756d888e0a8d10"
+    },
+    {
+      "number": 20,
+      "title": "docs(review): PR19 PA-006 changes requested; retain closed findings and reopen task0010",
+      "draft": false,
+      "base": "session/2026-11-15-pa006-idempotency",
+      "head": "review/0010-pa006-controller-20261115",
+      "head_sha": "e507175cb2982b6a974eee8bf437d0b6de5879c6"
+    },
+    {
+      "number": 18,
+      "title": "docs(review): PA-006 PR17 changes requested; reopen task0010",
+      "draft": false,
+      "base": "session/2026-11-14-pa006-idempotency",
+      "head": "review/0010-pa006-controller-20261114",
+      "head_sha": "b6a0cb863f52cbbf512b23dceafc4231ff9c7d74"
+    },
+    {
+      "number": 16,
+      "title": "docs(review): PA-006 changes requested; reopen task0010",
+      "draft": false,
+      "base": "session/2026-11-13-pa006-idempotency",
+      "head": "review/0010-pa006-controller-20261113",
+      "head_sha": "5da0d801c71b020fbb8b977294502ea5a09e7bcb"
+    },
+    {
+      "number": 15,
+      "title": "PA-006 (task 0010): HTTP idempotency aman terhadap scope dan race",
+      "draft": false,
+      "base": "main",
+      "head": "session/2026-11-13-pa006-idempotency",
+      "head_sha": "7480c80e2c27b8b06048b77132d235efe6b3a3c2"
+    },
+    {
+      "number": 14,
+      "title": "docs: plan future DANA Payment Point add-on (non-blocking Beta)",
+      "draft": true,
+      "base": "main",
+      "head": "docs/payment-point-planning-20261113",
+      "head_sha": "2a9803593c328ab014bab6695b298072ed4c1886"
+    },
+    {
+      "number": 13,
+      "title": "docs(review): catat PA-006 belum diserahkan dan next actor",
+      "draft": false,
+      "base": "main",
+      "head": "review/0010-pa006-submission-check-20261112",
+      "head_sha": "17901fc439199ad70082942832d88fd7214f391c"
+    },
+    {
+      "number": 8,
+      "title": "docs: finalisasi planning audit modularitas dan upgrade safety MicroTix",
+      "draft": true,
+      "base": "main",
+      "head": "docs/planning-audit-20261110",
+      "head_sha": "6bb57c9251f3a7a67b71b9523c01e507fdb1b601"
+    },
+    {
+      "number": 7,
+      "title": "feat(network): Phase-2 SSTP — kanal manajemen komplementer WireGuard (v6+v7)",
+      "draft": false,
+      "base": "main",
+      "head": "session/2026-11-07-sstp-phase2",
+      "head_sha": "d7fa35e5583bc36848e3b45497d2511739298c8a"
+    }
+  ],
+  "tasks": [
+    {
+      "path": "task/0000-start-here.md",
+      "sha": "b34d6c8f86d3e02f10188608aaee79ee5d927fd0"
+    },
+    {
+      "path": "task/0010-pa006-idempotency_done.md",
+      "sha": "57c502ebf937b1454d2e258363489ad5e7454ffe"
+    }
+  ],
+  "predecessor_merges": [
+    {
+      "number": 24,
+      "merged": true,
+      "merged_at": "2026-11-16T11:17:20Z",
+      "head": "a301a94c2b3268679065e85bbef66f35949483f7",
+      "merge_commit_sha": "532862be2711f26d537ae1df540258bbdcae2052"
+    },
+    {
+      "number": 25,
+      "merged": true,
+      "merged_at": "2026-11-16T11:17:44Z",
+      "head": "c352bce4e3f4cfe87ae62ee23e3c1e2a4cfbb450",
+      "merge_commit_sha": "fd0f3faa84ea87c142d37da5dacf01e22a493f90"
+    }
+  ],
+  "code_continuity": {
+    "base": "c352bce4e3f4cfe87ae62ee23e3c1e2a4cfbb450",
+    "head": "41d1f33f16508491a34f66b767830b9dd3e5954e",
+    "status": "ahead",
+    "changed_paths": [
+      "docs/progress.md",
+      "report/LATEST_HANDOFF.md",
+      "report/executor-evidence/20261116T111835Z-0010-pa006-integration/check.log",
+      "report/executor-evidence/20261116T111835Z-0010-pa006-integration/ci-record-commit.txt",
+      "report/executor-evidence/20261116T111835Z-0010-pa006-integration/consistency.log",
+      "report/executor-evidence/20261116T111835Z-0010-pa006-integration/docs.log",
+      "report/executor-evidence/20261116T111835Z-0010-pa006-integration/environment.txt",
+      "report/executor-evidence/20261116T111835Z-0010-pa006-integration/full-suite.log",
+      "report/executor-evidence/20261116T111835Z-0010-pa006-integration/main-after-pr24.txt",
+      "report/executor-evidence/20261116T111835Z-0010-pa006-integration/main-after-pr25.txt",
+      "report/executor-evidence/20261116T111835Z-0010-pa006-integration/main-after-records.txt",
+      "report/executor-evidence/20261116T111835Z-0010-pa006-integration/merge-pr24.json",
+      "report/executor-evidence/20261116T111835Z-0010-pa006-integration/merge-pr25.json",
+      "report/executor-evidence/20261116T111835Z-0010-pa006-integration/pre-merge-verification.txt",
+      "report/executor-evidence/20261116T111835Z-0010-pa006-integration/preservation.txt",
+      "report/orchestrator/20261116T111835Z-0010-pa006-integration.md",
+      "task/0010-pa006-idempotency_done.md"
+    ],
+    "protected_application_config_change_count": 0
+  },
+  "exact_baseline_ci": {
+    "run_id": 43857508367,
+    "head_sha": "41d1f33f16508491a34f66b767830b9dd3e5954e",
+    "checks": [
+      {
+        "name": "frontend",
+        "sha": "41d1f33f16508491a34f66b767830b9dd3e5954e",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/smahud/MicroTix_Project/actions/runs/43857508367/job/133265461154"
+      },
+      {
+        "name": "backend",
+        "sha": "41d1f33f16508491a34f66b767830b9dd3e5954e",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/smahud/MicroTix_Project/actions/runs/43857508367/job/133265461113"
+      },
+      {
+        "name": "docs",
+        "sha": "41d1f33f16508491a34f66b767830b9dd3e5954e",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/smahud/MicroTix_Project/actions/runs/43857508367/job/133265460727"
+      }
+    ],
+    "backend": {
+      "passed": 513,
+      "skipped": 1,
+      "warnings": 3,
+      "duration_s": 89.29,
+      "skip": "binary freeradius unavailable; tests/unit/test_radius_config.py:133",
+      "postgres_reported_version": "17.12"
+    },
+    "frontend": {
+      "test_files": 9,
+      "passed": 66,
+      "typecheck_lint_i18n_live_build": "success"
+    },
+    "docs": {
+      "result": "PASS",
+      "files": 24,
+      "internal_links": 106
+    }
+  },
+  "attribution": {
+    "ci": "Existing GitHub Actions job metadata and decoded logs read by root; not local re-execution",
+    "historical_integrator": "514 passed with FreeRADIUS real binary is integrator evidence, not this session's CI result",
+    "local_execution": "UNAVAILABLE: exec_command returned No usable execution environment is available; no local worktree, shell, PG, or process test inspected/run",
+    "new_task_implementation": "not_submitted"
+  }
+}

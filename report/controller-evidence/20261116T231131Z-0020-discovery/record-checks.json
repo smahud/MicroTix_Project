@@ -1,0 +1,19 @@
+{
+  "result": "PASS",
+  "scope": "record_static_only",
+  "checks": {
+    "new_packet_id_0020_absent_on_baseline": true,
+    "single_0010_done_preserved": true,
+    "packet_0020_ready": true,
+    "packet_0020_review_not_submitted": true,
+    "acceptance_A01_to_A09": true,
+    "task0010_only_next_metadata_changed": true,
+    "no_source_config_or_normative_doc_change": true,
+    "manifest_untouched": true,
+    "all_three_independent_reports_present": true,
+    "relative_links_valid": true
+  },
+  "relative_links_checked": 122,
+  "broken_links": [],
+  "attribution": "JavaScript in functions.exec; no local shell, Python docs validator or application tests run"
+}

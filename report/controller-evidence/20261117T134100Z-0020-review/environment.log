@@ -1,0 +1,7 @@
+                                                       version                                                       | current_user | rolsuper | rolbypassrls 
+---------------------------------------------------------------------------------------------------------------------+--------------+----------+--------------
+ PostgreSQL 17.11 (Debian 17.11-0+deb13u1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit | mtx_app      | f        | f
+(1 row)
+
+3.13.5 (main, Aug 10 2026, 12:06:59) [GCC 14.2.0]
+django 5.2.19 psycopg 3.2.13 pytest 8.4.2

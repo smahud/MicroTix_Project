@@ -1,0 +1,68 @@
+                                                       version                                                       | current_user | rolsuper | rolbypassrls 
+---------------------------------------------------------------------------------------------------------------------+--------------+----------+--------------
+ PostgreSQL 17.12 (Debian 17.12-0+deb13u1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit | mtx_app      | f        | f
+(1 row)
+
+ nspname |              relname               |   relowner   | relrowsecurity | relforcerowsecurity 
+---------+------------------------------------+--------------+----------------+---------------------
+ public  | audit_event                        | mtx_migrator | t              | t
+ public  | auth_group                         | mtx_migrator | f              | f
+ public  | auth_group_permissions             | mtx_migrator | f              | f
+ public  | auth_permission                    | mtx_migrator | f              | f
+ public  | backups_artifact                   | mtx_migrator | t              | t
+ public  | backups_schedule                   | mtx_migrator | t              | t
+ public  | billing_internet_invoice           | mtx_migrator | t              | t
+ public  | billing_internet_invoice_line      | mtx_migrator | t              | t
+ public  | billing_internet_payment           | mtx_migrator | t              | t
+ public  | billing_package                    | mtx_migrator | t              | t
+ public  | billing_payment_allocation         | mtx_migrator | t              | t
+ public  | billing_service_charge             | mtx_migrator | t              | t
+ public  | customers_access_account           | mtx_migrator | t              | t
+ public  | customers_csv_import               | mtx_migrator | t              | t
+ public  | customers_customer                 | mtx_migrator | t              | t
+ public  | customers_migration_decision       | mtx_migrator | t              | t
+ public  | customers_migration_session        | mtx_migrator | t              | t
+ public  | customers_service                  | mtx_migrator | t              | t
+ public  | django_admin_log                   | mtx_migrator | f              | f
+ public  | django_content_type                | mtx_migrator | f              | f
+ public  | django_migrations                  | mtx_migrator | f              | f
+ public  | django_session                     | mtx_migrator | f              | f
+ public  | documents_issued_document          | mtx_migrator | t              | t
+ public  | identity_email_token               | mtx_migrator | f              | f
+ public  | identity_login_attempt             | mtx_migrator | f              | f
+ public  | identity_recovery_code             | mtx_migrator | f              | f
+ public  | identity_support_grant             | mtx_migrator | f              | f
+ public  | identity_totp_device               | mtx_migrator | f              | f
+ public  | identity_user                      | mtx_migrator | f              | f
+ public  | identity_user_groups               | mtx_migrator | f              | f
+ public  | identity_user_user_permissions     | mtx_migrator | f              | f
+ public  | jobs_idempotency_key               | mtx_migrator | f              | f
+ public  | jobs_job                           | mtx_migrator | f              | f
+ public  | jobs_jobdetail                     | mtx_migrator | t              | t
+ public  | jobs_outbox_event                  | mtx_migrator | f              | f
+ public  | network_device_operation           | mtx_migrator | t              | t
+ public  | network_discovery_object           | mtx_migrator | t              | t
+ public  | network_discovery_snapshot         | mtx_migrator | t              | t
+ public  | network_router                     | mtx_migrator | t              | t
+ public  | network_router_enrollment          | mtx_migrator | t              | t
+ public  | network_router_health              | mtx_migrator | t              | t
+ public  | network_wireguard_host             | mtx_migrator | f              | f
+ public  | network_wireguard_peer             | mtx_migrator | t              | t
+ public  | radius_cutover_run                 | mtx_migrator | t              | t
+ public  | subs_payment_submission            | mtx_migrator | t              | t
+ public  | subs_plan_version                  | mtx_migrator | f              | f
+ public  | subs_platform_payment_source_event | mtx_migrator | f              | f
+ public  | subs_quota_reservation             | mtx_migrator | t              | t
+ public  | subs_saas_invoice                  | mtx_migrator | t              | t
+ public  | subs_subscription                  | mtx_migrator | t              | t
+ public  | tenancy_membership                 | mtx_migrator | f              | f
+ public  | tenancy_tenant                     | mtx_migrator | f              | f
+ radius  | nas                                | mtx_migrator | t              | t
+ radius  | radacct                            | mtx_migrator | t              | t
+ radius  | radcheck                           | mtx_migrator | t              | t
+ radius  | radgroupreply                      | mtx_migrator | t              | t
+ radius  | radpostauth                        | mtx_migrator | t              | t
+ radius  | radreply                           | mtx_migrator | t              | t
+ radius  | radusergroup                       | mtx_migrator | t              | t
+(59 rows)
+

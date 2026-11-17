@@ -1,6 +1,141 @@
 # MicroTix — checkpoint kemajuan
 
-Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-16 (Asia/Jakarta).
+Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-17 (Asia/Jakarta).
+
+## Checkpoint 2026-11-17, ~23:59 WIB — executor menyerahkan koreksi task0020 (done, pending review)
+
+Coding agent menutup **REV-1711-01–09 pada ID0020 yang sama** dari decision
+ref **[PR29](https://github.com/smahud/MicroTix_Project/pull/29)** (fetched
+sampai `0e45157`; base membawa source PR27). Perubahan minimum stack
+existing: guard ownership DI DALAM transaksi unit domain (`scope()`+`
+assert_owned()`, heartbeat/progress melempar OwnershipLost; guard diteruskan
+ke `run_discovery`/`finalize_verification`), `JobError.no_effect` eksplisit
++ default uncertain pasca-efek (komposisi transisi executing→uncertain→
+retry_wait sah tabel §6), retry lineage root-lock+BFS seluruh descendant,
+hold durable router outcome-unknown (+executing/verifying lease expired),
+authority di batas efek setelah preflight, HTTP job menghormati
+membership.router_scope (404 non-scope), B6 APPLY/VERIFY di luar transaksi
++ readback negatif jujur (run FAILED, tanpa klaim LOCAL/ROLLED_BACK), serta
++8 tes bukti REV-1711-09 (SIGTERM/SIGINT idle/active-barrier/stop-claim,
+fase panjang vs reconciler serentak, crash setelah commit domain,
+current-policy/SUB-05 restricted/ended). Tanpa migrasi schema.
+
+Bukti: **probe controller R1 failing-before 11 failed → passing-after
+11 passed** (diulang pada DB split-role migrator-owned + runtime
+NOSUPERUSER/NOBYPASSRLS/FORCE RLS); **suite penuh 562 passed/1skip**;
+PA-001 33, PA-006 125, RLS 8 lulus; check/makemigrations/docs PASS.
+[Reviewer independen](../report/reviewer/20261117T160500Z-0020-correction-independent.md):
+REV-1711-01–09 CLOSED, nol pelemahan assertion; temuan P2 reviewer
+(CORR-REV-01 no_effect blanket backup, CORR-REV-02 jendela hard-crash
+pra-reconcile) **ditutup sebelum commit**. Execution **done / review
+pending** pada [packet0020_done](../task/0020-job-lifecycle-authority_done.md);
+[laporan koreksi + matriks A01–A09](../report/orchestrator/20261117T160000Z-0020-correction-delivery.md)
++ [evidence](../report/executor-evidence/20261117T150000Z-0020-correction/).
+Candidate **[PR30](https://github.com/smahud/MicroTix_Project/pull/30)** published head `062a017` (impl/tested `2681a3d`), CI exact head **[run44119619011](https://github.com/smahud/MicroTix_Project/actions/runs/44119619011) backend/frontend/docs success 3/3** terverifikasi. Next **controller_reviewer** mereview exact SHA koreksi; task0010 tetap
+accepted/integrated; task0030 belum eligible. Beta **NOT_READY**;
+host/perangkat/GNS3/live RADIUS/browser/benchmark tetap NOT_RUN.
+
+## Checkpoint 2026-11-17, ~21:48 WIB — controller resume task0020
+
+GitHub/fresh clone **31 branches/14 open PRs**: main41d1f33, PR27bd37c14,
+starting PR29decision43043be unchanged; **belum ada penyerahan koreksi**.
+Task0020 tetap **ready / changes_requested**, correction delivery
+**not_submitted**, next **coding_agent** fetch PR29 decision ref dan tutup
+REV-1711-01–09 pada ID sama. Ancestry7118cce→bd37c14→43043be sah; seluruh
+delta hanya task/report/progress. Existing CI43043be sekarang success3/3
+(menggantikan observasi in-progress), bukan closure finding/CI checkpoint.
+
+[Controller checkpoint](../report/controller/20261117T144620Z-0020-resume-review.md),
+[independent review](../report/reviewer/20261117T144620Z-0020-resume-independent.md)
+dan [checks](../report/controller-evidence/20261117T144620Z-0020-resume/local-checks.json)
+pada existing PR29; docs validator PASS24/106 dan diff hygiene PASS. Bukti
+R1 554passed/1skip +11 acceptance failures tetap historis; runtime tidak
+diulang pada source unchanged. Task0010 accepted/integrated, task0030
+belum eligible, Beta NOT_READY. Publication/readback checkpoint §6 dan
+final-head CI di PR29; tanpa aplikasi patch/merge/deploy/tag/activation.
+
+## Checkpoint 2026-11-17 — controller R1 task0020 changes_requested
+
+Review exact **PR27@bd37c14e6c41339a8743b3d4b723ee74f13bef08** dari
+main41d1f33/instruction PR26ea7b8a1; ancestor7118cce→candidate app/source
+diff kosong. [Controller R1](../report/controller/20261117T134100Z-0020-job-lifecycle-review.md)
++ dua reviewer independen, root full suite **554 passed/1skip/3warnings**,
+check/makemigrations/docs PASS, exact candidate CI43994355914 success3/3.
+**11 focused acceptance assertions gagal tanpa harness error** pada fresh
+PG17.11 migrator-owned schema+runtime nonowner/NOBYPASSRLS/FORCE RLS:
+stale discovery commit, backup resend, uncertain retry lineage/router hold,
+revoke/demote setelah preflight, HTTP router-scope bypass, B6 I/O transaction
+serta false-success negative verifier. Delapan defect **REV-1711-01–08**,
+gap mandatory evidence **09** dicatat terpisah; [evidence summary](../report/controller-evidence/20261117T134100Z-0020-review/review-results.json).
+
+**[Packet0020](../task/0020-job-lifecycle-authority.md) reopened ready /
+changes_requested**, next **coding_agent** fetch `review/0020-controller-20261117`
+dan tutup finding pada ID sama, submit exact SHA baru+tes/evidence/CI.
+Decision dipublikasikan pada **[PR29](https://github.com/smahud/MicroTix_Project/pull/29)**,
+initial commit **3c4b71f/tree9b7d2405**, ref/commit/tree+39path readback MATCH
+dan clean local fetch; metadata descendant hanya mencatat publikasi ini.
+Final head/CI mengikuti PR29 dan controller report §8. PA-006/task0010 tetap accepted/integrated dan P3 R5
+assertions preserved. Tidak ada task0030, app patch, main merge, deployment,
+aktivasi atau tag. Beta **NOT_READY**; host/perangkat/GNS3/live RADIUS/
+browser/benchmark tidak diklaim terverifikasi. Checkpoint di bawah histori.
+
+## Checkpoint 2026-11-17, ~08:10 WIB — executor menyerahkan task0020 PA-002+PA-003 (done, pending review)
+
+Executor Z.ai sandbox menjalankan [packet0020](../task/0020-job-lifecycle-authority.md)
+dari instruction ref PR26 `review/0020-job-lifecycle-authority-20261117` @ ea7b8a1,
+base main **41d1f33** (delta kosong). Implementation/tested **6e96ce33** pada branch
+`session/2026-11-17-0020-job-lifecycle-authority` (penyerahan report-only di atasnya;
+tree kode identik). Engine jobs direworks: CAS lease token+epoch+expected-state pada
+seluruh tulisan worker (hasil terminal ikut CAS di WHERE), unit transaksi tenant pendek
+per handler tanpa lock melintasi I/O adapter, effect_state=maybe atomik pra-execute +
+cancel hanya pra-efek (executing 409 jujur), satu pemilik pengirim per router via
+advisory lock, reconcile state/effect-aware CAS + idempotent, resolve readback protocol
+(fence penulis lama; verify tanpa resend; unknown tertahan), retry diserialisasi
+(uncertain/recovery_required dianggap aktif), deadline claim+pra-efek, progress
+memperpanjang lease, kewenangan terkini fresh-DB (peta kind fail-closed; provenance
+verify_api_ssl dari enrollment.created_by; karantina actorless dengan resume; recheck
+antar fase kirim cutover), HTTP job detail/retry/cancel pakai izin operasi dasar +
+step-up sensitif, RouterReplaceView → routers.release, handler hilang/verifier negatif
+fail-closed, runworker drain SIGTERM/SIGINT + drain-timeout + exit 0/3. Tanpa migrasi
+schema (jobs/0004/0005 tak tersentuh).
+
+Bukti: **suite penuh 554 passed + 1 skip** PG 17.11 nyata non-superuser FORCE RLS;
+**failing-before pada baseline 41d1f33: 33/37 lifecycle + 4/4 drain GAGAL**,
+passing-after 41/41; PA-001 + PA-006 (R4/R5 replay migrasi) lulus; check/makemigrations/
+docs PASS; frontend tsc/eslint/vitest 66/i18n/build lulus; P3 REV-1611-TEST-01 ditutup
+test-only. [Review independen](../report/reviewer/20261117T010218Z-0020-job-lifecycle-independent.md)
+pra-koreksi CHANGES_REQUESTED (REV-2011-01 P1 .. 10) — seluruh temuan ditindaklanjuti
+dengan tes; [laporan eksekusi + matriks A01–A09 + runbook](../report/orchestrator/20261117T010218Z-0020-job-lifecycle-authority.md),
+[evidence](../report/executor-evidence/20261117T000000Z-0020-job-lifecycle/).
+Task0020 **done / pending**; next **controller_reviewer** review exact SHA 6e96ce3.
+PA-006 tetap accepted/integrated; Beta tetap **NOT_READY** (installer/upgrade/restore/
+scheduler/DEC-01/02/host-lab/kapasitas). Simulator/CI bukan bukti perangkat nyata.
+
+## Checkpoint 2026-11-17 — PA-006 integrated terverifikasi, task0020 ready untuk coding agent
+
+Controller menjalankan default reviewer dari GitHub pada main **41d1f33**:
+PR24/25 merged; decision headc352bce→main delta17record paths tanpa aplikasi/config/test.
+PA-006 tetap **done / accepted / integrated**, tanpa submission keenam.
+Exact main CI43857508367 success3/3; decoded log backend **513 passed,1 skipped,3 warnings**
+(FreeRADIUS binary unavailable), frontend66, docs PASS24/106.
+Ini bukti CI existing; root runtime lokal unavailable, tidak mengklaim rerun514.
+
+[Task0020 PA-002+PA-003](../task/0020-job-lifecycle-authority.md) disiapkan
+**ready / not_submitted** pada instruction ref
+`review/0020-job-lifecycle-authority-20261117`: lifecycle fencing seluruh write,
+short RLS DB/I/O boundary, cancel/uncertain/readback/per-router writer,
+early crash recovery/deadline, current authority/HTTP permission/verifier,
+real-process drain dan legacy compatibility. PA-001/PA-006 preserved;
+P3 REV-1611-TEST-01 hanya test hardening. Tidak mengadopsi PR8 draft
+atau memperluas fitur R2/R3/R4. [Controller report](../report/controller/20261116T231131Z-0020-job-lifecycle-review.md)
+menautkan dua reviewer independen, packet QA dan remote evidence.
+Publikasi **[PR26](https://github.com/smahud/MicroTix_Project/pull/26)** initial ancestor
+**e11d48b4fdc0c1757c52af7d9e528437b5afa0bc**, tree653db3cf, ref/commit/PR dan10file content+blob readback MATCH;
+metadata descendant hanya mencatat publikasi ini. Initial CI43978170214 docs PASS,
+backend/frontend masih berjalan pada readback pertama; final-head CI dicatat di PR26 setelah teramati.
+Belum ada hasil implementasi0020.
+Next **coding_agent** fetch instruction ref dan eksekusi packet, lalu submit SHA baru.
+Production Beta **NOT_READY**; tidak ada merge/deploy/aktivasi/tag. Checkpoint berikut histori.
 
 ## Checkpoint 2026-11-16, ~18:25 WIB — integrasi task0010/PA-006 selesai: PR24+PR25 merged ke main
 

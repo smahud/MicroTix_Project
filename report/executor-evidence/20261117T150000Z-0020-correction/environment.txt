@@ -1,0 +1,6 @@
+== environment ==
+Python 3.13.18
+Django 5.2.19 | psycopg 3.2.13 | pytest 8.4.2
+ PostgreSQL 17.12 (Debian 17.12-0+deb13u1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+
+Linux 5.10.134-013.15.kangaroo.al8.x86_64

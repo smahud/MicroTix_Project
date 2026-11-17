@@ -58,9 +58,18 @@ def _enroll_and_backup(tenant, router):
 
 def _run_cutover_job(tenant, router, *, rollback=False):
     # create_job membuka tenant_scope sendiri — jangan dibungkus scope luar.
+    # Aktor = owner tenant: job produksi membawa provenance yang diperiksa
+    # ulang engine (PA-003) — mensimulasikan alur API sah.
+    from domains.tenancy.models import Membership
+
+    owner_user = (
+        Membership.objects.filter(tenant_id=tenant.id, role="owner", revoked_at=None).first()
+    )
+    assert owner_user is not None
     job = engine.create_job(
         tenant_id=tenant.id,
         kind="radius_cutover_step",
+        actor=owner_user.user,
         router=router,
         payload={"router_id": str(router.id), **({"rollback": True} if rollback else {})},
     )

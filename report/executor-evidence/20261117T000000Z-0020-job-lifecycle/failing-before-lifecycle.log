@@ -1,0 +1,857 @@
+FFFFFFFFF.FFFFFFF..FFFFFFFFFFFFF.FFFF                                    [100%]
+=================================== FAILURES ===================================
+_____ TestOwnershipFencing.test_stale_snapshot_after_cancel_writes_nothing _____
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestOwnershipFencing object at 0x7f178c08fc50>
+
+    def test_stale_snapshot_after_cancel_writes_nothing(self):
+        """Cancel saat claimed menaikkan epoch; worker basi berhenti TANPA
+        menimpa state/result dan TANPA efek baru (fail sebelum execute)."""
+        tenant, owner = _make_tenant("rtrw-pa02-a01a")
+        job = engine.create_job(tenant_id=tenant.id, kind="_test_router_send", actor=owner,
+                                payload={"x": 1})
+        claimed = engine.claim_next()
+        assert claimed is not None and str(claimed.id) == str(job.id)
+        epoch_before = claimed.lease_epoch
+    
+        cancelled = engine.cancel_job(claimed, "operator")
+        assert cancelled.state == JobState.CANCELLED
+        # epoch dinaikkan oleh cancel → pasangan token+epoch worker basi mati
+>       assert cancelled.lease_epoch == epoch_before + 1
+E       assert 1 == (1 + 1)
+E        +  where 1 = <Job: Job object (6f2acc80-fdd8-4ec8-957b-d57b634ac893)>.lease_epoch
+
+tests/integration/test_jobs_lifecycle_pa002.py:231: AssertionError
+---------------------------- Captured stdout setup -----------------------------
+jobs.0004 idempotency identity backfill: kept_with_response=0 kept_no_response=0 platform_remapped=0 legacy_opaque_group=0 unparsed_retained=0 duplicate_deleted=0
+jobs.0005 idempotency secret-preview scrub: scanned=0 scrubbed=0 guards_deleted=0
+_ TestOwnershipFencing.test_stale_worker_after_lease_transfer_cannot_overwrite _
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestOwnershipFencing object at 0x7f178be04910>
+
+    def test_stale_worker_after_lease_transfer_cannot_overwrite(self):
+        """Lease dipindahkan (reconcile + klaim baru); snapshot worker lama
+        tidak dapat menimpa state/hasil/progress pemilik baru."""
+        tenant, owner = _make_tenant("rtrw-pa02-a01b")
+        job = engine.create_job(tenant_id=tenant.id, kind="_test_router_send", actor=owner)
+        stale = engine.claim_next()
+        from django.utils import timezone as tz
+    
+        # Paksa lease habis → reconcile → uncertain → klaim ulang (owner baru).
+        Job.objects.filter(id=job.id).update(lease_expires_at=tz.now() - tz.timedelta(seconds=1))
+>       assert engine.reconcile_expired_leases() >= 1
+E       assert 0 >= 1
+E        +  where 0 = <function reconcile_expired_leases at 0x7f178dbb7e20>()
+E        +    where <function reconcile_expired_leases at 0x7f178dbb7e20> = engine.reconcile_expired_leases
+
+tests/integration/test_jobs_lifecycle_pa002.py:250: AssertionError
+______ TestOwnershipFencing.test_heartbeat_progress_report_ownership_loss ______
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestOwnershipFencing object at 0x7f178c087820>
+
+    def test_heartbeat_progress_report_ownership_loss(self):
+        """heartbeat/progress ter-fence: kehilangan lease dilaporkan (False),
+        bukan diam-diam diabaikan; worker berhenti di batas berikutnya."""
+        tenant, owner = _make_tenant("rtrw-pa02-a01c")
+        job = engine.create_job(tenant_id=tenant.id, kind="_test_router_send", actor=owner)
+        claimed = engine.claim_next()
+        ctx = engine.JobContext(job=claimed, payload={})
+>       assert ctx.heartbeat() is True
+E       assert None is True
+E        +  where None = heartbeat()
+E        +    where heartbeat = JobContext(job=<Job: Job object (6a615bc9-2cb9-4b4f-b627-3db1729cd229)>, payload={}).heartbeat
+
+tests/integration/test_jobs_lifecycle_pa002.py:272: AssertionError
+______________ TestOwnershipFencing.test_terminal_state_immutable ______________
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestOwnershipFencing object at 0x7f178c087360>
+
+    def test_terminal_state_immutable(self):
+        """Terminal tidak dapat diubah oleh jalur engine manapun."""
+        tenant, owner = _make_tenant("rtrw-pa02-a01d")
+        job = engine.create_job(tenant_id=tenant.id, kind="_test_router_send", actor=owner)
+        claimed = engine.claim_next()
+        done = engine.run_claimed(claimed)
+        assert done.state == JobState.SUCCEEDED
+        with pytest.raises(ValueError):
+            engine.transition_claimed(done, JobState.FAILED)
+        # _mark ter-fence: expected state bukan verifying → CAS gagal
+>       with pytest.raises(engine.OwnershipLost):
+                           ^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'domains.jobs.engine' has no attribute 'OwnershipLost'
+
+tests/integration/test_jobs_lifecycle_pa002.py:293: AttributeError
+______ TestTransactionBoundaries.test_no_db_transaction_across_blocked_io ______
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestTransactionBoundaries object at 0x7f178be04b90>
+
+    def test_no_db_transaction_across_blocked_io(self):
+        """Adapter diblokir terkendali: koneksi observer melihat state
+        executing+maybe TERKOMIT, heartbeat terlihat, dan backend worker
+        tidak menahan transaksi/lock DB (idle, bukan idle in transaction)."""
+        tenant, owner = _make_tenant("rtrw-pa02-a02a")
+        job = engine.create_job(tenant_id=tenant.id, kind="_test_marker", actor=owner)
+        claimed = engine.claim_next()
+        lease_before = Job.objects.get(id=job.id).lease_expires_at
+    
+        results: dict = {}
+        t = _run_in_thread(claimed, results)
+        try:
+>           assert _MarkerHandler.blocked.wait(15), "handler tidak mencapai blok I/O"
+E           AssertionError: handler tidak mencapai blok I/O
+E           assert False
+E            +  where False = wait(15)
+E            +    where wait = <threading.Event at 0x7f178b6c03b0: unset>.wait
+E            +      where <threading.Event at 0x7f178b6c03b0: unset> = _MarkerHandler.blocked
+
+tests/integration/test_jobs_lifecycle_pa002.py:316: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2026-11-17 07:56:15,941 ERROR domains.jobs.engine job 0cd610a8-5d03-4c63-9bc3-e86494f26bf1 gagal tak terduga
+Traceback (most recent call last):
+  File "/tmp/mtx-baseline/backend/domains/jobs/engine.py", line 245, in run_claimed
+    result = handler.execute(ctx) or {}
+             ~~~~~~~~~~~~~~~^^^^^
+  File "/tmp/mtx-baseline/backend/tests/integration/test_jobs_lifecycle_pa002.py", line 97, in execute
+    with ctx.scope():  # unit DB pendek (commit segera)
+         ^^^^^^^^^
+AttributeError: 'JobContext' object has no attribute 'scope'
+------------------------------ Captured log call -------------------------------
+ERROR    domains.jobs.engine:engine.py:251 job 0cd610a8-5d03-4c63-9bc3-e86494f26bf1 gagal tak terduga
+Traceback (most recent call last):
+  File "/tmp/mtx-baseline/backend/domains/jobs/engine.py", line 245, in run_claimed
+    result = handler.execute(ctx) or {}
+             ~~~~~~~~~~~~~~~^^^^^
+  File "/tmp/mtx-baseline/backend/tests/integration/test_jobs_lifecycle_pa002.py", line 97, in execute
+    with ctx.scope():  # unit DB pendek (commit segera)
+         ^^^^^^^^^
+AttributeError: 'JobContext' object has no attribute 'scope'
+___ TestTransactionBoundaries.test_tenant_context_fail_closed_between_units ____
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestTransactionBoundaries object at 0x7f178be04e10>
+
+    def test_tenant_context_fail_closed_between_units(self):
+        """Antar unit scope, GUC koneksi kembali fail-closed (tanpa konteks
+        tenant) — koneksi pooled/reuse tidak membawa konteks lama."""
+        from domains.common.tenant_context import current_tenant_id
+    
+        tenant, owner = _make_tenant("rtrw-pa02-a02b")
+        job = engine.create_job(tenant_id=tenant.id, kind="_test_marker", actor=owner)
+        claimed = engine.claim_next()
+        ctx = engine.JobContext(job=claimed, payload={})
+>       with ctx.scope():
+             ^^^^^^^^^
+E       AttributeError: 'JobContext' object has no attribute 'scope'
+
+tests/integration/test_jobs_lifecycle_pa002.py:355: AttributeError
+_ TestExternalWriterAndCancel.test_same_router_single_sender_other_router_independent _
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestExternalWriterAndCancel object at 0x7f178be04f50>
+
+    def test_same_router_single_sender_other_router_independent(self):
+        """Dua job router sama: pengirim kedua TIDAK mengirim bersamaan
+        (advisory lock); router lain tetap maju mandiri."""
+        tenant, owner = _make_tenant("rtrw-pa02-a03a")
+        router1 = _make_router(tenant, code="PA02-R1", ip="100.127.8.1")
+        router2 = _make_router(tenant, code="PA02-R2", ip="100.127.8.2")
+    
+        job1 = engine.create_job(tenant_id=tenant.id, kind="_test_router_send", actor=owner, router=router1)
+        claimed1 = engine.claim_next()
+        assert claimed1 is not None and str(claimed1.id) == str(job1.id)
+    
+        gate = threading.Event()
+        _RouterSendHandler.gate = gate
+        _RouterSendHandler.gate_job = str(job1.id)
+    
+        results1: dict = {}
+        t1 = _run_in_thread(claimed1, results1)
+        try:
+            assert _wait_up_to(10, lambda: _send(job1.id) == 1), "job1 harus sudah 'mengirim'"
+    
+            # Job2 router sama → tidak boleh mengirim selama penulis lama hidup.
+            job2 = engine.create_job(tenant_id=tenant.id, kind="_test_router_send", actor=owner, router=router1)
+            claimed2 = engine.claim_next()
+            assert claimed2 is not None and str(claimed2.id) == str(job2.id)
+            attempt2_after_claim = Job.objects.get(id=job2.id).attempt
+            r2 = engine.run_claimed(claimed2)
+>           assert r2.state == JobState.RETRY_WAIT
+E           AssertionError: assert 'succeeded' == JobState.RETRY_WAIT
+E             
+E             - retry_wait
+E             + succeeded
+
+tests/integration/test_jobs_lifecycle_pa002.py:395: AssertionError
+___ TestExternalWriterAndCancel.test_cancel_rejected_while_send_outstanding ____
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestExternalWriterAndCancel object at 0x7f178be05090>
+
+    def test_cancel_rejected_while_send_outstanding(self):
+        """Cancel saat executing (efek maybe, kirim outstanding) ditolak —
+        tidak ada false cancelled menyembunyikan efek."""
+        tenant, owner = _make_tenant("rtrw-pa02-a03b")
+        job = engine.create_job(tenant_id=tenant.id, kind="_test_router_send", actor=owner)
+        claimed = engine.claim_next()
+        gate = threading.Event()
+        _RouterSendHandler.gate = gate
+        _RouterSendHandler.gate_job = str(job.id)
+        results: dict = {}
+        t = _run_in_thread(claimed, results)
+        try:
+            assert _wait_up_to(10, lambda: _send(job.id) == 1)
+            fresh = Job.objects.get(id=job.id)
+>           assert fresh.state == JobState.EXECUTING
+E           AssertionError: assert 'claimed' == JobState.EXECUTING
+E             
+E             - executing
+E             + claimed
+
+tests/integration/test_jobs_lifecycle_pa002.py:439: AssertionError
+_ TestExternalWriterAndCancel.test_cancel_before_effect_is_atomic_and_fences_worker _
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestExternalWriterAndCancel object at 0x7f178c0875c0>
+
+    def test_cancel_before_effect_is_atomic_and_fences_worker(self):
+        """Race cancel vs execute: cancel menang CAS → worker berhenti sebelum
+        efek (nol kirim); sudah executing → cancel jujur ditolak."""
+        tenant, owner = _make_tenant("rtrw-pa02-a03c")
+        job = engine.create_job(tenant_id=tenant.id, kind="_test_router_send", actor=owner)
+        claimed = engine.claim_next()
+        # Cancel MENANG sebelum worker masuk executing.
+        cancelled = engine.cancel_job(claimed, "cepat")
+        assert cancelled.state == JobState.CANCELLED
+>       r = engine.run_claimed(claimed)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/integration/test_jobs_lifecycle_pa002.py:460: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+domains/jobs/engine.py:232: in run_claimed
+    transition_claimed(job, JobState.PREFLIGHT, phase_label_code="preflight")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+job = <Job: Job object (c7f92d20-adf6-4bff-8110-7e5b24e1eab3)>
+new_state = JobState.PREFLIGHT, fields = {'phase_label_code': 'preflight'}
+
+    def transition_claimed(job: Job, new_state: str, **fields) -> None:
+        """Transisi state dengan validasi mesin state (dipakai worker & API).
+    
+        Memakai queryset update agar kemajuan items (ditulis heartbeat/progress
+        di jalur lain) tidak tertimpa nilai basi pada objek Python.
+        """
+        if job.state in TERMINAL_STATES:
+>           raise ValueError("Job terminal tidak dapat berubah")
+E           ValueError: Job terminal tidak dapat berubah
+
+domains/jobs/engine.py:209: ValueError
+______ TestUncertainAndRetry.test_uncertain_not_retryable_until_readback _______
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestUncertainAndRetry object at 0x7f178be051d0>
+
+    def test_uncertain_not_retryable_until_readback(self):
+        """Uncertain TIDAK boleh retry langsung (blind retry membuka efek baru
+        dari hasil tak diketahui) — API 409, engine menolak."""
+        from rest_framework.test import APIClient
+    
+        tenant, owner, job = self._uncertain_job("rtrw-pa02-a04a")
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/integration/test_jobs_lifecycle_pa002.py:497: Failed
+_ TestUncertainAndRetry.test_resolve_not_applied_requeues_with_old_writer_fence _
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestUncertainAndRetry object at 0x7f178be05310>
+
+    def test_resolve_not_applied_requeues_with_old_writer_fence(self):
+        """Readback terbukti belum diterapkan → antrian ulang dengan fence
+        penulis lama (epoch naik); kirim ulang terjadi TEPAT sekali lagi."""
+        tenant, owner, job = self._uncertain_job("rtrw-pa02-a04b")
+        epoch_before = Job.objects.get(id=job.id).lease_epoch
+        resolved = engine.resolve_uncertain(job, applied=False)
+        assert resolved.state == JobState.RETRY_WAIT
+        fresh = Job.objects.get(id=job.id)
+>       assert fresh.lease_epoch == epoch_before + 1, "penulis lama harus ter-fence"
+E       AssertionError: penulis lama harus ter-fence
+E       assert 1 == (1 + 1)
+E        +  where 1 = <Job: Job object (2a9bf5ab-9a2a-4440-bf2c-ae1d4cc7404d)>.lease_epoch
+
+tests/integration/test_jobs_lifecycle_pa002.py:517: AssertionError
+______ TestUncertainAndRetry.test_resolve_applied_verifies_without_resend ______
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestUncertainAndRetry object at 0x7f178c086c40>
+
+    def test_resolve_applied_verifies_without_resend(self):
+        """Readback terbukti sudah diterapkan → verify TANPA resend: jumlah
+        kirim tetap, job sukses lewat verifier readback."""
+        tenant, owner, job = self._uncertain_job("rtrw-pa02-a04c")
+        resolved = engine.resolve_uncertain(job, applied=True)
+>       assert resolved.state == JobState.SUCCEEDED
+E       assert JobState.VERIFYING == JobState.SUCCEEDED
+E         
+E         - succeeded
+E         + verifying
+
+tests/integration/test_jobs_lifecycle_pa002.py:529: AssertionError
+___________ TestUncertainAndRetry.test_resolve_unknown_stays_blocked ___________
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestUncertainAndRetry object at 0x7f178b785350>
+
+    def test_resolve_unknown_stays_blocked(self):
+        """Readback tak diketahui → tertahan (recovery_required), bukan
+        dijadikan antrean eksekusi baru."""
+        tenant, owner, job = self._uncertain_job("rtrw-pa02-a04d")
+        resolved = engine.resolve_uncertain(job, applied=None)
+>       assert resolved.state == JobState.RECOVERY_REQUIRED
+E       assert JobState.VERIFYING == JobState.RECOVERY_REQUIRED
+E         
+E         - recovery_required
+E         + verifying
+
+tests/integration/test_jobs_lifecycle_pa002.py:537: AssertionError
+_____ TestUncertainAndRetry.test_concurrent_retry_single_active_candidate ______
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestUncertainAndRetry object at 0x7f178b792210>
+
+    def test_concurrent_retry_single_active_candidate(self):
+        """Retry serentak dari job failed: satu 202, lainnya 409 — tidak ada
+        dua kandidat aktif untuk origin sama (efek logis tunggal)."""
+        from rest_framework.test import APIClient
+    
+        tenant, owner = _make_tenant("rtrw-pa02-a04e")
+        job = engine.create_job(tenant_id=tenant.id, kind="_test_router_send", actor=owner)
+        Job.objects.filter(id=job.id).update(state=JobState.FAILED, retryable=True, error_code="uji")
+    
+        def _client():
+            client = APIClient(enforce_csrf_checks=False)
+            client.force_login(owner)
+            session = client.session
+            session["active_tenant_id"] = str(tenant.id)
+            session["auth_at"] = _time_time()
+            session.save()
+            return client
+    
+        outcomes: dict[str, dict] = {}
+        barrier = threading.Barrier(2, timeout=30)
+    
+        def _retry(tag):
+            try:
+                client = _client()
+                barrier.wait()
+                resp = client.post(f"/api/v1/jobs/{job.id}/retry")
+                outcomes[tag] = {"status": resp.status_code}
+            except Exception as exc:  # noqa: BLE001
+                outcomes[tag] = {"exception": f"{type(exc).__name__}: {exc}"}
+    
+        threads = [threading.Thread(target=_retry, args=(t,)) for t in ("A", "B")]
+        for th in threads:
+            th.start()
+        for th in threads:
+            th.join(timeout=45)
+        assert not any(th.is_alive() for th in threads), "semua thread wajib selesai"
+        assert set(outcomes) == {"A", "B"}, outcomes
+        assert "exception" not in outcomes["A"] and "exception" not in outcomes["B"], outcomes
+        codes = sorted([outcomes["A"]["status"], outcomes["B"]["status"]])
+>       assert codes == [202, 409], f"satu diterima, satu ditolak: {outcomes}"
+E       AssertionError: satu diterima, satu ditolak: {'B': {'status': 202}, 'A': {'status': 202}}
+E       assert [202, 202] == [202, 409]
+E         
+E         At index 1 diff: 202 != 409
+E         Use -v to get more diff
+
+tests/integration/test_jobs_lifecycle_pa002.py:580: AssertionError
+__________ TestCrashReconcileDeadline.test_crash_after_claim_requeues __________
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestCrashReconcileDeadline object at 0x7f178be05450>
+
+    def test_crash_after_claim_requeues(self):
+        """Proses mati setelah claim (belum ada efek): reconcile mengantrekan
+        ulang — tidak menggantung, tidak false uncertain."""
+        tenant, owner = _make_tenant("rtrw-pa02-a05a")
+        job = engine.create_job(tenant_id=tenant.id, kind="_test_router_send", actor=owner)
+        claimed = engine.claim_next()
+        from django.utils import timezone as tz
+    
+        Job.objects.filter(id=job.id).update(lease_expires_at=tz.now() - tz.timedelta(seconds=1))
+        n = engine.reconcile_expired_leases()
+>       assert n >= 1
+E       assert 0 >= 1
+
+tests/integration/test_jobs_lifecycle_pa002.py:602: AssertionError
+_____ TestCrashReconcileDeadline.test_crash_after_claim_max_attempts_fails _____
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestCrashReconcileDeadline object at 0x7f178be05590>
+
+    def test_crash_after_claim_max_attempts_fails(self):
+        """Crash berulang hingga attempt habis → failed jujur."""
+        from django.utils import timezone as tz
+    
+        tenant, owner = _make_tenant("rtrw-pa02-a05b")
+        job = engine.create_job(tenant_id=tenant.id, kind="_test_router_send", actor=owner)
+        engine.claim_next()
+        Job.objects.filter(id=job.id).update(
+            lease_expires_at=tz.now() - tz.timedelta(seconds=1),
+            attempt=5,
+        )
+        engine.reconcile_expired_leases()
+        fresh = Job.objects.get(id=job.id)
+>       assert fresh.state == JobState.FAILED
+E       AssertionError: assert 'claimed' == JobState.FAILED
+E         
+E         - failed
+E         + claimed
+
+tests/integration/test_jobs_lifecycle_pa002.py:627: AssertionError
+_ TestCrashReconcileDeadline.test_deadline_expired_in_queue_fails_without_send _
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestCrashReconcileDeadline object at 0x7f178b792e70>
+
+    def test_deadline_expired_in_queue_fails_without_send(self):
+        """Deadline terlewat saat masih antrian → failed jujur, tanpa kirim."""
+        tenant, owner = _make_tenant("rtrw-pa02-a05e")
+        job = engine.create_job(tenant_id=tenant.id, kind="_test_router_send", actor=owner)
+        from django.utils import timezone as tz
+    
+        Job.objects.filter(id=job.id).update(deadline_at=tz.now() - tz.timedelta(seconds=1))
+>       assert engine.claim_next() is None
+E       assert <Job: Job object (8074e9e8-cda9-4bc4-8d45-a4e7616ae563)> is None
+E        +  where <Job: Job object (8074e9e8-cda9-4bc4-8d45-a4e7616ae563)> = <function claim_next at 0x7f178dbb7880>()
+E        +    where <function claim_next at 0x7f178dbb7880> = engine.claim_next
+
+tests/integration/test_jobs_lifecycle_pa002.py:672: AssertionError
+_____ TestCrashReconcileDeadline.test_deadline_before_execute_fails_honest _____
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestCrashReconcileDeadline object at 0x7f178c082e00>
+
+    def test_deadline_before_execute_fails_honest(self):
+        """Deadline habis setelah claim namun sebelum efek → failed tanpa
+        mengirim terlambat; (expired SETELAH efek possible → uncertain,
+        dibuktikan jalur uncertain di A04)."""
+        tenant, owner = _make_tenant("rtrw-pa02-a05f")
+        job = engine.create_job(tenant_id=tenant.id, kind="_test_router_send", actor=owner)
+        claimed = engine.claim_next()
+        from django.utils import timezone as tz
+    
+        Job.objects.filter(id=job.id).update(deadline_at=tz.now() - tz.timedelta(seconds=1))
+        r = engine.run_claimed(claimed)
+>       assert r.state == JobState.FAILED
+E       AssertionError: assert 'succeeded' == JobState.FAILED
+E         
+E         - failed
+E         + succeeded
+
+tests/integration/test_jobs_lifecycle_pa002.py:689: AssertionError
+___ TestCurrentAuthority.test_revoked_membership_stops_job_with_zero_effects ___
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestCurrentAuthority object at 0x7f178be056d0>
+
+    def test_revoked_membership_stops_job_with_zero_effects(self):
+        """Membership dicabut SETELAH enqueue: nol efek (router tidak dilepas),
+        job gagal jujur authority_denied."""
+        tenant, owner = _make_tenant("rtrw-pa02-a06a")
+        router = _make_router(tenant, code="PA02-AUTH1", ip="100.127.9.1")
+        job, claimed = self._release_job(tenant, owner, router)
+        Membership.objects.filter(user=owner, tenant=tenant).update(
+            revoked_at=tz.now()
+        )
+        r = engine.run_claimed(claimed)
+>       assert r.state == JobState.FAILED
+E       AssertionError: assert 'succeeded' == JobState.FAILED
+E         
+E         - failed
+E         + succeeded
+
+tests/integration/test_jobs_lifecycle_pa002.py:718: AssertionError
+_______________ TestCurrentAuthority.test_demoted_role_stops_job _______________
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestCurrentAuthority object at 0x7f178be05810>
+
+    def test_demoted_role_stops_job(self):
+        """Owner diturunkan ke viewer (tanpa routers.release) setelah enqueue →
+        nol efek; izin diperiksa dari DB mutakhir, bukan snapshot enqueue."""
+        tenant, owner = _make_tenant("rtrw-pa02-a06b")
+        router = _make_router(tenant, code="PA02-AUTH2", ip="100.127.9.2")
+        job, claimed = self._release_job(tenant, owner, router)
+        Membership.objects.filter(user=owner, tenant=tenant).update(role=Role.VIEWER)
+        r = engine.run_claimed(claimed)
+>       assert r.state == JobState.FAILED
+E       AssertionError: assert 'succeeded' == JobState.FAILED
+E         
+E         - failed
+E         + succeeded
+
+tests/integration/test_jobs_lifecycle_pa002.py:733: AssertionError
+_ TestCurrentAuthority.test_actorless_legacy_job_quarantined_with_resume_path __
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestCurrentAuthority object at 0x7f178b7849d0>
+
+    def test_actorless_legacy_job_quarantined_with_resume_path(self):
+        """Job produksi lama tanpa aktor (payload legacy) TIDAK menjadi
+        privilege sistem: dikarantina recovery_required dengan alasan; jalur
+        resume = retry dengan provenance baru → tuntas."""
+        tenant, owner = _make_tenant("rtrw-pa02-a06c")
+        router = _make_router(tenant, code="PA02-AUTH3", ip="100.127.9.3")
+        job = engine.create_job(  # tanpa actor — simulasi legacy
+            tenant_id=tenant.id, kind="router_release", router=router,
+            payload={"router_id": str(router.id)},
+        )
+        claimed = engine.claim_next()
+        r = engine.run_claimed(claimed)
+        # Karantina jujur sesuai tabel §6: FAILED authority_unresolved yang
+        # retryable — nol efek, resume = retry dengan provenance (bukan
+        # privilege sistem; REV-2011-05).
+>       assert r.state == JobState.FAILED
+E       AssertionError: assert 'succeeded' == JobState.FAILED
+E         
+E         - failed
+E         + succeeded
+
+tests/integration/test_jobs_lifecycle_pa002.py:755: AssertionError
+_______ TestCurrentAuthority.test_platform_only_and_foreign_actor_denied _______
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestCurrentAuthority object at 0x7f178b784770>
+
+    def test_platform_only_and_foreign_actor_denied(self):
+        """Aktor tanpa membership tenant (mis. user platform-only) → ditolak;
+        aktor non-aktif → ditolak."""
+        tenant, owner = _make_tenant("rtrw-pa02-a06d")
+        router = _make_router(tenant, code="PA02-AUTH4", ip="100.127.9.4")
+        outsider = User.objects.create_user(
+            email="pa002-outsider@test.local", full_name="Outsider",
+            password=_TEST_PASSWORD, is_active=True,
+        )
+        job = engine.create_job(
+            tenant_id=tenant.id, kind="router_release", actor=outsider, router=router,
+            payload={"router_id": str(router.id)},
+        )
+        claimed = engine.claim_next()
+        r = engine.run_claimed(claimed)
+>       assert r.state == JobState.FAILED and r.error_code == "authority_denied"
+E       AssertionError: assert ('succeeded' == JobState.FAILED
+E         
+E         - failed
+E         + succeeded)
+
+tests/integration/test_jobs_lifecycle_pa002.py:788: AssertionError
+__________ TestCurrentAuthority.test_router_scope_membership_enforced __________
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestCurrentAuthority object at 0x7f178b793e30>
+
+    def test_router_scope_membership_enforced(self):
+        """Membership dengan router_scope sempit: job router di luar scope
+        ditolak sebelum efek."""
+        tenant, owner = _make_tenant("rtrw-pa02-a06e")
+        router_in = _make_router(tenant, code="PA02-AUTH5", ip="100.127.9.5")
+        router_out = _make_router(tenant, code="PA02-AUTH6", ip="100.127.9.6")
+        Membership.objects.filter(user=owner, tenant=tenant).update(
+            router_scope=[str(router_in.id)]
+        )
+        job = engine.create_job(
+            tenant_id=tenant.id, kind="router_release", actor=owner, router=router_out,
+            payload={"router_id": str(router_out.id)},
+        )
+        claimed = engine.claim_next()
+        r = engine.run_claimed(claimed)
+>       assert r.state == JobState.FAILED and r.error_code == "authority_denied"
+E       AssertionError: assert ('succeeded' == JobState.FAILED
+E         
+E         - failed
+E         + succeeded)
+
+tests/integration/test_jobs_lifecycle_pa002.py:815: AssertionError
+_ TestCurrentAuthority.test_verify_api_ssl_provenance_from_enrollment_creator __
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestCurrentAuthority object at 0x7f178c083570>
+
+    def test_verify_api_ssl_provenance_from_enrollment_creator(self):
+        """verify_api_ssl actorless diturunkan dari enrollment.created_by
+        (provenance ownership); creator sah → berjalan; creator dicabut →
+        gagal jujur, bukan privilege sistem."""
+        from domains.network.models import RouterEnrollment, WireGuardPeer
+    
+        tenant, owner = _make_tenant("rtrw-pa02-a06f")
+        with tenant_scope(tenant.id):
+            enrollment = RouterEnrollment.objects.create(
+                tenant_id=tenant.id, display_name="R Prov", router_code="PA02-PROV",
+                tunnel_ip="100.127.9.7", token_hash="th-" + _uuid.uuid4().hex,
+                token_expires_at=tz.now()
+                + tz.timedelta(minutes=10),
+                status=RouterEnrollment.Status.BOOTSTRAPPED,
+                created_by=owner,
+            )
+            # Peer desired dibuat oleh bootstrap nyata (services) — replika.
+            WireGuardPeer.objects.create(
+                tenant_id=tenant.id, router=None, enrollment=enrollment,
+                allowed_ip=enrollment.tunnel_ip, public_key="wgpub-pa02-prov",
+                desired_revision=1, state=WireGuardPeer.State.PENDING,
+            )
+        job = engine.create_job(  # tanpa actor — jalur bridge
+            tenant_id=tenant.id, kind="verify_api_ssl",
+            payload={"enrollment_id": str(enrollment.id)},
+        )
+        claimed = engine.claim_next()
+        r = engine.run_claimed(claimed)  # simulator path — creator sah
+        assert r.state == JobState.SUCCEEDED
+        # Creator kehilangan membership → job berikutnya gagal jujur.
+        enrollment2 = None
+        with tenant_scope(tenant.id):
+            enrollment2 = RouterEnrollment.objects.create(
+                tenant_id=tenant.id, display_name="R Prov2", router_code="PA02-PRO2",
+                tunnel_ip="100.127.9.8", token_hash="th-" + _uuid.uuid4().hex,
+                token_expires_at=tz.now()
+                + tz.timedelta(minutes=10),
+                status=RouterEnrollment.Status.BOOTSTRAPPED,
+                created_by=owner,
+            )
+            WireGuardPeer.objects.create(
+                tenant_id=tenant.id, router=None, enrollment=enrollment2,
+                allowed_ip=enrollment2.tunnel_ip, public_key="wgpub-pa02-pro2",
+                desired_revision=1, state=WireGuardPeer.State.PENDING,
+            )
+        job2 = engine.create_job(
+            tenant_id=tenant.id, kind="verify_api_ssl",
+            payload={"enrollment_id": str(enrollment2.id)},
+        )
+        Membership.objects.filter(user=owner, tenant=tenant).update(
+            revoked_at=tz.now()
+        )
+        claimed2 = engine.claim_next()
+        r2 = engine.run_claimed(claimed2)
+>       assert r2.state == JobState.FAILED and r2.error_code == "authority_denied"
+E       AssertionError: assert ('succeeded' == JobState.FAILED
+E         
+E         - failed
+E         + succeeded)
+
+tests/integration/test_jobs_lifecycle_pa002.py:875: AssertionError
+___ TestHttpAuthorityAndVerifier.test_detail_requires_underlying_permission ____
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestHttpAuthorityAndVerifier object at 0x7f178be05950>
+
+    def test_detail_requires_underlying_permission(self):
+        """Viewer (customers.read saja) tidak boleh detail job operasi
+        backup; owner boleh; lintas tenant tetap 404 generik."""
+        tenant, owner = _make_tenant("rtrw-pa02-a07a")
+        job = engine.create_job(tenant_id=tenant.id, kind="backup_router", actor=owner)
+        viewer = User.objects.create_user(
+            email="pa002-viewer@test.local", full_name="Viewer",
+            password=_TEST_PASSWORD, is_active=True,
+        )
+        Membership.objects.create(user=viewer, tenant=tenant, role=Role.VIEWER)
+        resp_owner = self._client(owner, tenant.id).get(f"/api/v1/jobs/{job.id}")
+        assert resp_owner.status_code == 200
+        resp_viewer = self._client(viewer, tenant.id).get(f"/api/v1/jobs/{job.id}")
+>       assert resp_viewer.status_code == 403
+E       assert 200 == 403
+E        +  where 200 = <Response status_code=200, "application/json">.status_code
+
+tests/integration/test_jobs_lifecycle_pa002.py:912: AssertionError
+_ TestHttpAuthorityAndVerifier.test_retry_cancel_sensitive_kind_requires_permission_and_stepup _
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestHttpAuthorityAndVerifier object at 0x7f178be05a90>
+
+    def test_retry_cancel_sensitive_kind_requires_permission_and_stepup(self):
+        """Job cutover (radius.cutover, sensitif): retry/cancel butuh izin itu
+        + step-up reauth; teknisi tanpa izin → 403; owner tanpa reauth → 403."""
+        tenant, owner = _make_tenant("rtrw-pa02-a07c")
+        technician = User.objects.create_user(
+            email="pa002-tech@test.local", full_name="Tech",
+            password=_TEST_PASSWORD, is_active=True,
+        )
+        Membership.objects.create(user=technician, tenant=tenant, role=Role.TECHNICIAN)
+        job = engine.create_job(tenant_id=tenant.id, kind="radius_cutover_step", actor=owner)
+        Job.objects.filter(id=job.id).update(state=JobState.FAILED, retryable=True, error_code="uji")
+    
+        # Teknisi punya banyak izin tapi TIDAK radius.cutover → 403.
+        resp_tech = self._client(technician, tenant.id).post(f"/api/v1/jobs/{job.id}/retry")
+>       assert resp_tech.status_code == 403
+E       assert 202 == 403
+E        +  where 202 = <Response status_code=202, "application/json">.status_code
+
+tests/integration/test_jobs_lifecycle_pa002.py:932: AssertionError
+_ TestHttpAuthorityAndVerifier.test_router_replace_requires_release_permission _
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestHttpAuthorityAndVerifier object at 0x7f178b784510>
+
+    def test_router_replace_requires_release_permission(self):
+        """Penggantian melepas router lama → routers.release (ARCHITECTURE §5):
+        teknisi (punya routers.enroll, TIDAK release) ditolak 403."""
+        from domains.network.models import Router
+    
+        tenant, owner = _make_tenant("rtrw-pa02-a07d")
+        technician = User.objects.create_user(
+            email="pa02-tech2@test.local", full_name="Tech2",
+            password=_TEST_PASSWORD, is_active=True,
+        )
+        Membership.objects.create(user=technician, tenant=tenant, role=Role.TECHNICIAN)
+        with tenant_scope(tenant.id):
+            router = Router.objects.create(
+                tenant_id=tenant.id, display_name="R Replace", router_code="PA02-REPL",
+                tunnel_ip="100.127.9.9", mode=Router.Mode.MANAGED, credential_ref="enc:t",
+            )
+        resp = self._client(technician, tenant.id).post(
+            f"/api/v1/tenants/{tenant.id}/routers/{router.id}/replace",
+            headers={"Idempotency-Key": "pa02-replace-1"},
+        )
+>       assert resp.status_code == 403, "routers.enroll saja tidak boleh melepas router"
+E       AssertionError: routers.enroll saja tidak boleh melepas router
+E       assert 202 == 403
+E        +  where 202 = <Response status_code=202, "application/json">.status_code
+
+tests/integration/test_jobs_lifecycle_pa002.py:967: AssertionError
+________ TestHttpAuthorityAndVerifier.test_missing_handler_fails_closed ________
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestHttpAuthorityAndVerifier object at 0x7f178c087bb0>
+
+    def test_missing_handler_fails_closed(self):
+        """Kind tanpa handler → gagal jujur handler_missing, TIDAK sukses
+        kosong."""
+        tenant, owner = _make_tenant("rtrw-pa02-a07e")
+        job = engine.create_job(tenant_id=tenant.id, kind="_test_nohandler", actor=owner)
+        claimed = engine.claim_next()
+        r = engine.run_claimed(claimed)
+>       assert r.state == JobState.FAILED
+E       AssertionError: assert 'succeeded' == JobState.FAILED
+E         
+E         - failed
+E         + succeeded
+
+tests/integration/test_jobs_lifecycle_pa002.py:982: AssertionError
+______ TestHttpAuthorityAndVerifier.test_negative_verifier_never_succeeds ______
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestHttpAuthorityAndVerifier object at 0x7f178b793410>
+
+    def test_negative_verifier_never_succeeds(self):
+        """Verifier mengembalikan {ok: False} → job FAILED verification_failed,
+        bukan succeeded."""
+        tenant, owner = _make_tenant("rtrw-pa02-a07f")
+        job = engine.create_job(tenant_id=tenant.id, kind="_test_negverify", actor=owner)
+        claimed = engine.claim_next()
+        r = engine.run_claimed(claimed)
+>       assert r.state == JobState.FAILED
+E       AssertionError: assert 'succeeded' == JobState.FAILED
+E         
+E         - failed
+E         + succeeded
+
+tests/integration/test_jobs_lifecycle_pa002.py:992: AssertionError
+___ TestReviewerCorrections.test_retry_origin_blocked_while_child_uncertain ____
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestReviewerCorrections object at 0x7f178be05bd0>
+
+    def test_retry_origin_blocked_while_child_uncertain(self):
+        """REV-2011-01: kandidat retry yang UNCERTAIN tetap dianggap aktif —
+        retry kedua pada origin ditolak 409 sampai outcome terselesaikan
+        (tidak ada efek logis ganda dari hasil tak diketahui)."""
+        tenant, owner = _make_tenant("rtrw-pa02-rev01")
+        origin = engine.create_job(tenant_id=tenant.id, kind="_test_uncertain_send", actor=owner)
+        Job.objects.filter(id=origin.id).update(state=JobState.FAILED, retryable=True, error_code="uji")
+        child = engine.retry_job(Job.objects.get(id=origin.id), actor=owner)
+        claimed = engine.claim_next()
+        assert str(claimed.id) == str(child.id)
+        r = engine.run_claimed(claimed)
+        assert r.state == JobState.UNCERTAIN  # kirim pertama, outcome tak diketahui
+    
+        # Retry origin LAGI saat kandidat masih uncertain → ditolak.
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/integration/test_jobs_lifecycle_pa002.py:1055: Failed
+_ TestReviewerCorrections.test_resolve_not_applied_refused_while_old_writer_active _
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestReviewerCorrections object at 0x7f178be05d10>
+
+    def test_resolve_not_applied_refused_while_old_writer_active(self):
+        """REV-2011-03: readback 'belum diterapkan' tidak dipercaya selama
+        penulis lama masih memegang router (send in-flight bisa mendarat
+        setelah readback) — resolve menolak sampai penulis terbukti berhenti."""
+        tenant, owner = _make_tenant("rtrw-pa02-rev03")
+        router = _make_router(tenant, code="PA02-REV3", ip="100.127.10.1")
+        job = engine.create_job(tenant_id=tenant.id, kind="_test_router_send", actor=owner, router=router)
+        claimed = engine.claim_next()
+        gate = threading.Event()
+        _RouterSendHandler.gate = gate
+        _RouterSendHandler.gate_job = str(job.id)
+        results: dict = {}
+        t = _run_in_thread(claimed, results)
+        try:
+            assert _wait_up_to(10, lambda: _send(job.id) == 1)
+            # Paksa uncertain sementara penulis lama masih hidup (memegang lock).
+            from django.utils import timezone as tz2
+    
+            Job.objects.filter(id=job.id).update(
+                state=JobState.UNCERTAIN, lease_token=None, lease_expires_at=None,
+                error_code="lease_expired",
+            )
+>           with pytest.raises(ValueError, match="writer_active"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/integration/test_jobs_lifecycle_pa002.py:1089: Failed
+_______ TestReviewerCorrections.test_progress_renews_lease_for_long_work _______
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestReviewerCorrections object at 0x7f178b7842b0>
+
+    def test_progress_renews_lease_for_long_work(self):
+        """REV-2011-04: laporan kemajuan sekaligus memperpanjang lease —
+        handler yang melapor per fase tidak dipaksa uncertain oleh reconcile
+        worker lain (renewal pekerjaan panjang)."""
+        tenant, owner = _make_tenant("rtrw-pa02-rev04")
+        job = engine.create_job(tenant_id=tenant.id, kind="_test_router_send", actor=owner)
+        claimed = engine.claim_next()
+        ctx = engine.JobContext(job=claimed, payload={})
+        before = Job.objects.get(id=job.id).lease_expires_at
+>       assert ctx.progress(phase="fase", done=1, total=10) is True
+E       AssertionError: assert None is True
+E        +  where None = progress(phase='fase', done=1, total=10)
+E        +    where progress = JobContext(job=<Job: Job object (bc70545f-2604-4349-94d0-299fc5f8ad56)>, payload={}).progress
+
+tests/integration/test_jobs_lifecycle_pa002.py:1108: AssertionError
+____ TestReviewerCorrections.test_drain_before_effect_holds_job_requeueable ____
+
+self = <tests.integration.test_jobs_lifecycle_pa002.TestReviewerCorrections object at 0x7f178b785480>
+
+    def test_drain_before_effect_holds_job_requeueable(self):
+        """REV-2011-09: sinyal stop sebelum efek (preflight) → job ditahan di
+        retry_wait drained_before_effect, nol efek, dapat diklaim ulang."""
+        tenant, owner = _make_tenant("rtrw-pa02-rev09")
+        job = engine.create_job(tenant_id=tenant.id, kind="_test_router_send", actor=owner)
+        claimed = engine.claim_next()
+>       r = engine.run_claimed(claimed, stop_check=lambda: True)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: run_claimed() got an unexpected keyword argument 'stop_check'
+
+tests/integration/test_jobs_lifecycle_pa002.py:1120: TypeError
+=========================== short test summary info ============================
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestOwnershipFencing::test_stale_snapshot_after_cancel_writes_nothing
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestOwnershipFencing::test_stale_worker_after_lease_transfer_cannot_overwrite
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestOwnershipFencing::test_heartbeat_progress_report_ownership_loss
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestOwnershipFencing::test_terminal_state_immutable
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestTransactionBoundaries::test_no_db_transaction_across_blocked_io
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestTransactionBoundaries::test_tenant_context_fail_closed_between_units
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestExternalWriterAndCancel::test_same_router_single_sender_other_router_independent
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestExternalWriterAndCancel::test_cancel_rejected_while_send_outstanding
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestExternalWriterAndCancel::test_cancel_before_effect_is_atomic_and_fences_worker
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestUncertainAndRetry::test_uncertain_not_retryable_until_readback
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestUncertainAndRetry::test_resolve_not_applied_requeues_with_old_writer_fence
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestUncertainAndRetry::test_resolve_applied_verifies_without_resend
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestUncertainAndRetry::test_resolve_unknown_stays_blocked
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestUncertainAndRetry::test_concurrent_retry_single_active_candidate
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestCrashReconcileDeadline::test_crash_after_claim_requeues
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestCrashReconcileDeadline::test_crash_after_claim_max_attempts_fails
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestCrashReconcileDeadline::test_deadline_expired_in_queue_fails_without_send
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestCrashReconcileDeadline::test_deadline_before_execute_fails_honest
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestCurrentAuthority::test_revoked_membership_stops_job_with_zero_effects
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestCurrentAuthority::test_demoted_role_stops_job
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestCurrentAuthority::test_actorless_legacy_job_quarantined_with_resume_path
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestCurrentAuthority::test_platform_only_and_foreign_actor_denied
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestCurrentAuthority::test_router_scope_membership_enforced
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestCurrentAuthority::test_verify_api_ssl_provenance_from_enrollment_creator
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestHttpAuthorityAndVerifier::test_detail_requires_underlying_permission
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestHttpAuthorityAndVerifier::test_retry_cancel_sensitive_kind_requires_permission_and_stepup
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestHttpAuthorityAndVerifier::test_router_replace_requires_release_permission
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestHttpAuthorityAndVerifier::test_missing_handler_fails_closed
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestHttpAuthorityAndVerifier::test_negative_verifier_never_succeeds
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestReviewerCorrections::test_retry_origin_blocked_while_child_uncertain
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestReviewerCorrections::test_resolve_not_applied_refused_while_old_writer_active
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestReviewerCorrections::test_progress_renews_lease_for_long_work
+FAILED tests/integration/test_jobs_lifecycle_pa002.py::TestReviewerCorrections::test_drain_before_effect_holds_job_requeueable
+33 failed, 4 passed in 60.01s (0:01:00)

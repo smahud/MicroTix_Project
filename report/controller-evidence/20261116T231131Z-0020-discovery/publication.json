@@ -1,0 +1,152 @@
+{
+  "observed_at_utc": "2026-11-16T23:19:48.605Z",
+  "repository": "smahud/MicroTix_Project",
+  "branch": "review/0020-job-lifecycle-authority-20261117",
+  "pull_request": {
+    "number": 26,
+    "url": "https://github.com/smahud/MicroTix_Project/pull/26",
+    "state": "open",
+    "base": "41d1f33f16508491a34f66b767830b9dd3e5954e",
+    "head": "e11d48b4fdc0c1757c52af7d9e528437b5afa0bc"
+  },
+  "published_ancestor": {
+    "sha": "e11d48b4fdc0c1757c52af7d9e528437b5afa0bc",
+    "tree": "653db3cfc9c05e233004bbeae7e753b07b333938",
+    "parent": "41d1f33f16508491a34f66b767830b9dd3e5954e",
+    "ref_readback": "e11d48b4fdc0c1757c52af7d9e528437b5afa0bc"
+  },
+  "file_readback": [
+    {
+      "path": "task/0020-job-lifecycle-authority.md",
+      "sha": "dcff2e6127dc409bd300b6eac88db857eaea5f1a",
+      "expected_blob_sha": "dcff2e6127dc409bd300b6eac88db857eaea5f1a",
+      "content_matches": true,
+      "blob_matches": true,
+      "isError": false
+    },
+    {
+      "path": "task/0010-pa006-idempotency_done.md",
+      "sha": "c0fa988b66ce18b1fac1aa9972a9e7fa812805d2",
+      "expected_blob_sha": "c0fa988b66ce18b1fac1aa9972a9e7fa812805d2",
+      "content_matches": true,
+      "blob_matches": true,
+      "isError": false
+    },
+    {
+      "path": "report/LATEST_HANDOFF.md",
+      "sha": "e3db15e7345aff796a3d953a3da0aa6bf4e407b2",
+      "expected_blob_sha": "e3db15e7345aff796a3d953a3da0aa6bf4e407b2",
+      "content_matches": true,
+      "blob_matches": true,
+      "isError": false
+    },
+    {
+      "path": "docs/progress.md",
+      "sha": "786e276a4807833b1a09c5cdc510dd26a35e158d",
+      "expected_blob_sha": "786e276a4807833b1a09c5cdc510dd26a35e158d",
+      "content_matches": true,
+      "blob_matches": true,
+      "isError": false
+    },
+    {
+      "path": "report/controller/20261116T231131Z-0020-job-lifecycle-review.md",
+      "sha": "9167a48cd9ad39e10f91a4805220ba701c9c1119",
+      "expected_blob_sha": "9167a48cd9ad39e10f91a4805220ba701c9c1119",
+      "content_matches": true,
+      "blob_matches": true,
+      "isError": false
+    },
+    {
+      "path": "report/controller-evidence/20261116T231131Z-0020-discovery/remote-state.json",
+      "sha": "7734339dc9020c13762bcf8109759ebb1e88209b",
+      "expected_blob_sha": "7734339dc9020c13762bcf8109759ebb1e88209b",
+      "content_matches": true,
+      "blob_matches": true,
+      "isError": false
+    },
+    {
+      "path": "report/reviewer/20261116T231008Z-0020-job-safety-independent.md",
+      "sha": "6c210a7d27629a87c93eac7467864bd6b8b2f92c",
+      "expected_blob_sha": "6c210a7d27629a87c93eac7467864bd6b8b2f92c",
+      "content_matches": true,
+      "blob_matches": true,
+      "isError": false
+    },
+    {
+      "path": "report/reviewer/20261116T231048Z-0020-prerequisite-independent.md",
+      "sha": "fd512dff839c270c50af65dac625ddd0f8a8d284",
+      "expected_blob_sha": "fd512dff839c270c50af65dac625ddd0f8a8d284",
+      "content_matches": true,
+      "blob_matches": true,
+      "isError": false
+    },
+    {
+      "path": "report/reviewer/20261116T231131Z-0020-packet-qa.md",
+      "sha": "4563cc76a21a02309310988a1078b2a88259344a",
+      "expected_blob_sha": "4563cc76a21a02309310988a1078b2a88259344a",
+      "content_matches": true,
+      "blob_matches": true,
+      "isError": false
+    },
+    {
+      "path": "report/controller-evidence/20261116T231131Z-0020-discovery/record-checks.json",
+      "sha": "dd90966a027e68e0de0ef561f4c2619e57d31b55",
+      "expected_blob_sha": "dd90966a027e68e0de0ef561f4c2619e57d31b55",
+      "content_matches": true,
+      "blob_matches": true,
+      "isError": false
+    }
+  ],
+  "source_config_delta_empty": true,
+  "new_packet_qa": {
+    "result": "PASS",
+    "inspected_blob": "dcff2e6127dc409bd300b6eac88db857eaea5f1a",
+    "packet_blob_unchanged": true
+  },
+  "static_record_checks": {
+    "result": "PASS",
+    "scope": "record_static_only",
+    "checks": {
+      "new_packet_id_0020_absent_on_baseline": true,
+      "single_0010_done_preserved": true,
+      "packet_0020_ready": true,
+      "packet_0020_review_not_submitted": true,
+      "acceptance_A01_to_A09": true,
+      "task0010_only_next_metadata_changed": true,
+      "no_source_config_or_normative_doc_change": true,
+      "manifest_untouched": true,
+      "all_three_independent_reports_present": true,
+      "relative_links_valid": true
+    },
+    "relative_links_checked": 122,
+    "broken_links": [],
+    "attribution": "JavaScript in functions.exec; no local shell, Python docs validator or application tests run"
+  },
+  "initial_publication_ci": {
+    "run_id": 43978170214,
+    "sha": "e11d48b4fdc0c1757c52af7d9e528437b5afa0bc",
+    "checks": [
+      {
+        "name": "docs",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "e11d48b4fdc0c1757c52af7d9e528437b5afa0bc"
+      },
+      {
+        "name": "backend",
+        "status": "in_progress",
+        "conclusion": null,
+        "head_sha": "e11d48b4fdc0c1757c52af7d9e528437b5afa0bc"
+      },
+      {
+        "name": "frontend",
+        "status": "in_progress",
+        "conclusion": null,
+        "head_sha": "e11d48b4fdc0c1757c52af7d9e528437b5afa0bc"
+      }
+    ],
+    "note": "Snapshot at first readback. Final publication-head CI is separately observed and recorded in PR26; old main success is not reused as a new result."
+  },
+  "scope": "Versioned review/task records only; no implementation acceptance for task0020, no merge/deployment/tag/feature activation; main remains starting SHA.",
+  "limitations": "No local shell/worktree/PG/process/Python docs validator available. Remote ref/commit/content/CI readback performed through GitHub connector. No claimed clean local fetch."
+}

@@ -1,4 +1,118 @@
-# LATEST_HANDOFF — 16 November 2026: PA-006 task0010 terintegrasi ke main (PR24+PR25); next packet PA-002/PA-003
+# LATEST_HANDOFF — 17 November 2026: task0020 koreksi REV-1711-01–09 diserahkan (pending review)
+
+Pintu masuk: [task/0000-start-here.md](../task/0000-start-here.md).
+Fetch current main, candidate dan decision ref sebelum melanjutkan. Tabel ini
+menggantikan status historis di bawah; tanggal pengguna Asia/Jakarta.
+
+**Penyerahan koreksi 17 November ~23:59 WIB (sesi ini):** coding agent
+menutup **REV-1711-01–09 pada ID0020 yang sama** dari decision ref PR29
+(fetched sampai `0e45157`). Probe controller R1 (11 assertion):
+**failing-before 11 failed pada source kandidat bd37c14 → passing-after
+11 passed** pada tree koreksi, diulang pada DB split-role (migrator-owned,
+runtime NOSUPERUSER/NOBYPASSRLS, 59 tabel FORCE RLS). Suite penuh
+**562 passed/1 skipped/3 warnings** (+8 tes bukti REV-1711-09);
+PA-001 33, PA-006 125, RLS 8 lulus; check/makemigrations/docs PASS.
+[Reviewer independen](reviewer/20261117T160500Z-0020-correction-independent.md):
+REV-1711-01–09 **CLOSED**, nol pelemahan assertion; temuan P2 reviewer
+(CORR-REV-01 no_effect blanket, CORR-REV-02 jendela hard-crash pra-reconcile)
+ditutup sebelum commit. Execution status **done**, review **pending** —
+bukan accepted; `_done` bukan acceptance/merge/deploy.
+
+| Field | Current state / pointer |
+|---|---|
+| Canonical main teramati | **41d1f33f16508491a34f66b767830b9dd3e5954e**; main tidak diubah sesi ini |
+| Active task | **[ID0020 PA-002+PA-003](../task/0020-job-lifecycle-authority_done.md)** — **done / pending review / not integrated** |
+| Correction branch + PR | `session/2026-11-17-0020-job-lifecycle-correction` (base `0e45157` membawa source PR27); implementation/tested **`2681a3d`**, published head **`062a017`**; candidate **[PR30](https://github.com/smahud/MicroTix_Project/pull/30)** target main; CI exact head **[run44119619011](https://github.com/smahud/MicroTix_Project/actions/runs/44119619011) backend/frontend/docs success 3/3** terverifikasi ([ci evidence](executor-evidence/20261117T150000Z-0020-correction/ci-pr30.txt)) |
+| Decision ref | **[PR29](https://github.com/smahud/MicroTix_Project/pull/29)** `review/0020-controller-20261117`; verdict acceptance tetap [controller R1](controller/20261117T134100Z-0020-job-lifecycle-review.md) sampai controller mereview SHA koreksi |
+| Correction evidence root | [executor-evidence/20261117T150000Z-0020-correction/](executor-evidence/20261117T150000Z-0020-correction/) — failing-before/passing-after probe, split-role migrate/grant/RLS, check, makemigrations, docs, full-suite 562, targeted subsets, environment |
+| Coreksi inti | Guard ownership DALAM transaksi unit domain (scope+assert_owned; heartbeat/progress raise); no_effect eksplisit + default uncertain post-efek; retry lineage root-lock+BFS; hold durable router unknown (+expired-executing); authority di batas efek pasca-preflight; HTTP router scope 404; B6 APPLY/VERIFY di luar transaksi; B6 readback negatif jujur; +bukti SIGINT/active-barrier/stop-claim/long-phase/crash-after-commit/current-policy |
+| Independent reviewer | [Koreksi](reviewer/20261117T160500Z-0020-correction-independent.md); [lifecycle](reviewer/20261117T140000Z-0020-lifecycle-independent.md), [authority](reviewer/20261117T140000Z-0020-authority-independent.md) histori R1 |
+| Next actor | **controller_reviewer** |
+| Exact next action | Review exact SHA koreksi atas REV-1711-01–09 (jalankan ulang probe R1 + matriks [laporan koreksi §5](orchestrator/20261117T160000Z-0020-correction-delivery.md)), delta main/candidate+CI; changes-requested membuka kembali ID0020 yang sama; jangan buka task0030 sebelum prasyarat terpenuhi |
+| Accepted predecessor | **Task0010/PA-006 tetap accepted/integrated**, PR24/25 merged; P3 R5 thread assertions preserved; tidak dibuka kembali |
+| Other refs | PR26 instruction, PR27 kandidat pertama bd37c14, PR28@8204ba0 report-only, PR29 decision, histori PR task0010 serta PR7/8/14 dipertahankan; tidak ada merge/close/force-push pekerjaan pihak lain |
+| Beta / limits | **NOT_READY**; sandbox engine/PG/proses nyata saja — installer/upgrade/restore/secret/scheduler/DEC-01/02 dan host/GNS3/pilot/kapasitas tetap terpisah. OS/device/live RADIUS/browser/benchmark NOT_RUN; simulator bukan perangkat nyata |
+
+## Histori — resume checkpoint & R1 (digantikan penyerahan koreksi di atas)
+
+**Resume 17 November ~21:48 WIB:** 31 branches/14 open PRs diperiksa;
+belum ada penyerahan koreksi baru (**correction delivery not_submitted**).
+Main41d1f33, PR27bd37c14 dan starting decision43043be unchanged; seluruh
+source/config identik. [Checkpoint controller](controller/20261117T144620Z-0020-resume-review.md)
+dan [independent check](reviewer/20261117T144620Z-0020-resume-independent.md)
+dipublikasikan pada existing PR29. Verdict R1 tetap **ready /
+changes_requested**, next **coding_agent** menutup REV-1711-01–09 pada
+ID0020 yang sama. Existing CI43043be kini **completed success3/3**, bukan
+bukti penutupan finding atau CI commit checkpoint yang lebih baru.
+Runtime review tidak diulang pada source yang tidak berubah. Publication
+ancestor/readback mengikuti checkpoint §6; final-head CI mengikuti PR29.
+
+| Field | Current state / pointer |
+|---|---|
+| Active task (saat resume) | **[ID0020](../task/0020-job-lifecycle-authority.md)** — **ready / changes_requested / not integrated** |
+| Exact reviewed candidate | **[PR27](https://github.com/smahud/MicroTix_Project/pull/27)** `bd37c14e6c41339a8743b3d4b723ee74f13bef08`; executor tested ancestor7118cce, source/app delta kosong |
+| Decision ref | **[PR29](https://github.com/smahud/MicroTix_Project/pull/29)** `review/0020-controller-20261117`, initial decision **3c4b71fa75ab0619bf12b84660a8678b99294e20/tree9b7d2405** verified |
+| Evidence root R1 | Full backend **554 passed,1 skipped,3 warnings**; **11 acceptance probes FAIL / 0 harness errors** pada fresh PG17.11 migrator-owned schema + runtime nonowner/NOBYPASSRLS/FORCE RLS; [summary](controller-evidence/20261117T134100Z-0020-review/review-results.json) |
+| Blocking findings | **REV-1711-01–08**: stale domain commit, blind retry setelah efek, retry lineage unknown, router unreadback hold, after-preflight authority, HTTP router scope, B6 I/O transaction dan B6 false success; **09** missing required evidence (drain SIGINT/active DB, long-phase/policy/recovery) |
+| Candidate CI | Existing run43994355914 exact **bd37c14 success backend/frontend/docs3/3**; tidak menutup probe acceptance gagal |
+| Independent reviewers R1 | [Lifecycle](reviewer/20261117T140000Z-0020-lifecycle-independent.md), [authority](reviewer/20261117T140000Z-0020-authority-independent.md); root memeriksa source+menjalankan PG probes |
+| Next actor (saat resume) | **coding_agent**: fetch decision ref, tutup REV-1711-01–09 menurut packet/controller §3, preserve PA-001/006, submit kode+tes+matriks evidence+exact SHA baru+CI |
+| Accepted predecessor | **Task0010/PA-006 tetap accepted/integrated**, PR24/25 merged; P3 R5 thread assertions preserved; tidak dibuka kembali |
+| Other refs | PR26 instruction, PR28@8204ba0 report-only state check, histori PR task0010 serta PR7/8/14 dipertahankan; tidak ada merge/close/force-push |
+| Beta / limits | **NOT_READY**; sandbox defects di atas + installer/upgrade/restore/secret/scheduler/DEC-01/02 dan host/GNS3/pilot/kapasitas tetap terpisah. OS/device/live RADIUS/browser/benchmark NOT_RUN; simulator bukan perangkat nyata |
+
+Initial decision commit/ref/tree +39path readback MATCH, clean local fetch
+terverifikasi; metadata descendant hanya mencatat publikasi yang sudah ada.
+Final head/CI mengikuti PR29; packet tidak otomatis memulai external coding agent.
+
+## Histori — penyerahan executor task0020 (digantikan review R1 di atas)
+
+Pintu masuk tetap: [task/0000-start-here.md](../task/0000-start-here.md).
+Fetch remote refs/PR dan baca CONTRACT §6A sebelum bertindak. Tanggal pengguna Asia/Jakarta, filename evidence UTC.
+
+## Current state — 17 November 2026, ~08:10 WIB: executor menyerahkan task0020 (penyerahan pertama)
+
+**Task0020 / PA-002+PA-003 done (scope executor + tes wajib) / pending review.**
+Executor Z.ai sandbox mengambil packet dari instruction ref PR26
+`review/0020-job-lifecycle-authority-20261117` @ ea7b8a1 setelah memverifikasi
+main tidak berubah (41d1f33). PA-006 tetap accepted/integrated (tidak dibuka).
+
+| Field handoff | Status / pointer |
+|---|---|
+| Canonical main teramati | **41d1f33f16508491a34f66b767830b9dd3e5954e** — tidak berubah saat sesi; fetch ulang sebelum bertindak |
+| Active task | [ID0020 / PA-002+PA-003](../task/0020-job-lifecycle-authority.md) — **done / pending** |
+| Candidate branch | `session/2026-11-17-0020-job-lifecycle-authority` dari instruction ref ea7b8a1; implementation/tested **`7118cce0db330acb02be0b3b774b1b1628d55d7a`** (engine 6e96ce3 + fix test-infra CI); **[PR27](https://github.com/smahud/MicroTix_Project/pull/27)** published head `6c8d9206a4a875dd07f3b1bc3b04cbb0d7758b76` — record di atas impl report-only, `git diff 7118cce 6c8d920 -- backend/ apps/` kosong |
+| Perubahan inti | Engine jobs: CAS fencing penuh (termasuk commit hasil terminal di klausa WHERE), unit transaksi tenant pendek tanpa lock melintasi I/O adapter, cancel pra-efek atomik + epoch-bump (executing jujur 409), effect_state=maybe atomik pra-execute, advisory lock pengirim per-router (busy requeue tanpa konsumsi attempt), reconcile state/effect-aware CAS idempotent (claimed/preflight requeue via retry_wait; executing/verifying → uncertain), resolve readback protocol (penulis lama wajib terbukti berhenti; applied=True verify tanpa resend; unknown tertahan), retry diserialisasi (uncertain/recovery_required dianggap aktif), deadline claim + pra-efek (dibaca segar), progress memperpanjang lease; authority fresh-DB peta kind fail-closed + provenance verify_api_ssl dari enrollment.created_by + karantina actorless dengan resume + recheck antar fase kirim cutover; HTTP job detail/retry/cancel izin operasi dasar + step-up sensitif + 403/404; RouterReplaceView → routers.release; handler hilang/verifier negatif fail-closed; runworker drain SIGTERM/SIGINT + drain-timeout + exit 0/3. **Tanpa migrasi schema** (jobs/0004/0005 tak tersentuh) |
+| Bukti kunci | **Full suite 554 passed + 1 skipped** (PG 17.11 nyata, peran non-superuser, FORCE RLS; +41 tes baru); **failing-before pada baseline 41d1f33: 33/37 lifecycle + 4/4 drain GAGAL → passing-after 41/41**; PA-001 + PA-006 (incl. R4/R5 replay migrasi) lulus utuh; check/makemigrations/docs PASS; frontend tsc/eslint/vitest 66/i18n/build lulus; P3 REV-1611-TEST-01 ditutup test-only |
+| Review independen | [Reviewer](reviewer/20261117T010218Z-0020-job-lifecycle-independent.md) pra-koreksi **CHANGES_REQUESTED** (REV-2011-01 P1; 02–04 P2; 05–10 P3) — seluruh temuan ditindaklanjuti dengan koreksi + tes baru (matriks §3 laporan eksekusi); internal review ≠ acceptance |
+| Execution report | [Orchestrator](orchestrator/20261117T010218Z-0020-job-lifecycle-authority.md) — inventaris kind, matriks A01–A09 → evidence, runbook drain, batas; [evidence dir](executor-evidence/20261117T000000Z-0020-job-lifecycle/) |
+| Candidate CI | **[run 43993939448](https://github.com/smahud/MicroTix_Project/actions/runs/43993939448)** exact `6c8d920` **backend/frontend/docs 3/3 success** terverifikasi (01:16Z; [evidence](executor-evidence/20261117T000000Z-0020-job-lifecycle/ci-final.txt)); run awal fc6a425 backend gagal (password auth CI pada subprocess drain) — ditutup test-infra `7118cce`, suite diulang lokal 554 passed |
+| Next actor | **controller_reviewer** |
+| Exact next action | Review exact SHA `7118cce` (kode+tes; tree published identik — verifikasi `git diff 7118cce0db330acb02be0b3b774b1b1628d55d7a HEAD -- backend/ apps/` kosong) atas matriks acceptance J20-A01..A09 laporan eksekusi §4 dan penutupan REV-2011-01..10 §3; changes-requested membuka kembali ID0020 yang sama; jangan buka task0030 sebelum prasyarat review/integrasi terpenuhi |
+| Batas / Beta | Production Beta **NOT_READY**; bloker register 11 Nov tidak berubah (installer/upgrade/worker ops/restore/DEC-01/DEC-02/scheduler/REV-1111-*/kapasitas + gates host/lab). OS install/upgrade/restore/DR, real drain service, CHR/GNS3/router/pilot, E2E browser, benchmark NOT_RUN; simulator/CI bukan bukti perangkat nyata |
+
+## Prior controller publication — 17 November 2026: task0020 disiapkan (superseded oleh penyerahan di atas)
+
+| Field | Current state / pointer |
+|---|---|
+| Canonical main observed | **41d1f33f16508491a34f66b767830b9dd3e5954e**; exact CI [43857508367](https://github.com/smahud/MicroTix_Project/actions/runs/43857508367) backend/frontend/docs3/3 success |
+| Instruction ref | **`review/0020-job-lifecycle-authority-20261117`** — record/task branch belum merged saat disiapkan; fetch current head dan gunakan ref ini, bukan instruksi lama main |
+| Active task | **[0020 — PA-002 + PA-003](../task/0020-job-lifecycle-authority.md)**, current jobs lifecycle/fencing/drain/authority |
+| Execution / review / implementation | **ready / not_submitted**; belum ada kandidat kode, hasil tes atau acceptance0020 |
+| Accepted predecessor | [0010_done](../task/0010-pa006-idempotency_done.md): **done / accepted / integrated**; R5 exacta301a94, PR24+PR25 merged. Tidak dibuka ulang |
+| Controller decision | [Review current main + packet](controller/20261116T231131Z-0020-job-lifecycle-review.md), [remote state](controller-evidence/20261116T231131Z-0020-discovery/remote-state.json) |
+| Scope / evidence | A01–A09: all-write fencing, short RLS DB units, external sender/cancel/readback, early-crash recovery, current authority, HTTP permissions/verifier, real-process drain, legacy compatibility. Dua independent source/prerequisite reviews + packet QA pada controller report |
+| Main CI actual | Backend **513 passed,1 skipped,3 warnings** (FreeRADIUS binary unavailable); frontend66 tests; docs PASS24/106. Integrator historical514 real-binary tetap attributed; root tidak menjalankan ulang aplikasi |
+| Publication | **[PR26](https://github.com/smahud/MicroTix_Project/pull/26)**; initial ancestor **e11d48b4fdc0c1757c52af7d9e528437b5afa0bc**, tree653db3cf. Ref/commit/PR dan seluruh10 file content+blob readback MATCH; [publication evidence](controller-evidence/20261116T231131Z-0020-discovery/publication.json). Metadata descendants record-only; final-head CI dicek terpisah pada PR26 |
+| Next actor | **coding_agent** |
+| Exact next action | Fetch instruction ref ini atau descendant yang sudah terintegrasi; jalankan task0020 dengan PG/race/process evidence, submit exact SHA+PR+report untuk controller. File tidak otomatis menjalankan external coding agent |
+| Beta / remaining gates | **NOT_READY**; installer/upgrade/restore/secret/scheduler/topology DEC-01/DEC-02 dan host/CHR/GNS3/pilot/capacity belum ditutup. Tidak ada merge/deploy/aktivasi/tag dalam sesi reviewer ini |
+
+Root environment lokal tidak tersedia: shell/PG/process/docs validator lokal NOT_RUN; source/refs/CI diperiksa langsung dari GitHub. Publication branch records hanya dokumen, bukan perbaikan aplikasi. PA-001 financial atomic locks dan PA-006 replay/security tetap preserved. PR7/8/14 serta historical branches dipertahankan.
+
+## Historical handoff — superseded current pointers; audit trail retained
+
+### LATEST_HANDOFF — 16 November 2026: PA-006 task0010 terintegrasi ke main (PR24+PR25); next packet PA-002/PA-003
 
 Pintu masuk tetap: [task/0000-start-here.md](../task/0000-start-here.md),
 CONTRACT §6A. Fetch remote refs/PR sebelum bertindak. Status integrasi di
@@ -238,3 +352,4 @@ controller reviews the new exact SHA. Controller verdict and task evidence
 must be versioned/verified before dependent work. `_done` and green CI are
 not acceptance, integration, deployment or release authorization. Reports and
 packet files do not automatically start an external coding agent.
+

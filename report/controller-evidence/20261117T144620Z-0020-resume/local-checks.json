@@ -1,0 +1,354 @@
+{
+  "result": "PASS",
+  "observed_at_utc": "2026-11-17T14:50:22.427003+00:00",
+  "python": "3.12.14",
+  "git": "git version 2.52.0",
+  "branches": 31,
+  "open_prs": 14,
+  "correction_delivery": "not_submitted",
+  "task_execution": "ready",
+  "task_review": "changes_requested",
+  "next_actor": "coding_agent",
+  "local_branch_inventories": [
+    {
+      "branch": "docs/default-agent-prompts-20261112",
+      "sha": "776099e10def9c6922a105f0e7b6ca278a47c025",
+      "tasks": [
+        "task/0000-start-here.md",
+        "task/0010-pa006-idempotency.md"
+      ],
+      "task0020_reports": []
+    },
+    {
+      "branch": "docs/payment-point-planning-20261113",
+      "sha": "2a9803593c328ab014bab6695b298072ed4c1886",
+      "tasks": [
+        "task/0000-start-here.md",
+        "task/0010-pa006-idempotency.md"
+      ],
+      "task0020_reports": []
+    },
+    {
+      "branch": "docs/planning-audit-20261110",
+      "sha": "6bb57c9251f3a7a67b71b9523c01e507fdb1b601",
+      "tasks": [],
+      "task0020_reports": []
+    },
+    {
+      "branch": "docs/task-communication-loop-20261112",
+      "sha": "4f807e77484babf71550ede3bd2aa65a990aa877",
+      "tasks": [
+        "task/0000-start-here.md",
+        "task/0010-pa006-idempotency.md"
+      ],
+      "task0020_reports": []
+    },
+    {
+      "branch": "docs/task-workflow-20261112",
+      "sha": "826672ee3fbebd48eddc833a3a9e29282ccbaec1",
+      "tasks": [
+        "task/0000-start-here.md",
+        "task/0010-pa006-idempotency.md"
+      ],
+      "task0020_reports": []
+    },
+    {
+      "branch": "integration/beta-0.1",
+      "sha": "0eb01d2e5baaa6511e0b2145f05850df18a1bdc0",
+      "tasks": [],
+      "task0020_reports": []
+    },
+    {
+      "branch": "main",
+      "sha": "41d1f33f16508491a34f66b767830b9dd3e5954e",
+      "tasks": [
+        "task/0000-start-here.md",
+        "task/0010-pa006-idempotency_done.md"
+      ],
+      "task0020_reports": []
+    },
+    {
+      "branch": "parallel/beta-be2",
+      "sha": "c9023e6d9bb1e5e1b2ef18685d94bc82f6c6eb02",
+      "tasks": [],
+      "task0020_reports": []
+    },
+    {
+      "branch": "review/0010-pa006-controller-20261113",
+      "sha": "5da0d801c71b020fbb8b977294502ea5a09e7bcb",
+      "tasks": [
+        "task/0000-start-here.md",
+        "task/0010-pa006-idempotency.md"
+      ],
+      "task0020_reports": []
+    },
+    {
+      "branch": "review/0010-pa006-controller-20261114",
+      "sha": "b6a0cb863f52cbbf512b23dceafc4231ff9c7d74",
+      "tasks": [
+        "task/0000-start-here.md",
+        "task/0010-pa006-idempotency.md"
+      ],
+      "task0020_reports": []
+    },
+    {
+      "branch": "review/0010-pa006-controller-20261115",
+      "sha": "e507175cb2982b6a974eee8bf437d0b6de5879c6",
+      "tasks": [
+        "task/0000-start-here.md",
+        "task/0010-pa006-idempotency.md"
+      ],
+      "task0020_reports": []
+    },
+    {
+      "branch": "review/0010-pa006-controller-r4-20261115",
+      "sha": "4bb726106f2dea1949dc737eb8c81dae6fd8d341",
+      "tasks": [
+        "task/0000-start-here.md",
+        "task/0010-pa006-idempotency.md"
+      ],
+      "task0020_reports": []
+    },
+    {
+      "branch": "review/0010-pa006-controller-r5-20261116",
+      "sha": "c352bce4e3f4cfe87ae62ee23e3c1e2a4cfbb450",
+      "tasks": [
+        "task/0000-start-here.md",
+        "task/0010-pa006-idempotency_done.md"
+      ],
+      "task0020_reports": []
+    },
+    {
+      "branch": "review/0010-pa006-submission-check-20261112",
+      "sha": "17901fc439199ad70082942832d88fd7214f391c",
+      "tasks": [
+        "task/0000-start-here.md",
+        "task/0010-pa006-idempotency.md"
+      ],
+      "task0020_reports": []
+    },
+    {
+      "branch": "review/0020-controller-20261117",
+      "sha": "43043be4b0562f982316593cf6ef4e5d5b6951a6",
+      "tasks": [
+        "task/0000-start-here.md",
+        "task/0010-pa006-idempotency_done.md",
+        "task/0020-job-lifecycle-authority.md"
+      ],
+      "task0020_reports": [
+        "report/controller/20261116T231131Z-0020-job-lifecycle-review.md",
+        "report/controller/20261117T134100Z-0020-job-lifecycle-review.md",
+        "report/orchestrator/20261117T010218Z-0020-job-lifecycle-authority.md",
+        "report/reviewer/20261116T231008Z-0020-job-safety-independent.md",
+        "report/reviewer/20261116T231048Z-0020-prerequisite-independent.md",
+        "report/reviewer/20261116T231131Z-0020-packet-qa.md",
+        "report/reviewer/20261117T010218Z-0020-job-lifecycle-independent.md",
+        "report/reviewer/20261117T140000Z-0020-authority-independent.md",
+        "report/reviewer/20261117T140000Z-0020-lifecycle-independent.md"
+      ]
+    },
+    {
+      "branch": "review/0020-job-lifecycle-authority-20261117",
+      "sha": "ea7b8a17ad8d6339eed45769bbff1626ea279665",
+      "tasks": [
+        "task/0000-start-here.md",
+        "task/0010-pa006-idempotency_done.md",
+        "task/0020-job-lifecycle-authority.md"
+      ],
+      "task0020_reports": [
+        "report/controller/20261116T231131Z-0020-job-lifecycle-review.md",
+        "report/reviewer/20261116T231008Z-0020-job-safety-independent.md",
+        "report/reviewer/20261116T231048Z-0020-prerequisite-independent.md",
+        "report/reviewer/20261116T231131Z-0020-packet-qa.md"
+      ]
+    },
+    {
+      "branch": "session/2026-11-06-billing-docs",
+      "sha": "43946354715de5391b86765eb5cad3d0da938562",
+      "tasks": [],
+      "task0020_reports": []
+    },
+    {
+      "branch": "session/2026-11-06-bootstrap-inrepo",
+      "sha": "8f6b173464270d77be93da70775d1fc367fac2d2",
+      "tasks": [],
+      "task0020_reports": []
+    },
+    {
+      "branch": "session/2026-11-06-tk604-billing-ui",
+      "sha": "5d902e361526b6b35bda5d0f75984ffacea28ab9",
+      "tasks": [],
+      "task0020_reports": []
+    },
+    {
+      "branch": "session/2026-11-06-wg-e2e",
+      "sha": "b07504a2a3455348ba05f1aabd5550246c088dec",
+      "tasks": [],
+      "task0020_reports": []
+    },
+    {
+      "branch": "session/2026-11-07-sstp-phase2",
+      "sha": "d7fa35e5583bc36848e3b45497d2511739298c8a",
+      "tasks": [],
+      "task0020_reports": []
+    },
+    {
+      "branch": "session/2026-11-07-wg-onboarding",
+      "sha": "4ed21454d8e37bdc58bd61575031765dfa6b47c7",
+      "tasks": [],
+      "task0020_reports": []
+    },
+    {
+      "branch": "session/2026-11-11-pa001-payment-concurrency",
+      "sha": "482602ecad6616167d14f2b30cd60e2039093fe9",
+      "tasks": [],
+      "task0020_reports": []
+    },
+    {
+      "branch": "session/2026-11-13-pa006-idempotency",
+      "sha": "7480c80e2c27b8b06048b77132d235efe6b3a3c2",
+      "tasks": [
+        "task/0000-start-here.md",
+        "task/0010-pa006-idempotency_done.md"
+      ],
+      "task0020_reports": []
+    },
+    {
+      "branch": "session/2026-11-14-pa006-idempotency",
+      "sha": "37a87291ae66a0fa9167f0c72d1e8340aa5fd245",
+      "tasks": [
+        "task/0000-start-here.md",
+        "task/0010-pa006-idempotency_done.md"
+      ],
+      "task0020_reports": []
+    },
+    {
+      "branch": "session/2026-11-15-pa006-executor-state-check",
+      "sha": "b645797974a3921e04518a06af756d888e0a8d10",
+      "tasks": [
+        "task/0000-start-here.md",
+        "task/0010-pa006-idempotency.md"
+      ],
+      "task0020_reports": []
+    },
+    {
+      "branch": "session/2026-11-15-pa006-idempotency",
+      "sha": "9e9bf2d42002a00a69d54fc355b77384897b9478",
+      "tasks": [
+        "task/0000-start-here.md",
+        "task/0010-pa006-idempotency_done.md"
+      ],
+      "task0020_reports": []
+    },
+    {
+      "branch": "session/2026-11-15-pa006-idempotency-correction",
+      "sha": "634da4224f15dd6a5a4e9010fe1811dec8c7954d",
+      "tasks": [
+        "task/0000-start-here.md",
+        "task/0010-pa006-idempotency_done.md"
+      ],
+      "task0020_reports": []
+    },
+    {
+      "branch": "session/2026-11-16-pa006-rev1311-01-correction",
+      "sha": "a301a94c2b3268679065e85bbef66f35949483f7",
+      "tasks": [
+        "task/0000-start-here.md",
+        "task/0010-pa006-idempotency_done.md"
+      ],
+      "task0020_reports": []
+    },
+    {
+      "branch": "session/2026-11-17-0020-executor-state-check",
+      "sha": "8204ba0a5664aea9efc3742d00461a8a341caf8a",
+      "tasks": [
+        "task/0000-start-here.md",
+        "task/0010-pa006-idempotency_done.md"
+      ],
+      "task0020_reports": [
+        "report/orchestrator/20261117T131403Z-0020-job-lifecycle-state-check.md"
+      ]
+    },
+    {
+      "branch": "session/2026-11-17-0020-job-lifecycle-authority",
+      "sha": "bd37c14e6c41339a8743b3d4b723ee74f13bef08",
+      "tasks": [
+        "task/0000-start-here.md",
+        "task/0010-pa006-idempotency_done.md",
+        "task/0020-job-lifecycle-authority_done.md"
+      ],
+      "task0020_reports": [
+        "report/controller/20261116T231131Z-0020-job-lifecycle-review.md",
+        "report/orchestrator/20261117T010218Z-0020-job-lifecycle-authority.md",
+        "report/reviewer/20261116T231008Z-0020-job-safety-independent.md",
+        "report/reviewer/20261116T231048Z-0020-prerequisite-independent.md",
+        "report/reviewer/20261116T231131Z-0020-packet-qa.md",
+        "report/reviewer/20261117T010218Z-0020-job-lifecycle-independent.md"
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "base": "7118cce0db330acb02be0b3b774b1b1628d55d7a",
+      "head": "bd37c14e6c41339a8743b3d4b723ee74f13bef08",
+      "ancestor": true,
+      "changed_paths": [
+        "report/LATEST_HANDOFF.md",
+        "report/executor-evidence/20261117T000000Z-0020-job-lifecycle/ci-final.txt",
+        "report/orchestrator/20261117T010218Z-0020-job-lifecycle-authority.md",
+        "task/0020-job-lifecycle-authority_done.md"
+      ],
+      "application_config_delta_empty": true
+    },
+    {
+      "base": "bd37c14e6c41339a8743b3d4b723ee74f13bef08",
+      "head": "43043be4b0562f982316593cf6ef4e5d5b6951a6",
+      "ancestor": true,
+      "changed_paths": [
+        "docs/progress.md",
+        "report/LATEST_HANDOFF.md",
+        "report/controller-evidence/20261117T134100Z-0020-review/authority-probes-initial.log",
+        "report/controller-evidence/20261117T134100Z-0020-review/authority-probes.log",
+        "report/controller-evidence/20261117T134100Z-0020-review/before-publish.json",
+        "report/controller-evidence/20261117T134100Z-0020-review/check-initial.log",
+        "report/controller-evidence/20261117T134100Z-0020-review/check.log",
+        "report/controller-evidence/20261117T134100Z-0020-review/docs-final.log",
+        "report/controller-evidence/20261117T134100Z-0020-review/docs.log",
+        "report/controller-evidence/20261117T134100Z-0020-review/environment.log",
+        "report/controller-evidence/20261117T134100Z-0020-review/exit-codes-initial.txt",
+        "report/controller-evidence/20261117T134100Z-0020-review/exit-codes.txt",
+        "report/controller-evidence/20261117T134100Z-0020-review/full-suite.log",
+        "report/controller-evidence/20261117T134100Z-0020-review/initdb.log",
+        "report/controller-evidence/20261117T134100Z-0020-review/initial-harness.log",
+        "report/controller-evidence/20261117T134100Z-0020-review/lifecycle-probes-initial.log",
+        "report/controller-evidence/20261117T134100Z-0020-review/lifecycle-probes.log",
+        "report/controller-evidence/20261117T134100Z-0020-review/makemigrations-initial.log",
+        "report/controller-evidence/20261117T134100Z-0020-review/makemigrations.log",
+        "report/controller-evidence/20261117T134100Z-0020-review/publication.json",
+        "report/controller-evidence/20261117T134100Z-0020-review/record-checks.json",
+        "report/controller-evidence/20261117T134100Z-0020-review/remote-inputs.json",
+        "report/controller-evidence/20261117T134100Z-0020-review/review-results.json",
+        "report/controller-evidence/20261117T134100Z-0020-review/rls.log",
+        "report/controller-evidence/20261117T134100Z-0020-review/run_probes_split.sh",
+        "report/controller-evidence/20261117T134100Z-0020-review/run_review.sh",
+        "report/controller-evidence/20261117T134100Z-0020-review/source-authority.log",
+        "report/controller-evidence/20261117T134100Z-0020-review/source_authority_probe.py",
+        "report/controller-evidence/20261117T134100Z-0020-review/split-grant.log",
+        "report/controller-evidence/20261117T134100Z-0020-review/split-migrate.log",
+        "report/controller-evidence/20261117T134100Z-0020-review/split-roles-rls.log",
+        "report/controller-evidence/20261117T134100Z-0020-review/split-test-cleanup-grant.log",
+        "report/controller-evidence/20261117T134100Z-0020-review/test_authority_review.py",
+        "report/controller-evidence/20261117T134100Z-0020-review/test_lifecycle_review.py",
+        "report/controller/20261117T134100Z-0020-job-lifecycle-review.md",
+        "report/orchestrator/20261117T010218Z-0020-job-lifecycle-authority.md",
+        "report/reviewer/20261117T140000Z-0020-authority-independent.md",
+        "report/reviewer/20261117T140000Z-0020-lifecycle-independent.md",
+        "task/0020-job-lifecycle-authority.md"
+      ],
+      "application_config_delta_empty": true
+    }
+  ],
+  "ci": "Existing exact main/candidate/decision success3/3; not this checkpoint's CI",
+  "application_runtime_tests_executed": 0,
+  "prior_failures": "R1 historical 11 failed acceptance assertions/0 harness errors; not rerun"
+}

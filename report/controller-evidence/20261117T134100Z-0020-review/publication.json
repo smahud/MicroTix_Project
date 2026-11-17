@@ -1,0 +1,37 @@
+{
+  "commit": "3c4b71fa75ab0619bf12b84660a8678b99294e20",
+  "tree": "9b7d2405b61be23f333f83dc4a6e3999b63790e7",
+  "paths": 39,
+  "failures": [],
+  "branch": "review/0020-controller-20261117",
+  "pr": 29,
+  "pr_base": "session/2026-11-17-0020-job-lifecycle-authority",
+  "main_unchanged": "41d1f33f16508491a34f66b767830b9dd3e5954e",
+  "reviewed_candidate": "bd37c14e6c41339a8743b3d4b723ee74f13bef08",
+  "ci_observation": [
+    {
+      "name": "docs",
+      "sha": "3c4b71fa75ab0619bf12b84660a8678b99294e20",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/smahud/MicroTix_Project/actions/runs/44097989570/job/134090118330"
+    },
+    {
+      "name": "frontend",
+      "sha": "3c4b71fa75ab0619bf12b84660a8678b99294e20",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/smahud/MicroTix_Project/actions/runs/44097989570/job/134090118205"
+    },
+    {
+      "name": "backend",
+      "sha": "3c4b71fa75ab0619bf12b84660a8678b99294e20",
+      "status": "in_progress",
+      "conclusion": null,
+      "url": "https://github.com/smahud/MicroTix_Project/actions/runs/44097989570/job/134090118007"
+    }
+  ],
+  "status": "PUBLISHED_AND_VERIFIED",
+  "readback": "GitHub ref/commit/full-tree + all39 changed/deleted paths match local staged blob IDs; clean local fetch/worktree; protected source delta empty",
+  "recorded_in": "metadata descendant of this existing published commit; this file does not claim its own future SHA"
+}

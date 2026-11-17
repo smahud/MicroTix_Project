@@ -1,0 +1,113 @@
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+______________ TestDrainProcesses.test_sigterm_idle_exits_drained ______________
+
+self = <tests.integration.test_jobs_drain_pa002.TestDrainProcesses object at 0x7f8712e8fc50>
+
+    def test_sigterm_idle_exits_drained(self):
+        """Worker idle menerima SIGTERM: berhenti mengklaim, keluar 0."""
+        proc = _spawn("--loop", "--interval", "0.2", "--drain-timeout", "5")
+        try:
+            time.sleep(1.5)  # biarkan beberapa siklus polling idle
+            proc.send_signal(signal.SIGTERM)
+            out, _ = proc.communicate(timeout=15)
+        finally:
+            if proc.poll() is None:  # pragma: no cover
+                proc.kill()
+                proc.communicate()
+>       assert proc.returncode == EXIT_DRAINED, out
+E       AssertionError: Traceback (most recent call last):
+E           File "<frozen runpy>", line 198, in _run_module_as_main
+E           File "<frozen runpy>", line 88, in _run_code
+E           File "/tmp/mtx-baseline/backend/tests/drain_worker.py", line 28, in <module>
+E             call_command("runworker", *sys.argv[1:])
+E             ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "/home/z/my-project/venv-mtx/lib/python3.13/site-packages/django/core/management/__init__.py", line 172, in call_command
+E             defaults = parser.parse_args(args=parse_args)
+E           File "/home/z/my-project/venv-mtx/lib/python3.13/site-packages/django/core/management/base.py", line 72, in parse_args
+E             return super().parse_args(args, namespace)
+E                    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+E           File "/usr/lib/python3.13/argparse.py", line 1916, in parse_args
+E             self.error(msg)
+E             ~~~~~~~~~~^^^^^
+E           File "/home/z/my-project/venv-mtx/lib/python3.13/site-packages/django/core/management/base.py", line 78, in error
+E             raise CommandError("Error: %s" % message)
+E         django.core.management.base.CommandError: Error: unrecognized arguments: --drain-timeout 5
+E         
+E       assert 1 == 0
+E        +  where 1 = <Popen: returncode: 1 args: ['/home/z/my-project/venv-mtx/bin/python', '-m',...>.returncode
+
+tests/integration/test_jobs_drain_pa002.py:116: AssertionError
+---------------------------- Captured stdout setup -----------------------------
+jobs.0004 idempotency identity backfill: kept_with_response=0 kept_no_response=0 platform_remapped=0 legacy_opaque_group=0 unparsed_retained=0 duplicate_deleted=0
+jobs.0005 idempotency secret-preview scrub: scanned=0 scrubbed=0 guards_deleted=0
+_________ TestDrainProcesses.test_sigterm_completes_cooperative_db_job _________
+
+self = <tests.integration.test_jobs_drain_pa002.TestDrainProcesses object at 0x7f8712da0550>
+
+    def test_sigterm_completes_cooperative_db_job(self):
+        """SIGTERM saat job DB kooperatif berjalan: job DISELESAIKAN, worker
+        keluar 0 tanpa klaim baru setelahnya."""
+        job = _make_job("_test_drain_db")
+        proc = _spawn("--loop", "--interval", "0.2", "--drain-timeout", "10")
+        try:
+            done = _wait_state(job.id, {JobState.SUCCEEDED, JobState.FAILED}, timeout_s=25)
+            proc.send_signal(signal.SIGTERM)
+            out, _ = proc.communicate(timeout=15)
+        finally:
+            if proc.poll() is None:  # pragma: no cover
+                proc.kill()
+                proc.communicate()
+>       assert done.state == JobState.SUCCEEDED
+E       AssertionError: assert 'queued' == JobState.SUCCEEDED
+E         
+E         - succeeded
+E         + queued
+
+tests/integration/test_jobs_drain_pa002.py:132: AssertionError
+___ TestDrainProcesses.test_drain_deadline_on_blocked_io_holds_job_honestly ____
+
+self = <tests.integration.test_jobs_drain_pa002.TestDrainProcesses object at 0x7f8712e87360>
+tmp_path = PosixPath('/tmp/pytest-of-z/pytest-13/test_drain_deadline_on_blocked0')
+
+    def test_drain_deadline_on_blocked_io_holds_job_honestly(self, tmp_path):
+        """I/O terblokir melebihi batas drain: job ditahan jujur (uncertain),
+        keluar 3 (incomplete, bukan menggantung); pulih lewat resolve+retry."""
+        sentinel = tmp_path / "sentinel.txt"
+        job = _make_job("_test_drain_io", {"sentinel": str(sentinel)})
+        proc = _spawn("--loop", "--interval", "0.2", "--drain-timeout", "2")
+        try:
+            executing = _wait_state(job.id, {JobState.EXECUTING}, timeout_s=25)
+>           assert executing.state == JobState.EXECUTING
+E           AssertionError: assert 'queued' == JobState.EXECUTING
+E             
+E             - executing
+E             + queued
+
+tests/integration/test_jobs_drain_pa002.py:144: AssertionError
+___________ TestDrainProcesses.test_sigkill_then_reconcile_recovers ____________
+
+self = <tests.integration.test_jobs_drain_pa002.TestDrainProcesses object at 0x7f8712e875c0>
+tmp_path = PosixPath('/tmp/pytest-of-z/pytest-13/test_sigkill_then_reconcile_re0')
+
+    def test_sigkill_then_reconcile_recovers(self, tmp_path):
+        """Proses dibunuh paksa (SIGKILL) saat executing: lease kedaluwarsa →
+        reconcile → uncertain; sentinel + resolve → tuntas (recoverability)."""
+        sentinel = tmp_path / "sentinel-kill.txt"
+        job = _make_job("_test_drain_io", {"sentinel": str(sentinel)})
+        proc = _spawn("--loop", "--interval", "0.2", "--drain-timeout", "60")
+        try:
+            executing = _wait_state(job.id, {JobState.EXECUTING}, timeout_s=25)
+>           assert executing.state == JobState.EXECUTING
+E           AssertionError: assert 'queued' == JobState.EXECUTING
+E             
+E             - executing
+E             + queued
+
+tests/integration/test_jobs_drain_pa002.py:172: AssertionError
+=========================== short test summary info ============================
+FAILED tests/integration/test_jobs_drain_pa002.py::TestDrainProcesses::test_sigterm_idle_exits_drained
+FAILED tests/integration/test_jobs_drain_pa002.py::TestDrainProcesses::test_sigterm_completes_cooperative_db_job
+FAILED tests/integration/test_jobs_drain_pa002.py::TestDrainProcesses::test_drain_deadline_on_blocked_io_holds_job_honestly
+FAILED tests/integration/test_jobs_drain_pa002.py::TestDrainProcesses::test_sigkill_then_reconcile_recovers
+4 failed in 80.49s (0:01:20)

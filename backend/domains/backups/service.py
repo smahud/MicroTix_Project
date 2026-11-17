@@ -20,7 +20,14 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone as dj_timezone
 
-from adapters.routeros.base import RouterContext, RouterOsError, TimeoutAfterSendError, UnreachableError
+from adapters.routeros.base import (
+    PermissionDeniedError,
+    RevisionConflictError,
+    RouterContext,
+    RouterOsError,
+    TimeoutAfterSendError,
+    UnreachableError,
+)
 from adapters.routeros.simulator import RouterOsSimulator
 from domains.backups.models import BackupArtifact, BackupSchedule
 from domains.common import crypto
@@ -159,27 +166,29 @@ class BackupRunHandler(JobHandler):
     # --- tahap generate + staging manifest ---
 
     def execute(self, ctx: JobContext) -> dict[str, Any]:
-        router = self._load_router(ctx)
-        category = ctx.payload.get("category") or BackupArtifact.Category.MANUAL
+        # Unit DB pendek: muat router + buat artifact GENERATING (commit cepat,
+        # terlihat observer) — adapter I/O di luar transaksi (PA-002).
+        with ctx.scope():
+            router = self._load_router(ctx)
+            category = ctx.payload.get("category") or BackupArtifact.Category.MANUAL
+            generation = (
+                BackupArtifact.objects.filter(
+                    tenant_id=router.tenant_id, router_id=router.id, category=category
+                ).aggregate(m=models.Max("generation"))["m"]
+                or 0
+            ) + 1
+            password = _router_password(router.id, router.tenant_id)
+            artifact = BackupArtifact.objects.create(
+                tenant_id=router.tenant_id,
+                router=router,
+                category=category,
+                generation=generation,
+                state=BackupArtifact.State.GENERATING,
+                file_name=f"{router.router_code or 'router'}-{category}-{generation}.backup"[:255],
+                storage_path=f"backups/{uuid.uuid4().hex}",
+                password_ref=crypto.SecretBox.encrypt(password),
+            )
         ctx.progress(phase="generate", done=0, total=1)
-
-        generation = (
-            BackupArtifact.objects.filter(tenant_id=router.tenant_id, router_id=router.id, category=category).aggregate(
-                m=models.Max("generation")
-            )["m"]
-            or 0
-        ) + 1
-        password = _router_password(router.id, router.tenant_id)
-        artifact = BackupArtifact.objects.create(
-            tenant_id=router.tenant_id,
-            router=router,
-            category=category,
-            generation=generation,
-            state=BackupArtifact.State.GENERATING,
-            file_name=f"{router.router_code or 'router'}-{category}-{generation}.backup"[:255],
-            storage_path=f"backups/{uuid.uuid4().hex}",
-            password_ref=crypto.SecretBox.encrypt(password),
-        )
 
         adapter = select_adapter()
         rctx = RouterContext(
@@ -191,22 +200,39 @@ class BackupRunHandler(JobHandler):
             credential_ref=router.credential_ref,
         )
         try:
+            # I/O adapter — DI LUAR transaksi DB (PA-002).
             metadata = adapter.create_backup(rctx, category=category)
         except TimeoutAfterSendError:
-            artifact.state = BackupArtifact.State.FAILED
-            artifact.save(update_fields=["state"])
+            with ctx.scope():
+                artifact.state = BackupArtifact.State.FAILED
+                artifact.save(update_fields=["state"])
             # Perintah mungkin sudah terkirim → uncertain, bukan failed (§6).
             raise JobError(code="timeout_after_send", uncertain=True) from None
         except UnreachableError:
-            artifact.state = BackupArtifact.State.FAILED
-            artifact.save(update_fields=["state"])
-            raise JobError(code="router_unreachable", retryable=True) from None
+            with ctx.scope():
+                artifact.state = BackupArtifact.State.FAILED
+                artifact.save(update_fields=["state"])
+            # Koneksi tidak pernah terbangun → terbukti belum ada kirim: retry
+            # eksplisit no-effect (REV-1711-02).
+            raise JobError(code="router_unreachable", retryable=True, no_effect=True) from None
+        except (PermissionDeniedError, RevisionConflictError) as exc:
+            with ctx.scope():
+                artifact.state = BackupArtifact.State.FAILED
+                artifact.save(update_fields=["state"])
+            # Perintah ditolak/tahan sebelum diterapkan adapter → no-effect
+            # eksplisit (pra-kirim; CORR-REV-01 menutup klaim blanket).
+            raise JobError(code=exc.code, retryable=True, no_effect=True) from None
         except RouterOsError as exc:
-            artifact.state = BackupArtifact.State.FAILED
-            artifact.save(update_fields=["state"])
+            with ctx.scope():
+                artifact.state = BackupArtifact.State.FAILED
+                artifact.save(update_fields=["state"])
+            # RouterOsError generik dapat terbit pasca-kirim (trap protokol):
+            # tanpa bukti pra-efek → default engine menahan uncertain untuk
+            # readback ops — TIDAK blanket no_effect (CORR-REV-01).
             raise JobError(code=exc.code, retryable=True) from None
 
         # Staging manifest di penyimpanan privat (opaque; tidak via API).
+        # Tulis file di luar transaksi DB (I/O file bukan penghalang koneksi).
         ctx.progress(phase="transfer", done=0, total=1)
         _write_manifest(
             artifact.storage_path,
@@ -229,22 +255,24 @@ class BackupRunHandler(JobHandler):
 
         Verify membaca ulang keadaan (bukan mempercaya memori execute):
         artifact generating terbaru untuk (router, kategori) + manifest
-        fisik di penyimpanan privat.
+        fisik di penyimpanan privat. Baca file DI LUAR transaksi; commit
+        katalog + prune dalam unit tenant pendek (PA-002).
         """
-        router = self._load_router(ctx)
-        category = ctx.payload.get("category") or BackupArtifact.Category.MANUAL
-        artifact = (
-            BackupArtifact.objects.filter(
-                tenant_id=router.tenant_id,
-                router_id=router.id,
-                category=category,
-                state=BackupArtifact.State.GENERATING,
+        with ctx.scope():
+            router = self._load_router(ctx)
+            category = ctx.payload.get("category") or BackupArtifact.Category.MANUAL
+            artifact = (
+                BackupArtifact.objects.filter(
+                    tenant_id=router.tenant_id,
+                    router_id=router.id,
+                    category=category,
+                    state=BackupArtifact.State.GENERATING,
+                )
+                .order_by("-generation")
+                .first()
             )
-            .order_by("-generation")
-            .first()
-        )
-        if artifact is None:
-            raise JobError(code="verification_error", uncertain=True)
+            if artifact is None:
+                raise JobError(code="verification_error", uncertain=True)
         try:
             manifest = json.loads((settings.MT_STORAGE_ROOT / artifact.storage_path).read_text())
             metadata = manifest.get("adapter_metadata", {})
@@ -253,16 +281,18 @@ class BackupRunHandler(JobHandler):
             raise JobError(code="staging_unreadable", uncertain=True) from None
         size = int(metadata.get("size_bytes") or 0)
         if size <= 0 or size > _config_int("backup.max_artifact_bytes"):
-            artifact.state = BackupArtifact.State.FAILED
-            artifact.save(update_fields=["state"])
+            with ctx.scope():
+                artifact.state = BackupArtifact.State.FAILED
+                artifact.save(update_fields=["state"])
             raise JobError(code="artifact_size_invalid", recovery_required=False)
         # Commit katalog dulu, prune setelahnya (§5 commit-before-prune).
-        artifact.state = BackupArtifact.State.COMMITTED
-        artifact.size_bytes = size
-        artifact.sha256 = str(metadata.get("hash") or "")[:64]
-        artifact.committed_at = dj_timezone.now()
-        artifact.save(update_fields=["state", "size_bytes", "sha256", "committed_at"])
-        pruned = prune_beyond_retention(artifact.tenant_id, artifact.router_id, artifact.category)
+        with ctx.scope():
+            artifact.state = BackupArtifact.State.COMMITTED
+            artifact.size_bytes = size
+            artifact.sha256 = str(metadata.get("hash") or "")[:64]
+            artifact.committed_at = dj_timezone.now()
+            artifact.save(update_fields=["state", "size_bytes", "sha256", "committed_at"])
+            pruned = prune_beyond_retention(artifact.tenant_id, artifact.router_id, artifact.category)
         ctx.progress(phase=None, done=1, total=1)
         evidence = {"source": "simulator" if metadata.get("simulated") else "routeros", "verified_lab": False}
         return {

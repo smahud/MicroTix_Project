@@ -1,0 +1,175 @@
+{
+  "candidate_sha": "bd37c14e6c41339a8743b3d4b723ee74f13bef08",
+  "verdict": "changes_requested",
+  "task": "0020",
+  "next_actor": "coding_agent",
+  "root_full_suite": {
+    "passed": 554,
+    "skipped": 1,
+    "warnings": 3,
+    "exit": 0,
+    "seconds": 98.09,
+    "runtime_owns_test_tables": true,
+    "force_rls": true
+  },
+  "root_focused_probes": {
+    "failed_assertions": 11,
+    "errors": 0,
+    "lifecycle_seconds": 1.83,
+    "authority_seconds": 2.91,
+    "exit_each": 1,
+    "schema_owner": "mtx_migrator",
+    "runtime": "mtx_app",
+    "runtime_superuser": false,
+    "runtime_bypassrls": false,
+    "force_rls": true,
+    "extra_privilege": "TRUNCATE only for disposable pytest cleanup"
+  },
+  "observed": [
+    {
+      "artifact_count": 2,
+      "case": "backup-generic-after-send",
+      "effect_state": "maybe",
+      "first_state": "retry_wait",
+      "reclaimed": true,
+      "send_count": 2
+    },
+    {
+      "case": "stale-discovery-domain-commit",
+      "health_count": 1,
+      "job_state": "uncertain",
+      "object_count": 1,
+      "outcomes": {
+        "worker": {
+          "state": "uncertain"
+        }
+      },
+      "snapshot_status": [
+        "succeeded"
+      ]
+    },
+    {
+      "case": "retry-uncertain-grandchild",
+      "error": null,
+      "extra_retry_created": true,
+      "grandchild_state": "uncertain",
+      "send_count": 2
+    },
+    {
+      "case": "router-unknown-predecessor",
+      "first_state": "uncertain",
+      "second_job": "56ac7a18-dde5-4c37-87aa-be11104e2a89",
+      "second_state": "succeeded",
+      "send_count": 2
+    },
+    {
+      "http_status": 200,
+      "job_count_after": 1,
+      "job_count_before": 1,
+      "job_router_in_membership_scope": false,
+      "job_state_after": "queued",
+      "job_state_before": "queued",
+      "probe": "http_scope_detail"
+    },
+    {
+      "http_status": 204,
+      "job_count_after": 1,
+      "job_count_before": 1,
+      "job_router_in_membership_scope": false,
+      "job_state_after": "cancelled",
+      "job_state_before": "queued",
+      "probe": "http_scope_cancel"
+    },
+    {
+      "http_status": 202,
+      "job_count_after": 2,
+      "job_count_before": 1,
+      "job_router_in_membership_scope": false,
+      "job_state_after": "failed",
+      "job_state_before": "failed",
+      "probe": "http_scope_retry"
+    },
+    {
+      "distinct_db_connections": true,
+      "error_code": null,
+      "probe": "after_preflight_revoke",
+      "router_released": true,
+      "state": "succeeded"
+    },
+    {
+      "distinct_db_connections": true,
+      "error_code": null,
+      "probe": "after_preflight_demote",
+      "router_released": true,
+      "state": "succeeded"
+    },
+    {
+      "calls": [
+        {
+          "autocommit": false,
+          "in_atomic_block": true,
+          "op": "apply",
+          "pid": 631
+        },
+        {
+          "autocommit": false,
+          "in_atomic_block": true,
+          "op": "verify",
+          "pid": 631
+        }
+      ],
+      "job_error": null,
+      "job_state": "succeeded",
+      "probe": "b6_negative_verifier",
+      "readback_ok": false,
+      "result": {
+        "note": "state cutover tersimpan dengan evidence per fase",
+        "ok": true,
+        "phase": "B6",
+        "state": "rolled_back"
+      },
+      "router_enforcement": "local",
+      "run_state": "rolled_back"
+    },
+    {
+      "calls": [
+        {
+          "autocommit": false,
+          "in_atomic_block": true,
+          "op": "apply",
+          "pid": 696
+        },
+        {
+          "autocommit": false,
+          "in_atomic_block": true,
+          "op": "verify",
+          "pid": 696
+        }
+      ],
+      "job_error": null,
+      "job_state": "succeeded",
+      "probe": "b6_transaction_boundary",
+      "readback_ok": true,
+      "result": {
+        "note": "state cutover tersimpan dengan evidence per fase",
+        "ok": true,
+        "phase": "B6",
+        "state": "rolled_back"
+      },
+      "router_enforcement": "local",
+      "run_state": "rolled_back"
+    }
+  ],
+  "finding_ids": [
+    "REV-1711-01",
+    "REV-1711-02",
+    "REV-1711-03",
+    "REV-1711-04",
+    "REV-1711-05",
+    "REV-1711-06",
+    "REV-1711-07",
+    "REV-1711-08",
+    "REV-1711-09"
+  ],
+  "scope_limit": "Eight confirmed code defects from eleven probes; REV-1711-09 is missing mandatory evidence. Controlled adapters are not device/lab verification."
+}

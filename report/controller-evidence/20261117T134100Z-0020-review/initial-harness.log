@@ -1,0 +1,23 @@
+Initial controller harness failure: PG daemon launched in a separate process/network namespace; clients in another exec could not connect. This is not a candidate failure. Re-run all checks with PG and clients inside run_review.sh.
+
+EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE [ 12%]
+EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE [ 25%]
+EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE [ 38%]
+EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE [ 51%]
+EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE [ 64%]
+EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE [ 77%]
+EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE [ 90%]
+EEEEEEEEEEEEsEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE                      [100%]
+==================================== ERRORS ====================================
+___________________ ERROR at setup of test_health_endpoints ____________________
+
+self = <DatabaseWrapper vendor='postgresql' alias='__no_db__'>
+...
+ERROR tests/unit/test_wg_probe.py::TestValidatePublicKey::test_valid_x25519_32byte
+ERROR tests/unit/test_wg_probe.py::TestValidatePublicKey::test_empty_returns_empty
+ERROR tests/unit/test_wg_probe.py::TestValidatePublicKey::test_rejects_non_base64
+ERROR tests/unit/test_wg_probe.py::TestValidatePublicKey::test_rejects_wrong_length
+ERROR tests/unit/test_wg_probe.py::TestValidatePublicKey::test_rejects_padding_ignored
+1 skipped, 1 warning, 554 errors in 72.91s (0:01:12)
+
+First focused probe run: missing available_apps marker caused unmanaged radius.nas FK TRUNCATE teardown errors. Later test results from contaminated DB discarded; acceptance assertions unchanged. Corrected probes use available_apps (CASCADE cleanup) on a fresh migrator-owned schema with a separate DML runtime; extra TRUNCATE is test-only. See *-initial.log versus final *-probes.log.
