@@ -3,8 +3,8 @@
 | Field | Nilai |
 |---|---|
 | Task ID | `0020`; satu packet untuk lifecycle + authority yang saling bergantung |
-| Execution status | `ready` |
-| Review status | `not_submitted`; belum ada kandidat implementasi atau hasil tes task ini |
+| Execution status | `done` (scope executor + tes wajib tuntas; bukan acceptance) |
+| Review status | `pending` — menunggu controller review exact SHA kandidat |
 | Controller / executor | ChatGPT Work controller / coding agent sandbox |
 | Baseline | `main@41d1f33f16508491a34f66b767830b9dd3e5954e`; fetch ulang dan periksa delta sebelum bekerja |
 | Instruction ref | `review/0020-job-lifecycle-authority-20261117`; baca packet ini pada ref tersebut atau descendant yang sudah diintegrasikan, bukan packet0010 dari branch lama |
@@ -12,8 +12,10 @@
 | Authority | [CONTRACT](../CONTRACT.md) §§5–6A/8–13; [PRODUCT](../docs/PRODUCT.md) TEN-03, JOB-02–05, SEC-01/04/05, SUB-05; [ARCHITECTURE](../docs/ARCHITECTURE.md) §§3–6; [OPERATIONS](../docs/OPERATIONS.md) §§3–4; [ACCEPTANCE](../docs/ACCEPTANCE.md) §4 |
 | Backlog / tests | Existing TK-101/102/103 dan bagian drain TK-1002; katalog T06-CRASH-01/02/03, T10-TEN-03; T05/T14 hanya invariant current-state yang relevan, bukan seluruh fitur R2/DR |
 | Controller report | [Review dan dasar packet](../report/controller/20261116T231131Z-0020-job-lifecycle-review.md) |
-| Implementation / tested SHA / candidate / CI | Belum diserahkan; isi dengan bukti aktual saat delivery |
-| Next actor / action | `coding_agent`: fetch instruction ref, implementasikan dan buktikan acceptance di bawah; serahkan exact SHA untuk controller review |
+| Implementation / tested SHA / candidate / CI | Implementation/tested **`6e96ce33a2708e204a72ff3b6814deaf62195444`**; candidate branch `session/2026-11-17-0020-job-lifecycle-authority` (published head = commit penyerahan; report-only descendant, `git diff 6e96ce33 HEAD -- backend/ apps/` kosong) + PR; CI exact head diobservasi dan dicatat pada PR/handoff setelah push |
+| Bukti kunci | **Suite penuh 554 passed + 1 skip** (PG 17.11 nyata, peran non-superuser, FORCE RLS) — failing-before pada baseline main@41d1f33: 33/37 lifecycle + 4/4 drain GAGAL, passing-after 41/41; PA-001 + PA-006 (incl. R4/R5 replay migrasi) lulus utuh; check/makemigrations/docs PASS; frontend typecheck/lint/66 tes/i18n/build lulus; P3 REV-1611-TEST-01 ditutup test-only |
+| Execution report | [Orchestrator](../report/orchestrator/20261117T010218Z-0020-job-lifecycle-authority.md) — matriks A01–A09 + inventaris + runbook; [review independen](../report/reviewer/20261117T010218Z-0020-job-lifecycle-independent.md) (REV-2011-01..10 — seluruhnya ditindaklanjuti); [evidence](../report/executor-evidence/20261117T000000Z-0020-job-lifecycle/) |
+| Next actor / action | **controller_reviewer**: review exact SHA `6e96ce3` (kode) / head published (tree identik) atas matriks A01–A09 laporan eksekusi §4 dan temuan reviewer §3; changes-requested membuka kembali ID0020 yang sama |
 
 PA-002/PA-003 adalah label kontinuitas audit, bukan otoritas baru. PR8 planning_audit masih draft/unmerged; kebutuhan packet ini seluruhnya diturunkan dari kontrak main di atas. Prasyarat PA-006 sudah accepted/integrated dan tidak dibuka kembali. PA-001 pembayaran juga dipertahankan. Packet ini tidak memberi izin merge, deploy, tag atau aktivasi fitur.
 

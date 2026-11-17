@@ -2,6 +2,38 @@
 
 Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-17 (Asia/Jakarta).
 
+## Checkpoint 2026-11-17, ~08:10 WIB — executor menyerahkan task0020 PA-002+PA-003 (done, pending review)
+
+Executor Z.ai sandbox menjalankan [packet0020](../task/0020-job-lifecycle-authority_done.md)
+dari instruction ref PR26 `review/0020-job-lifecycle-authority-20261117` @ ea7b8a1,
+base main **41d1f33** (delta kosong). Implementation/tested **6e96ce33** pada branch
+`session/2026-11-17-0020-job-lifecycle-authority` (penyerahan report-only di atasnya;
+tree kode identik). Engine jobs direworks: CAS lease token+epoch+expected-state pada
+seluruh tulisan worker (hasil terminal ikut CAS di WHERE), unit transaksi tenant pendek
+per handler tanpa lock melintasi I/O adapter, effect_state=maybe atomik pra-execute +
+cancel hanya pra-efek (executing 409 jujur), satu pemilik pengirim per router via
+advisory lock, reconcile state/effect-aware CAS + idempotent, resolve readback protocol
+(fence penulis lama; verify tanpa resend; unknown tertahan), retry diserialisasi
+(uncertain/recovery_required dianggap aktif), deadline claim+pra-efek, progress
+memperpanjang lease, kewenangan terkini fresh-DB (peta kind fail-closed; provenance
+verify_api_ssl dari enrollment.created_by; karantina actorless dengan resume; recheck
+antar fase kirim cutover), HTTP job detail/retry/cancel pakai izin operasi dasar +
+step-up sensitif, RouterReplaceView → routers.release, handler hilang/verifier negatif
+fail-closed, runworker drain SIGTERM/SIGINT + drain-timeout + exit 0/3. Tanpa migrasi
+schema (jobs/0004/0005 tak tersentuh).
+
+Bukti: **suite penuh 554 passed + 1 skip** PG 17.11 nyata non-superuser FORCE RLS;
+**failing-before pada baseline 41d1f33: 33/37 lifecycle + 4/4 drain GAGAL**,
+passing-after 41/41; PA-001 + PA-006 (R4/R5 replay migrasi) lulus; check/makemigrations/
+docs PASS; frontend tsc/eslint/vitest 66/i18n/build lulus; P3 REV-1611-TEST-01 ditutup
+test-only. [Review independen](../report/reviewer/20261117T010218Z-0020-job-lifecycle-independent.md)
+pra-koreksi CHANGES_REQUESTED (REV-2011-01 P1 .. 10) — seluruh temuan ditindaklanjuti
+dengan tes; [laporan eksekusi + matriks A01–A09 + runbook](../report/orchestrator/20261117T010218Z-0020-job-lifecycle-authority.md),
+[evidence](../report/executor-evidence/20261117T000000Z-0020-job-lifecycle/).
+Task0020 **done / pending**; next **controller_reviewer** review exact SHA 6e96ce3.
+PA-006 tetap accepted/integrated; Beta tetap **NOT_READY** (installer/upgrade/restore/
+scheduler/DEC-01/02/host-lab/kapasitas). Simulator/CI bukan bukti perangkat nyata.
+
 ## Checkpoint 2026-11-17 — PA-006 integrated terverifikasi, task0020 ready untuk coding agent
 
 Controller menjalankan default reviewer dari GitHub pada main **41d1f33**:

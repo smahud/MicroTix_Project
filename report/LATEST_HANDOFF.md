@@ -1,9 +1,30 @@
-# LATEST_HANDOFF — 17 November 2026: task0020 ready, PA-006 tetap integrated
+# LATEST_HANDOFF — 17 November 2026: task0020 PA-002/PA-003 diserahkan executor (done/pending); task0010 tetap integrated
 
 Pintu masuk tetap: [task/0000-start-here.md](../task/0000-start-here.md).
 Fetch remote refs/PR dan baca CONTRACT §6A sebelum bertindak. Tanggal pengguna Asia/Jakarta, filename evidence UTC.
 
-## Current state — task0020 disiapkan controller
+## Current state — 17 November 2026, ~08:10 WIB: executor menyerahkan task0020 (penyerahan pertama)
+
+**Task0020 / PA-002+PA-003 done (scope executor + tes wajib) / pending review.**
+Executor Z.ai sandbox mengambil packet dari instruction ref PR26
+`review/0020-job-lifecycle-authority-20261117` @ ea7b8a1 setelah memverifikasi
+main tidak berubah (41d1f33). PA-006 tetap accepted/integrated (tidak dibuka).
+
+| Field handoff | Status / pointer |
+|---|---|
+| Canonical main teramati | **41d1f33f16508491a34f66b767830b9dd3e5954e** — tidak berubah saat sesi; fetch ulang sebelum bertindak |
+| Active task | [ID0020 / PA-002+PA-003](../task/0020-job-lifecycle-authority_done.md) — **done / pending** |
+| Candidate branch | `session/2026-11-17-0020-job-lifecycle-authority` dari instruction ref ea7b8a1; implementation/tested **`6e96ce33a2708e204a72ff3b6814deaf62195444`**; penyerahan (packet `_done` + report + handoff/progress) report-only di atasnya — `git diff 6e96ce33 HEAD -- backend/ apps/` kosong |
+| Perubahan inti | Engine jobs: CAS fencing penuh (termasuk commit hasil terminal di klausa WHERE), unit transaksi tenant pendek tanpa lock melintasi I/O adapter, cancel pra-efek atomik + epoch-bump (executing jujur 409), effect_state=maybe atomik pra-execute, advisory lock pengirim per-router (busy requeue tanpa konsumsi attempt), reconcile state/effect-aware CAS idempotent (claimed/preflight requeue via retry_wait; executing/verifying → uncertain), resolve readback protocol (penulis lama wajib terbukti berhenti; applied=True verify tanpa resend; unknown tertahan), retry diserialisasi (uncertain/recovery_required dianggap aktif), deadline claim + pra-efek (dibaca segar), progress memperpanjang lease; authority fresh-DB peta kind fail-closed + provenance verify_api_ssl dari enrollment.created_by + karantina actorless dengan resume + recheck antar fase kirim cutover; HTTP job detail/retry/cancel izin operasi dasar + step-up sensitif + 403/404; RouterReplaceView → routers.release; handler hilang/verifier negatif fail-closed; runworker drain SIGTERM/SIGINT + drain-timeout + exit 0/3. **Tanpa migrasi schema** (jobs/0004/0005 tak tersentuh) |
+| Bukti kunci | **Full suite 554 passed + 1 skipped** (PG 17.11 nyata, peran non-superuser, FORCE RLS; +41 tes baru); **failing-before pada baseline 41d1f33: 33/37 lifecycle + 4/4 drain GAGAL → passing-after 41/41**; PA-001 + PA-006 (incl. R4/R5 replay migrasi) lulus utuh; check/makemigrations/docs PASS; frontend tsc/eslint/vitest 66/i18n/build lulus; P3 REV-1611-TEST-01 ditutup test-only |
+| Review independen | [Reviewer](reviewer/20261117T010218Z-0020-job-lifecycle-independent.md) pra-koreksi **CHANGES_REQUESTED** (REV-2011-01 P1; 02–04 P2; 05–10 P3) — seluruh temuan ditindaklanjuti dengan koreksi + tes baru (matriks §3 laporan eksekusi); internal review ≠ acceptance |
+| Execution report | [Orchestrator](orchestrator/20261117T010218Z-0020-job-lifecycle-authority.md) — inventaris kind, matriks A01–A09 → evidence, runbook drain, batas; [evidence dir](executor-evidence/20261117T000000Z-0020-job-lifecycle/) |
+| Candidate CI | exact published head — diobservasi setelah push; hasil final dicatat pada PR dan pembaruan handoff ini |
+| Next actor | **controller_reviewer** |
+| Exact next action | Review exact SHA `6e96ce3` (kode) / head published (tree identik — verifikasi `git diff 6e96ce33 HEAD -- backend/ apps/` kosong) atas matriks acceptance J20-A01..A09 laporan eksekusi §4 dan penutupan REV-2011-01..10 §3; changes-requested membuka kembali ID0020 yang sama; jangan buka task0030 sebelum prasyarat review/integrasi terpenuhi |
+| Batas / Beta | Production Beta **NOT_READY**; bloker register 11 Nov tidak berubah (installer/upgrade/worker ops/restore/DEC-01/DEC-02/scheduler/REV-1111-*/kapasitas + gates host/lab). OS install/upgrade/restore/DR, real drain service, CHR/GNS3/router/pilot, E2E browser, benchmark NOT_RUN; simulator/CI bukan bukti perangkat nyata |
+
+## Prior controller publication — 17 November 2026: task0020 disiapkan (superseded oleh penyerahan di atas)
 
 | Field | Current state / pointer |
 |---|---|
