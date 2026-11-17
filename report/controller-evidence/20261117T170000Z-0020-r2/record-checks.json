@@ -1,0 +1,9 @@
+{
+  "docs_final_exit": 0,
+  "new_record_relative_links_missing": [],
+  "protected_application_config_contract_diff": "empty",
+  "acceptance_A01_A09": "byte-identical to original packet",
+  "root_probe_source_review": "complete; six assertions express required behavior and fail on reviewed source",
+  "publication": "initial443b1dc verified GitHub ref/commit/tree/all40 path blobs/key files/local clean fetch; PR31 open",
+  "terminal_log_normalization": "trailing whitespace and extra blank EOF stripped; values and assertions unchanged"
+}
