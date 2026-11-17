@@ -42,6 +42,11 @@
       "sha256": "623031225cf8279ca61f83ce14bdbf809fff53c841c056aa9154a9e7e6b8c0db"
     },
     {
+      "path": "docs/BETA_RELEASE_NOTES.md",
+      "bytes": 8056,
+      "sha256": "7913cf693caa53c887d15d955ca98067b5a6d6b21e9e3980949b44fae5a7cb86"
+    },
+    {
       "path": "docs/FINANCE.md",
       "bytes": 15181,
       "sha256": "4eede639090f930c8f63401cd7a8102b187bfd89a5b4597e845cc888ab695722"
@@ -110,6 +115,31 @@
       "path": "docs/defaults.json",
       "bytes": 59698,
       "sha256": "109d3f513d3910fc733dcb3504abc1871af610a9f6ee86590ef6fc7ea0b5472b"
+    },
+    {
+      "path": "docs/planning_audit/01_MODULARITY_AUDIT.md",
+      "bytes": 35129,
+      "sha256": "59879245d8ddec854c68d3a7ec3f662f284096263d89b6a5c72898c3c2c297b7"
+    },
+    {
+      "path": "docs/planning_audit/02_MODULE_CONTRACTS.md",
+      "bytes": 19178,
+      "sha256": "0ef8aa0771842dbcc85276af6052520346d9767891c219da92c48c3fa90d65e7"
+    },
+    {
+      "path": "docs/planning_audit/03_UPGRADE_PATCH_SAFETY.md",
+      "bytes": 24174,
+      "sha256": "05caaef898fab6d6f63752fa0431f0c5825ba158a8d7b9483c4005a88e2ea15d"
+    },
+    {
+      "path": "docs/planning_audit/04_REVIEW_GATES.md",
+      "bytes": 16002,
+      "sha256": "fc0918a5947653b8d22ccb3386981d3edb021e2bf4abee63771bc579670cdb88"
+    },
+    {
+      "path": "docs/planning_audit/README.md",
+      "bytes": 8024,
+      "sha256": "76b3424b25f46ea81b465eedd3e0884ccc7b3f285467ce524f867a2c0a9c574d"
     },
     {
       "path": "docs/planning_mvp/payment_point/ARCHITECTURE_PROPOSAL.md",
