@@ -5,6 +5,7 @@
 | Task ID | `0020`; satu packet untuk lifecycle + authority yang saling bergantung |
 | Execution status | **`ready`** — controller R1 membuka kembali ID0020 setelah review kandidat |
 | Review status | **`changes_requested`** pada exact PR27 `bd37c14e6c41339a8743b3d4b723ee74f13bef08` |
+| Resume controller 17 Nov ~21:48 WIB | Correction delivery **not_submitted**; main41d1f33/candidatebd37c14/starting decision43043be unchanged; [checkpoint](../report/controller/20261117T144620Z-0020-resume-review.md). Seluruh REV-1711-01–09 tetap OPEN; bukan review implementasi/acceptance baru |
 | Controller / executor | ChatGPT Work controller / coding agent sandbox |
 | Baseline | `main@41d1f33f16508491a34f66b767830b9dd3e5954e`; fetch ulang dan periksa delta sebelum bekerja |
 | Original instruction ref | PR26 `review/0020-job-lifecycle-authority-20261117` @ `ea7b8a17ad8d6339eed45769bbff1626ea279665`; histori instruksi awal |

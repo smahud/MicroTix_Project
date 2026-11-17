@@ -4,13 +4,25 @@ Pintu masuk: [task/0000-start-here.md](../task/0000-start-here.md).
 Fetch current main, candidate dan decision ref sebelum melanjutkan. Tabel ini
 menggantikan status historis di bawah; tanggal pengguna Asia/Jakarta.
 
+**Resume 17 November ~21:48 WIB:** 31 branches/14 open PRs diperiksa;
+belum ada penyerahan koreksi baru (**correction delivery not_submitted**).
+Main41d1f33, PR27bd37c14 dan starting decision43043be unchanged; seluruh
+source/config identik. [Checkpoint controller](controller/20261117T144620Z-0020-resume-review.md)
+dan [independent check](reviewer/20261117T144620Z-0020-resume-independent.md)
+dipublikasikan pada existing PR29. Verdict R1 tetap **ready /
+changes_requested**, next **coding_agent** menutup REV-1711-01–09 pada
+ID0020 yang sama. Existing CI43043be kini **completed success3/3**, bukan
+bukti penutupan finding atau CI commit checkpoint yang lebih baru.
+Runtime review tidak diulang pada source yang tidak berubah. Publication
+ancestor/readback mengikuti checkpoint §6; final-head CI mengikuti PR29.
+
 | Field | Current state / pointer |
 |---|---|
 | Canonical main teramati | **41d1f33f16508491a34f66b767830b9dd3e5954e**; main tidak diubah sesi ini |
 | Active task | **[ID0020 PA-002+PA-003](../task/0020-job-lifecycle-authority.md)** — **ready / changes_requested / not integrated** |
 | Exact reviewed candidate | **[PR27](https://github.com/smahud/MicroTix_Project/pull/27)** `bd37c14e6c41339a8743b3d4b723ee74f13bef08`; executor tested ancestor7118cce, source/app delta kosong |
 | Decision ref | **[PR29](https://github.com/smahud/MicroTix_Project/pull/29)** `review/0020-controller-20261117`, initial decision **3c4b71fa75ab0619bf12b84660a8678b99294e20/tree9b7d2405** verified; [controller R1](controller/20261117T134100Z-0020-job-lifecycle-review.md), publication/readback §8. Branch ini membawa source kandidat + packet reopened, bukan main yang masih lama |
-| Evidence root | Full backend **554 passed,1 skipped,3 warnings**; **11 acceptance probes FAIL / 0 harness errors** pada fresh PG17.11 migrator-owned schema + runtime nonowner/NOBYPASSRLS/FORCE RLS; [summary](controller-evidence/20261117T134100Z-0020-review/review-results.json) |
+| Evidence root R1 (historis, tidak diulang saat resume) | Full backend **554 passed,1 skipped,3 warnings**; **11 acceptance probes FAIL / 0 harness errors** pada fresh PG17.11 migrator-owned schema + runtime nonowner/NOBYPASSRLS/FORCE RLS; [summary](controller-evidence/20261117T134100Z-0020-review/review-results.json) |
 | Blocking findings | **REV-1711-01–08**: stale domain commit, blind retry setelah efek, retry lineage unknown, router unreadback hold, after-preflight authority, HTTP router scope, B6 I/O transaction dan B6 false success; **09** missing required evidence (drain SIGINT/active DB, long-phase/policy/recovery) |
 | Candidate CI | Existing run43994355914 exact **bd37c14 success backend/frontend/docs3/3**; tidak menutup probe acceptance gagal |
 | Independent reviewers | [Lifecycle](reviewer/20261117T140000Z-0020-lifecycle-independent.md), [authority](reviewer/20261117T140000Z-0020-authority-independent.md); root memeriksa source+menjalankan PG probes |

@@ -1,0 +1,357 @@
+{
+  "observed_at_utc": "2026-11-17T14:47:57.415Z",
+  "repository": "smahud/MicroTix_Project",
+  "source": "GitHub plugin branches/pulls/check-runs APIs, cross-checked with fresh local clone",
+  "canonical_main": "41d1f33f16508491a34f66b767830b9dd3e5954e",
+  "candidate_pr": 27,
+  "candidate_sha": "bd37c14e6c41339a8743b3d4b723ee74f13bef08",
+  "tested_ancestor": "7118cce0db330acb02be0b3b774b1b1628d55d7a",
+  "decision_pr": 29,
+  "decision_start_sha": "43043be4b0562f982316593cf6ef4e5d5b6951a6",
+  "branches": [
+    {
+      "name": "docs/default-agent-prompts-20261112",
+      "sha": "776099e10def9c6922a105f0e7b6ca278a47c025"
+    },
+    {
+      "name": "docs/payment-point-planning-20261113",
+      "sha": "2a9803593c328ab014bab6695b298072ed4c1886"
+    },
+    {
+      "name": "docs/planning-audit-20261110",
+      "sha": "6bb57c9251f3a7a67b71b9523c01e507fdb1b601"
+    },
+    {
+      "name": "docs/task-communication-loop-20261112",
+      "sha": "4f807e77484babf71550ede3bd2aa65a990aa877"
+    },
+    {
+      "name": "docs/task-workflow-20261112",
+      "sha": "826672ee3fbebd48eddc833a3a9e29282ccbaec1"
+    },
+    {
+      "name": "integration/beta-0.1",
+      "sha": "0eb01d2e5baaa6511e0b2145f05850df18a1bdc0"
+    },
+    {
+      "name": "main",
+      "sha": "41d1f33f16508491a34f66b767830b9dd3e5954e"
+    },
+    {
+      "name": "parallel/beta-be2",
+      "sha": "c9023e6d9bb1e5e1b2ef18685d94bc82f6c6eb02"
+    },
+    {
+      "name": "review/0010-pa006-controller-20261113",
+      "sha": "5da0d801c71b020fbb8b977294502ea5a09e7bcb"
+    },
+    {
+      "name": "review/0010-pa006-controller-20261114",
+      "sha": "b6a0cb863f52cbbf512b23dceafc4231ff9c7d74"
+    },
+    {
+      "name": "review/0010-pa006-controller-20261115",
+      "sha": "e507175cb2982b6a974eee8bf437d0b6de5879c6"
+    },
+    {
+      "name": "review/0010-pa006-controller-r4-20261115",
+      "sha": "4bb726106f2dea1949dc737eb8c81dae6fd8d341"
+    },
+    {
+      "name": "review/0010-pa006-controller-r5-20261116",
+      "sha": "c352bce4e3f4cfe87ae62ee23e3c1e2a4cfbb450"
+    },
+    {
+      "name": "review/0010-pa006-submission-check-20261112",
+      "sha": "17901fc439199ad70082942832d88fd7214f391c"
+    },
+    {
+      "name": "review/0020-controller-20261117",
+      "sha": "43043be4b0562f982316593cf6ef4e5d5b6951a6"
+    },
+    {
+      "name": "review/0020-job-lifecycle-authority-20261117",
+      "sha": "ea7b8a17ad8d6339eed45769bbff1626ea279665"
+    },
+    {
+      "name": "session/2026-11-06-billing-docs",
+      "sha": "43946354715de5391b86765eb5cad3d0da938562"
+    },
+    {
+      "name": "session/2026-11-06-bootstrap-inrepo",
+      "sha": "8f6b173464270d77be93da70775d1fc367fac2d2"
+    },
+    {
+      "name": "session/2026-11-06-tk604-billing-ui",
+      "sha": "5d902e361526b6b35bda5d0f75984ffacea28ab9"
+    },
+    {
+      "name": "session/2026-11-06-wg-e2e",
+      "sha": "b07504a2a3455348ba05f1aabd5550246c088dec"
+    },
+    {
+      "name": "session/2026-11-07-sstp-phase2",
+      "sha": "d7fa35e5583bc36848e3b45497d2511739298c8a"
+    },
+    {
+      "name": "session/2026-11-07-wg-onboarding",
+      "sha": "4ed21454d8e37bdc58bd61575031765dfa6b47c7"
+    },
+    {
+      "name": "session/2026-11-11-pa001-payment-concurrency",
+      "sha": "482602ecad6616167d14f2b30cd60e2039093fe9"
+    },
+    {
+      "name": "session/2026-11-13-pa006-idempotency",
+      "sha": "7480c80e2c27b8b06048b77132d235efe6b3a3c2"
+    },
+    {
+      "name": "session/2026-11-14-pa006-idempotency",
+      "sha": "37a87291ae66a0fa9167f0c72d1e8340aa5fd245"
+    },
+    {
+      "name": "session/2026-11-15-pa006-executor-state-check",
+      "sha": "b645797974a3921e04518a06af756d888e0a8d10"
+    },
+    {
+      "name": "session/2026-11-15-pa006-idempotency",
+      "sha": "9e9bf2d42002a00a69d54fc355b77384897b9478"
+    },
+    {
+      "name": "session/2026-11-15-pa006-idempotency-correction",
+      "sha": "634da4224f15dd6a5a4e9010fe1811dec8c7954d"
+    },
+    {
+      "name": "session/2026-11-16-pa006-rev1311-01-correction",
+      "sha": "a301a94c2b3268679065e85bbef66f35949483f7"
+    },
+    {
+      "name": "session/2026-11-17-0020-executor-state-check",
+      "sha": "8204ba0a5664aea9efc3742d00461a8a341caf8a"
+    },
+    {
+      "name": "session/2026-11-17-0020-job-lifecycle-authority",
+      "sha": "bd37c14e6c41339a8743b3d4b723ee74f13bef08"
+    }
+  ],
+  "open_prs": [
+    {
+      "number": 29,
+      "title": "docs(review): task0020 changes requested — fencing, authority and rollback",
+      "head": "43043be4b0562f982316593cf6ef4e5d5b6951a6",
+      "branch": "review/0020-controller-20261117",
+      "base": "session/2026-11-17-0020-job-lifecycle-authority",
+      "base_sha": "bd37c14e6c41339a8743b3d4b723ee74f13bef08",
+      "url": "https://github.com/smahud/MicroTix_Project/pull/29"
+    },
+    {
+      "number": 28,
+      "title": "docs(task0020): executor state check — kandidat pertama PR27 menunggu controller",
+      "head": "8204ba0a5664aea9efc3742d00461a8a341caf8a",
+      "branch": "session/2026-11-17-0020-executor-state-check",
+      "base": "main",
+      "base_sha": "41d1f33f16508491a34f66b767830b9dd3e5954e",
+      "url": "https://github.com/smahud/MicroTix_Project/pull/28"
+    },
+    {
+      "number": 27,
+      "title": "task0020 PA-002+PA-003: job lifecycle fencing, drain, current authority (executor submission)",
+      "head": "bd37c14e6c41339a8743b3d4b723ee74f13bef08",
+      "branch": "session/2026-11-17-0020-job-lifecycle-authority",
+      "base": "main",
+      "base_sha": "41d1f33f16508491a34f66b767830b9dd3e5954e",
+      "url": "https://github.com/smahud/MicroTix_Project/pull/27"
+    },
+    {
+      "number": 26,
+      "title": "docs(review): siapkan task0020 PA-002/PA-003 setelah integrasi PA-006",
+      "head": "ea7b8a17ad8d6339eed45769bbff1626ea279665",
+      "branch": "review/0020-job-lifecycle-authority-20261117",
+      "base": "main",
+      "base_sha": "41d1f33f16508491a34f66b767830b9dd3e5954e",
+      "url": "https://github.com/smahud/MicroTix_Project/pull/26"
+    },
+    {
+      "number": 23,
+      "title": "docs(review): PR21 PA-006 changes requested; one legacy-migration finding remains",
+      "head": "4bb726106f2dea1949dc737eb8c81dae6fd8d341",
+      "branch": "review/0010-pa006-controller-r4-20261115",
+      "base": "session/2026-11-15-pa006-idempotency-correction",
+      "base_sha": "634da4224f15dd6a5a4e9010fe1811dec8c7954d",
+      "url": "https://github.com/smahud/MicroTix_Project/pull/23"
+    },
+    {
+      "number": 22,
+      "title": "docs(task0010): executor state check — kandidat keempat PR21 menunggu controller review",
+      "head": "b645797974a3921e04518a06af756d888e0a8d10",
+      "branch": "session/2026-11-15-pa006-executor-state-check",
+      "base": "main",
+      "base_sha": "9903d9b0cf09d737b553da3c21067b4810e956c0",
+      "url": "https://github.com/smahud/MicroTix_Project/pull/22"
+    },
+    {
+      "number": 20,
+      "title": "docs(review): PR19 PA-006 changes requested; retain closed findings and reopen task0010",
+      "head": "e507175cb2982b6a974eee8bf437d0b6de5879c6",
+      "branch": "review/0010-pa006-controller-20261115",
+      "base": "session/2026-11-15-pa006-idempotency",
+      "base_sha": "9e9bf2d42002a00a69d54fc355b77384897b9478",
+      "url": "https://github.com/smahud/MicroTix_Project/pull/20"
+    },
+    {
+      "number": 18,
+      "title": "docs(review): PA-006 PR17 changes requested; reopen task0010",
+      "head": "b6a0cb863f52cbbf512b23dceafc4231ff9c7d74",
+      "branch": "review/0010-pa006-controller-20261114",
+      "base": "session/2026-11-14-pa006-idempotency",
+      "base_sha": "37a87291ae66a0fa9167f0c72d1e8340aa5fd245",
+      "url": "https://github.com/smahud/MicroTix_Project/pull/18"
+    },
+    {
+      "number": 16,
+      "title": "docs(review): PA-006 changes requested; reopen task0010",
+      "head": "5da0d801c71b020fbb8b977294502ea5a09e7bcb",
+      "branch": "review/0010-pa006-controller-20261113",
+      "base": "session/2026-11-13-pa006-idempotency",
+      "base_sha": "7480c80e2c27b8b06048b77132d235efe6b3a3c2",
+      "url": "https://github.com/smahud/MicroTix_Project/pull/16"
+    },
+    {
+      "number": 15,
+      "title": "PA-006 (task 0010): HTTP idempotency aman terhadap scope dan race",
+      "head": "7480c80e2c27b8b06048b77132d235efe6b3a3c2",
+      "branch": "session/2026-11-13-pa006-idempotency",
+      "base": "main",
+      "base_sha": "9903d9b0cf09d737b553da3c21067b4810e956c0",
+      "url": "https://github.com/smahud/MicroTix_Project/pull/15"
+    },
+    {
+      "number": 14,
+      "title": "docs: plan future DANA Payment Point add-on (non-blocking Beta)",
+      "head": "2a9803593c328ab014bab6695b298072ed4c1886",
+      "branch": "docs/payment-point-planning-20261113",
+      "base": "main",
+      "base_sha": "9903d9b0cf09d737b553da3c21067b4810e956c0",
+      "url": "https://github.com/smahud/MicroTix_Project/pull/14"
+    },
+    {
+      "number": 13,
+      "title": "docs(review): catat PA-006 belum diserahkan dan next actor",
+      "head": "17901fc439199ad70082942832d88fd7214f391c",
+      "branch": "review/0010-pa006-submission-check-20261112",
+      "base": "main",
+      "base_sha": "9903d9b0cf09d737b553da3c21067b4810e956c0",
+      "url": "https://github.com/smahud/MicroTix_Project/pull/13"
+    },
+    {
+      "number": 8,
+      "title": "docs: finalisasi planning audit modularitas dan upgrade safety MicroTix",
+      "head": "6bb57c9251f3a7a67b71b9523c01e507fdb1b601",
+      "branch": "docs/planning-audit-20261110",
+      "base": "main",
+      "base_sha": "16085f825fef25ee4112d74b729c57e623b0bb05",
+      "url": "https://github.com/smahud/MicroTix_Project/pull/8"
+    },
+    {
+      "number": 7,
+      "title": "feat(network): Phase-2 SSTP — kanal manajemen komplementer WireGuard (v6+v7)",
+      "head": "d7fa35e5583bc36848e3b45497d2511739298c8a",
+      "branch": "session/2026-11-07-sstp-phase2",
+      "base": "main",
+      "base_sha": "16085f825fef25ee4112d74b729c57e623b0bb05",
+      "url": "https://github.com/smahud/MicroTix_Project/pull/7"
+    }
+  ],
+  "ci": [
+    {
+      "sha": "41d1f33f16508491a34f66b767830b9dd3e5954e",
+      "total": 3,
+      "checks": [
+        {
+          "name": "frontend",
+          "status": "completed",
+          "conclusion": "success",
+          "head_sha": "41d1f33f16508491a34f66b767830b9dd3e5954e",
+          "url": "https://github.com/smahud/MicroTix_Project/actions/runs/43857508367/job/133265461154",
+          "completed_at": "2026-11-16T11:25:27Z"
+        },
+        {
+          "name": "backend",
+          "status": "completed",
+          "conclusion": "success",
+          "head_sha": "41d1f33f16508491a34f66b767830b9dd3e5954e",
+          "url": "https://github.com/smahud/MicroTix_Project/actions/runs/43857508367/job/133265461113",
+          "completed_at": "2026-11-16T11:27:01Z"
+        },
+        {
+          "name": "docs",
+          "status": "completed",
+          "conclusion": "success",
+          "head_sha": "41d1f33f16508491a34f66b767830b9dd3e5954e",
+          "url": "https://github.com/smahud/MicroTix_Project/actions/runs/43857508367/job/133265460727",
+          "completed_at": "2026-11-16T11:24:54Z"
+        }
+      ]
+    },
+    {
+      "sha": "bd37c14e6c41339a8743b3d4b723ee74f13bef08",
+      "total": 3,
+      "checks": [
+        {
+          "name": "backend",
+          "status": "completed",
+          "conclusion": "success",
+          "head_sha": "bd37c14e6c41339a8743b3d4b723ee74f13bef08",
+          "url": "https://github.com/smahud/MicroTix_Project/actions/runs/43994355914/job/133742593066",
+          "completed_at": "2026-11-17T01:19:03Z"
+        },
+        {
+          "name": "frontend",
+          "status": "completed",
+          "conclusion": "success",
+          "head_sha": "bd37c14e6c41339a8743b3d4b723ee74f13bef08",
+          "url": "https://github.com/smahud/MicroTix_Project/actions/runs/43994355914/job/133742593008",
+          "completed_at": "2026-11-17T01:17:38Z"
+        },
+        {
+          "name": "docs",
+          "status": "completed",
+          "conclusion": "success",
+          "head_sha": "bd37c14e6c41339a8743b3d4b723ee74f13bef08",
+          "url": "https://github.com/smahud/MicroTix_Project/actions/runs/43994355914/job/133742592642",
+          "completed_at": "2026-11-17T01:16:58Z"
+        }
+      ]
+    },
+    {
+      "sha": "43043be4b0562f982316593cf6ef4e5d5b6951a6",
+      "total": 3,
+      "checks": [
+        {
+          "name": "frontend",
+          "status": "completed",
+          "conclusion": "success",
+          "head_sha": "43043be4b0562f982316593cf6ef4e5d5b6951a6",
+          "url": "https://github.com/smahud/MicroTix_Project/actions/runs/44098498359/job/134091888547",
+          "completed_at": "2026-11-17T14:07:07Z"
+        },
+        {
+          "name": "backend",
+          "status": "completed",
+          "conclusion": "success",
+          "head_sha": "43043be4b0562f982316593cf6ef4e5d5b6951a6",
+          "url": "https://github.com/smahud/MicroTix_Project/actions/runs/44098498359/job/134091888521",
+          "completed_at": "2026-11-17T14:03:34Z"
+        },
+        {
+          "name": "docs",
+          "status": "completed",
+          "conclusion": "success",
+          "head_sha": "43043be4b0562f982316593cf6ef4e5d5b6951a6",
+          "url": "https://github.com/smahud/MicroTix_Project/actions/runs/44098498359/job/134091888072",
+          "completed_at": "2026-11-17T14:00:56Z"
+        }
+      ]
+    }
+  ]
+}

@@ -2,6 +2,25 @@
 
 Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-17 (Asia/Jakarta).
 
+## Checkpoint 2026-11-17, ~21:48 WIB — controller resume task0020
+
+GitHub/fresh clone **31 branches/14 open PRs**: main41d1f33, PR27bd37c14,
+starting PR29decision43043be unchanged; **belum ada penyerahan koreksi**.
+Task0020 tetap **ready / changes_requested**, correction delivery
+**not_submitted**, next **coding_agent** fetch PR29 decision ref dan tutup
+REV-1711-01–09 pada ID sama. Ancestry7118cce→bd37c14→43043be sah; seluruh
+delta hanya task/report/progress. Existing CI43043be sekarang success3/3
+(menggantikan observasi in-progress), bukan closure finding/CI checkpoint.
+
+[Controller checkpoint](../report/controller/20261117T144620Z-0020-resume-review.md),
+[independent review](../report/reviewer/20261117T144620Z-0020-resume-independent.md)
+dan [checks](../report/controller-evidence/20261117T144620Z-0020-resume/local-checks.json)
+pada existing PR29; docs validator PASS24/106 dan diff hygiene PASS. Bukti
+R1 554passed/1skip +11 acceptance failures tetap historis; runtime tidak
+diulang pada source unchanged. Task0010 accepted/integrated, task0030
+belum eligible, Beta NOT_READY. Publication/readback checkpoint §6 dan
+final-head CI di PR29; tanpa aplikasi patch/merge/deploy/tag/activation.
+
 ## Checkpoint 2026-11-17 — controller R1 task0020 changes_requested
 
 Review exact **PR27@bd37c14e6c41339a8743b3d4b723ee74f13bef08** dari
