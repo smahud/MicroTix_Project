@@ -1,0 +1,51 @@
+{
+  "name": "microtix-phase2",
+  "_comment": [
+    "Topologi lab Phase-2 (deklaratif; dibaca provision.py — stdlib JSON, tanpa dependensi baru).",
+    "Sumber kebutuhan: master directive 'Secure Router Connectivity' fase 2 + docs/ROUTEROS.md §2",
+    "(gate T01/T10/T19: dua tenant LAN sama, UDP tertutup, NAT/CGNAT, replay, pin mismatch).",
+    "template = nama template pada controller GNS3 lab (dikonfigurasi ops; image CHR berlisensi",
+    "TIDAK dibundel repo — CONTRACT.md §7). Alamat manajemen plane (100.127.0.0/16) TIDAK diset di sini —",
+    "/32 per router dialokasikan platform saat enrollment (tidak diketik manual).",
+    "Gateway MicroTix BUKAN node GNS3 — host Debian 13 terpisah (instalasi.sh, MT_DOMAIN=lab-gw.microtix.test);",
+    "node lab-nat (cloud/NAT) menghubungkan jaringan lab ke gateway."
+  ],
+  "stages": {
+    "A": {
+      "nodes": [
+        { "name": "chr-a", "template": "chr", "kind": "router", "tenant": "A" },
+        { "name": "client-a", "template": "alpine", "kind": "client", "tenant": "A" },
+        { "name": "lab-nat", "template": "nat-cloud", "kind": "cloud", "tenant": null }
+      ],
+      "links": [
+        { "a": ["chr-a", "ether2"], "b": ["lab-nat", "nat0"], "purpose": "jalur publik → gateway MicroTix" },
+        { "a": ["chr-a", "ether3"], "b": ["client-a", "eth0"], "purpose": "LAN tenant A (DHCP lokal)" }
+      ]
+    },
+    "B": {
+      "extends": "A",
+      "nodes": [
+        { "name": "chr-b", "template": "chr", "kind": "router", "tenant": "B" },
+        { "name": "client-b", "template": "alpine", "kind": "client", "tenant": "B" }
+      ],
+      "links": [
+        { "a": ["chr-b", "ether2"], "b": ["lab-nat", "nat1"], "purpose": "jalur publik → gateway MicroTix" },
+        { "a": ["chr-b", "ether3"], "b": ["client-b", "eth0"], "purpose": "LAN tenant B" }
+      ],
+      "overlapping_lan": {
+        "subnet": "192.168.88.0/24",
+        "nodes": ["chr-a", "chr-b"],
+        "note": "Kedua LAN pelanggan memakai subnet yang sama SENGAJA — untuk membuktikan isolasi manajemen plane (tunnel /32 unik global; default deny peer→peer pada host gateway). Platform TIDAK pernah menjembatani LAN pelanggan lintas tenant. Bukti: client-a tidak dapat mencapai client-b; chr-a tidak dapat mencapai IP tunnel chr-b (evidence-checklist.md G1-ISO-1/2)."
+      }
+    }
+  },
+  "enrollment_plan": {
+    "A": [
+      { "node": "chr-a", "tenant": "A", "protocol": "wireguard", "routeros_version": "7.15.3", "note": "fase 1" }
+    ],
+    "B": [
+      { "node": "chr-a", "tenant": "A", "protocol": "sstp", "routeros_version": "7.15.3", "note": "jalur komplementer pada v7 — bukti koeksistensi WG+SSTP" },
+      { "node": "chr-b", "tenant": "B", "protocol": "sstp", "routeros_version": "6.49.13", "note": "jalur utama SSTP (WG tidak tersedia pada v6)" }
+    ]
+  }
+}

@@ -214,6 +214,45 @@ class WireGuardPeer(models.Model):
         indexes = [models.Index(fields=["state", "desired_revision"], name="ix_wgpeer_state_rev")]
 
 
+class SstpAccount(models.Model):
+    """Kredensial SSTP per router (Phase-2, master directive konektivitas).
+
+    Username unik GLOBAL (lintas tenant — kredensial per-router; matriks
+    kapabilitas report/researcher/20261106T183941Z: klien SSTP RouterOS tanpa
+    EAP → server wajib MSCHAPv2). Password CSPRNG disimpan TERENKRIPSI
+    (SecretBox) — hanya didekripsi saat render chap-secrets (ops host).
+    desired vs applied mengikuti pola reconciler WireGuardPeer; baris
+    REMOVED tidak dirender.
+    """
+
+    class State(models.TextChoices):
+        PENDING = "pending"
+        APPLIED = "applied"
+        DRIFT = "drift"
+        REMOVED = "removed"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey("tenancy.Tenant", on_delete=models.CASCADE, related_name="sstp_accounts", db_column="tenant_id")
+    # Router nullable saat fase bridge; diisi oleh finalize_verification.
+    router = models.OneToOneField(Router, null=True, blank=True, on_delete=models.CASCADE, related_name="sstp_account", db_column="router_id")
+    enrollment = models.ForeignKey(RouterEnrollment, null=True, blank=True, on_delete=models.SET_NULL, db_column="enrollment_id", related_name="sstp_accounts")
+    # Username = identitas kredensial (bukan rahasia); unik global agar dua
+    # tenant tidak dapat berbagi kredensial (isolasi §7).
+    username = models.CharField(max_length=64, unique=True)
+    password_ref = models.TextField()  # SecretBox — tidak pernah plaintext
+    # /32 dialokasikan dari carve host yang sama dengan WireGuard (invariant
+    # §2.1: tunnel IP unik global lintas protokol).
+    tunnel_ip = models.GenericIPAddressField(unique=True)
+    desired_revision = models.IntegerField(default=1)
+    applied_revision = models.IntegerField(default=0)
+    state = models.CharField(max_length=12, choices=State.choices, default=State.PENDING)
+    created_at = models.DateTimeField(default=dj_timezone.now)
+
+    class Meta:
+        db_table = "network_sstp_account"
+        indexes = [models.Index(fields=["state", "desired_revision"], name="ix_sstp_state_rev")]
+
+
 class DiscoverySnapshot(models.Model):
     """Satu sesi discovery per router — bounded, tanpa password (§3)."""
 

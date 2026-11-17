@@ -25,4 +25,6 @@ urlpatterns = [
     path("tenants/<str:tenant_id>/routers/<str:router_id>/replace", views.RouterReplaceView.as_view(), name="router-replace"),
     # Bridge dari perangkat router (token di body; tanpa sesi pengguna).
     path("bridge/enroll-complete", views.BridgeEnrollCompleteView.as_view(), name="bridge-enroll-complete"),
+    # CA platform (materi publik) untuk verifikasi sertifikat SSTP router.
+    path("bridge/enroll-ca", views.BridgeEnrollCaView.as_view(), name="bridge-enroll-ca"),
 ]

@@ -40,6 +40,7 @@ BACKUP_DIR="/var/lib/microtix/backups"
 LOG_DIR="/var/log/microtix"
 WG_DIR="$ETC_DIR/wireguard"
 WG_CONF="$WG_DIR/wg0.conf"
+SSTP_DIR="$ETC_DIR/sstp"
 RUN_USER="microtix"
 RUN_GROUP="microtix"
 DB_NAME="microtix"
@@ -397,6 +398,109 @@ setup_wireguard() {
 }
 
 # ----------------------------------------------------------------------------
+# SSTP host (Phase-2) — CA + sertifikat gateway + accel-ppp (MT_ENABLE_SSTP)
+# ----------------------------------------------------------------------------
+# Server = accel-ppp 1.15.0 (build dari sumber: backend/scripts/build_accel_ppp.sh
+# — tidak ada paket resmi Debian; tarball dipin SHA-256). Fase-aware seperti
+# RADIUS: TANPA MT_ENABLE_SSTP=1 tidak dikonfigurasi dan tidak diklaim siap.
+# Sertifikat: CA privat MicroTix (10 th) + sertifikat gateway SAN=MT_DOMAIN;
+# CA disajikan PUBLIK di /api/v1/bridge/enroll-ca (router mengimpor untuk
+# verify-server-certificate=yes — tidak boleh dimatikan). Kunci 600 root.
+setup_sstp() {
+  if [ "${MT_ENABLE_SSTP:-0}" != "1" ]; then
+    log "SSTP nonaktif (MT_ENABLE_SSTP≠1) — jujur: tidak dikonfigurasi, tidak diklaim siap."
+    return
+  fi
+  log "Menyiapkan server SSTP manajemen router (Phase-2; accel-ppp)..."
+  if [ "$DRY_RUN" -eq 1 ]; then echo "[dry-run] CA+cert gateway + render accel-ppp.conf/chap-secrets + unit microtix-sstp"; return; fi
+  if [ ! -x /usr/local/sbin/accel-pppd ]; then
+    warn "accel-pppd tidak ditemukan di /usr/local/sbin — SSTP diminta (MT_ENABLE_SSTP=1) tetapi binary belum dibangun."
+    warn "Jalankan: sudo bash backend/scripts/build_accel_ppp.sh  lalu  'sudo bash instalasi.sh repair'."
+    gate_partial "accel-pppd belum terpasang (SSTP diminta) — jalankan build_accel_ppp.sh"
+    return
+  fi
+  mkdir -p "$SSTP_DIR" /var/log/accel-ppp
+  # --- CA privat MicroTix (dipertahankan bila sudah ada — rotasi = ops) ---
+  if [ ! -f "$SSTP_DIR/ca.key" ]; then
+    umask 077
+    openssl genrsa -out "$SSTP_DIR/ca.key" 4096
+    openssl req -x509 -new -key "$SSTP_DIR/ca.key" -sha256 -days 3650 \
+      -out "$SSTP_DIR/ca.crt" -subj "/CN=MicroTix Management CA/O=MicroTix"
+    log "CA SSTP MicroTix dibuat (10 tahun; $SSTP_DIR/ca.crt publik)."
+  else
+    log "CA SSTP sudah ada — dipertahankan (rotasi = operasi terjadwal)."
+  fi
+  # --- Sertifikat gateway (SAN = MT_DOMAIN; dibuat ulang bila SAN berubah) ---
+  local DOMAIN="${MT_DOMAIN:-}"
+  local SAN_HOST="$DOMAIN"
+  [ -z "$SAN_HOST" ] && { SAN_HOST="microtix.invalid"; warn "MT_DOMAIN kosong — sertifikat gateway dibuat dengan placeholder microtix.invalid; jalankan repair setelah MT_DOMAIN diisi."; }
+  local need_cert=1
+  if [ -f "$SSTP_DIR/gateway.pem" ] && [ -n "$DOMAIN" ]; then
+    if openssl x509 -in "$SSTP_DIR/gateway.pem" -noout -ext subjectAltName 2>/dev/null | grep -q "DNS: *$DOMAIN"; then
+      need_cert=0
+      log "Sertifikat gateway sudah cocok SAN=$DOMAIN — dipertahankan."
+    else
+      log "SAN sertifikat ≠ MT_DOMAIN — sertifikat gateway dibuat ulang (CA dipertahankan)."
+    fi
+  fi
+  if [ "$need_cert" -eq 1 ]; then
+    umask 077
+    openssl genrsa -out "$SSTP_DIR/gateway.key" 2048
+    openssl req -new -key "$SSTP_DIR/gateway.key" -out "$SSTP_DIR/gateway.csr" \
+      -subj "/CN=$SAN_HOST/O=MicroTix"
+    printf 'subjectAltName=DNS:%s\nextendedKeyUsage=serverAuth\nkeyUsage=digitalSignature,keyEncipherment\n' "$SAN_HOST" > "$SSTP_DIR/sstp.ext"
+    openssl x509 -req -in "$SSTP_DIR/gateway.csr" -CA "$SSTP_DIR/ca.crt" -CAkey "$SSTP_DIR/ca.key" \
+      -CAcreateserial -out "$SSTP_DIR/gateway.crt" -days 825 -sha256 -extfile "$SSTP_DIR/sstp.ext"
+    # Fullchain leaf-first (format ssl-pemfile accel-ppp: leaf → intermediate → root).
+    cat "$SSTP_DIR/gateway.crt" "$SSTP_DIR/ca.crt" > "$SSTP_DIR/gateway.pem"
+    rm -f "$SSTP_DIR/gateway.csr" "$SSTP_DIR/sstp.ext"
+    log "Sertifikat gateway SSTP dibuat (SAN=$SAN_HOST, 825 hari)."
+  fi
+  chmod 600 "$SSTP_DIR/ca.key" "$SSTP_DIR/gateway.key"
+  chmod 644 "$SSTP_DIR/ca.crt" "$SSTP_DIR/gateway.pem"
+  # Publikasikan jalur CA ke env aplikasi (endpoint /bridge/enroll-ca).
+  if grep -q '^MT_SSTP_CA_PATH=' "$ENV_FILE" 2>/dev/null; then
+    sed -i "s|^MT_SSTP_CA_PATH=.*|MT_SSTP_CA_PATH=$SSTP_DIR/ca.crt|" "$ENV_FILE"
+  else
+    echo "MT_SSTP_CA_PATH=$SSTP_DIR/ca.crt" >> "$ENV_FILE"
+  fi
+  chown root:"$RUN_GROUP" "$ENV_FILE"; chmod 640 "$ENV_FILE"
+  # --- Render konfigurasi dari state akun (sumber sama: backend) ---
+  (
+    cd "$INSTALL_ROOT/backend"
+    set -a; . "$ENV_FILE"; set +a
+    "$INSTALL_ROOT/venv/bin/python" manage.py render_sstp_config \
+      --target "$SSTP_DIR" \
+      || die "render_sstp_config gagal (lihat output di atas)."
+    chown -R root:"$RUN_GROUP" "$SSTP_DIR"; chmod -R o-rwx "$SSTP_DIR"
+  )
+  # --- Unit systemd (pola kontrib accel-ppp: -d daemon + Type=forking) ---
+  cat > /etc/systemd/system/microtix-sstp.service <<EOF
+# MicroTix — server SSTP manajemen router (accel-ppp; Phase-2).
+# Konfigurasi: $SSTP_DIR/accel-ppp.conf + chap-secrets (dirender backend).
+[Unit]
+Description=MicroTix SSTP management server (accel-ppp)
+After=network.target
+
+[Service]
+ExecStart=/usr/local/sbin/accel-pppd -d -p /run/microtix-sstp.pid -c $SSTP_DIR/accel-ppp.conf
+StandardOutput=null
+ExecReload=/bin/kill -SIGUSR1 \$MAINPID
+PIDFile=/run/microtix-sstp.pid
+Type=forking
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+  systemctl daemon-reload
+  systemctl enable microtix-sstp >/dev/null 2>&1 || true
+  systemctl restart microtix-sstp
+  log "SSTP aktif: listener TCP $SSTP_DIR/accel-ppp.conf (port dari defaults vpn.sstp_listen_port; shared-port seluruh router)."
+  log "Isolasi jaringan peer (peer→peer/DB/SSH deny; input chain API hanya server) menyatu di aturan integrasi jaringan nftables (M3) — sama seperti WireGuard."
+}
+
+# ----------------------------------------------------------------------------
 # Caddy reverse proxy + HTTPS
 # ----------------------------------------------------------------------------
 setup_caddy() {
@@ -513,6 +617,18 @@ health_checks() {
   else
     log "RADIUS: tidak diaktifkan (opsional pada mode ini)."
   fi
+  # SSTP (Phase-2) hanya gerbang bila diaktifkan eksplisit DAN binary ada
+  # (bila binary belum dibangun, setup_sstp sudah menandai parsial).
+  if [ "${MT_ENABLE_SSTP:-0}" = "1" ]; then
+    if [ -x /usr/local/sbin/accel-pppd ]; then
+      systemctl is-active --quiet microtix-sstp \
+        && log "SSTP (accel-ppp): aktif" || gate_fail "SSTP diminta (MT_ENABLE_SSTP=1) tetapi microtix-sstp tidak aktif"
+    else
+      log "SSTP: diminta tetapi accel-pppd belum dibangun (lihat parsial di atas)."
+    fi
+  else
+    log "SSTP: tidak diaktifkan (MT_ENABLE_SSTP=1 untuk mengaktifkan)."
+  fi
 }
 
 admin_onboarding() {
@@ -559,6 +675,7 @@ WireGuard   : host keypair + $WG_CONF disiapkan (port be2; idempoten);
               aktifkan: systemctl enable --now wg-quick@wg0 — peers ditambah
               reconciler saat router di-enroll via aplikasi
 RADIUS      : $( [ "${MT_ENABLE_RADIUS:-0}" = "1" ] && echo "terpasang + dikonfigurasi (listener loopback/WG; NAS via reconciler)" || echo "TIDAK diaktifkan (MT_ENABLE_RADIUS=1 untuk mengaktifkan)" )
+SSTP        : $( [ "${MT_ENABLE_SSTP:-0}" = "1" ] && [ -x /usr/local/sbin/accel-pppd ] && systemctl is-active --quiet microtix-sstp 2>/dev/null && echo "aktif (accel-ppp; listener shared-port; kredensial per-router via reconciler)" || echo "TIDAK aktif (MT_ENABLE_SSTP=1 + build_accel_ppp.sh untuk mengaktifkan)" )
 Router      : BELUM ada router terhubung — enrollment via aplikasi dengan
               otorisasi Owner (docs/ROUTEROS.md); installer tidak menyentuh router.
 Onboarding  : $( [ -f "$STATE_DIR/.platform-admin-created" ] && echo "admin platform dibuat — login lalu aktifkan MFA" || echo "admin belum dibuat — jalankan repair" )
@@ -616,6 +733,15 @@ do_doctor() {
         || warn "WireGuard host: pubkey env belum diadopsi backend (jalankan: manage.py adopt_wg_host) — atau cek koneksi DB."
     )
   fi
+  # SSTP (Phase-2): layanan + CA publik terkonfigurasi bila diminta.
+  if [ "${MT_ENABLE_SSTP:-0}" = "1" ]; then
+    [ -x /usr/local/sbin/accel-pppd ] \
+      || warn "accel-pppd belum dibangun (sudo bash backend/scripts/build_accel_ppp.sh)."
+    systemctl is-active --quiet microtix-sstp 2>/dev/null \
+      || warn "microtix-sstp tidak aktif: journalctl -u microtix-sstp -n 50"
+    grep -q '^MT_SSTP_CA_PATH=' "$ENV_FILE" 2>/dev/null \
+      || warn "MT_SSTP_CA_PATH belum di env aplikasi (jalankan repair bila MT_ENABLE_SSTP=1)."
+  fi
   [ "$PREFLIGHT_OK" -eq 1 ] && log "Doctor: semua pemeriksaan utama sehat." || log "Doctor: temuan di atas perlu ditindak."
 }
 
@@ -636,16 +762,20 @@ do_upgrade() {
   build_frontend
   setup_caddy
   setup_wireguard   # idempoten: keypair dipertahankan; pubkey env + adopsi backend + render peers diperbarui
+  setup_sstp        # idempoten: CA/cert dipertahankan (SAN cocok); render ulang akun aktif
   [ "$DRY_RUN" -ne 1 ] && { systemctl restart microtix-api microtix-worker; health_checks; }
   log "Upgrade selesai."
 }
 
 do_repair() {
   log "Repair: restart layanan + reload konfigurasi..."
-  [ "$DRY_RUN" -ne 1 ] || { echo "[dry-run] restart api/worker/caddy(+radius)"; return; }
+  [ "$DRY_RUN" -ne 1 ] || { echo "[dry-run] restart api/worker/caddy(+radius/sstp)"; return; }
   systemctl restart microtix-api microtix-worker || true
   setup_caddy
   [ "${MT_ENABLE_RADIUS:-0}" = "1" ] && systemctl restart freeradius || true
+  # SSTP idempoten: sertifikat SAN dicek ulang (regen bila MT_DOMAIN berubah),
+  # render ulang akun aktif, restart microtix-sstp bila terpasang.
+  setup_sstp
   health_checks
 }
 
@@ -666,6 +796,7 @@ case "$MODE" in
     setup_wireguard
     setup_caddy
     setup_radius
+    setup_sstp
     health_checks
     admin_onboarding
     summary
