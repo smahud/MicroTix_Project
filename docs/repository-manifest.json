@@ -112,6 +112,26 @@
       "sha256": "a28774a47d29f06271f7254577a77d2e62e034ffb668891e4a6b64bffff42e6d"
     },
     {
+      "path": "docs/planning_mvp/payment_point/ARCHITECTURE_PROPOSAL.md",
+      "bytes": 5571,
+      "sha256": "b13209b06f05081bd96d54a8a98182a8cdad603e7731f096d1dfce216b783b03"
+    },
+    {
+      "path": "docs/planning_mvp/payment_point/DANA_OFFICIAL_REFERENCE.md",
+      "bytes": 4759,
+      "sha256": "3bf6d467d70ab09d34637efa4473a3252ea6b5ab32a19649f432b577ee9592d1"
+    },
+    {
+      "path": "docs/planning_mvp/payment_point/IMPLEMENTATION_AND_ACCEPTANCE.md",
+      "bytes": 4124,
+      "sha256": "00856f04044f8c59265fb2c4f8e050849597fe32c5fa5f03cd4cbd11d32455f7"
+    },
+    {
+      "path": "docs/planning_mvp/payment_point/README.md",
+      "bytes": 2912,
+      "sha256": "e03880b88a7fbbaf89ef9ba18a2f893989a83f176bd9428605a88c2b5398b672"
+    },
+    {
       "path": "docs/tasks.json",
       "bytes": 69135,
       "sha256": "fb8cf4eca4c8cfa5b0cbbf1c79b94549f5c9309092cdf4aa5f7c5d86c29c6ed2"
