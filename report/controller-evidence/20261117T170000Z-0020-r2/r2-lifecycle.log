@@ -1,0 +1,19 @@
+{"case": "r2-guard-to-commit-race", "objects": 1, "snapshots": ["succeeded"], "job": "uncertain", "outcomes": {"discovery": {"state": "uncertain"}}}
+F{"case": "r2-hold-to-sender-race", "sends": 2, "outcomes": {"predecessor": {"state": "uncertain"}, "successor": {"state": "succeeded"}}, "first": "uncertain", "second": "succeeded"}
+F
+=================================== FAILURES ===================================
+_____ test_discovery_guard_and_domain_commit_are_atomic_against_reconcile ______
+../report/controller-evidence/20261117T170000Z-0020-r2/lifecycle/test_r2_lifecycle_edges.py:118: in test_discovery_guard_and_domain_commit_are_atomic_against_reconcile
+    assert count == 0, "real discovery committed object after independent ownership loss"
+E   AssertionError: real discovery committed object after independent ownership loss
+E   assert 1 == 0
+________ test_unknown_router_hold_is_rechecked_after_sender_acquisition ________
+../report/controller-evidence/20261117T170000Z-0020-r2/lifecycle/test_r2_lifecycle_edges.py:190: in test_unknown_router_hold_is_rechecked_after_sender_acquisition
+    assert len(sends) == 1, "successor sent after prior outcome became unknown before lock acquisition"
+E   AssertionError: successor sent after prior outcome became unknown before lock acquisition
+E   assert 2 == 1
+E    +  where 2 = len(['5e013f82-8603-4117-9ee5-73abc3019b43', 'be687244-0274-48eb-b95a-d78dc1052e5c'])
+=========================== short test summary info ============================
+FAILED ::test_discovery_guard_and_domain_commit_are_atomic_against_reconcile
+FAILED ::test_unknown_router_hold_is_rechecked_after_sender_acquisition - Ass...
+2 failed in 0.96s

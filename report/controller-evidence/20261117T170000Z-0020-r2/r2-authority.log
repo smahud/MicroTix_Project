@@ -1,0 +1,25 @@
+{"credential": "applied", "enrollment": "completed", "error": null, "probe": "revoked-during-enrollment-io", "protocol": "wireguard", "routers_created": 1, "separate_connections": true, "state": "succeeded"}
+F{"credential": "applied", "enrollment": "completed", "error": null, "probe": "revoked-during-enrollment-io", "protocol": "sstp", "routers_created": 1, "separate_connections": true, "state": "succeeded"}
+F{"enforcement": "local", "error": null, "job": "succeeded", "probe": "b6-selected-adapter", "readback": true, "run": "rolled_back", "selected_adapter": "api_ssl", "selected_adapter_calls": []}
+F
+=================================== FAILURES ===================================
+____ test_revocation_during_enrollment_probe_prevents_new_router[wireguard] ____
+../report/controller-evidence/20261117T170000Z-0020-r2/authority/test_authority_r2.py:136: in test_revocation_during_enrollment_probe_prevents_new_router
+    assert routers == 0 and credential.state == "pending", observed
+E   AssertionError: {'credential': 'applied', 'enrollment': 'completed', 'error': None, 'probe': 'revoked-during-enrollment-io', ...}
+E   assert (1 == 0)
+______ test_revocation_during_enrollment_probe_prevents_new_router[sstp] _______
+../report/controller-evidence/20261117T170000Z-0020-r2/authority/test_authority_r2.py:136: in test_revocation_during_enrollment_probe_prevents_new_router
+    assert routers == 0 and credential.state == "pending", observed
+E   AssertionError: {'credential': 'applied', 'enrollment': 'completed', 'error': None, 'probe': 'revoked-during-enrollment-io', ...}
+E   assert (1 == 0)
+__________ test_b6_uses_selected_adapter_instead_of_simulator_success __________
+../report/controller-evidence/20261117T170000Z-0020-r2/authority/test_authority_r2.py:186: in test_b6_uses_selected_adapter_instead_of_simulator_success
+    assert selected_adapter_calls and final.state != JobState.SUCCEEDED, observed
+E   AssertionError: {'enforcement': 'local', 'error': None, 'job': 'succeeded', 'probe': 'b6-selected-adapter', ...}
+E   assert ([])
+=========================== short test summary info ============================
+FAILED ::test_revocation_during_enrollment_probe_prevents_new_router[wireguard]
+FAILED ::test_revocation_during_enrollment_probe_prevents_new_router[sstp] - ...
+FAILED ::test_b6_uses_selected_adapter_instead_of_simulator_success - Asserti...
+3 failed in 1.14s

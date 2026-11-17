@@ -5,7 +5,7 @@
 | Role/sesi | Coding agent (executor) — sesi baru menjalankan [master prompt executor](../../docs/MASTER_PROMPT_EXECUTOR.md) |
 | Objective | Temukan packet eligible dan tuntaskan sesuai executor prompt §2 (bukan implementasi ulang kandidat pending-review) |
 | Baseline | `main@41d1f33f16508491a34f66b767830b9dd3e5954e` (clone fresh sesi ini; tidak berubah sejak baseline packet0020) |
-| Task diperiksa | `task/0000-start-here.md` (permanen, bukan task) + `0010-pa006-idempotency_done.md` (main; accepted/integrated) + `0020-job-lifecycle-authority_done.md` (pada ref kandidat PR27) |
+| Task diperiksa | `task/0000-start-here.md` (permanen, bukan task) + `0010-pa006-idempotency_done.md` (main; accepted/integrated) + `0020-job-lifecycle-authority.md` (pada ref kandidat PR27) |
 | Perubahan source/tes | **TIDAK ADA** — sesi ini report-only; kandidat task0020 dan branch pihak lain tidak disentuh |
 | Sub-agent | Tidak dipakai — verifikasi state lintas-ref selesai in-session (state check tidak memerlukan paralelisasi; paritas alasan preseden PR22) |
 | Next actor | **controller_reviewer** |
@@ -16,7 +16,7 @@
 - Branch terbaru menurut committerdate: `session/2026-11-17-0020-job-lifecycle-authority` (penyerahan executor, head **`bd37c14`**, commit 01:16:45Z) dan `review/0020-job-lifecycle-authority-20261117` (instruction ref PR26, head `ea7b8a1`, commit 16 Nov 23:21:36Z). Tidak ada branch review/keputusan yang lebih baru atas PR27.
 - Daftar PR (GitHub API `pulls?state=all`, terautentikasi): tertinggi **PR27 OPEN** (`session/2026-11-17-0020-job-lifecycle-authority`, head `bd37c14e6c41339a8743b3d4b723ee74f13bef08`, base main, updated `2026-11-17T01:22:08Z`, mergeable_state clean) — kandidat pertama task0020. PR26 OPEN = instruction ref packet (bukan verdict). PR13/16/18/20/22/23 = riwayat task0010/state-check; PR7/8/14 milik pihak lain.
 - **Belum ada verdict controller atas PR27**: PR27 reviews = 0; issue comments hanya bot Qodo (paused); tidak ada branch/PR/report review controller yang lebih baru dari instruction ref. Sesuai konvensi repo (keputusan controller wajib record in-repo pada ref yang disebut), belum ditemukan verdict `accepted`/`changes_requested` atas kandidat pertama task0020.
-- Status packet pada ref kandidat PR27 (`task/0020-job-lifecycle-authority_done.md`): execution **`done`** / review **`pending`**; implementation/tested **`7118cce0db330acb02be0b3b774b1b1628d55d7a`**; published head `bd37c14` = record report-only di atasnya — diverifikasi sesi ini: `git diff 7118cce bd37c14 -- backend/ apps/` **kosong** (pohon source published identik dengan yang diuji).
+- Status packet pada ref kandidat PR27 (`task/0020-job-lifecycle-authority.md`): execution **`done`** / review **`pending`**; implementation/tested **`7118cce0db330acb02be0b3b774b1b1628d55d7a`**; published head `bd37c14` = record report-only di atasnya — diverifikasi sesi ini: `git diff 7118cce bd37c14 -- backend/ apps/` **kosong** (pohon source published identik dengan yang diuji).
 - CI exact head `bd37c14` (GitHub check-runs, diverifikasi sesi ini): backend/frontend/docs **completed/success 3/3** (docs 01:16:58Z, frontend 01:17:38Z, backend 01:19:03Z; run 43993939448 sesuai handoff).
 - Bukti kunci kandidat (milik sesi penyerah, tidak diulang sesi ini): full suite **554 passed + 1 skipped** pada tree `7118cce` (PG 17.11 nyata, peran non-superuser, FORCE RLS); **failing-before pada baseline main@41d1f33: 33/37 lifecycle + 4/4 drain GAGAL → passing-after 41/41**; PA-001 + PA-006 (incl. replay migrasi R4/R5) lulus utuh; check/makemigrations/docs PASS; frontend tsc/eslint/vitest 66/i18n/build lulus; P3 REV-1611-TEST-01 ditutup test-only. Laporan eksekusi: `report/orchestrator/20261117T010218Z-0020-job-lifecycle-authority.md` dan evidence `report/executor-evidence/20261117T000000Z-0020-job-lifecycle/` — **keduanya pada ref PR27, belum ada di main**.
 - Handoff kanonis terbaru (17 November 2026, penyerahan pertama task0020; next actor controller_reviewer) berada pada `report/LATEST_HANDOFF.md` **di branch PR27**, di atas histori integrasi PA-006 yang sudah ada di main.
@@ -45,7 +45,7 @@
 | GitHub API `pulls/27/reviews` + `issues/27/comments` | 200 | reviews **0**; comments hanya bot Qodo — tidak ada verdict controller |
 | GitHub API `commits/bd37c14.../check-runs` | 200 | total 3: backend/frontend/docs completed **success** |
 | GitHub API `commits/41d1f33.../check-runs` (main) | 200 | total 3: backend/frontend/docs completed **success** |
-| `git show origin/session/...:task/0020-job-lifecycle-authority_done.md` + `report/LATEST_HANDOFF.md` + `docs/progress.md` | 0 | status done/pending; impl `7118cce`; next actor **controller_reviewer**; PR body PR27 konsisten |
+| `git show origin/session/...:task/0020-job-lifecycle-authority.md` + `report/LATEST_HANDOFF.md` + `docs/progress.md` | 0 | status done/pending; impl `7118cce`; next actor **controller_reviewer**; PR body PR27 konsisten |
 | `git diff 7118cce bd37c14 --stat -- backend/ apps/` | 0 | **kosong** — published head = tree teruji + record metadata saja (4 file docs: handoff, ci-final.txt, laporan, packet) |
 | `git ls-tree <setiap remote branch> task/` | 0 | hanya `0000`/`0010`/`0020`; tidak ada task0030 di branch mana pun |
 

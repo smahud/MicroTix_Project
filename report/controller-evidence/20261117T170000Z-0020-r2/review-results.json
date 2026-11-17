@@ -1,0 +1,93 @@
+{
+  "task": "0020",
+  "role": "controller_reviewer",
+  "baseline_reviewed_tested_sha": "64b68f8d74b0aa593f379c75d6b5702402fd9d78",
+  "correction_impl": "2681a3d090710c3855e66cfecc77b8af80fb1098",
+  "correction_final_head": "19023737d0c781eb34949067dfb67fc787eab49d",
+  "integration": "merged before this review; not controller acceptance",
+  "verdict": "changes_requested",
+  "execution_status": "ready",
+  "next_actor": "coding_agent",
+  "full_suite": {
+    "passed": 580,
+    "skipped": 1,
+    "warnings": 3,
+    "exit": 0,
+    "seconds": 92.47,
+    "fresh_database": true,
+    "log": "full-suite.log"
+  },
+  "original_r1": {
+    "lifecycle": {
+      "passed": 4,
+      "exit": 0,
+      "log": "r1-lifecycle.log"
+    },
+    "authority": {
+      "passed": 7,
+      "exit": 0,
+      "log": "r1-authority.log"
+    }
+  },
+  "new_r2": {
+    "lifecycle": {
+      "assertion_failures": 2,
+      "harness_errors": 0,
+      "exit": 1,
+      "log": "r2-lifecycle.log"
+    },
+    "authority": {
+      "assertion_failures": 3,
+      "harness_errors": 0,
+      "exit": 1,
+      "log": "r2-authority.log"
+    },
+    "sender_session_loss": {
+      "assertion_failures": 1,
+      "harness_errors": 0,
+      "exit": 1,
+      "log": "r2-sender-session.log",
+      "old_worker_outcome": "expected collected OperationalError after own disposable DB-session termination"
+    }
+  },
+  "split_role": {
+    "postgres": "17.11",
+    "runtime": "mtx_app",
+    "runtime_superuser": false,
+    "runtime_bypassrls": false,
+    "table_owner": "mtx_migrator",
+    "tables_observed": 60,
+    "enable_force_rls_tables": 37,
+    "all_focused_assertions_on_split_role": 17,
+    "extra_truncate": "disposable pytest cleanup only"
+  },
+  "finding_status": {
+    "REV-1711-01": "partial P1",
+    "REV-1711-02": "closed",
+    "REV-1711-03": "closed",
+    "REV-1711-04": "partial P1",
+    "REV-1711-05": "partial P1",
+    "REV-1711-06": "closed",
+    "REV-1711-07": "closed",
+    "REV-1711-08": "partial P1",
+    "REV-1711-09": "partial evidence P2"
+  },
+  "ci": {
+    "sha": "64b68f8d74b0aa593f379c75d6b5702402fd9d78",
+    "run_id": 44125923116,
+    "backend": "success",
+    "frontend": "success",
+    "docs": "success",
+    "root_local_frontend": "NOT_RUN"
+  },
+  "beta": "NOT_READY",
+  "not_run": [
+    "OS install/reinstall/upgrade/restore/DR",
+    "systemd drain",
+    "RouterOS/CHR/GNS3/pilot",
+    "live RADIUS daemon",
+    "local browser E2E",
+    "capacity/soak/one-million clients"
+  ],
+  "packet_acceptance_A01_A09_preserved_sha256": "47f5e3a9c368d9ca7fe66a3ea86bd601acaa9d2c94573da443c31a0c291fa8a2"
+}

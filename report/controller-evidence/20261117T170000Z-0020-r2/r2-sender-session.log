@@ -1,0 +1,12 @@
+{"case": "r2-db-session-loss-live-adapter", "sends": 2, "info": {"worker_pid": 85, "lock_released": true, "old_adapter_still_live_at_successor_end": true}, "outcomes": {"successor-after-db-loss": {"state": "succeeded"}, "live-adapter": {"exception": "OperationalError: terminating connection due to administrator command"}}, "first": "executing", "second": "succeeded"}
+F
+=================================== FAILURES ===================================
+_______ test_database_session_loss_does_not_prove_adapter_writer_stopped _______
+../report/controller-evidence/20261117T170000Z-0020-r2/lifecycle/test_r2_lifecycle_edges.py:277: in test_database_session_loss_does_not_prove_adapter_writer_stopped
+    assert len(sends) == 1, "DB session loss released lock while old adapter writer remained alive"
+E   AssertionError: DB session loss released lock while old adapter writer remained alive
+E   assert 2 == 1
+E    +  where 2 = len(['c8629fe1-2b78-4c58-ab9b-70839b9b96d1', '070f5575-b023-4d60-badf-e0a7b66cd051'])
+=========================== short test summary info ============================
+FAILED ::test_database_session_loss_does_not_prove_adapter_writer_stopped - A...
+1 failed in 0.74s

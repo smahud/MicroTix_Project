@@ -1,4 +1,31 @@
-# LATEST_HANDOFF — 17 November 2026: task0020 koreksi diserahkan + merge-all branch ke main (wewenang pemilik)
+# LATEST_HANDOFF — controller R2 task0020, 18 November 2026
+
+**Current decision: `ready / changes_requested` pada integrated main64b68f8.**
+Koreksi PR30 memang sudah merged; controller menemukan4 residual P1 melalui
+6 assertion gagal. Original11 probe lulus dan full suite580/1skip tetap
+dipertahankan. Tabel ini menggantikan seluruh status historis di bawah.
+
+| Field | Current state / pointer |
+|---|---|
+| Canonical main teramati / reviewed | **64b68f8d74b0aa593f379c75d6b5702402fd9d78**, current tree diuji sendiri; bukan source-identical terhadap impl2681a3d |
+| Active task | **[ID0020 PA002+PA003](../task/0020-job-lifecycle-authority.md)** — **ready / changes_requested**; task0010 tetap accepted/integrated |
+| Integration facts | PR30 **merged**, actual final head19023737/merge9eb5dacf; main memuat SSTP dan merge-all source lain. Semua32 remote branches dan0 open PR diperiksa sebelum keputusan ini; data terbaru pada report R2. |
+| Decision ref | **`review/0020-controller-r2-20261117`** — [branch GitHub](https://github.com/smahud/MicroTix_Project/tree/review/0020-controller-r2-20261117); fetch ref ini bila belum merged; publication record menyusul readback, bukan SHA masa depan |
+| Current controller review | **[R2 changes_requested](controller/20261117T170000Z-0020-r2-review.md)**; [lifecycle reviewer](reviewer/20261117T170000Z-0020-r2-lifecycle.md), [authority reviewer](reviewer/20261117T170000Z-0020-r2-authority.md) |
+| Required corrections | **REV-1711-01/04/05/08 PARTIAL P1**: atomic domain fencing, durable router/sender lifecycle, post-I/O enrollment authority WG/SSTP, B6 active-adapter honest readback. **09 PARTIAL evidence**: long-phase/current process evidence mapping. **02/03/06/07 CLOSED**; preserve their fixes. |
+| Root evidence | **580 passed/1 skipped/3 warnings**, original11 probes **PASS**; new6 safety assertions **FAIL/0 errors** on PG17.11 separate migrator-owner/runtime NOSUPERUSER/NOBYPASSRLS; [evidence](controller-evidence/20261117T170000Z-0020-r2/) |
+| Exact reviewed-main CI | [run44125923116](https://github.com/smahud/MicroTix_Project/actions/runs/44125923116), head64b68f8, backend/frontend/docs success3/3; not closure of6 new failures |
+| Next actor | **coding_agent** |
+| Exact next action | Fetch decision R2, read reopened packet0020 + report §3/§7, close the residuals on **same ID0020**, prove6 probes passing without weakening them and preserve11 old probes + required full regression. Publish new exact implementation/tested/candidate SHA, independent reports and CI for controller re-review. New R2 correction delivery **not_submitted**. |
+| Dependency / Beta | Task0030 ineligible. Production Beta **NOT_READY**; install/upgrade/restore/secrets/scheduler/DEC01/02/host/lab/pilot/capacity separate. No merge/deploy/tag/activation authorization created. |
+
+GitHub records do not automatically start an external coding agent. Current
+source was kept read-only by this controller; application fixes return to
+executor. Entry remains [task/0000-start-here.md](../task/0000-start-here.md).
+
+## Historical handoffs — superseded by current table above
+
+### LATEST_HANDOFF — 17 November 2026: task0020 koreksi diserahkan + merge-all branch ke main (wewenang pemilik)
 
 **Update integrasi (sesi sama, ~00:5x WIB):** pemilik repo menginstruksikan
 merge-all branch ke main dengan PAT commit/merge/push (preseden PR9/PR24/25).
@@ -34,7 +61,7 @@ bukan accepted; `_done` bukan acceptance/merge/deploy.
 | Field | Current state / pointer |
 |---|---|
 | Canonical main teramati | **41d1f33f16508491a34f66b767830b9dd3e5954e**; main tidak diubah sesi ini |
-| Active task | **[ID0020 PA-002+PA-003](../task/0020-job-lifecycle-authority_done.md)** — **done / pending review / not integrated** |
+| Active task | **[ID0020 PA-002+PA-003](../task/0020-job-lifecycle-authority.md)** — **done / pending review / not integrated** |
 | Correction branch + PR | `session/2026-11-17-0020-job-lifecycle-correction` (base `0e45157` membawa source PR27); implementation/tested **`2681a3d`**, published head **`062a017`**; candidate **[PR30](https://github.com/smahud/MicroTix_Project/pull/30)** target main; CI exact head **[run44119619011](https://github.com/smahud/MicroTix_Project/actions/runs/44119619011) backend/frontend/docs success 3/3** terverifikasi ([ci evidence](executor-evidence/20261117T150000Z-0020-correction/ci-pr30.txt)) |
 | Decision ref | **[PR29](https://github.com/smahud/MicroTix_Project/pull/29)** `review/0020-controller-20261117`; verdict acceptance tetap [controller R1](controller/20261117T134100Z-0020-job-lifecycle-review.md) sampai controller mereview SHA koreksi |
 | Correction evidence root | [executor-evidence/20261117T150000Z-0020-correction/](executor-evidence/20261117T150000Z-0020-correction/) — failing-before/passing-after probe, split-role migrate/grant/RLS, check, makemigrations, docs, full-suite 562, targeted subsets, environment |

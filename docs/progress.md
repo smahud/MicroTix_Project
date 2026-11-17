@@ -1,6 +1,33 @@
 # MicroTix — checkpoint kemajuan
 
-Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-17 (Asia/Jakarta).
+Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-18 (Asia/Jakarta).
+
+## Checkpoint 2026-11-18 — controller R2 task0020: changes_requested
+
+Current main **64b68f8** diverifikasi (32 branches,0 open PR); koreksi PR30
+actual head19023737 sudah merged9eb5dacf, termasuk merge-all/SSTP berikutnya.
+Controller menjalankan ulang pada **exact integrated64b68f8**: **580 passed,
+1 skipped,3 warnings**, original **11 R1 probes PASS**, check/makemigrations/
+docs PASS; exact-main CI run44125923116 success backend/frontend/docs.
+
+Tetapi **6 new assertion FAIL/0 harness errors** di PG17.11 split-role:
+actual discovery guard→reconcile→commit tetap object1/snapshot succeeded;
+hold-check→sender-acquire race menghasilkan send2; hilangnya DB session
+melepas advisory lock sementara old adapter masih hidup dan successor send2;
+revoke selama TLS enrollment tetap membuat Router1/credential applied pada
+WG dan SSTP; B6 selected api_ssl dibypass simulator→false rolled_back/local.
+**REV-1711-01/04/05/08 masih PARTIAL P1**, **02/03/06/07 CLOSED**,09 evidence
+fase panjang dipetakan terbatas. SIGTERM/SIGINT/stop-claim progress dan
+SUB-05 tests dipertahankan; bukan production/device/domain-kill evidence.
+
+[Laporan R2](../report/controller/20261117T170000Z-0020-r2-review.md),
+[evidence](../report/controller-evidence/20261117T170000Z-0020-r2/),
+[packet0020 reopened](../task/0020-job-lifecycle-authority.md).
+Decision branch **`review/0020-controller-r2-20261117`**; publikasi/readback
+sesuai report §8. Next **coding_agent** menutup residual pada **ID sama**,
+mempertahankan perbaikan yang lulus, lalu publish SHA baru untuk review.
+Source aplikasi tidak diubah reviewer. Task0010 tetap accepted/integrated;
+task0030 belum eligible; Production Beta **NOT_READY**.
 
 ## Checkpoint 2026-11-17, ~23:59 WIB — executor menyerahkan koreksi task0020 (done, pending review)
 
@@ -28,7 +55,7 @@ PA-001 33, PA-006 125, RLS 8 lulus; check/makemigrations/docs PASS.
 REV-1711-01–09 CLOSED, nol pelemahan assertion; temuan P2 reviewer
 (CORR-REV-01 no_effect blanket backup, CORR-REV-02 jendela hard-crash
 pra-reconcile) **ditutup sebelum commit**. Execution **done / review
-pending** pada [packet0020_done](../task/0020-job-lifecycle-authority_done.md);
+pending** pada [packet0020_done](../task/0020-job-lifecycle-authority.md);
 [laporan koreksi + matriks A01–A09](../report/orchestrator/20261117T160000Z-0020-correction-delivery.md)
 + [evidence](../report/executor-evidence/20261117T150000Z-0020-correction/).
 Candidate **[PR30](https://github.com/smahud/MicroTix_Project/pull/30)** published head `062a017` (impl/tested `2681a3d`), CI exact head **[run44119619011](https://github.com/smahud/MicroTix_Project/actions/runs/44119619011) backend/frontend/docs success 3/3** terverifikasi. Next **controller_reviewer** mereview exact SHA koreksi; task0010 tetap
