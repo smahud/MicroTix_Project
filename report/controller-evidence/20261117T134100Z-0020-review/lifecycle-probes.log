@@ -1,0 +1,106 @@
+2026-11-17 20:48:41,188 ERROR domains.jobs.engine job 44c981b7-3c63-4fd2-bd19-4e800c2ab49e gagal tak terduga
+Traceback (most recent call last):
+  File "/workspace/scratch/0493f259e0c9/MicroTix_Project/backend/domains/jobs/engine.py", line 606, in run_claimed
+    result = handler.execute(ctx) or {}
+             ~~~~~~~~~~~~~~~^^^^^
+  File "/workspace/scratch/0493f259e0c9/MicroTix_Project/backend/domains/backups/service.py", line 218, in execute
+    _write_manifest(
+    ~~~~~~~~~~~~~~~^
+        artifact.storage_path,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<8 lines>...
+        },
+        ^^
+    )
+    ^
+  File "/workspace/scratch/0493f259e0c9/MicroTix_Project/report/controller-evidence/20261117T134100Z-0020-review/test_lifecycle_review.py", line 83, in fail_staging
+    raise OSError("controlled ENOSPC after successful create_backup")
+OSError: controlled ENOSPC after successful create_backup
+2026-11-17 20:48:41,213 ERROR domains.jobs.engine job 44c981b7-3c63-4fd2-bd19-4e800c2ab49e gagal tak terduga
+Traceback (most recent call last):
+  File "/workspace/scratch/0493f259e0c9/MicroTix_Project/backend/domains/jobs/engine.py", line 606, in run_claimed
+    result = handler.execute(ctx) or {}
+             ~~~~~~~~~~~~~~~^^^^^
+  File "/workspace/scratch/0493f259e0c9/MicroTix_Project/backend/domains/backups/service.py", line 218, in execute
+    _write_manifest(
+    ~~~~~~~~~~~~~~~^
+        artifact.storage_path,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<8 lines>...
+        },
+        ^^
+    )
+    ^
+  File "/workspace/scratch/0493f259e0c9/MicroTix_Project/report/controller-evidence/20261117T134100Z-0020-review/test_lifecycle_review.py", line 83, in fail_staging
+    raise OSError("controlled ENOSPC after successful create_backup")
+OSError: controlled ENOSPC after successful create_backup
+{"artifact_count": 2, "case": "backup-generic-after-send", "effect_state": "maybe", "first_state": "retry_wait", "reclaimed": true, "send_count": 2}
+F{"case": "stale-discovery-domain-commit", "health_count": 1, "job_state": "uncertain", "object_count": 1, "outcomes": {"worker": {"state": "uncertain"}}, "snapshot_status": ["succeeded"]}
+F{"case": "retry-uncertain-grandchild", "error": null, "extra_retry_created": true, "grandchild_state": "uncertain", "send_count": 2}
+F{"case": "router-unknown-predecessor", "first_state": "uncertain", "second_job": "56ac7a18-dde5-4c37-87aa-be11104e2a89", "second_state": "succeeded", "send_count": 2}
+F
+=================================== FAILURES ===================================
+__________ test_backup_manifest_failure_after_send_must_hold_unknown ___________
+../report/controller-evidence/20261117T134100Z-0020-review/test_lifecycle_review.py:107: in test_backup_manifest_failure_after_send_must_hold_unknown
+    assert first_state in {JobState.UNCERTAIN, JobState.RECOVERY_REQUIRED}, (
+E   AssertionError: successful adapter effect followed by staging failure must not become retry_wait
+E   assert 'retry_wait' in {JobState.RECOVERY_REQUIRED, JobState.UNCERTAIN}
+------------------------------ Captured log call -------------------------------
+ERROR    domains.jobs.engine:engine.py:614 job 44c981b7-3c63-4fd2-bd19-4e800c2ab49e gagal tak terduga
+Traceback (most recent call last):
+  File "/workspace/scratch/0493f259e0c9/MicroTix_Project/backend/domains/jobs/engine.py", line 606, in run_claimed
+    result = handler.execute(ctx) or {}
+             ~~~~~~~~~~~~~~~^^^^^
+  File "/workspace/scratch/0493f259e0c9/MicroTix_Project/backend/domains/backups/service.py", line 218, in execute
+    _write_manifest(
+    ~~~~~~~~~~~~~~~^
+        artifact.storage_path,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<8 lines>...
+        },
+        ^^
+    )
+    ^
+  File "/workspace/scratch/0493f259e0c9/MicroTix_Project/report/controller-evidence/20261117T134100Z-0020-review/test_lifecycle_review.py", line 83, in fail_staging
+    raise OSError("controlled ENOSPC after successful create_backup")
+OSError: controlled ENOSPC after successful create_backup
+ERROR    domains.jobs.engine:engine.py:614 job 44c981b7-3c63-4fd2-bd19-4e800c2ab49e gagal tak terduga
+Traceback (most recent call last):
+  File "/workspace/scratch/0493f259e0c9/MicroTix_Project/backend/domains/jobs/engine.py", line 606, in run_claimed
+    result = handler.execute(ctx) or {}
+             ~~~~~~~~~~~~~~~^^^^^
+  File "/workspace/scratch/0493f259e0c9/MicroTix_Project/backend/domains/backups/service.py", line 218, in execute
+    _write_manifest(
+    ~~~~~~~~~~~~~~~^
+        artifact.storage_path,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<8 lines>...
+        },
+        ^^
+    )
+    ^
+  File "/workspace/scratch/0493f259e0c9/MicroTix_Project/report/controller-evidence/20261117T134100Z-0020-review/test_lifecycle_review.py", line 83, in fail_staging
+    raise OSError("controlled ENOSPC after successful create_backup")
+OSError: controlled ENOSPC after successful create_backup
+_____________ test_actual_discovery_cannot_commit_after_reconcile ______________
+../report/controller-evidence/20261117T134100Z-0020-review/test_lifecycle_review.py:183: in test_actual_discovery_cannot_commit_after_reconcile
+    assert objects == 0, "stale discovery writer committed new domain objects after reconcile"
+E   AssertionError: stale discovery writer committed new domain objects after reconcile
+E   assert 1 == 0
+_____________ test_retry_origin_cannot_bypass_uncertain_grandchild _____________
+../report/controller-evidence/20261117T134100Z-0020-review/test_lifecycle_review.py:229: in test_retry_origin_cannot_bypass_uncertain_grandchild
+    assert extra is None, "origin retry bypassed the unknown grandchild outcome"
+E   AssertionError: origin retry bypassed the unknown grandchild outcome
+E   assert <Job: Job object (50129fc4-049e-4d67-8e94-16585be8e873)> is None
+________ test_new_router_writer_waits_for_unknown_predecessor_readback _________
+../report/controller-evidence/20261117T134100Z-0020-review/test_lifecycle_review.py:264: in test_new_router_writer_waits_for_unknown_predecessor_readback
+    assert len(sends) == 1, "new conflicting router writer sent before predecessor readback"
+E   AssertionError: new conflicting router writer sent before predecessor readback
+E   assert 2 == 1
+E    +  where 2 = len(['39d9c37c-91b2-4e62-85da-7207fe83fa7a', '56ac7a18-dde5-4c37-87aa-be11104e2a89'])
+=========================== short test summary info ============================
+FAILED ::test_backup_manifest_failure_after_send_must_hold_unknown - Assertio...
+FAILED ::test_actual_discovery_cannot_commit_after_reconcile - AssertionError...
+FAILED ::test_retry_origin_cannot_bypass_uncertain_grandchild - AssertionErro...
+FAILED ::test_new_router_writer_waits_for_unknown_predecessor_readback - Asse...
+4 failed in 1.83s

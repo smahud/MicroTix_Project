@@ -3,21 +3,50 @@
 | Field | Nilai |
 |---|---|
 | Task ID | `0020`; satu packet untuk lifecycle + authority yang saling bergantung |
-| Execution status | `done` (scope executor + tes wajib tuntas; bukan acceptance) |
-| Review status | `pending` — menunggu controller review exact SHA kandidat |
+| Execution status | **`ready`** — controller R1 membuka kembali ID0020 setelah review kandidat |
+| Review status | **`changes_requested`** pada exact PR27 `bd37c14e6c41339a8743b3d4b723ee74f13bef08` |
 | Controller / executor | ChatGPT Work controller / coding agent sandbox |
 | Baseline | `main@41d1f33f16508491a34f66b767830b9dd3e5954e`; fetch ulang dan periksa delta sebelum bekerja |
-| Instruction ref | `review/0020-job-lifecycle-authority-20261117`; baca packet ini pada ref tersebut atau descendant yang sudah diintegrasikan, bukan packet0010 dari branch lama |
+| Original instruction ref | PR26 `review/0020-job-lifecycle-authority-20261117` @ `ea7b8a17ad8d6339eed45769bbff1626ea279665`; histori instruksi awal |
+| Current correction instruction ref | **`review/0020-controller-20261117`**, [controller R1 §3/§7](../report/controller/20261117T134100Z-0020-job-lifecycle-review.md); fetch ref ini untuk koreksi, bukan packet awal PR26 atau main yang lama |
 | Accepted predecessor | [0010 / PA-006](0010-pa006-idempotency_done.md), accepted exact `a301a94c2b3268679065e85bbef66f35949483f7` pada [R5 review](../report/controller/20261116T101809Z-0010-pa006-r5-review.md); PR24+PR25 merged ke main, [integrasi](../report/orchestrator/20261116T111835Z-0010-pa006-integration.md) |
 | Authority | [CONTRACT](../CONTRACT.md) §§5–6A/8–13; [PRODUCT](../docs/PRODUCT.md) TEN-03, JOB-02–05, SEC-01/04/05, SUB-05; [ARCHITECTURE](../docs/ARCHITECTURE.md) §§3–6; [OPERATIONS](../docs/OPERATIONS.md) §§3–4; [ACCEPTANCE](../docs/ACCEPTANCE.md) §4 |
 | Backlog / tests | Existing TK-101/102/103 dan bagian drain TK-1002; katalog T06-CRASH-01/02/03, T10-TEN-03; T05/T14 hanya invariant current-state yang relevan, bukan seluruh fitur R2/DR |
-| Controller report | [Review dan dasar packet](../report/controller/20261116T231131Z-0020-job-lifecycle-review.md) |
+| Controller report | **[R1 changes_requested](../report/controller/20261117T134100Z-0020-job-lifecycle-review.md)**; [dasar packet/instruksi awal](../report/controller/20261116T231131Z-0020-job-lifecycle-review.md) tetap berlaku |
 | Implementation / tested SHA / candidate / CI | Implementation/tested **`7118cce0db330acb02be0b3b774b1b1628d55d7a`** (berisi engine `6e96ce33` + perbaikan test-infra password CI; full suite 554 passed pada tree ini); candidate branch `session/2026-11-17-0020-job-lifecycle-authority` + **[PR27](https://github.com/smahud/MicroTix_Project/pull/27)**; penyerahan/record commits di atasnya report-only — `git diff 7118cce0db330acb02be0b3b774b1b1628d55d7a HEAD -- backend/ apps/` kosong; CI exact head diobservasi pada PR |
-| Bukti kunci | **Suite penuh 554 passed + 1 skip** (PG 17.11 nyata, peran non-superuser, FORCE RLS) — failing-before pada baseline main@41d1f33: 33/37 lifecycle + 4/4 drain GAGAL, passing-after 41/41; PA-001 + PA-006 (incl. R4/R5 replay migrasi) lulus utuh; check/makemigrations/docs PASS; frontend typecheck/lint/66 tes/i18n/build lulus; P3 REV-1611-TEST-01 ditutup test-only |
+| Bukti executor (histori, bukan acceptance) | **Suite penuh 554 passed + 1 skip** (PG 17.11 nyata, peran non-superuser, FORCE RLS) — failing-before pada baseline main@41d1f33: 33/37 lifecycle + 4/4 drain GAGAL, passing-after 41/41; PA-001 + PA-006 (incl. R4/R5 replay migrasi) lulus utuh; check/makemigrations/docs PASS; frontend typecheck/lint/66 tes/i18n/build lulus; P3 REV-1611-TEST-01 ditutup test-only |
 | Execution report | [Orchestrator](../report/orchestrator/20261117T010218Z-0020-job-lifecycle-authority.md) — matriks A01–A09 + inventaris + runbook; [review independen](../report/reviewer/20261117T010218Z-0020-job-lifecycle-independent.md) (REV-2011-01..10 — seluruhnya ditindaklanjuti); [evidence](../report/executor-evidence/20261117T000000Z-0020-job-lifecycle/) |
-| Next actor / action | **controller_reviewer**: review exact SHA `7118cce` (kode+tes; tree published identik — verifikasi diff kosong) atas matriks A01–A09 laporan eksekusi §4 dan temuan reviewer §3; changes-requested membuka kembali ID0020 yang sama |
+| Next actor / action | **coding_agent**: fetch `review/0020-controller-20261117`, tutup **REV-1711-01–09** pada ID0020 yang sama, preserve source PR27+PA-001/006, jalankan tes penutup dan submit exact SHA baru; [controller R1 §3/§7](../report/controller/20261117T134100Z-0020-job-lifecycle-review.md) |
 
 PA-002/PA-003 adalah label kontinuitas audit, bukan otoritas baru. PR8 planning_audit masih draft/unmerged; kebutuhan packet ini seluruhnya diturunkan dari kontrak main di atas. Prasyarat PA-006 sudah accepted/integrated dan tidak dibuka kembali. PA-001 pembayaran juga dipertahankan. Packet ini tidak memberi izin merge, deploy, tag atau aktivasi fitur.
+
+## Koreksi controller R1 — wajib sebelum penyerahan berikutnya
+
+Verdict pada **PR27@bd37c14** adalah `changes_requested`: **8 defect kode
+terkonfirmasi melalui 11 assertion PostgreSQL gagal**, bukan 11 error harness.
+Root full suite554 passed/1skip/3warning tetap tidak memenuhi acceptance yang
+probe ini buktikan gagal. [Matriks evidence dan koreksi lengkap](../report/controller/20261117T134100Z-0020-job-lifecycle-review.md)
+menjadi instruksi koreksi; A01–A09 di bawah tidak dikurangi. Current source
+PR27 dibawa oleh decision ref; main41d1f33 belum memuat packet/kandidat ini.
+
+| ID | Koreksi minimum / tes penutup |
+|---|---|
+| **REV-1711-01 P1** | Guard lease/token/epoch/state/validity **dalam transaksi domain**; actual blocked discovery→reconcile→resume tidak commit object/health/success atau efek berikutnya; failed checkpoint menghentikan worker |
+| **REV-1711-02 P1** | Generic/staging failure sesudah backup send ditahan uncertain/recovery; nol resend otomatis/manual tanpa bukti no-effect/readback |
+| **REV-1711-03 P1** | Retry lineage serialized: ancestor retry tidak melewati descendant uncertain/recovery/active; concurrent ancestor/child menghasilkan nol efek duplikat |
+| **REV-1711-04 P1** | Mutasi router berkonflik ditahan durable sampai old-writer aman **dan** readback unknown predecessor selesai; router lain tetap maju |
+| **REV-1711-05 P1** | Current authority di effect boundary setelah preflight/per-chunk; revoke/demote/narrow-scope barrier→nol release/peer/NAS/send |
+| **REV-1711-06 P1** | HTTP detail/retry/cancel menghormati membership router scope; non-scope404+state/job tidak berubah, in-scope403/step-up tetap benar |
+| **REV-1711-07 P2** | B6 APPLY/VERIFY keluar dari outer DB transaction; independent observer membuktikan no transaction/row-lock saat adapter diblokir |
+| **REV-1711-08 P1** | B6 negative/unknown readback tidak mengklaim succeeded/rolled_back/local; positive dan pending_observation tetap jujur |
+| **REV-1711-09 P2 evidence gap** | Buktikan SIGTERM+SIGINT idle/active-DB/blocked-I/O dengan barrier+efek durable+complete outcomes, long-phase/heartbeat/recovery dan current-policy/SUB05 assertions yang applicable; jangan membangun fitur R2 untuk tes |
+
+Reproduksi final disimpan di [controller-evidence](../report/controller-evidence/20261117T134100Z-0020-review/).
+Tutup finding dengan perubahan minimum dan passing-after assertion yang sama
+atau lebih kuat; jangan mengubah requirement atau melemahkan probe untuk lulus.
+PA-006/task0010 tetap accepted/integrated, P3 thread assertions dipertahankan.
+Tidak ada task0030/deploy/merge/aktivasi otomatis. Ringkasan internal reviewer
+lama ditandai histori; controller R1 adalah keputusan acceptance current.
 
 ## Tujuan dan batas
 

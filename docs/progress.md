@@ -2,9 +2,32 @@
 
 Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-17 (Asia/Jakarta).
 
+## Checkpoint 2026-11-17 — controller R1 task0020 changes_requested
+
+Review exact **PR27@bd37c14e6c41339a8743b3d4b723ee74f13bef08** dari
+main41d1f33/instruction PR26ea7b8a1; ancestor7118cce→candidate app/source
+diff kosong. [Controller R1](../report/controller/20261117T134100Z-0020-job-lifecycle-review.md)
++ dua reviewer independen, root full suite **554 passed/1skip/3warnings**,
+check/makemigrations/docs PASS, exact candidate CI43994355914 success3/3.
+**11 focused acceptance assertions gagal tanpa harness error** pada fresh
+PG17.11 migrator-owned schema+runtime nonowner/NOBYPASSRLS/FORCE RLS:
+stale discovery commit, backup resend, uncertain retry lineage/router hold,
+revoke/demote setelah preflight, HTTP router-scope bypass, B6 I/O transaction
+serta false-success negative verifier. Delapan defect **REV-1711-01–08**,
+gap mandatory evidence **09** dicatat terpisah; [evidence summary](../report/controller-evidence/20261117T134100Z-0020-review/review-results.json).
+
+**[Packet0020](../task/0020-job-lifecycle-authority.md) reopened ready /
+changes_requested**, next **coding_agent** fetch `review/0020-controller-20261117`
+dan tutup finding pada ID sama, submit exact SHA baru+tes/evidence/CI.
+Decision dipublikasikan terpisah dari kandidat; readback/commit/PR mengikuti
+controller report §8. PA-006/task0010 tetap accepted/integrated dan P3 R5
+assertions preserved. Tidak ada task0030, app patch, main merge, deployment,
+aktivasi atau tag. Beta **NOT_READY**; host/perangkat/GNS3/live RADIUS/
+browser/benchmark tidak diklaim terverifikasi. Checkpoint di bawah histori.
+
 ## Checkpoint 2026-11-17, ~08:10 WIB — executor menyerahkan task0020 PA-002+PA-003 (done, pending review)
 
-Executor Z.ai sandbox menjalankan [packet0020](../task/0020-job-lifecycle-authority_done.md)
+Executor Z.ai sandbox menjalankan [packet0020](../task/0020-job-lifecycle-authority.md)
 dari instruction ref PR26 `review/0020-job-lifecycle-authority-20261117` @ ea7b8a1,
 base main **41d1f33** (delta kosong). Implementation/tested **6e96ce33** pada branch
 `session/2026-11-17-0020-job-lifecycle-authority` (penyerahan report-only di atasnya;

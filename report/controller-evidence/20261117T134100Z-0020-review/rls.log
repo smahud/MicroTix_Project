@@ -1,0 +1,10 @@
+ current_user | rolsuper | rolbypassrls 
+--------------+----------+--------------
+ mtx_app      | f        | f
+(1 row)
+
+    relname     | relowner | relrowsecurity | relforcerowsecurity 
+----------------+----------+----------------+---------------------
+ jobs_jobdetail | mtx_app  | t              | t
+(1 row)
+

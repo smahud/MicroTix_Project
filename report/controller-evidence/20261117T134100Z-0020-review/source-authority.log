@@ -1,0 +1,48 @@
+{
+  "http_helper": [
+    {
+      "method": "GET",
+      "job_router": "router-denied",
+      "membership_scope": [
+        "router-allowed"
+      ],
+      "authority_check": "ALLOWED"
+    },
+    {
+      "method": "POST",
+      "job_router": "router-denied",
+      "membership_scope": [
+        "router-allowed"
+      ],
+      "authority_check": "ALLOWED"
+    }
+  ],
+  "rollback_calls": [
+    {
+      "op": "APPLY",
+      "scope_depth": 1
+    },
+    {
+      "op": "VERIFY",
+      "scope_depth": 1,
+      "verified": false
+    }
+  ],
+  "rollback_result": {
+    "phase": "B6",
+    "state": "rolled_back"
+  },
+  "stored_enforcement_mode": "local",
+  "stored_evidence": {
+    "B2": {},
+    "B6": {
+      "rollback_readback_ok": false
+    }
+  },
+  "handler_verify_result": {
+    "ok": true,
+    "phase": "B6",
+    "state": "rolled_back",
+    "note": "state cutover tersimpan dengan evidence per fase"
+  }
+}

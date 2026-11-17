@@ -1,0 +1,8 @@
+{
+  "new_reports_packet_links_missing": [],
+  "protected_source_changes": [],
+  "only_one_packet": true,
+  "observed_probe_cases": 11,
+  "verdict": "changes_requested",
+  "next_actor": "coding_agent"
+}

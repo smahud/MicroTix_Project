@@ -1,0 +1,4 @@
+docs 0
+check 0
+makemigrations 0
+full-suite 1
