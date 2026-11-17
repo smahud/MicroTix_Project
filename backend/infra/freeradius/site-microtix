@@ -1,0 +1,63 @@
+# Site default MicroTix — bind HANYA tunnel wg0 (RAD-01).
+# Message-Authenticator wajib pada Access-Request (RAD-05 §5).
+server default {
+    listen {
+        type = auth
+        ipaddr = 100.127.0.1
+        port = 1812
+        proto = udp
+    }
+    listen {
+        type = acct
+        ipaddr = 100.127.0.1
+        port = 1813
+        proto = udp
+    }
+
+    authorize {
+        # BlastRADIUS: tolak Access-Request tanpa Message-Authenticator valid.
+        if (!&Message-Authenticator) {
+            reject
+        }
+        preprocess
+        sql {
+            notfound = 1
+        }
+        if (notfound) {
+            # NAS terdaftar + kredensial proyeksi tidak ditemukan → Reject.
+            # Tidak pernah menebak dari User-Name/real (RAD-03 §4).
+            reject
+        }
+        expiration
+        pap
+    }
+
+    authenticate {
+        Auth-Type PAP {
+            pap
+        }
+        Auth-Type CHAP {
+            chap
+        }
+        Auth-Type MS-CHAP {
+            mschap
+        }
+    }
+
+    preacct {
+        preprocess
+        acct_unique
+    }
+    accounting {
+        sql
+    }
+    session {
+        sql
+    }
+    post-auth {
+        sql
+        Post-Auth-Type REJECT {
+            sql
+        }
+    }
+}

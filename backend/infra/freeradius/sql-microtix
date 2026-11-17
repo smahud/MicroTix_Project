@@ -1,0 +1,27 @@
+# rlm_sql PostgreSQL — MicroTix (RAD-02/RAD-03).
+# Kredensial via berkas 600 milik freerad; jangan hardcode di repo.
+sql microtix {
+    driver = "rlm_sql_postgresql"
+    postgresql {
+        server = "127.0.0.1"
+        port = 5432
+        login = "radius_svc"
+        password = "${env.MT_RADIUS_DB_PASSWORD}"
+        db_name = "microtix"
+    }
+    # Facade EXECUTE-only: authorize tidak membaca tabel langsung (RAD-03).
+    # read_clients = yes memakai radius.nas via kebijakan bootstrap tenant.
+    read_clients = yes
+    client_table = "radius.nas"
+    # Tabel standar (proyeksi) — skema radius.
+    authcheck_table = "radius.radcheck"
+    authreply_table = "radius.radreply"
+    groupcheck_table = "radius.radgroupcheck"
+    groupreply_table = "radius.radgroupreply"
+    usergroup_table = "radius.radusergroup"
+    acct_table1 = "radius.radacct"
+    acct_table2 = "radius.radacct"
+    postauth_table = "radius.radpostauth"
+    # BlastRADIUS mitigation: Message-Authenticator diminta pada policy
+    # site (site-microtix); lalu lintas hanya di dalam tunnel WG.
+}
