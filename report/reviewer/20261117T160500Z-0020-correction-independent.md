@@ -108,7 +108,7 @@ reconcile/claim). Catat sebagai residual teoretis, bukan blocker.
 dengan placeholder ("commit koreksi ini (lihat §8)") dan §8 menyatakan
 "commit koreksi kode+tes+packet+laporan ini + rename packet `_done.md`" —
 namun `git status` menunjukkan koreksi MASIH uncommitted (12 file modified
-+ 3 path report untracked), `task/0020-job-lifecycle-authority.md` BELUM
++ 3 path report untracked), `task/0020-job-lifecycle-authority_done.md` BELUM
 di-rename, belum ada commit/branch push/PR/CI pada tree koreksi. Bukti
 probe/suite executor dijalankan pada working tree ini (konsisten dengan
 isi diff), tetapi "tested SHA = published SHA" belum dapat diverifikasi

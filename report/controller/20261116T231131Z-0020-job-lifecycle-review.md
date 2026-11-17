@@ -48,7 +48,7 @@ Ordinary asynchronous jobs do not require an open browser. Re-evaluate current a
 
 ## 3. Packet and acceptance traceability
 
-New [task0020](../../task/0020-job-lifecycle-authority.md) has one objective: safe execution/recovery/current authority for currently registered jobs. It provides baseline/instruction ref, accepted predecessor, allowed/forbidden ownership, nine acceptance groups, required actual PG/race/process checks, legacy migration/drain/recovery treatment and exact delivery protocol.
+New [task0020](../../task/0020-job-lifecycle-authority_done.md) has one objective: safe execution/recovery/current authority for currently registered jobs. It provides baseline/instruction ref, accepted predecessor, allowed/forbidden ownership, nine acceptance groups, required actual PG/race/process checks, legacy migration/drain/recovery treatment and exact delivery protocol.
 
 Main authorities: PRODUCT TEN-03/JOB-02–05/SEC-01/04/05/SUB-05; ARCHITECTURE §§3–6; OPERATIONS §§3–4; ACCEPTANCE §4. Existing backlog TK-101/102/103 and scoped drain TK-1002 remain the source backlog. T06-CRASH and T10 current-authority cases guide assertions; future R2 bulk activation and full DR are **not newly required implementations**. R3/R4/device/scale gates are not smuggled into sandbox DoD.
 

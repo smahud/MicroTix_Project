@@ -21,7 +21,7 @@ panjang) yang perlu ditutup sebelum acceptance.
 > **Catatan orchestrator (bukan bagian laporan reviewer):** seluruh temuan
 > REV-2011-01..10 ditindaklanjuti pada penyerahan ini — 01..04 + 05..09
 > diperbaikan di kode dengan tes baru (lihat matriks pada laporan eksekusi
-> `report/orchestrator/20261117T010218Z-0020-job-lifecycle-authority.md`);
+> `report/orchestrator/20261117T010218Z-0020-job-lifecycle-authority_done.md`);
 > REV-2011-10 ditutup sebagai runbook non-normatif di laporan eksekusi
 > (menghindari perubahan manifest docs untuk file baru). Verdict di atas
 > adalah penilaian reviewer terhadap KANDIDAT PRA-KOREKSI (`ea7b8a1`),

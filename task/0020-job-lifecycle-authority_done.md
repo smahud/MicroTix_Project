@@ -3,8 +3,8 @@
 | Field | Nilai |
 |---|---|
 | Task ID | `0020`; satu packet untuk lifecycle + authority yang saling bergantung |
-| Execution status | **`ready`** — dibuka kembali controller R2; source koreksi sebelumnya sudah terintegrasi, residual wajib ditutup pada ID sama |
-| Review status | **`changes_requested`** pada exact main **`64b68f8d74b0aa593f379c75d6b5702402fd9d78`**; empat residual P1 + batas evidence09 |
+| Execution status | **`done`** — koreksi R2 selesai dan diserahkan (sesi 18 Nov 2026 WIB); menunggu review controller R3 |
+| Review status | **`pending`** — kandidat koreksi R2 diserahkan untuk review exact SHA; changes_requested R2 adalah histori keputusan yang dikerjakan |
 | Resume controller 17 Nov ~21:48 WIB | Histori checkpoint sebelum koreksi: [checkpoint](../report/controller/20261117T144620Z-0020-resume-review.md); REV-1711-01–09 ditutup pada sesi koreksi berikutnya |
 | Controller / executor | ChatGPT Work controller / coding agent sandbox |
 | Baseline | **`main@64b68f8d74b0aa593f379c75d6b5702402fd9d78`** untuk koreksi R2; baseline awal41d1f33 adalah histori, bukan current main |
@@ -14,10 +14,11 @@
 | Authority | [CONTRACT](../CONTRACT.md) §§5–6A/8–13; [PRODUCT](../docs/PRODUCT.md) TEN-03, JOB-02–05, SEC-01/04/05, SUB-05; [ARCHITECTURE](../docs/ARCHITECTURE.md) §§3–6; [OPERATIONS](../docs/OPERATIONS.md) §§3–4; [ACCEPTANCE](../docs/ACCEPTANCE.md) §4 |
 | Backlog / tests | Existing TK-101/102/103 dan bagian drain TK-1002; katalog T06-CRASH-01/02/03, T10-TEN-03; T05/T14 hanya invariant current-state yang relevan, bukan seluruh fitur R2/DR |
 | Controller report | **[R2 changes_requested](../report/controller/20261117T170000Z-0020-r2-review.md)** pada main64b68f8; [R1](../report/controller/20261117T134100Z-0020-job-lifecycle-review.md) dan instruksi awal dipertahankan |
-| Correction implementation / tested / candidate | Histori koreksi executor: impl2681a3d, PR30 actual head19023737 **merged** (9eb5dacf); source current berbeda karena merge SSTP. **Controller tested/reviewed64b68f8**; kandidat koreksi R2 **not_submitted** |
+| Correction implementation / tested / candidate | **Koreksi R2 (sesi ini):** impl/tested **`cd6eea378cd2134ca38924e8b181d1cd601f33ec`** (kode+tes saja) dari base main `0c6403de` (PR31 merged); published candidate = head PR32 (commit penyerahan, report-only descendant). Histori koreksi R1: impl2681a3d, PR30 head19023737 merged (9eb5dacf) |
+| Koreksi R2 — laporan & bukti | [Laporan eksekusi](../report/orchestrator/20261117T194548Z-0020-r2-correction.md) — matriks A01–A09 + pemetaan presisi A05/A08; [reviewer independen](../report/reviewer/20261117T194548Z-0020-r2-correction-independent.md): 5/5 temuan R2 CLOSED + 5 temuan baru REV-R2C-01..05 (semua ditutup sesi ini); [evidence](../report/executor-evidence/20261117T191917Z-0020-r2-correction/) — probe R2 6/6 + R1 11/11 lulus tanpa pelemahan (file probe controller FROZEN), suite penuh 583 passed/1 skip, check/makemigrations/docs/frontend PASS |
 | Histori bukti executor R1 | **Probe controller R1: failing-before 11 failed → passing-after 11 passed** (diulang pada DB split-role migrator-owned + FORCE RLS); **suite penuh 562 passed + 1 skip** (+8 tes bukti REV-1711-09: SIGINT/active-barrier/stop-claim, fase panjang vs reconciler, crash setelah commit domain, current-policy/SUB-05); PA-001 33 + PA-006 125 + RLS 8 lulus; check/makemigrations/docs PASS; [evidence root](../report/executor-evidence/20261117T150000Z-0020-correction/) |
-| Historical correction execution report | [Orchestrator koreksi](../report/orchestrator/20261117T160000Z-0020-correction-delivery.md) — matriks A01–A09 + temuan→perubahan→bukti; [reviewer independen](../report/reviewer/20261117T160500Z-0020-correction-independent.md): REV-1711-01–09 CLOSED, temuan P2 CORR-REV-01/02 ditutup sebelum commit; [laporan penyerahan pertama](../report/orchestrator/20261117T010218Z-0020-job-lifecycle-authority.md) histori |
-| Next actor / action | **coding_agent**: fetch decision branch R2; tutup residual **REV-1711-01/04/05/08** + pemetaan evidence09, pertahankan CLOSED02/03/06/07; jalankan6 assertion R2 dan11 probe lama + regresi wajib, publish SHA baru pada ID0020 |
+| Historical correction execution report | [Orchestrator koreksi](../report/orchestrator/20261117T160000Z-0020-correction-delivery.md) — matriks A01–A09 + temuan→perubahan→bukti; [reviewer independen](../report/reviewer/20261117T160500Z-0020-correction-independent.md): REV-1711-01–09 CLOSED, temuan P2 CORR-REV-01/02 ditutup sebelum commit; [laporan penyerahan pertama](../report/orchestrator/20261117T010218Z-0020-job-lifecycle-authority_done.md) histori |
+| Next actor / action | **controller_reviewer**: review exact SHA kandidat PR32 terhadap instruksi R2 ([laporan §3/§7](../report/controller/20261117T170000Z-0020-r2-review.md)); acceptance/integrasi/deploy tetap keputusan terpisah — `_done` bukan acceptance |
 
 PA-002/PA-003 adalah label kontinuitas audit, bukan otoritas baru. PR8 planning_audit kini terintegrasi sebagai record historis melalui merge-all; kebutuhan packet ini tetap diturunkan dari kontrak/domain requirements di atas. Prasyarat PA-006 sudah accepted/integrated dan tidak dibuka kembali. PA-001 pembayaran juga dipertahankan. Packet ini tidak memberi izin merge, deploy, tag atau aktivasi fitur.
 
@@ -122,7 +123,7 @@ Host/lab unavailable tidak menghalangi pengembangan sandbox ini. Bila mandatory 
 
 ## Penyerahan
 
-Orchestrator memakai reviewer independen sesuai CONTRACT§5 untuk concurrency/recovery dan authority/compatibility; read-only boleh paralel, writes disjoint hanya jika isolation terverifikasi. Laporan utama `report/orchestrator/<UTC>-0020-job-lifecycle-authority.md`; setiap reviewer `report/<role>/<UTC>-0020-*.md`; evidence tersanitasi sesuai CONTRACT§10.
+Orchestrator memakai reviewer independen sesuai CONTRACT§5 untuk concurrency/recovery dan authority/compatibility; read-only boleh paralel, writes disjoint hanya jika isolation terverifikasi. Laporan utama `report/orchestrator/<UTC>-0020-job-lifecycle-authority_done.md`; setiap reviewer `report/<role>/<UTC>-0020-*.md`; evidence tersanitasi sesuai CONTRACT§10.
 
 Laporan memuat inventory, minimum solution/alternatives, finding→change→failing-before/passing-after, **seluruh A01–A09→actual evidence**, migration/legacy/recovery, batas source vs PG vs process vs device, exact instruction/base/implementation/tested/published SHA, PR+CI, risiko dan next actor/action. Tidak cukup melaporkan jumlah tes.
 

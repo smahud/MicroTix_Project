@@ -1177,8 +1177,10 @@ def complete_enrollment(token: str, wg_public_key: str = "", sstp_username: str 
     return {"status": "bootstrap_accepted", "router_id": None, "replay": False}
 
 
-def finalize_verification(enrollment: RouterEnrollment, *, source: str = "simulator",
-                          ownership_guard=None) -> Router:
+def finalize_verification(
+    enrollment: RouterEnrollment, *, source: str = "simulator",
+    ownership_guard=None, authority_guard=None, commit_guard=None,
+) -> Router:
     """Selesaikan verifikasi → buat Router read-only + pasang peer.
 
     Kejujuran bukti (ROUTEROS.md §2.8; master directive §10): `source` = nama
@@ -1195,6 +1197,15 @@ def finalize_verification(enrollment: RouterEnrollment, *, source: str = "simula
     ``ownership_guard`` (REV-1711-01): dipanggil DI DALAM transaksi commit
     router/peer/enrollment — worker basi (lease dipindah/dicabut selama probe
     I/O) tidak dapat menulis domain hasil verifikasi.
+    ``authority_guard`` (REV-1711-05 R2): dipanggil DI DALAM transaksi unit
+    efek pada ENTRY — kewenangan AKTUAL aktor/membership/permission dibaca
+    segar dari DB SETELAH probe I/O; pencabutan/demosi/narrowing yang terjadi
+    selama I/O membatalkan unit efek sebelum ada router/enrollment/kredensial
+    yang ditulis (lease yang valid bukan izin aktor).
+    ``commit_guard`` (REV-1711-01 R2): dipanggil DI DALAM transaksi yang sama
+    sesaat SEBELUM commit dengan lock baris job — update ownership-changing
+    pihak lain ter-serialisasi terhadap commit unit (window check-to-commit
+    tertutup), atau unit di-rollback.
     """
     from adapters.routeros.base import RouterContext
 
@@ -1260,6 +1271,27 @@ def finalize_verification(enrollment: RouterEnrollment, *, source: str = "simula
         with transaction.atomic():
             if ownership_guard is not None:
                 ownership_guard()
+            if authority_guard is not None:
+                authority_guard()
+            # REV-R2C-02: serialisasi per-enrollment — kunci baris enrollment
+            # dan validasi ulang status DI BAWAH kunci: finalize konkuren pada
+            # enrollment sama (job verify_api_ssl tidak memegang router_id /
+            # sender per-router) tidak dapat membuat Router kedua. Re-entry
+            # sah (status VERIFYING) tetap lolos; COMPLETED konkuren ditolak.
+            locked = (
+                RouterEnrollment.objects.select_for_update()
+                .filter(id=enrollment.id)
+                .first()
+            )
+            if locked is None or (
+                locked.status == RouterEnrollment.Status.COMPLETED
+                and locked.router_id is not None
+            ):
+                raise JobError(
+                    code="enrollment_state",
+                    retryable=False,
+                    message="enrollment sudah difinalisasi oleh worker konkuren",
+                )
             router = Router.objects.create(
                 tenant_id=enrollment.tenant_id,
                 display_name=enrollment.display_name,
@@ -1303,10 +1335,15 @@ def finalize_verification(enrollment: RouterEnrollment, *, source: str = "simula
                 WireGuardPeer.objects.filter(enrollment=enrollment).update(
                     router=router, state=WireGuardPeer.State.APPLIED, applied_revision=1
                 )
+            if commit_guard is not None:
+                # Guard terkunci sesaat sebelum commit unit efek (REV-1711-01 R2):
+                # seluruh efek router/enrollment/kredensial di atas di-rollback bila
+                # kepemilikan berpindah sebelum commit; transfer ter-serialisasi.
+                commit_guard()
     return router
 
 
-def run_discovery(router: Router, ownership_guard=None) -> dict:
+def run_discovery(router: Router, ownership_guard=None, commit_guard=None) -> dict:
     """Discovery bounded — TIDAK membaca password (ROUTEROS.md §3).
 
     Unit DB pendek dipisah dari I/O adapter (PA-002/task0020): snapshot
@@ -1317,11 +1354,16 @@ def run_discovery(router: Router, ownership_guard=None) -> dict:
     Scope luar pemanggil tetap dihormati (tenant_scope reentrant).
 
     ``ownership_guard`` (REV-1711-01): dipanggil DI DALAM transaksi tiap unit
-    commit domain — kehilangan lease job membatalkan unit SEBELUM commit dan
+    pada ENTRY — kehilangan lease job membatalkan unit SEBELUM commit dan
     menghentikan efek berikutnya (guard melempar OwnershipLost).
+    ``commit_guard`` (REV-1711-01 R2): dipanggil DI DALAM transaksi yang sama
+    sesaat SEBELUM commit dengan lock baris job (guard_commit) — update
+    ownership-changing pihak lain ter-serialisasi terhadap commit unit
+    (window check-to-commit tertutup), atau unit di-rollback.
     """
     from adapters.routeros.base import RouterContext
     from adapters.routeros.factory import active_adapter_name, active_routeros_adapter
+    from django.db import transaction as _transaction
 
     ctx = RouterContext(
         router_id=str(router.id),
@@ -1332,22 +1374,26 @@ def run_discovery(router: Router, ownership_guard=None) -> dict:
         credential_ref=router.credential_ref,
     )
     adapter = active_routeros_adapter()
-    with tenant_scope(router.tenant_id):
+    with tenant_scope(router.tenant_id), _transaction.atomic():
         if ownership_guard is not None:
             ownership_guard()
         snapshot = DiscoverySnapshot.objects.create(tenant_id=router.tenant_id, router=router)
+        if commit_guard is not None:
+            commit_guard()
     try:
         accounts = adapter.list_accounts(ctx)  # I/O — di luar transaksi DB
     except Exception:
-        with tenant_scope(router.tenant_id):
+        with tenant_scope(router.tenant_id), _transaction.atomic():
             if ownership_guard is not None:
                 ownership_guard()
             snapshot.status = DiscoverySnapshot.Status.FAILED
             snapshot.finished_at = timezone.now()
             snapshot.save(update_fields=["status", "finished_at"])
+            if commit_guard is not None:
+                commit_guard()
         raise
     count = 0
-    with tenant_scope(router.tenant_id):
+    with tenant_scope(router.tenant_id), _transaction.atomic():
         if ownership_guard is not None:
             ownership_guard()
         for account in accounts:
@@ -1373,11 +1419,13 @@ def run_discovery(router: Router, ownership_guard=None) -> dict:
         MigrationSession.objects.filter(router=router, state="pending_discovery").update(
             snapshot=snapshot, state="discovered"
         )
+        if commit_guard is not None:
+            commit_guard()
     # Sampel kesehatan pertama (source jujur sesuai adapter aktif).
     from domains.network.models import RouterHealthSample
 
     health = adapter.read_health(ctx)  # I/O — di luar transaksi DB
-    with tenant_scope(router.tenant_id):
+    with tenant_scope(router.tenant_id), _transaction.atomic():
         if ownership_guard is not None:
             ownership_guard()
         RouterHealthSample.objects.create(
@@ -1390,4 +1438,6 @@ def run_discovery(router: Router, ownership_guard=None) -> dict:
             uptime_s=health.get("uptime_s"),
             source=active_adapter_name(),
         )
+        if commit_guard is not None:
+            commit_guard()
     return {"snapshot_id": str(snapshot.id), "accounts": count}

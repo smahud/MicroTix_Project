@@ -19,8 +19,8 @@ Production Beta tetap **NOT_READY**. PA-006/task0010 tetap accepted/integrated.
 | Executor tested ancestor | `7118cce0db330acb02be0b3b774b1b1628d55d7a`; `git diff 7118cce bd37c14 -- backend/ apps/` kosong |
 | Local branch | `review/0020-controller-20261117`, dibuat dari exact candidate pada checkout baru yang bersih; tidak ada pekerjaan pengguna ditimpa |
 | Decision ref | `review/0020-controller-20261117`; target PR kandidat, publikasi/readback ada pada §8 dan `publication.json` |
-| Packet reopened | [0020-job-lifecycle-authority.md](../../task/0020-job-lifecycle-authority.md) |
-| Executor input | [Report](../orchestrator/20261117T010218Z-0020-job-lifecycle-authority.md), [internal reviewer](../reviewer/20261117T010218Z-0020-job-lifecycle-independent.md) |
+| Packet reopened | [0020-job-lifecycle-authority_done.md](../../task/0020-job-lifecycle-authority_done.md) |
+| Executor input | [Report](../orchestrator/20261117T010218Z-0020-job-lifecycle-authority_done.md), [internal reviewer](../reviewer/20261117T010218Z-0020-job-lifecycle-independent.md) |
 | Controller evidence | [Directory](../controller-evidence/20261117T134100Z-0020-review/), [summary](../controller-evidence/20261117T134100Z-0020-review/review-results.json) |
 
 AGENTS, CONTRACT, panduan tetap/default reviewer dan packet dibaca. Authority

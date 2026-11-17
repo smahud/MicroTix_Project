@@ -10,7 +10,7 @@ from __future__ import annotations
 from django.core.exceptions import ImproperlyConfigured
 
 from adapters.routeros.base import RouterOsAdapter
-from adapters.routeros.simulator import RouterOsSimulator
+from adapters.routeros import simulator
 
 _ALLOWED = ("simulator", "api_ssl")
 
@@ -21,7 +21,10 @@ def active_routeros_adapter() -> RouterOsAdapter:
 
     choice = getattr(settings, "MT_ROUTEROS_ADAPTER", "simulator")
     if choice == "simulator":
-        return RouterOsSimulator()
+        # Resolve atribut modul secara dinamis: penggantian kelas pada
+        # adapters.routeros.simulator (mis. probe uji) dihormati factory —
+        # pilihan adapter tetap tunggal, tidak ada jalur bypass (REV-1711-08 R2).
+        return simulator.RouterOsSimulator()
     if choice == "api_ssl":
         from adapters.routeros.apiclient import ApiSslAdapter
 

@@ -14,7 +14,7 @@ reviewer. Only this report was written. Parent owns integration/publication.
 
 Applicable instructions read: AGENTS.md, CONTRACT §§5–6A/10–13,
 task/0000-start-here.md, docs/MASTER_PROMPT_REVIEWER.md,
-report/LATEST_HANDOFF.md, task/0020-job-lifecycle-authority.md and controller R1
+report/LATEST_HANDOFF.md, task/0020-job-lifecycle-authority_done.md and controller R1
 `report/controller/20261117T134100Z-0020-job-lifecycle-review.md`.
 Requirements remain those in the existing packet, including J20-A01–A09;
 this state review introduces no normative requirement or new finding ID.

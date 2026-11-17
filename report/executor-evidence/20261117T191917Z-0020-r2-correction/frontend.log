@@ -1,0 +1,105 @@
+
+ RUN  v2.1.9 /home/z/my-project/MicroTix_Project/apps/web
+
+stderr | src/features/billing/BillingPage.test.tsx > BillingPage (U09) > tab Invoice menampilkan invoice mock + tautan PDF + strip aging
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/features/billing/BillingPage.test.tsx (4 tests) 4870ms
+   ✓ BillingPage (U09) > tab Invoice menampilkan invoice mock + tautan PDF + strip aging 804ms
+   ✓ BillingPage (U09) > tab Pengajuan: catat penerimaan tunai → verifikasi dengan alokasi → banner U10 1960ms
+   ✓ BillingPage (U09) > filter periode menyaring invoice (server-side via adapter) 880ms
+   ✓ ActivationPage (U10) > menampilkan kandidat suspended dengan kelayakan; aktivasi → daftar kosong 1224ms
+stderr | src/features/routers/RouterNewPage.test.tsx > RouterNewPage (U05 — protokol & versi RouterOS) > menampilkan pilihan versi + protokol; WireGuard & SSTP aktif, L2TP/OpenVPN direncanakan
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/features/routers/RouterNewPage.test.tsx (6 tests) 1532ms
+   ✓ RouterNewPage (U05 — protokol & versi RouterOS) > RouterOS v6 + SSTP dapat dilanjutkan (Phase-2: v6 via SSTP) 405ms
+   ✓ RouterNewPage (U05 — protokol & versi RouterOS) > submit v7 + WireGuard valid → lanjut ke Prasyarat dengan ringkasan terpilih 359ms
+   ✓ RouterNewPage (U05 — protokol & versi RouterOS) > langkah Skrip menampilkan baris endpoint gateway (ROUTEROS.md §2.2) 534ms
+stderr | src/api/api.test.tsx > StatusBadge terhadap kontrak aksesibilitas > render label + ikon — warna bukan satu-satunya penanda
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/api/api.test.tsx (12 tests) 9247ms
+   ✓ MockApiClient > CSV validasi menandai baris tanpa username 802ms
+   ✓ MockApiClient > reauth berhasil memberi jendela 10 menit, cutover lalu diterima 412ms
+   ✓ MockApiClient > job berjalan lalu selesai (polling state) 7245ms
+   ✓ MockApiClient > pembayaran platform: approve tanpa alasan ok, reject wajib alasan 412ms
+ ✓ src/api/billing-adapter.test.tsx (7 tests) 7158ms
+   ✓ MockApiClient billing (U09) > listInvoices memfilter state dan periode 972ms
+   ✓ MockApiClient billing (U09) > record → submitted; tunai tanpa bukti ok; transfer tanpa bukti ditolak 644ms
+   ✓ MockApiClient billing (U09) > verify: alokasi penuh melunasi invoice + kwitansi terbit; kredit bila sisa 1284ms
+   ✓ MockApiClient billing (U09) > verify dengan alokasi kosong → kredit penuh (kwitansi tetap terbit) 965ms
+   ✓ MockApiClient billing (U09) > alokasi melebihi pembayaran / sisa tagihan → conflict 964ms
+   ✓ MockApiClient billing (U09) > keputusan ganda → conflict; tolak wajib alasan 1124ms
+   ✓ MockApiClient billing (U09) > akun suspended diaktifkan → tidak lagi muncul di daftar suspended 1203ms
+ ✓ src/lib/billing-eligibility.test.ts (7 tests) 12ms
+ ✓ src/lib/statuses.test.ts (8 tests) 4ms
+ ✓ src/lib/format.test.ts (11 tests) 16ms
+ ✓ src/permissions/release-flags.test.ts (6 tests) 16ms
+ ✓ src/permissions/permissions.test.ts (6 tests) 3ms
+
+ Test Files  9 passed (9)
+      Tests  67 passed (67)
+   Start at  19:44:50
+   Duration  28.50s (transform 389ms, setup 671ms, collect 820ms, tests 22.86s, environment 2.69s, prepare 469ms)
+
+Keys used (literal+expanded): 1063
+id catalog: 1063; en catalog: 1063
+Missing in id: 0
+Missing in en: 0
+Extra in id (unused): 0
+Placeholder parity: OK
+Identical id/en (info): 54
+vite v5.4.21 building for production...
+transforming...
+✓ 248 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                   0.67 kB │ gzip:  0.34 kB
+dist/assets/landing-BPttT3G6.css                  3.25 kB │ gzip:  0.90 kB
+dist/assets/index-C4AsWxvW.css                   27.05 kB │ gzip:  5.45 kB
+dist/assets/PageHeader-0ELm6puf.js                0.75 kB │ gzip:  0.37 kB │ map:   2.25 kB
+dist/assets/billing-eligibility-CjWL7FBs.js       0.93 kB │ gzip:  0.52 kB │ map:   5.52 kB
+dist/assets/MetricCard-CpyXSOFo.js                1.09 kB │ gzip:  0.57 kB │ map:   3.20 kB
+dist/assets/Button-CgxRdzdM.js                    1.19 kB │ gzip:  0.56 kB │ map:   4.06 kB
+dist/assets/Notices-Bh4EUeTN.js                   1.51 kB │ gzip:  0.74 kB │ map:   4.65 kB
+dist/assets/RecoverPage-DxJYKeQu.js               1.74 kB │ gzip:  0.84 kB │ map:   4.58 kB
+dist/assets/JobProgress-7MeFazRf.js               1.75 kB │ gzip:  0.86 kB │ map:   5.05 kB
+dist/assets/VerifyPage-iGiuC3tv.js                1.82 kB │ gzip:  0.82 kB │ map:   4.67 kB
+dist/assets/Dialog-Cezl5uQl.js                    1.96 kB │ gzip:  0.94 kB │ map:   6.95 kB
+dist/assets/PackagesPage-BH8_jO_r.js              2.40 kB │ gzip:  1.10 kB │ map:   6.07 kB
+dist/assets/Input-9NmovyEm.js                     2.47 kB │ gzip:  0.95 kB │ map:   8.66 kB
+dist/assets/DataTable-lWv9bt1f.js                 2.52 kB │ gzip:  1.11 kB │ map:   8.95 kB
+dist/assets/format-DV7f3TbA.js                    2.52 kB │ gzip:  0.95 kB │ map:   8.78 kB
+dist/assets/JobsPage-D8Oz7SEE.js                  2.59 kB │ gzip:  1.16 kB │ map:   6.95 kB
+dist/assets/ChartWithTable-cC0ETu51.js            2.84 kB │ gzip:  1.25 kB │ map:   8.47 kB
+dist/assets/RoutersListPage-silc6ngi.js           3.42 kB │ gzip:  1.27 kB │ map:   8.46 kB
+dist/assets/LoginPage-BhPK8c-Z.js                 3.60 kB │ gzip:  1.36 kB │ map:  10.64 kB
+dist/assets/StatusBadge-jUHY2TqT.js               3.68 kB │ gzip:  1.25 kB │ map:  11.85 kB
+dist/assets/DataParts-DeqZnfNj.js                 3.94 kB │ gzip:  1.26 kB │ map:  10.31 kB
+dist/assets/RegisterPage-B25PD-6Q.js              4.18 kB │ gzip:  1.67 kB │ map:  11.91 kB
+dist/assets/JobDetailPage-DupL8AGz.js             4.35 kB │ gzip:  1.74 kB │ map:  12.16 kB
+dist/assets/Landing-irS4_bLz.js                   4.69 kB │ gzip:  1.55 kB │ map:  11.75 kB
+dist/assets/MonitoringPage-DCNLwdSr.js            5.36 kB │ gzip:  2.01 kB │ map:  14.44 kB
+dist/assets/AdminSubscriptionsPage-ChF8jc0L.js    5.74 kB │ gzip:  2.09 kB │ map:  16.47 kB
+dist/assets/BackupsPage-CbKm-lMj.js               6.44 kB │ gzip:  2.12 kB │ map:  16.49 kB
+dist/assets/ImportCsvPage-CS3F6DAl.js             6.72 kB │ gzip:  2.39 kB │ map:  19.23 kB
+dist/assets/ActivationPage-BBhOzssW.js            7.63 kB │ gzip:  2.79 kB │ map:  24.12 kB
+dist/assets/RadiusPage-BAG1Dcla.js                8.56 kB │ gzip:  2.98 kB │ map:  23.43 kB
+dist/assets/OverviewPage-KIAcCqkB.js              9.50 kB │ gzip:  3.06 kB │ map:  26.06 kB
+dist/assets/SettingsPage-XK4FS1iI.js              9.90 kB │ gzip:  2.89 kB │ map:  26.96 kB
+dist/assets/AppShell-ChViYLgZ.js                 10.12 kB │ gzip:  3.06 kB │ map:  27.95 kB
+dist/assets/CustomerDetailPage-Cr8ZmWuY.js       10.45 kB │ gzip:  3.20 kB │ map:  30.68 kB
+dist/assets/CustomersPage-C4GhZqY4.js            11.20 kB │ gzip:  4.00 kB │ map:  33.40 kB
+dist/assets/RouterDetailPage-gDoM9mYK.js         11.37 kB │ gzip:  3.24 kB │ map:  30.35 kB
+dist/assets/RouterNewPage-B41Oxhz9.js            11.51 kB │ gzip:  3.29 kB │ map:  32.16 kB
+dist/assets/ImportRouterPage-DEPdCllG.js         12.87 kB │ gzip:  3.84 kB │ map:  36.43 kB
+dist/assets/BillingPage-DjUhXL1f.js              17.67 kB │ gzip:  5.56 kB │ map:  56.99 kB
+dist/assets/query-zj4WsKf1.js                    39.18 kB │ gzip: 12.06 kB │ map: 229.57 kB
+dist/assets/intl-BEGNJp6O.js                     60.77 kB │ gzip: 17.43 kB │ map: 282.24 kB
+dist/assets/index-rcjx7vAU.js                   150.54 kB │ gzip: 45.05 kB │ map: 173.41 kB
+dist/assets/vendor-C7nvCFGp.js                  164.32 kB │ gzip: 53.64 kB │ map: 707.67 kB
+✓ built in 2.02s

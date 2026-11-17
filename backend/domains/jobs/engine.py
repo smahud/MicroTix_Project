@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import threading
 import uuid
 from contextlib import contextmanager
 from dataclasses import dataclass, field
@@ -216,22 +217,56 @@ class JobContext:
                 f"job {self.job.id}: guard ownership gagal pada unit domain (REV-1711-01)"
             )
 
+    def guard_commit(self) -> None:
+        """Guard ownership TERKUNCI pada baris job — REV-1711-01 (R2).
+
+        Dipanggil DI DALAM transaksi unit sesaat SEBELUM commit: SELECT ...
+        FOR UPDATE pada baris job di koneksi/transaksi unit yang sama, lalu
+        validasi segar token+epoch+state non-terminal+lease masih berlaku.
+        Dengan lock baris ini, update ownership-changing (reconcile/cancel/
+        transfer lease) milik pihak lain ter-serialisasi terhadap commit unit:
+        transfer tidak bisa menyelinap di antara guard dan commit (window
+        check-to-commit tertutup), atau unit kalah dan di-rollback. Ini bukan
+        SELECT polos lain — lock dipegang sampai unit commit/rollback.
+        """
+        row = (
+            Job.objects.select_for_update()
+            .filter(id=self.job.id)
+            .values_list("lease_token", "lease_epoch", "state", "lease_expires_at")
+            .first()
+        )
+        owned = (
+            row is not None
+            and row[0] == self.job.lease_token
+            and row[1] == self.job.lease_epoch
+            and row[2] not in TERMINAL_STATES
+            and row[3] is not None
+            and row[3] > timezone.now()
+        )
+        if not owned:
+            self.lost = True
+            raise OwnershipLost(
+                f"job {self.job.id}: guard commit terkunci gagal (lease/state berubah)"
+            )
+
     @contextmanager
     def scope(self):
         """Unit transaksi tenant pendek (RLS aktif) + guard ownership.
 
-        Guard dipanggil DI DALAM transaksi: (1) sebelum yield — cek segar
-        sebelum unit mulai; (2) setelah yield — cek terakhir sebelum commit
-        sehingga kehilangan kepemilikan yang terjadi selama unit membatalkan
-        commit domain (bukan hanya envelope CAS di akhir). I/O jaringan TETAP
+        SATU transaksi nyata (transaction.atomic): (1) guard segar sebelum
+        yield; (2) guard TERKUNCI (FOR UPDATE, guard_commit) sesaat sebelum
+        commit — kehilangan kepemilikan yang terjadi selama unit membatalkan
+        commit domain, dan update ownership-changing pihak lain ter-serialisasi
+        terhadap commit unit ini (REV-1711-01 R2: window check-to-commit
+        tertutup lock baris job; bukan SELECT polos lain). I/O jaringan TETAP
         di luar unit ini; handler memanggil scope() per unit DB.
         """
         if self.lost:
             raise OwnershipLost(f"job {self.job.id}: lease hilang sebelum unit DB")
-        with tenant_scope(self.job.tenant_id):
+        with tenant_scope(self.job.tenant_id), transaction.atomic():
             self.assert_owned()
             yield
-            self.assert_owned()
+            self.guard_commit()
         if self.lost:
             raise OwnershipLost(f"job {self.job.id}: lease hilang saat unit DB")
 
@@ -552,6 +587,73 @@ def check_current_authority(job: Job, payload: dict[str, Any] | None = None) -> 
 # Eksekusi (A01–A05/A07)
 
 
+def _heartbeat_watchdog(ctx: JobContext, stop: threading.Event, done: threading.Event) -> None:
+    """Perpanjang lease selama fase I/O handler yang panjang (REV-1711-09 R2).
+
+    Satu pembaruan lease nyata memakai HEARTBEAT_S (sebelumnya dideklarasikan
+    tetapi tidak dipakai): pembaruan BERSYARAT — hanya memperpanjang lease yang
+    MASIH berlaku saat pembaruan berjalan, tidak pernah menghidupkan kembali
+    lease kedaluwarsa, sehingga keputusan reconcile/pindah kepemilikan yang sah
+    tidak tertimpa pembaruan lama (fence tetap CAS token+epoch di klausa
+    WHERE). 0 baris (hilang kepemilikan/lease habis) atau kegagalan koneksi →
+    berhenti jujur; thread tidak menahan transaksi/lock melintasi I/O.
+    Koneksi thread-nya sendiri ditutup saat keluar (tidak ada sesi menggantung).
+    """
+    from django.db import connections
+
+    try:
+        while not stop.wait(HEARTBEAT_S):
+            try:
+                rows = (
+                    Job.objects.filter(
+                        id=ctx.job.id,
+                        lease_token=ctx.job.lease_token,
+                        lease_epoch=ctx.job.lease_epoch,
+                        lease_expires_at__gt=timezone.now(),
+                    )
+                    .exclude(state__in=TERMINAL_STATES)
+                    .update(
+                        lease_expires_at=timezone.now()
+                        + timezone.timedelta(seconds=LEASE_S)
+                    )
+                )
+                if not rows:
+                    break
+            except Exception:
+                break
+    finally:
+        try:
+            connections.close_all()
+        except Exception:  # pragma: no cover - koneksi sudah mati saat keluar
+            pass
+    done.set()
+
+
+@contextmanager
+def _heartbeat_during_io(ctx: JobContext):
+    """Watchdog heartbeat untuk SATU fase I/O handler (execute/verify).
+
+    Thread daemon dibatasi: stop + join di akhir fase — participant terkumpul
+    dan terhenti, tidak ada thread menggantung melintasi I/O (A02/A08).
+    Pembaruan berjalan di koneksi thread-nya sendiri (transaksi pendek per
+    pembaruan), terlihat observer independen.
+    """
+    stop = threading.Event()
+    done = threading.Event()
+    worker = threading.Thread(
+        target=_heartbeat_watchdog,
+        args=(ctx, stop, done),
+        name=f"heartbeat-{ctx.job.id}",
+        daemon=True,
+    )
+    worker.start()
+    try:
+        yield
+    finally:
+        stop.set()
+        worker.join(timeout=5)
+
+
 def run_claimed(job: Job, *, stop_check: Callable[[], bool] | None = None) -> Job:
     """Jalankan satu job ter-claim: authority → preflight → execute → verify.
 
@@ -678,6 +780,36 @@ def run_claimed(job: Job, *, stop_check: Callable[[], bool] | None = None) -> Jo
                     raise OwnershipLost(f"job {job.id}: sender busy")
                 job.refresh_from_db()
                 return job
+            # REV-1711-04 (R2): recheck DURABLE DI BAWAH kunci sender yang baru
+            # dipegang. SELECT pertama di atas tidak menutup jendela sampai
+            # acquisition (predecessor bisa menjadi uncertain di antara keduanya
+            # → tetap menahan send); dan lock advisory mati bersama SESI DB,
+            # bukan bersama worker: job lain pada router ini yang masih
+            # EXECUTING/VERIFYING dengan lease berlaku = penulis yang mungkin
+            # masih hidup (sesi PG terputus ≠ writer berhenti). State DB bertahan
+            # melewati proses, jadi cek ini tahan kehilangan sesi. Keduanya
+            # menahan send sampai terbukti aman; router lain tetap maju.
+            held = (
+                Job.objects.filter(router_id=job.router_id)
+                .exclude(id=job.id)
+                .filter(
+                    Q(state__in=[JobState.UNCERTAIN, JobState.RECOVERY_REQUIRED])
+                    | Q(state__in=[JobState.EXECUTING, JobState.VERIFYING])
+                )
+                .exists()
+            )
+            if held:
+                release_router_sender(job.router_id)
+                if not _fenced_update(
+                    job, [JobState.PREFLIGHT], state=JobState.RETRY_WAIT,
+                    error_code="router_outcome_unknown", retryable=True,
+                    available_at=dj_timezone.now() + dj_timezone.timedelta(seconds=ROUTER_BUSY_RETRY_S),
+                    attempt=F("attempt") - 1, lease_token=None, lease_expires_at=None,
+                    updated_at=dj_timezone.now(),
+                ):
+                    raise OwnershipLost(f"job {job.id}: router held")
+                job.refresh_from_db()
+                return job
             sender_router_id = job.router_id
 
         # --- execute: effect_state=maybe ATOMIK dengan entering executing ---
@@ -695,7 +827,8 @@ def run_claimed(job: Job, *, stop_check: Callable[[], bool] | None = None) -> Jo
                 # Heartbeat gagal = lease sudah berpindah/dicabut: berhenti
                 # sebelum efek apa pun (A01).
                 raise OwnershipLost(f"job {job.id}: heartbeat sebelum execute")
-            result = handler.execute(ctx) or {}
+            with _heartbeat_during_io(ctx):
+                result = handler.execute(ctx) or {}
         except DrainRequested:
             return _hold_for_drain(job, mid_effect=True)
         except OwnershipLost:
@@ -721,7 +854,8 @@ def run_claimed(job: Job, *, stop_check: Callable[[], bool] | None = None) -> Jo
             ctx.heartbeat()
             if ctx.lost:
                 raise OwnershipLost(f"job {job.id}: heartbeat sebelum verify")
-            result = handler.verify(ctx) or result
+            with _heartbeat_during_io(ctx):
+                result = handler.verify(ctx) or result
             if isinstance(result, dict) and result.get("ok") is False:
                 # Kontrak verifier eksplisit: hasil negatif ≠ sukses (A07).
                 raise JobError(
@@ -1077,7 +1211,11 @@ def _verify_only(job: Job) -> Job:
         with tenant_scope(job.tenant_id):
             detail = getattr(job, "detail", None) or JobDetail.objects.get(job_id=job.id)
         ctx = JobContext(job=job, payload=detail.payload or {})
-        result = handler.verify(ctx) or {}
+        # Watchdog heartbeat yang sama dengan run_claimed (REV-R2C-04):
+        # verify readback yang panjang tetap memperbarui lease; pembaruan
+        # tetap bersyarat sehingga tidak menghidupkan lease kedaluwarsa.
+        with _heartbeat_during_io(ctx):
+            result = handler.verify(ctx) or {}
         if isinstance(result, dict) and result.get("ok") is False:
             raise JobError(code="verification_failed", retryable=False,
                            message=str(result.get("reason") or "verifier negatif"))
