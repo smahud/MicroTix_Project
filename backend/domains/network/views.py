@@ -198,7 +198,10 @@ class RouterReleaseView(TenantApiView):
 
 
 class RouterReplaceView(TenantApiView):
-    required_permission = "routers.enroll"
+    # Penggantian melepaskan router lama → kewenangan routers.release
+    # (ARCHITECTURE §5 "Release/replace router … routers.release"), bukan
+    # enroll saja.
+    required_permission = "routers.release"
 
     @idempotent("router_replace", resource_from=lambda request, kwargs: str(kwargs.get("router_id", "")))
     @extend_schema(summary="Ganti perangkat — lepas lama + draft enrollment baru")

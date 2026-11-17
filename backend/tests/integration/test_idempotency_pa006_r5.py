@@ -400,6 +400,11 @@ class TestPrefixTenantSpellingMigration:
             t.start()
         for t in threads:
             t.join(timeout=45)
+        # REV-1611-TEST-01 (P3, task0020/A09): kedua partisipan wajib BENAR-BENAR
+        # selesai dan kedua hasil terisi — bukan hanya yang teramati pertama.
+        for t in threads:
+            assert not t.is_alive(), "thread peserta harus selesai (bounded join)"
+        assert set(results.keys()) == {"A", "B"}, results
         for tag, res in results.items():
             assert "exception" not in res, (tag, res)
             assert res["status"] == 201

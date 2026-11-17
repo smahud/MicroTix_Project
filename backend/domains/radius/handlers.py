@@ -1,4 +1,4 @@
-"""Handler job radius_cutover_step — mesin status B0–B6 (RADIUS.md §10.2).
+"""Handler job radius_cutover_step — mesin state B0–B6 (RADIUS.md §10.2).
 
 PENTING (jujur): B3 canary memerlukan jendela observasi NYATA 1800 detik dan
 B4 shadow 86400 detik — job TIDAK mempercepat gate runtime. Run berhenti pada
@@ -6,6 +6,11 @@ state pending_observation dengan evidence {window_s, started_at}; job
 berikutnya SETELAH jendela berlalu melanjutkan. B1 parity adalah auth sintetis
 via facade (bukan bukti login NAS produksi). B5 pada simulator menggunakan
 metode 'disable' teruji-simulator — bukan verified_lab.
+
+PA-002/task0020: kerja DB per fase berjalan dalam unit transaksi tenant
+pendek (ctx.scope()); APPLY/VERIFY adapter (I/O jaringan) pada B2/B5/B6
+berada DI LUAR unit — tidak ada transaksi/lock DB yang tertahan melintasi
+send/readback. Jendela observasi B3/B4 tidak diberi deadline pendek.
 """
 from __future__ import annotations
 
@@ -26,6 +31,11 @@ _PHASES_ORDER = [
     CutoverRun.Phase.B4,
     CutoverRun.Phase.B5,
 ]
+
+# Fase APPLY/VERIFY adapter (B2/B5/B6) melakukan I/O jaringan — unit DB
+# dikelola internal oleh masing-masing fungsi agar send/readback berada di
+# luar transaksi (PA-002).
+_IO_PHASES = frozenset({CutoverRun.Phase.B2, CutoverRun.Phase.B5})
 
 
 def _router_ctx(router) -> "object":
@@ -50,102 +60,123 @@ def _save(run: CutoverRun) -> None:
     run.save(update_fields=["phase", "state", "evidence", "updated_at"])
 
 
-def _b0_preflight(run: CutoverRun, ctx: JobContext) -> None:
+def _b0_preflight(run: CutoverRun, ctx: JobContext, router: Router) -> None:
     """Preflight B0: mode managed, enrolled, NAS terproyeksi, kredensial siap,
-    backup valid (ROUTEROS.md §5). Gagal jujur dengan alasan spesifik."""
-    router = run.router
+    backup valid (ROUTEROS.md §5). Gagal jujur dengan alasan spesifik.
+    Evidence kegagalan di-COMMIT dalam unit scope, JobError dilempar SETELAH
+    unit selesai — kegagalan tetap terlihat jujur (PA-002)."""
     ev = _ev(run)
     reasons: list[str] = []
-    if router.mode != Router.Mode.MANAGED:
-        reasons.append("router_not_managed")
-    if not router.tunnel_ip or not router.credential_ref:
-        reasons.append("router_not_enrolled")
-    from domains.radius.projection import nas_state
+    error: JobError | None = None
+    with ctx.scope():
+        if router.mode != Router.Mode.MANAGED:
+            reasons.append("router_not_managed")
+        if not router.tunnel_ip or not router.credential_ref:
+            reasons.append("router_not_enrolled")
+        from domains.radius.projection import nas_state
 
-    nas = nas_state(router)
-    if nas is None:
-        reasons.append("nas_not_projected")
-    elif nas[2] != nas[3]:
-        reasons.append("nas_revision_drift")
-    from domains.customers.models import AccessAccount
+        nas = nas_state(router)
+        if nas is None:
+            reasons.append("nas_not_projected")
+        elif nas[2] != nas[3]:
+            reasons.append("nas_revision_drift")
+        from domains.customers.models import AccessAccount
 
-    not_ready = AccessAccount.objects.filter(tenant_id=run.tenant_id, credential_state="unknown").count()
-    if not_ready:
-        reasons.append(f"credential_unknown:{not_ready}")
-    from domains.backups.models import BackupArtifact
+        not_ready = AccessAccount.objects.filter(tenant_id=run.tenant_id, credential_state="unknown").count()
+        if not_ready:
+            reasons.append(f"credential_unknown:{not_ready}")
+        from domains.backups.models import BackupArtifact
 
-    if not BackupArtifact.objects.filter(tenant_id=run.tenant_id, router=router, state="committed").exists():
-        reasons.append("no_valid_backup")
-    ev["checks"] = reasons or ["pass"]
-    if reasons:
-        run.state = CutoverRun.State.FAILED
-        _save(run)
-        raise JobError(code="cutover_preflight_blocked", retryable=False, message=";".join(reasons))
+        if not BackupArtifact.objects.filter(tenant_id=run.tenant_id, router=router, state="committed").exists():
+            reasons.append("no_valid_backup")
+        ev["checks"] = reasons or ["pass"]
+        if reasons:
+            run.state = CutoverRun.State.FAILED
+            _save(run)
+            error = JobError(code="cutover_preflight_blocked", retryable=False, message=";".join(reasons))
+    if error:
+        raise error
     ctx.progress(phase="cutover_b0", done=1, total=6)
 
 
-def _b1_parity(run: CutoverRun, ctx: JobContext) -> None:
-    """Parity B1: auth sintetis via facade dengan konteks NAS router ini."""
+def _b1_parity(run: CutoverRun, ctx: JobContext, router: Router) -> None:
+    """Parity B1: auth sintetis via facade dengan konteks NAS router ini.
+    DB-only dalam unit scope; kegagalan di-commit lalu dilempar setelahnya."""
     from domains.customers.models import AccessAccount
     from domains.radius.projection import nas_state
 
-    nas = nas_state(run.router)
     ev = _ev(run)
     accepted = rejected = 0
-    from django.db import connection
+    error: JobError | None = None
+    with ctx.scope():
+        nas = nas_state(router)
+        from django.db import connection
 
-    with connection.cursor() as cur:
-        for account in (
-            AccessAccount.objects.filter(tenant_id=run.tenant_id).order_by("username")[:50]
-        ):
-            cur.execute(
-                "SELECT attribute, value FROM radius.authorize_check(%s, %s)",
-                [nas[0], account.username],
-            )
-            rows = dict(cur.fetchall())
-            if "Auth-Type" in rows:
-                rejected += 1
-            elif "Cleartext-Password" in rows:
-                accepted += 1
-    ev.update(
-        {
-            "synthetic_auth": {"accepted": accepted, "rejected": rejected},
-            "note": "parity level facade; bukan bukti login NAS produksi (§10.2)",
-        }
-    )
-    if accepted + rejected == 0:
-        run.state = CutoverRun.State.FAILED
-        _save(run)
-        raise JobError(code="cutover_parity_no_accounts", retryable=False, message="tidak ada akun terproyeksi")
+        with connection.cursor() as cur:
+            for account in (
+                AccessAccount.objects.filter(tenant_id=run.tenant_id).order_by("username")[:50]
+            ):
+                cur.execute(
+                    "SELECT attribute, value FROM radius.authorize_check(%s, %s)",
+                    [nas[0], account.username],
+                )
+                rows = dict(cur.fetchall())
+                if "Auth-Type" in rows:
+                    rejected += 1
+                elif "Cleartext-Password" in rows:
+                    accepted += 1
+        ev.update(
+            {
+                "synthetic_auth": {"accepted": accepted, "rejected": rejected},
+                "note": "parity level facade; bukan bukti login NAS produksi (§10.2)",
+            }
+        )
+        if accepted + rejected == 0:
+            run.state = CutoverRun.State.FAILED
+            _save(run)
+            error = JobError(code="cutover_parity_no_accounts", retryable=False, message="tidak ada akun terproyeksi")
+    if error:
+        raise error
     ctx.progress(phase="cutover_b1", done=2, total=6)
 
 
-def _b2_install(run: CutoverRun, ctx: JobContext) -> None:
-    """Install B2: klien RADIUS + rule sempit via adapter aktif (default simulator)."""
+def _b2_install(run: CutoverRun, ctx: JobContext, router: Router) -> None:
+    """Install B2: klien RADIUS + rule sempit via adapter aktif (default simulator).
+
+    Unit DB (nas read, evidence commit) terpisah dari APPLY/VERIFY adapter
+    yang berjalan di luar transaksi (PA-002).
+    """
     from adapters.routeros.factory import active_routeros_adapter
 
     from domains.radius.projection import nas_state
     from domains.radius.services import radius_primary
 
     adapter = active_routeros_adapter()
-    nas = nas_state(run.router)
-    plan = adapter.install_radius_client(
-        _router_ctx(run.router),
-        {"primary": radius_primary(), "secret": nas[1], "tunnel_ip": str(run.router.tunnel_ip)},
-    )
-    adapter.apply_action(_router_ctx(run.router), plan)  # PLAN → APPLY → VERIFY
-    readback = adapter.verify_action(_router_ctx(run.router), plan)
+    with ctx.scope():
+        nas = nas_state(router)
+        # PLAN murni (tanpa I/O): boleh dalam unit DB.
+        plan = adapter.install_radius_client(
+            _router_ctx(router),
+            {"primary": radius_primary(), "secret": nas[1], "tunnel_ip": str(router.tunnel_ip)},
+        )
+    # APPLY → VERIFY = I/O jaringan — DI LUAR transaksi DB.
+    adapter.apply_action(_router_ctx(router), plan)
+    readback = adapter.verify_action(_router_ctx(router), plan)
     ok = bool(readback.get("verified", False))
-    _ev(ev_run := run).update(
-        {
-            "plan_fingerprint": plan.changes[0].fingerprint if plan.changes else "",
-            "readback_ok": ok,
-        }
-    )
-    if not ok:
-        run.state = CutoverRun.State.FAILED
-        _save(run)
-        raise JobError(code="cutover_install_readback_failed", retryable=False, message="readback gagal")
+    error: JobError | None = None
+    with ctx.scope():
+        _ev(run).update(
+            {
+                "plan_fingerprint": plan.changes[0].fingerprint if plan.changes else "",
+                "readback_ok": ok,
+            }
+        )
+        if not ok:
+            run.state = CutoverRun.State.FAILED
+            _save(run)
+            error = JobError(code="cutover_install_readback_failed", retryable=False, message="readback gagal")
+    if error:
+        raise error
     ctx.progress(phase="cutover_b2", done=3, total=6)
 
 
@@ -175,55 +206,68 @@ def _observation_pending(run: CutoverRun, window_s: int) -> bool:
     return False
 
 
-def _b3_canary(run: CutoverRun, ctx: JobContext) -> None:
-    if _observation_pending(run, CANARY_WINDOW_S):
-        return
-    _ev(run).update(
-        {"canary_result": "simulator_ok", "note": "login canary nyata menunggu NAS produksi"}
-    )
+def _b3_canary(run: CutoverRun, ctx: JobContext, router: Router) -> None:
+    with ctx.scope():
+        if _observation_pending(run, CANARY_WINDOW_S):
+            return
+        _ev(run).update(
+            {"canary_result": "simulator_ok", "note": "login canary nyata menunggu NAS produksi"}
+        )
     ctx.progress(phase="cutover_b3", done=4, total=6)
 
 
-def _b4_shadow(run: CutoverRun, ctx: JobContext) -> None:
-    if _observation_pending(run, SHADOW_WINDOW_S):
-        return
-    _ev(run)["shadow_result"] = "window_elapsed"
+def _b4_shadow(run: CutoverRun, ctx: JobContext, router: Router) -> None:
+    with ctx.scope():
+        if _observation_pending(run, SHADOW_WINDOW_S):
+            return
+        _ev(run)["shadow_result"] = "window_elapsed"
     ctx.progress(phase="cutover_b4", done=5, total=6)
 
 
-def _b5_authoritative(run: CutoverRun, ctx: JobContext) -> None:
+def _b5_authoritative(run: CutoverRun, ctx: JobContext, router: Router) -> None:
+    """B5: AAA authoritative — PLAN dalam unit DB; APPLY/VERIFY adapter di
+    luar transaksi; evidence + mode router commit dalam unit berikutnya."""
     from adapters.routeros.factory import active_adapter_name, active_routeros_adapter
 
     adapter = active_routeros_adapter()
-    plan = adapter.set_aaa(_router_ctx(run.router), {"use_radius": "yes"})
-    adapter.apply_action(_router_ctx(run.router), plan)
-    readback = adapter.verify_action(_router_ctx(run.router), plan)
+    # PLAN murni (tanpa I/O).
+    plan = adapter.set_aaa(_router_ctx(router), {"use_radius": "yes"})
+    # APPLY → VERIFY = I/O jaringan — DI LUAR transaksi DB (PA-002).
+    adapter.apply_action(_router_ctx(router), plan)
+    readback = adapter.verify_action(_router_ctx(router), plan)
     ok = bool(readback.get("verified", False))
-    _ev(run).update({"aaa_readback_ok": ok, "method": f"{active_adapter_name()}_disable"})
-    if not ok:
-        run.state = CutoverRun.State.FAILED
-        _save(run)
-        raise JobError(code="cutover_aaa_readback_failed", retryable=False, message="readback AAA gagal")
-    Router.objects.filter(id=run.router_id, tenant_id=run.tenant_id).update(
-        enforcement_mode=Router.Enforcement.RADIUS_AUTHORITATIVE
-    )
+    error: JobError | None = None
+    with ctx.scope():
+        _ev(run).update({"aaa_readback_ok": ok, "method": f"{active_adapter_name()}_disable"})
+        if not ok:
+            run.state = CutoverRun.State.FAILED
+            _save(run)
+            error = JobError(code="cutover_aaa_readback_failed", retryable=False, message="readback AAA gagal")
+        else:
+            Router.objects.filter(id=run.router_id, tenant_id=run.tenant_id).update(
+                enforcement_mode=Router.Enforcement.RADIUS_AUTHORITATIVE
+            )
+    if error:
+        raise error
     ctx.progress(phase="cutover_b5", done=6, total=6)
 
 
-def _b6_rollback(run: CutoverRun, ctx: JobContext) -> None:
+def _b6_rollback(run: CutoverRun, ctx: JobContext, router: Router) -> None:
     from adapters.routeros.simulator import RouterOsSimulator as SimulatorAdapter
 
     adapter = SimulatorAdapter()
     baseline = run.evidence.get("B2", {})
-    plan = adapter.rollback_radius(_router_ctx(run.router), baseline)
-    adapter.apply_action(_router_ctx(run.router), plan)
-    readback = adapter.verify_action(_router_ctx(run.router), plan)
-    _ev(run)["rollback_readback_ok"] = bool(readback.get("verified", False))
-    Router.objects.filter(id=run.router_id, tenant_id=run.tenant_id).update(
-        enforcement_mode=Router.Enforcement.LOCAL
-    )
-    run.state = CutoverRun.State.ROLLED_BACK
-    _save(run)
+    # PLAN murni; APPLY/VERIFY = I/O di luar transaksi DB.
+    plan = adapter.rollback_radius(_router_ctx(router), baseline)
+    adapter.apply_action(_router_ctx(router), plan)
+    readback = adapter.verify_action(_router_ctx(router), plan)
+    with ctx.scope():
+        _ev(run)["rollback_readback_ok"] = bool(readback.get("verified", False))
+        Router.objects.filter(id=run.router_id, tenant_id=run.tenant_id).update(
+            enforcement_mode=Router.Enforcement.LOCAL
+        )
+        run.state = CutoverRun.State.ROLLED_BACK
+        _save(run)
 
 
 _PHASE_FN = {
@@ -242,12 +286,15 @@ class RadiusCutoverStepHandler(JobHandler):
 
     Interface engine: preflight → execute → verify. Preflight ringan di sini;
     B0 preflight cutover ADALAH bagian dari eksekusi (hasilnya evidence).
+    Router dimuat segar dalam unit tenant; fase DB-only berjalan dalam
+    ctx.scope(), fase adapter (B2/B5/B6) menempatkan APPLY/VERIFY di luar
+    unit DB (PA-002).
     """
 
     kind = "radius_cutover_step"
 
     def preflight(self, ctx: JobContext) -> None:
-        if ctx.job.router is None:
+        if ctx.job.router_id is None:
             raise JobError(code="router_missing", retryable=False, message="job tanpa router")
 
     def execute(self, ctx: JobContext) -> dict:
@@ -258,48 +305,67 @@ class RadiusCutoverStepHandler(JobHandler):
         return result
 
     def verify(self, ctx: JobContext) -> dict:
-        run = (
-            CutoverRun.objects.filter(tenant_id=ctx.job.tenant_id, router=ctx.job.router)
-            .order_by("-created_at")
-            .first()
-        )
-        base = dict(getattr(ctx, "_cutover_result", {}) or {})
-        if run is None:
-            return {**base, "ok": False, "reason": "cutover_run_missing"}
-        # Hasil yang sah: terminal B5, pending observasi, atau rollback.
-        return {
-            **base,
-            "ok": True,
-            "phase": run.phase,
-            "state": run.state,
-            "note": "state cutover tersimpan dengan evidence per fase",
-        }
+        with ctx.scope():
+            run = (
+                CutoverRun.objects.filter(tenant_id=ctx.job.tenant_id, router_id=ctx.job.router_id)
+                .order_by("-created_at")
+                .first()
+            )
+            base = dict(getattr(ctx, "_cutover_result", {}) or {})
+            if run is None:
+                return {**base, "ok": False, "reason": "cutover_run_missing"}
+            # Hasil yang sah: terminal B5, pending observasi, atau rollback.
+            return {
+                **base,
+                "ok": True,
+                "phase": run.phase,
+                "state": run.state,
+                "note": "state cutover tersimpan dengan evidence per fase",
+            }
 
     def _run_phases(self, ctx: JobContext) -> dict:
-        router = ctx.job.router
-        rollback = bool(ctx.payload.get("rollback"))
-        run = (
-            CutoverRun.objects.filter(tenant_id=ctx.job.tenant_id, router=router)
-            .order_by("-created_at")
-            .first()
-        )
-        if rollback:
-            if run is None:
-                raise JobError(code="cutover_no_run", retryable=False, message="tidak ada run untuk rollback")
-            run.phase = CutoverRun.Phase.B6
-            _PHASE_FN[CutoverRun.Phase.B6](run, ctx)
-            return {"phase": run.phase, "state": run.state}
-        if run is None or run.state == CutoverRun.State.FAILED:
-            run = CutoverRun.objects.create(
-                tenant_id=ctx.job.tenant_id, router=router, created_by=ctx.job.actor
+        with ctx.scope():
+            router = (
+                Router.objects.filter(id=ctx.job.router_id).first()
+                if ctx.job.router_id
+                else None
             )
-        if run.state in (CutoverRun.State.AUTHORITATIVE, CutoverRun.State.ROLLED_BACK):
-            raise JobError(
-                code="cutover_terminal", retryable=False, message="run terminal; buat run baru"
+            if router is None:
+                raise JobError(code="router_missing", retryable=False, message="job tanpa router")
+            rollback = bool(ctx.payload.get("rollback"))
+            run = (
+                CutoverRun.objects.filter(tenant_id=ctx.job.tenant_id, router=router)
+                .order_by("-created_at")
+                .first()
             )
+            if rollback:
+                if run is None:
+                    raise JobError(code="cutover_no_run", retryable=False, message="tidak ada run untuk rollback")
+                run.phase = CutoverRun.Phase.B6
+                _PHASE_FN[CutoverRun.Phase.B6](run, ctx, router)
+                return {"phase": run.phase, "state": run.state}
+            if run is None or run.state == CutoverRun.State.FAILED:
+                run = CutoverRun.objects.create(
+                    tenant_id=ctx.job.tenant_id, router=router, created_by=ctx.job.actor
+                )
+            if run.state in (CutoverRun.State.AUTHORITATIVE, CutoverRun.State.ROLLED_BACK):
+                raise JobError(
+                    code="cutover_terminal", retryable=False, message="run terminal; buat run baru"
+                )
 
         while run.phase in _PHASES_ORDER:
-            _PHASE_FN[run.phase](run, ctx)
+            if run.phase in (CutoverRun.Phase.B2, CutoverRun.Phase.B5):
+                # Batas kirim sensitif berikutnya: kewenangan diperiksa ulang
+                # dari DB mutakhir (A06 per-chunk; REV-2011-07) — pencabutan
+                # setelah B2 menghentikan B5 tanpa efek baru.
+                try:
+                    ctx.recheck_authority()
+                except JobError as exc:
+                    with ctx.scope():
+                        run.state = CutoverRun.State.FAILED
+                        _save(run)
+                    raise exc
+            _PHASE_FN[run.phase](run, ctx, router)  # tiap fase mengelola unit scope-nya
             if run.state == CutoverRun.State.PENDING_OBSERVATION:
                 return {"phase": run.phase, "state": run.state, "waiting": "observation_window"}
             idx = _PHASES_ORDER.index(run.phase)
@@ -307,8 +373,9 @@ class RadiusCutoverStepHandler(JobHandler):
                 run.phase = _PHASES_ORDER[idx + 1]
             else:
                 break
-        run.state = CutoverRun.State.AUTHORITATIVE  # B5 selesai
-        _save(run)
+        with ctx.scope():
+            run.state = CutoverRun.State.AUTHORITATIVE  # B5 selesai
+            _save(run)
         return {"phase": run.phase, "state": run.state}
 
 

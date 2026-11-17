@@ -784,11 +784,20 @@ def complete_enrollment(token: str, wg_public_key: str) -> dict:
             except IntegrityError:
                 raise ApiError.conflict("wg_public_key_registered", "error.conflict") from None
     # Verifikasi API-SSL asinkron (job) — hasil tidak diklaim di sini.
+    # Provenance PA-003: aktor = pembuat enrollment (server-derived dari
+    # ownership enrollment; bridge tidak punya sesi HTTP); worker memeriksa
+    # ulang membership/izin aktor dari DB mutakhir sebelum efek.
     from domains.jobs import engine
 
     engine.create_job(
         tenant_id=enrollment.tenant_id,
         kind="verify_api_ssl",
+        actor=enrollment.created_by,
+        actor_display=(
+            getattr(enrollment.created_by, "full_name", "")
+            or getattr(enrollment.created_by, "email", "")
+            or "enrollment-bridge"
+        ),
         payload={"enrollment_id": str(enrollment.id)},
     )
     return {"status": "bootstrap_accepted", "router_id": None, "replay": False}
@@ -857,42 +866,52 @@ def finalize_verification(enrollment: RouterEnrollment, *, source: str = "simula
         }
     from django.db import transaction
 
-    with transaction.atomic():
-        router = Router.objects.create(
-            tenant_id=enrollment.tenant_id,
-            display_name=enrollment.display_name,
-            router_code=enrollment.router_code,
-            mode=Router.Mode.READ_ONLY,  # read-only default (§2.1)
-            routeros_version=enrollment.routeros_version or "",
-            tunnel_ip=enrollment.tunnel_ip,
-            # Format credential = kode\0password — sesuai parser klien API-SSL
-            # (apiclient._credentials: username rtrw-ro-<kode>); akun ini dipasang
-            # pada router oleh skrip bootstrap v2 (menunggu lab G1).
-            credential_ref=SecretBox.encrypt(f"{enrollment.router_code.lower()}\x00{api_password}"),
-            api_cert_fingerprint=fingerprint,
-            capability=capability,
-        )
-        RouterEnrollment.objects.filter(id=enrollment.id).update(
-            router=router,
-            status=RouterEnrollment.Status.COMPLETED,
-            api_cert_fingerprint=fingerprint,
-            device_identity={
-                "wg_public_key": enrollment.wg_public_key,
-                "simulator": source == "simulator",
-                "probe": probe,
-            },
-            completed_at=timezone.now(),
-        )
-        WireGuardPeer.objects.filter(enrollment=enrollment).update(
-            router=router, state=WireGuardPeer.State.APPLIED, applied_revision=1
-        )
+    from domains.common.tenant_context import tenant_scope
+
+    # Unit tenant pendek (atomic + GUC RLS) — commit router/peer/enrollment
+    # terpisah dari probe I/O di atas (PA-002).
+    with tenant_scope(enrollment.tenant_id):
+        with transaction.atomic():
+            router = Router.objects.create(
+                tenant_id=enrollment.tenant_id,
+                display_name=enrollment.display_name,
+                router_code=enrollment.router_code,
+                mode=Router.Mode.READ_ONLY,  # read-only default (§2.1)
+                routeros_version=enrollment.routeros_version or "",
+                tunnel_ip=enrollment.tunnel_ip,
+                # Format credential = kode\0password — sesuai parser klien API-SSL
+                # (apiclient._credentials: username rtrw-ro-<kode>); akun ini dipasang
+                # pada router oleh skrip bootstrap v2 (menunggu lab G1).
+                credential_ref=SecretBox.encrypt(f"{enrollment.router_code.lower()}\x00{api_password}"),
+                api_cert_fingerprint=fingerprint,
+                capability=capability,
+            )
+            RouterEnrollment.objects.filter(id=enrollment.id).update(
+                router=router,
+                status=RouterEnrollment.Status.COMPLETED,
+                api_cert_fingerprint=fingerprint,
+                device_identity={
+                    "wg_public_key": enrollment.wg_public_key,
+                    "simulator": source == "simulator",
+                    "probe": probe,
+                },
+                completed_at=timezone.now(),
+            )
+            WireGuardPeer.objects.filter(enrollment=enrollment).update(
+                router=router, state=WireGuardPeer.State.APPLIED, applied_revision=1
+            )
     return router
 
 
 def run_discovery(router: Router) -> dict:
     """Discovery bounded — TIDAK membaca password (ROUTEROS.md §3).
 
-    Pemanggil (job engine) sudah membuka tenant_scope (konvensi repo).
+    Unit DB pendek dipisah dari I/O adapter (PA-002/task0020): snapshot
+    dibuat/diakhiri dalam unit tenant tersendiri; list_accounts/read_health
+    (I/O adapter) berjalan DI LUAR transaksi — tidak ada lock/transaksi DB
+    yang tertahan melintasi send/readback. Kegagalan adapter meninggalkan
+    snapshot berstatus failed yang jujur terlihat, bukan rollback diam-diam.
+    Scope luar pemanggil tetap dihormati (tenant_scope reentrant).
     """
     from adapters.routeros.base import RouterContext
     from adapters.routeros.factory import active_adapter_name, active_routeros_adapter
@@ -906,44 +925,54 @@ def run_discovery(router: Router) -> dict:
         credential_ref=router.credential_ref,
     )
     adapter = active_routeros_adapter()
-    snapshot = DiscoverySnapshot.objects.create(tenant_id=router.tenant_id, router=router)
-    accounts = adapter.list_accounts(ctx)
+    with tenant_scope(router.tenant_id):
+        snapshot = DiscoverySnapshot.objects.create(tenant_id=router.tenant_id, router=router)
+    try:
+        accounts = adapter.list_accounts(ctx)  # I/O — di luar transaksi DB
+    except Exception:
+        with tenant_scope(router.tenant_id):
+            snapshot.status = DiscoverySnapshot.Status.FAILED
+            snapshot.finished_at = timezone.now()
+            snapshot.save(update_fields=["status", "finished_at"])
+        raise
     count = 0
-    for account in accounts:
-        DiscoveryObject.objects.create(
-            tenant_id=router.tenant_id,
-            snapshot=snapshot,
-            router=router,
-            username=account.get("username", "")[:64],
-            kind="pppoe" if account.get("service", "pppoe") in ("pppoe", "any") else "hotspot",
-            router_service=account.get("service", "pppoe")[:8],
-            profile=str(account.get("profile", ""))[:64],
-            disabled_on_router=bool(account.get("disabled", False)),
-            comment=str(account.get("comment", ""))[:255],
-            raw={k: v for k, v in account.items() if k != "password"},  # password TIDAK disimpan
-        )
-        count += 1
-    snapshot.status = DiscoverySnapshot.Status.SUCCEEDED
-    snapshot.finished_at = timezone.now()
-    snapshot.save(update_fields=["status", "finished_at"])
-    # Tautkan sesi migrasi menunggu discovery.
-    from domains.customers.models import MigrationSession
+    with tenant_scope(router.tenant_id):
+        for account in accounts:
+            DiscoveryObject.objects.create(
+                tenant_id=router.tenant_id,
+                snapshot=snapshot,
+                router=router,
+                username=account.get("username", "")[:64],
+                kind="pppoe" if account.get("service", "pppoe") in ("pppoe", "any") else "hotspot",
+                router_service=account.get("service", "pppoe")[:8],
+                profile=str(account.get("profile", ""))[:64],
+                disabled_on_router=bool(account.get("disabled", False)),
+                comment=str(account.get("comment", ""))[:255],
+                raw={k: v for k, v in account.items() if k != "password"},  # password TIDAK disimpan
+            )
+            count += 1
+        snapshot.status = DiscoverySnapshot.Status.SUCCEEDED
+        snapshot.finished_at = timezone.now()
+        snapshot.save(update_fields=["status", "finished_at"])
+        # Tautkan sesi migrasi menunggu discovery.
+        from domains.customers.models import MigrationSession
 
-    MigrationSession.objects.filter(router=router, state="pending_discovery").update(
-        snapshot=snapshot, state="discovered"
-    )
+        MigrationSession.objects.filter(router=router, state="pending_discovery").update(
+            snapshot=snapshot, state="discovered"
+        )
     # Sampel kesehatan pertama (source jujur sesuai adapter aktif).
     from domains.network.models import RouterHealthSample
 
-    health = adapter.read_health(ctx)
-    RouterHealthSample.objects.create(
-        tenant_id=router.tenant_id,
-        router=router,
-        vpn_up=health.get("vpn_up"),
-        api_up=health.get("api_up"),
-        cpu_percent=health.get("cpu_percent"),
-        memory_percent=health.get("memory_percent"),
-        uptime_s=health.get("uptime_s"),
-        source=active_adapter_name(),
-    )
+    health = adapter.read_health(ctx)  # I/O — di luar transaksi DB
+    with tenant_scope(router.tenant_id):
+        RouterHealthSample.objects.create(
+            tenant_id=router.tenant_id,
+            router=router,
+            vpn_up=health.get("vpn_up"),
+            api_up=health.get("api_up"),
+            cpu_percent=health.get("cpu_percent"),
+            memory_percent=health.get("memory_percent"),
+            uptime_s=health.get("uptime_s"),
+            source=active_adapter_name(),
+        )
     return {"snapshot_id": str(snapshot.id), "accounts": count}

@@ -1,0 +1,8 @@
+=== environment 20261117 ===
+Python Python 3.13.5
+pytest pytest 8.4.2
+Django 5.2.19
+postgres (PostgreSQL) 17.11
+peran runtime: mtx_app NOSUPERUSER NOBYPASSRLS CREATEDB (RLS FORCE via migrasi)
+worktree: /home/z/my-project/microtix @ ea7b8a1 (branch session/2026-11-17-0020-job-lifecycle-authority)
+frontend: node v24.22.3, pnpm 12.21.0

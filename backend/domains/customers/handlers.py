@@ -38,11 +38,15 @@ class ImportCommitHandler(JobHandler):
 
     def execute(self, ctx: JobContext) -> dict:
         import_id = str(ctx.payload.get("import_id", ""))
-        csv_import = CsvImport.objects.select_related("tenant").get(id=import_id)
-        total = int((csv_import.validation or {}).get("valid_rows") or 0)
+        with ctx.scope():
+            csv_import = CsvImport.objects.select_related("tenant").get(id=import_id)
+            total = int((csv_import.validation or {}).get("valid_rows") or 0)
         ctx.progress(phase="committing", done=0, total=total or None)
         try:
-            summary = services.commit_csv(csv_import)
+            # commit_csv DB-only: satu unit transaksi tenant pendek (atomic
+            # domain change; tanpa I/O jaringan melintasi transaksi — PA-002).
+            with ctx.scope():
+                summary = services.commit_csv(csv_import)
         except ApiError as exc:
             raise _to_job_error(exc) from None
         created = int(summary.get("created", summary.get("linked", 0)) or 0)
@@ -51,10 +55,11 @@ class ImportCommitHandler(JobHandler):
 
     def verify(self, ctx: JobContext) -> dict:
         import_id = str(ctx.payload.get("import_id", ""))
-        csv_import = CsvImport.objects.get(id=import_id)
-        if csv_import.state != CsvImport.State.COMMITTED:
-            raise JobError(code="verification_failed", retryable=False, message="Draf tidak berstatus committed")
-        return {"state": csv_import.state, "summary": (csv_import.validation or {}).get("commit_summary", {})}
+        with ctx.scope():
+            csv_import = CsvImport.objects.get(id=import_id)
+            if csv_import.state != CsvImport.State.COMMITTED:
+                raise JobError(code="verification_failed", retryable=False, message="Draf tidak berstatus committed")
+            return {"state": csv_import.state, "summary": (csv_import.validation or {}).get("commit_summary", {})}
 
 
 class CommitMigrationHandler(JobHandler):
@@ -70,11 +75,14 @@ class CommitMigrationHandler(JobHandler):
 
     def execute(self, ctx: JobContext) -> dict:
         session_id = str(ctx.payload.get("session_id", ""))
-        session = MigrationSession.objects.select_related("router", "snapshot").get(id=session_id)
-        selected = ctx.payload.get("selected_account_ids")
+        with ctx.scope():
+            session = MigrationSession.objects.select_related("router", "snapshot").get(id=session_id)
+            selected = ctx.payload.get("selected_account_ids")
         ctx.progress(phase="adopting", done=0, total=None)
         try:
-            counts = services.commit_migration(session, selected_ids=selected)
+            # commit_migration DB-only (Tahap A): satu unit tenant pendek.
+            with ctx.scope():
+                counts = services.commit_migration(session, selected_ids=selected)
         except ApiError as exc:
             raise _to_job_error(exc) from None
         ctx.progress(phase="adopting", done=counts.get("to_create", 0), total=counts.get("to_create", 0) or None)
@@ -82,12 +90,13 @@ class CommitMigrationHandler(JobHandler):
 
     def verify(self, ctx: JobContext) -> dict:
         session_id = str(ctx.payload.get("session_id", ""))
-        session = MigrationSession.objects.get(id=session_id)
-        if session.state != MigrationSession.State.COMMITTED:
-            raise JobError(code="verification_failed", retryable=False, message="Sesi tidak berstatus committed")
-        # Readback: objek adopted tidak menyisakan DeviceOperation applying
-        # (commit Tahap A tidak menyentuh router — diverifikasi di tes).
-        return {"state": session.state, "counts": session.counts}
+        with ctx.scope():
+            session = MigrationSession.objects.get(id=session_id)
+            if session.state != MigrationSession.State.COMMITTED:
+                raise JobError(code="verification_failed", retryable=False, message="Sesi tidak berstatus committed")
+            # Readback: objek adopted tidak menyisakan DeviceOperation applying
+            # (commit Tahap A tidak menyentuh router — diverifikasi di tes).
+            return {"state": session.state, "counts": session.counts}
 
 
 class HarvestPasswordsHandler(JobHandler):
