@@ -1,4 +1,15 @@
-# LATEST_HANDOFF — 17 November 2026: task0020 koreksi REV-1711-01–09 diserahkan (pending review)
+# LATEST_HANDOFF — 17 November 2026: task0020 koreksi diserahkan + merge-all branch ke main (wewenang pemilik)
+
+**Update integrasi (sesi sama, ~00:5x WIB):** pemilik repo menginstruksikan
+merge-all branch ke main dengan PAT commit/merge/push (preseden PR9/PR24/25).
+Seluruh branch kini ter-merge; main maju jauh dari 41d1f33 melalui merge
+koreksi task0020 (PR30 lineage) + branch historis; keputusan penyelesaian
+record-only vs kode-canonical tercatat pada
+[integrasi merge-all](orchestrator/20261117T170000Z-merge-all-integration.md).
+Suite penuh 580 passed/1 skip + checks/docs PASS pada tree final sebelum
+push. PR historis ter-tutup otomatis karena head kini ancestor main.
+REVIEW TASK0020 TETAP PENDING di PR30 — merge pemilik bukan acceptance
+controller.
 
 Pintu masuk: [task/0000-start-here.md](../task/0000-start-here.md).
 Fetch current main, candidate dan decision ref sebelum melanjutkan. Tabel ini
@@ -30,7 +41,7 @@ bukan accepted; `_done` bukan acceptance/merge/deploy.
 | Next actor | **controller_reviewer** |
 | Exact next action | Review exact SHA koreksi atas REV-1711-01–09 (jalankan ulang probe R1 + matriks [laporan koreksi §5](orchestrator/20261117T160000Z-0020-correction-delivery.md)), delta main/candidate+CI; changes-requested membuka kembali ID0020 yang sama; jangan buka task0030 sebelum prasyarat terpenuhi |
 | Accepted predecessor | **Task0010/PA-006 tetap accepted/integrated**, PR24/25 merged; P3 R5 thread assertions preserved; tidak dibuka kembali |
-| Other refs | PR26 instruction, PR27 kandidat pertama bd37c14, PR28@8204ba0 report-only, PR29 decision, histori PR task0010 serta PR7/8/14 dipertahankan; tidak ada merge/close/force-push pekerjaan pihak lain |
+| Other refs | PR26/27/28/29/30 kini ancestor main (merge-all pemilik — bukan acceptance); histori PR task0010 serta PR7/8/14 dipertahankan; tidak ada force-push/reset pekerjaan pihak lain |
 | Beta / limits | **NOT_READY**; sandbox engine/PG/proses nyata saja — installer/upgrade/restore/secret/scheduler/DEC-01/02 dan host/GNS3/pilot/kapasitas tetap terpisah. OS/device/live RADIUS/browser/benchmark NOT_RUN; simulator bukan perangkat nyata |
 
 ## Histori — resume checkpoint & R1 (digantikan penyerahan koreksi di atas)
