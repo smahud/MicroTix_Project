@@ -230,8 +230,10 @@ DEC-01/02/host/lab/kapasitas) tidak tersentuh sesi ini.
 
 - Branch: `session/2026-11-17-0020-job-lifecycle-correction` (dari
   decision ref `0e45157`), commit koreksi kode+tes+packet+laporan ini +
-  rename packet `_done.md`; implementation/tested/published SHA pada
-  tabel §1 diisi SHA commit koreksi sesuai urutan commit penyerahan.
+  rename packet `_done.md`; implementation/tested/published SHA:
+  **`2681a3d090710c3855e66cfecc77b8af80fb1098`** (suite penuh + probe
+  dijalankan pada tree persis ini; record SHA di atas ditulis setelah
+  commit tersebut ada — descendant metadata-only, kode tidak berubah).
 - Evidence root: [executor-evidence/20261117T150000Z-0020-correction/](../executor-evidence/20261117T150000Z-0020-correction/)
   (failing-before/passing-after probe, split-role migrate/grant/RLS,
   check, makemigrations, docs, full-suite 562, targeted subsets,
