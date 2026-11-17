@@ -41,8 +41,9 @@ def _create_sstp(tenant, **overrides) -> RouterEnrollment:
     from domains.network import services
 
     body = {**SSTP_BODY, **overrides}
+    actor = overrides.pop("actor", None)
     with tenant_scope(tenant.id):
-        return services.create_enrollment(str(tenant.id), body)
+        return services.create_enrollment(str(tenant.id), body, actor=actor)
 
 
 def _script_and_account(enrollment: RouterEnrollment) -> tuple[str, SstpAccount]:
@@ -175,10 +176,10 @@ class TestSstpBootstrapScript:
 
 
 class TestSstpBridge:
-    def _enroll_and_consume(self, tenant, username=None):
+    def _enroll_and_consume(self, tenant, username=None, actor=None):
         from django.test import Client
 
-        enr = _create_sstp(tenant)
+        enr = _create_sstp(tenant, actor=actor)
         script, account = _script_and_account(enr)
         token = script.split(':local token "')[1].split('"')[0]
         body = {"token": token, "protocol": "sstp", "sstp_username": username or account.username}
@@ -246,9 +247,13 @@ class TestSstpBridge:
 
 
 class TestSstpVerificationHonesty:
-    def test_simulator_path_labels_sstp_false(self, db, tenant_a):
-        """Jalur simulator: enrollment selesai TANPA klaim tunnel SSTP nyata."""
-        enr, account, token, bridge, body = TestSstpBridge()._enroll_and_consume(tenant_a)
+    def test_simulator_path_labels_sstp_false(self, db, tenant_a, owner):
+        """Jalur simulator: enrollment selesai TANPA klaim tunnel SSTP nyata.
+
+        Provenance enrollment = aktor sah (owner) — sesuai kontrak authority
+        task0020 (job actorless dikarantina; jalur API nyata selalu berprovenance).
+        """
+        enr, account, token, bridge, body = TestSstpBridge()._enroll_and_consume(tenant_a, actor=owner)
         assert bridge.post("/api/v1/bridge/enroll-complete", body, content_type="application/json").status_code == 200
         _run_jobs_until("verify_api_ssl")
         with tenant_scope(tenant_a.id):
@@ -271,7 +276,7 @@ class TestSstpVerificationHonesty:
         assert progress["verification"]["sstp"] is False
         assert progress["verification"]["source"] == "simulator"
 
-    def test_api_ssl_probe_path_labels_sstp_true(self, db, tenant_a, monkeypatch):
+    def test_api_ssl_probe_path_labels_sstp_true(self, db, tenant_a, owner, monkeypatch):
         """Jalur adapter api_ssl: probe TLS nyata melewati tunnel SSTP →
         sstp=True (sesi PPP nyata teramati), wireguard tetap False (jujur)."""
         import adapters.routeros.factory as factory
@@ -284,7 +289,7 @@ class TestSstpVerificationHonesty:
         monkeypatch.setattr(factory, "active_adapter_name", lambda: "api_ssl")
         monkeypatch.setattr(factory, "active_routeros_adapter", lambda: StubAdapter())
 
-        enr, account, token, bridge, body = TestSstpBridge()._enroll_and_consume(tenant_a)
+        enr, account, token, bridge, body = TestSstpBridge()._enroll_and_consume(tenant_a, actor=owner)
         assert bridge.post("/api/v1/bridge/enroll-complete", body, content_type="application/json").status_code == 200
         job = engine.claim_next()
         assert job is not None and job.kind == "verify_api_ssl"
@@ -299,18 +304,18 @@ class TestSstpVerificationHonesty:
             assert cap["wireguard"] is False  # tidak ada klaim WG
             assert enr.router.api_cert_fingerprint == "cd" * 32  # pin teramati
 
-    def test_release_revokes_sstp_account(self, db, tenant_a):
+    def test_release_revokes_sstp_account(self, db, tenant_a, owner):
         from domains.jobs import engine
         from domains.network.models import Router
 
-        enr, account, token, bridge, body = TestSstpBridge()._enroll_and_consume(tenant_a)
+        enr, account, token, bridge, body = TestSstpBridge()._enroll_and_consume(tenant_a, actor=owner)
         assert bridge.post("/api/v1/bridge/enroll-complete", body, content_type="application/json").status_code == 200
         _run_jobs_until("verify_api_ssl")
         with tenant_scope(tenant_a.id):
             router = Router.objects.get(enrollment=enr)
             engine.create_job(
                 tenant_id=str(tenant_a.id), kind="router_release", router=router,
-                payload={"router_id": str(router.id)},
+                payload={"router_id": str(router.id)}, actor=owner,
             )
         _run_jobs_until("router_release")
         with tenant_scope(tenant_a.id):
