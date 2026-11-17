@@ -254,3 +254,19 @@ DEC-01/02/host/lab/kapasitas) tidak tersentuh sesi ini.
   REV-1711-01–09 dan matriks §5, jalankan ulang probe yang relevan,
   delta main/candidate+CI; changes-requested membuka kembali ID0020 yang
   sama. Tidak ada task0030 sebelum prasyarat terpenuhi.
+
+## 9. Catatan infrastruktur uji (kejujuran bukti)
+
+Suite penuh dijalankan ulang pada **test DB SEGAR** (tanpa --reuse-db)
+setelah ditemukannya flake `test_quota_reservation_atomic` pada test DB
+yang dipakai ulang: akar masalah adalah **kontaminasi lintas sesi pytest**
+— file probe (available_apps memuat `domains.subscriptions`) menjalankan
+flush/TRUNCATE tabel subs_* termasuk `subs_plan_version`, lalu sesi suite
+berikutnya `ensure_free_subscription` membuat fallback plan FREE
+`routers_limit=NULL` pada konteks transactional-test yang tidak diflush —
+plan tanpa limit menetap di DB reuse → klaim kuota tidak terpicu. Bukan
+defect produk (kode subs/quota tak tersentuh diff); controller R1 memakai
+DB disposable terpisah untuk probe dengan alasan yang sama. Hasil kanonik
+CI-paritas: **562 passed/1 skipped/3 warnings pada fresh DB**
+([full-suite-fresh-db.log](../executor-evidence/20261117T150000Z-0020-correction/full-suite-fresh-db.log)).
+CI GitHub selalu DB segar per run — tidak terdampak.
