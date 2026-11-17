@@ -1,0 +1,62 @@
+{
+  "observed_at_utc": "2026-11-17T14:52:27.583Z",
+  "status": "PUBLISHED_AND_VERIFIED",
+  "commit": "294529f0fa5c1909f6d05fd6e2bd201962b6cc27",
+  "tree": "59566ae155a3a4ac533c77a955a277b3a7286af4",
+  "parent": "43043be4b0562f982316593cf6ef4e5d5b6951a6",
+  "branch": "review/0020-controller-20261117",
+  "pr": 29,
+  "pr_url": "https://github.com/smahud/MicroTix_Project/pull/29",
+  "base_sha": "bd37c14e6c41339a8743b3d4b723ee74f13bef08",
+  "changed_files": [
+    {
+      "path": "docs/progress.md",
+      "blob": "fe04e6ffcde623394a268c029f414699267e3f7c",
+      "remote_match": true
+    },
+    {
+      "path": "report/LATEST_HANDOFF.md",
+      "blob": "0c9ac1828b22242f1330589989c7354d3d594d55",
+      "remote_match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T144620Z-0020-resume/check_resume.py",
+      "blob": "9b204945c742af52b51ef8f819e9cfa146e2a848",
+      "remote_match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T144620Z-0020-resume/docs.log",
+      "blob": "5985c0db028c2e859fe1d8764b47fb4955f3a66c",
+      "remote_match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T144620Z-0020-resume/local-checks.json",
+      "blob": "bd8ae8790d5823cf8cb59a3d9c3e1e2c097d3732",
+      "remote_match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T144620Z-0020-resume/remote-state.json",
+      "blob": "d177789e172bf02d52bca4e7367ddf4191bdd5d5",
+      "remote_match": true
+    },
+    {
+      "path": "report/controller/20261117T144620Z-0020-resume-review.md",
+      "blob": "59d09717de08a7b68238b8adbd993e5d133b538d",
+      "remote_match": true
+    },
+    {
+      "path": "report/reviewer/20261117T144620Z-0020-resume-independent.md",
+      "blob": "f0f982baf4b41f0bbc6ae35cfd9adf69c17e413e",
+      "remote_match": true
+    },
+    {
+      "path": "task/0020-job-lifecycle-authority.md",
+      "blob": "1c53ed6e8cd015d3b61289dd45d96e7567f8e602",
+      "remote_match": true
+    }
+  ],
+  "ref_commit_tree_pr_match": true,
+  "tree_truncated": false,
+  "ci": "new checkpoint CI not yet observed; historical CI remains separate",
+  "local_fetch_tree_index_clean_verified": true
+}
