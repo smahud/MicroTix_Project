@@ -58,16 +58,26 @@ _SENDER_LOCK_NS = 0x6D745253  # 'mtRS'
 
 
 class JobError(Exception):
-    """Galat handler: kategorisasi hasil untuk engine."""
+    """Galat handler: kategorisasi hasil untuk engine.
+
+    - ``no_effect=True``: bukti EKSPLISIT handler bahwa kegagalan terjadi
+      sebelum efek apa pun (probe baca-saja gagal / DB rollback bersih).
+      Hanya bentuk ini yang boleh retry otomatis dari eksekusi (REV-1711-02:
+      "retry hanya dari bukti no-effect/safe outcome yang eksplisit").
+    - Tanpa bukti itu, kegagalan tahap executing default ditahan
+      uncertain/recovery — tidak pernah blind retry_wait.
+    """
 
     def __init__(self, *, code: str, retryable: bool = False, uncertain: bool = False,
-                 recovery_required: bool = False, message: str = "") -> None:
+                 recovery_required: bool = False, no_effect: bool = False,
+                 message: str = "") -> None:
         self.code = code
         self.retryable = retryable
         self.uncertain = uncertain
         self.recovery_required = recovery_required
-        self.message = message
-        super().__init__(message or code)
+        self.no_effect = no_effect
+        self.message = message or code
+        super().__init__(self.message)
 
 
 class OwnershipLost(Exception):
@@ -117,10 +127,14 @@ def _unmapped_production_kind(kind: str) -> bool:
 class JobContext:
     """Konteks eksekusi satu job milik worker ini.
 
-    - heartbeat/progress: CAS token+epoch; False = kepemilikan hilang
-      (ctx.lost) dan efek berikutnya harus berhenti.
-    - scope(): unit transaksi tenant pendek untuk kerja DB handler; I/O
-      jaringan HARUS di luar unit ini (tidak ada lock DB melintasi send).
+    - heartbeat/progress/unit domain: CAS token+epoch; kehilangan kepemilikan
+      langsung melempar OwnershipLost (efek berikutnya tidak bisa berjalan,
+      termasuk kirim adapter setelah progress yang diabaikan — REV-1711-01).
+    - scope(): unit transaksi tenant pendek dengan guard ownership DI DALAM
+      transaksi yang sama (entry + sebelum commit) — kehilangan kepemilikan
+      di tengah unit membatalkan commit domain (REV-1711-01).
+    - assert_owned(): guard untuk unit DB milik service (run_discovery dll.) —
+      wajib dipanggil DI DALAM transaksi unit agar cek+commit atomik.
     """
 
     job: Job
@@ -136,10 +150,17 @@ class JobContext:
         owned = rows > 0
         if not owned:
             self.lost = True
+            raise OwnershipLost(
+                f"job {self.job.id}: kepemilikan hilang (lease/state berubah) — efek dihentikan"
+            )
         return owned
 
     def heartbeat(self) -> bool:
-        """Perpanjang lease (transaksi pendek sendiri — terlihat observer)."""
+        """Perpanjang lease (transaksi pendek sendiri — terlihat observer).
+
+        Kehilangan kepemilikan melempar OwnershipLost (bukan sekadar False yang
+        dapat diabaikan pemanggil — REV-1711-01 "helper return diabaikan").
+        """
         return self._fenced(lease_expires_at=timezone.now() + timezone.timedelta(seconds=LEASE_S))
 
     def recheck_authority(self) -> None:
@@ -157,6 +178,7 @@ class JobContext:
         Setiap laporan kemajuan sekaligus memperpanjang lease sehingga
         handler yang melapor per fase/chunk tidak dipaksa uncertain oleh
         reconcile worker lain saat masih bekerja (REV-2011-04).
+        Kehilangan kepemilikan melempar OwnershipLost (REV-1711-01).
         """
         updates: dict[str, Any] = {
             "lease_expires_at": timezone.now() + timezone.timedelta(seconds=LEASE_S)
@@ -169,17 +191,47 @@ class JobContext:
             updates["items_total"] = total
         return self._fenced(**updates)
 
+    def assert_owned(self) -> None:
+        """Guard ownership dari DB segar — untuk unit DB milik service.
+
+        Baca lease_token/epoch/state terkini pada koneksi BERJALAN; pemanggil
+        harus sudah berada DI DALAM transaksi unit (tenant_scope) sehingga
+        cek ownership dan commit domain menjadi atomik: reconcile/cancel yang
+        terjadi sebelum unit ini membuat guard gagal → unit dibatalkan sebelum
+        commit (REV-1711-01). Guard gagal melempar OwnershipLost dan menandai
+        ctx.lost sehingga efek berikutnya (termasuk send adapter) berhenti.
+        """
+        row = Job.objects.filter(id=self.job.id).values_list(
+            "lease_token", "lease_epoch", "state"
+        ).first()
+        owned = (
+            row is not None
+            and row[0] == self.job.lease_token
+            and row[1] == self.job.lease_epoch
+            and row[2] not in TERMINAL_STATES
+        )
+        if not owned:
+            self.lost = True
+            raise OwnershipLost(
+                f"job {self.job.id}: guard ownership gagal pada unit domain (REV-1711-01)"
+            )
+
     @contextmanager
     def scope(self):
-        """Unit transaksi tenant pendek (RLS aktif) untuk kerja DB handler.
+        """Unit transaksi tenant pendek (RLS aktif) + guard ownership.
 
-        Tidak menahan transaksi melintasi I/O jaringan: handler memanggil
-        scope() per unit DB dan melakukan send/readback di antaranya.
+        Guard dipanggil DI DALAM transaksi: (1) sebelum yield — cek segar
+        sebelum unit mulai; (2) setelah yield — cek terakhir sebelum commit
+        sehingga kehilangan kepemilikan yang terjadi selama unit membatalkan
+        commit domain (bukan hanya envelope CAS di akhir). I/O jaringan TETAP
+        di luar unit ini; handler memanggil scope() per unit DB.
         """
         if self.lost:
             raise OwnershipLost(f"job {self.job.id}: lease hilang sebelum unit DB")
         with tenant_scope(self.job.tenant_id):
+            self.assert_owned()
             yield
+            self.assert_owned()
         if self.lost:
             raise OwnershipLost(f"job {self.job.id}: lease hilang saat unit DB")
 
@@ -547,6 +599,15 @@ def run_claimed(job: Job, *, stop_check: Callable[[], bool] | None = None) -> Jo
         except JobError as exc:
             return _finish_preflight_failure(job, exc)
 
+        # --- kewenangan pada BATAS EFEK (setelah preflight — REV-1711-05/A06) ---
+        # Revoke/demote/scope-narrowing yang terjadi selama preflight harus
+        # menghentikan efek: lease yang valid bukan izin aktor. Resource/router/
+        # policy dibaca segar dari DB, bukan snapshot enqueue.
+        try:
+            check_current_authority(job, payload)
+        except JobError as exc:
+            return _finish_preflight_failure(job, exc)
+
         # --- batas stop drain sebelum efek baru ---
         if stop_check is not None and stop_check():
             if not _fenced_update(
@@ -571,8 +632,39 @@ def run_claimed(job: Job, *, stop_check: Callable[[], bool] | None = None) -> Jo
             job.refresh_from_db()
             return job
 
-        # --- satu pemilik pengirim per router (A03) ---
+        # --- satu pemilik pengirim per router (A03) + hold durable (REV-1711-04) ---
         if job.router_id is not None:
+            # DURABLE hold: job router lain dengan outcome UNKNOWN menahan
+            # mutasi router berkonflik sampai old writer/readback membuktikan
+            # kelanjutan aman — lock sesi advisory hanya hidup selama worker;
+            # state DB bertahan melewati proses. Outcome unknown mencakup:
+            # (a) state uncertain/recovery_required; (b) executing/verifying
+            # dengan lease KEDALUWARSA (penulis hard-crash pasca-kirim SEBELUM
+            # reconcile — jendela CORR-REV-02 ditutup; penulis hidup dengan
+            # lease aktif tetap dibedakan advisory lock di bawah).
+            router_unknown = (
+                Job.objects.filter(router_id=job.router_id)
+                .filter(
+                    Q(state__in=[JobState.UNCERTAIN, JobState.RECOVERY_REQUIRED])
+                    | Q(
+                        state__in=[JobState.EXECUTING, JobState.VERIFYING],
+                        lease_expires_at__lt=dj_timezone.now(),
+                    )
+                )
+                .exclude(id=job.id)
+                .exists()
+            )
+            if router_unknown:
+                if not _fenced_update(
+                    job, [JobState.PREFLIGHT], state=JobState.RETRY_WAIT,
+                    error_code="router_outcome_unknown", retryable=True,
+                    available_at=dj_timezone.now() + dj_timezone.timedelta(seconds=ROUTER_BUSY_RETRY_S),
+                    attempt=F("attempt") - 1, lease_token=None, lease_expires_at=None,
+                    updated_at=dj_timezone.now(),
+                ):
+                    raise OwnershipLost(f"job {job.id}: router outcome unknown")
+                job.refresh_from_db()
+                return job
             if not acquire_router_sender(job.router_id):
                 # Penulis lama masih memegang router: job kembali antrian
                 # (attempt tidak dikonsumsi) sampai penulis terbukti selesai.
@@ -611,8 +703,12 @@ def run_claimed(job: Job, *, stop_check: Callable[[], bool] | None = None) -> Jo
         except JobError as exc:
             return _finish_execute_failure(job, exc)
         except Exception:
+            # Kegagalan generic pada tahap executing: efek mungkin SUDAH
+            # terjadi (state MAYBE) — default ditahan uncertain (readback ops
+            # menentukan kelanjutan), TIDAK blind retry (REV-1711-02; tabel §6
+            # executing tidak memuat retry_wait).
             logger.exception("job %s gagal tak terduga", job.id)
-            return _finish_execute_failure(job, JobError(code="internal_error", retryable=True))
+            return _finish_execute_failure(job, JobError(code="internal_error", uncertain=True))
 
         # --- verify: readback sebelum menyatakan berhasil ---
         if not _fenced_update(
@@ -733,6 +829,19 @@ def _finish_preflight_failure(job: Job, exc: JobError) -> Job:
 
 
 def _finish_execute_failure(job: Job, exc: JobError) -> Job:
+    """Kegagalan tahap executing — tabel state §6: executing tidak menuju
+    retry_wait; outcome tak diketahui default ditahan (REV-1711-02).
+
+    - ``uncertain`` → UNCERTAIN (readback ops; lease dibebaskan supaya
+      reconcile/penulis berikutnya ter-fence epoch).
+    - ``recovery_required`` → karantina RECOVERY_REQUIRED.
+    - ``retryable + no_effect`` (bukti EKSPLISIT pra-efek dari handler,
+      mis. probe baca-saja / DB rollback bersih) → dua langkah sah tabel §6:
+      executing→uncertain (teramati jujur) lalu uncertain→retry_wait dengan
+      bukti "belum diterapkan" dari deklarasi handler.
+    - ``retryable`` tanpa bukti no-effect → default UNCERTAIN (hold).
+    - definitif (``retryable=False``) → FAILED.
+    """
     if exc.uncertain:
         # Perintah mungkin sudah terkirim/terjalankan: status uncertain, bukan failed.
         return _mark_fenced(job, [JobState.EXECUTING], JobState.UNCERTAIN,
@@ -741,7 +850,68 @@ def _finish_execute_failure(job: Job, exc: JobError) -> Job:
     if exc.recovery_required:
         return _mark_fenced(job, [JobState.EXECUTING], JobState.RECOVERY_REQUIRED,
                             error_code=exc.code, retryable=False)
-    return _retry_or_fail(job, exc, expected_states=[JobState.EXECUTING])
+    if exc.retryable and exc.no_effect:
+        return _retry_no_effect(job, exc)
+    if exc.retryable:
+        # Tanpa bukti eksplisit no-effect: outcome tak diketahui → tahan.
+        return _mark_fenced(job, [JobState.EXECUTING], JobState.UNCERTAIN,
+                            error_code=exc.code, retryable=True,
+                            lease_token=None, lease_expires_at=None)
+    return _mark_fenced(job, [JobState.EXECUTING], JobState.FAILED,
+                        error_code=exc.code, retryable=exc.retryable)
+
+
+def _retry_no_effect(job: Job, exc: JobError) -> Job:
+    """Retry pra-efek terbukti: komposisi transisi sah tabel §6 (REV-1711-02).
+
+    executing→uncertain (klaim jujur sesaat: engine tidak tahu) lalu
+    uncertain→retry_wait dengan "bukti belum diterapkan" = deklarasi
+    no_effect handler. Backoff/attempt mengikuti kebijakan retry lama.
+    """
+    now = dj_timezone.now()
+    rows = Job.objects.filter(
+        id=job.id,
+        lease_token=job.lease_token,
+        lease_epoch=job.lease_epoch,
+        state=JobState.EXECUTING,
+    ).update(
+        state=JobState.UNCERTAIN,
+        error_code=exc.code,
+        retryable=True,
+        lease_token=None,
+        lease_expires_at=None,
+        updated_at=now,
+    )
+    if not rows:
+        raise OwnershipLost(f"job {job.id}: no-effect step-1")
+    if job.attempt < job.max_attempts:
+        backoff = min(BACKOFF_CAP_S, 2 ** job.attempt * 5)
+        rows = Job.objects.filter(
+            id=job.id, state=JobState.UNCERTAIN, lease_token=None,
+        ).update(
+            state=JobState.RETRY_WAIT,
+            available_at=now + dj_timezone.timedelta(seconds=backoff),
+            error_code=exc.code,
+            retryable=True,
+            lease_token=None,
+            lease_expires_at=None,
+            updated_at=now,
+        )
+        if not rows:
+            raise OwnershipLost(f"job {job.id}: no-effect step-2")
+        job.refresh_from_db()
+        handler = handler_for(job.kind)
+        if handler is not None:
+            ctx = _ctx_for(job)
+            try:
+                with tenant_scope(job.tenant_id):
+                    handler.on_retry(ctx)
+            except Exception:  # pragma: no cover - on_retry tidak boleh membalikkan state
+                logger.exception("job %s on_retry gagal (diabaikan)", job.id)
+        return job
+    job.refresh_from_db()
+    return _mark_fenced(job, [JobState.UNCERTAIN], JobState.FAILED,
+                        error_code=exc.code, retryable=True)
 
 
 def _retry_or_fail(job: Job, exc: JobError, *, expected_states) -> Job:
@@ -975,15 +1145,65 @@ def cancel_job(job: Job, reason: str) -> Job:
     raise ValueError("not_cancellable")
 
 
+# State yang menghalangi retry origin: seluruh nonterminal — uncertain dan
+# recovery_required dianggap AKTIF karena outcome belum diketahui (A04).
+_RETRY_BLOCKING_STATES = frozenset(
+    {
+        JobState.QUEUED, JobState.CLAIMED, JobState.PREFLIGHT,
+        JobState.EXECUTING, JobState.VERIFYING, JobState.WAITING_DEPENDENCY,
+        JobState.RETRY_WAIT, JobState.UNCERTAIN, JobState.RECOVERY_REQUIRED,
+    }
+)
+
+
+def _lineage_root_id(job: Job):
+    """Naik ke akar lineage (origin paling awal); lineage terbatas depth-nya."""
+    current_id = job.id
+    origin_id = job.origin_job_id
+    visited = {current_id}
+    for _ in range(64):  # pragma: no branch - lineage >64 tidak realistis; guard siklus
+        if origin_id is None or origin_id in visited:
+            return current_id
+        visited.add(origin_id)
+        row = Job.objects.filter(id=origin_id).values_list("id", "origin_job_id").first()
+        if row is None:
+            return current_id
+        current_id, origin_id = row[0], row[1]
+    return current_id
+
+
+def _lineage_active_exists(root_id) -> bool:
+    """True bila ada job nonterminal pada lineage manapun di bawah root.
+
+    BFS turun lewat origin_job_id — menutup REV-1711-03: retry ancestor tidak
+    boleh melewati descendant uncertain/recovery/aktif (bukan child langsung
+    saja). Retry atas terminal dengan outcome final tetap sah (§6).
+    """
+    frontier: list = [root_id]
+    visited: set = {root_id}
+    while frontier:
+        children = list(
+            Job.objects.filter(origin_job_id__in=frontier).values_list("id", "state")
+        )
+        if any(state in _RETRY_BLOCKING_STATES for _job_id, state in children):
+            return True
+        frontier = [job_id for job_id, _state in children if job_id not in visited]
+        visited.update(job_id for job_id, _state in children)
+        if not frontier:
+            break
+    return False
+
+
 def retry_job(job: Job, actor=None) -> Job:
     """Job terminal retryable → job baru menautkan asal (key idempotensi semula).
 
     - uncertain TIDAK boleh retry langsung: unknown outcome harus lewat
       resolve_uncertain (readback) — retry tidak membuka efek baru dari hasil
       tak diketahui.
-    - Retry serentak di-serialisasi (lock baris origin) dan ditolak bila
-      sudah ada kandidat aktif untuk origin yang sama → tidak ada efek
-      logis ganda.
+    - Retry SERENTAK di-serialisasi pada baris AKAR lineage (lock row) dan
+      ditolak bila sudah ada kandidat aktif pada LINEAGE yang sama (bukan
+      child langsung saja — REV-1711-03) → tidak ada efek logis ganda dari
+      jalur ancestor/grandchild manapun.
     """
     if job.state not in (JobState.FAILED, JobState.CANCELLED):
         raise ValueError("not_retryable")
@@ -992,16 +1212,16 @@ def retry_job(job: Job, actor=None) -> Job:
         origin = Job.objects.select_for_update().filter(id=job.id).first()
         if origin is None or origin.state not in (JobState.FAILED, JobState.CANCELLED):
             raise ValueError("not_retryable")
-        # Kandidat aktif = SEMUA state nonterminal, termasuk uncertain dan
-        # recovery_required: uncertain berarti efek mungkin sudah terjadi —
-        # kandidat kedua akan membuka efek baru dari outcome tak diketahui
-        # (REV-2011-01, A04).
-        active_states = {
-            JobState.QUEUED, JobState.CLAIMED, JobState.PREFLIGHT,
-            JobState.EXECUTING, JobState.VERIFYING, JobState.WAITING_DEPENDENCY,
-            JobState.RETRY_WAIT, JobState.UNCERTAIN, JobState.RECOVERY_REQUIRED,
-        }
-        if Job.objects.filter(origin_job_id=origin.id, state__in=active_states).exists():
+        # Serialisasi seluruh lineage: kunci akar lineage — dua retry serentak
+        # (origin dan descendant) berbagi baris akar yang sama.
+        root_id = _lineage_root_id(origin)
+        if str(root_id) != str(origin.id):
+            Job.objects.select_for_update().filter(id=root_id).first()
+        # Kandidat aktif = SEMUA state nonterminal pada lineage, termasuk
+        # uncertain dan recovery_required: uncertain berarti efek mungkin
+        # sudah terjadi — kandidat kedua akan membuka efek baru dari outcome
+        # tak diketahui (REV-2011-01, A04; lineage-wide REV-1711-03).
+        if _lineage_active_exists(root_id):
             raise ValueError("retry_active_exists")
         with tenant_scope(job.tenant_id):
             detail = getattr(origin, "detail", None) or JobDetail.objects.filter(job_id=origin.id).first()

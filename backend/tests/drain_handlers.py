@@ -23,6 +23,35 @@ class DrainDbHandler(JobHandler):
         return {"ok": True}
 
 
+class DrainActiveHandler(JobHandler):
+    """Job DB kooperatif dengan BARRIER (REV-1711-09 / A08).
+
+    Fase pertama melaporkan progress (commit DB), lalu menunggu file sentinel
+    (barrier) sebelum unit DB kedua + progress akhir. Sinyal drain yang tiba
+    SELAMA fase aktif membuktikan: job kooperatif diselesaikan (exit 0),
+    bukan ditahan — sementara klaim baru sudah dihentikan.
+    """
+
+    kind = "_test_drain_active"
+
+    def execute(self, ctx: JobContext) -> dict:
+        ctx.progress(phase="active-1", done=1, total=2)
+        sentinel = str(ctx.payload.get("sentinel") or "")
+        deadline = time.monotonic() + 120
+        while time.monotonic() < deadline:
+            if sentinel and os.path.exists(sentinel):
+                break
+            time.sleep(0.05)
+        with ctx.scope():
+            # Unit DB kedua pendek (efek DB kooperatif di balik barrier).
+            _ = ctx.payload
+        ctx.progress(phase="active-2", done=2, total=2)
+        return {"ok": True, "kind": "active", "sentinel_seen": bool(sentinel)}
+
+    def verify(self, ctx: JobContext) -> dict:
+        return {"ok": True}
+
+
 class DrainIoHandler(JobHandler):
     """Job I/O terblokir: menunggu file sentinel muncul (payload.sentinel).
 
@@ -46,7 +75,7 @@ class DrainIoHandler(JobHandler):
 
 
 def register_all() -> None:
-    for handler in (DrainDbHandler(), DrainIoHandler()):
+    for handler in (DrainDbHandler(), DrainActiveHandler(), DrainIoHandler()):
         try:
             register(handler)
         except ValueError:  # pragma: no cover - sudah terdaftar di sesi sama

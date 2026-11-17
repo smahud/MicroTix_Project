@@ -1,8 +1,39 @@
-# LATEST_HANDOFF — 17 November 2026: task0020 changes_requested pada PR27 bd37c14
+# LATEST_HANDOFF — 17 November 2026: task0020 koreksi REV-1711-01–09 diserahkan (pending review)
 
 Pintu masuk: [task/0000-start-here.md](../task/0000-start-here.md).
 Fetch current main, candidate dan decision ref sebelum melanjutkan. Tabel ini
 menggantikan status historis di bawah; tanggal pengguna Asia/Jakarta.
+
+**Penyerahan koreksi 17 November ~23:59 WIB (sesi ini):** coding agent
+menutup **REV-1711-01–09 pada ID0020 yang sama** dari decision ref PR29
+(fetched sampai `0e45157`). Probe controller R1 (11 assertion):
+**failing-before 11 failed pada source kandidat bd37c14 → passing-after
+11 passed** pada tree koreksi, diulang pada DB split-role (migrator-owned,
+runtime NOSUPERUSER/NOBYPASSRLS, 59 tabel FORCE RLS). Suite penuh
+**562 passed/1 skipped/3 warnings** (+8 tes bukti REV-1711-09);
+PA-001 33, PA-006 125, RLS 8 lulus; check/makemigrations/docs PASS.
+[Reviewer independen](reviewer/20261117T160500Z-0020-correction-independent.md):
+REV-1711-01–09 **CLOSED**, nol pelemahan assertion; temuan P2 reviewer
+(CORR-REV-01 no_effect blanket, CORR-REV-02 jendela hard-crash pra-reconcile)
+ditutup sebelum commit. Execution status **done**, review **pending** —
+bukan accepted; `_done` bukan acceptance/merge/deploy.
+
+| Field | Current state / pointer |
+|---|---|
+| Canonical main teramati | **41d1f33f16508491a34f66b767830b9dd3e5954e**; main tidak diubah sesi ini |
+| Active task | **[ID0020 PA-002+PA-003](../task/0020-job-lifecycle-authority_done.md)** — **done / pending review / not integrated** |
+| Correction branch + PR | `session/2026-11-17-0020-job-lifecycle-correction` (base `0e45157` membawa source PR27); exact implementation/tested/published SHA + CI pada [laporan koreksi §8](orchestrator/20261117T160000Z-0020-correction-delivery.md) dan deskripsi PR koreksi |
+| Decision ref | **[PR29](https://github.com/smahud/MicroTix_Project/pull/29)** `review/0020-controller-20261117`; verdict acceptance tetap [controller R1](controller/20261117T134100Z-0020-job-lifecycle-review.md) sampai controller mereview SHA koreksi |
+| Correction evidence root | [executor-evidence/20261117T150000Z-0020-correction/](executor-evidence/20261117T150000Z-0020-correction/) — failing-before/passing-after probe, split-role migrate/grant/RLS, check, makemigrations, docs, full-suite 562, targeted subsets, environment |
+| Coreksi inti | Guard ownership DALAM transaksi unit domain (scope+assert_owned; heartbeat/progress raise); no_effect eksplisit + default uncertain post-efek; retry lineage root-lock+BFS; hold durable router unknown (+expired-executing); authority di batas efek pasca-preflight; HTTP router scope 404; B6 APPLY/VERIFY di luar transaksi; B6 readback negatif jujur; +bukti SIGINT/active-barrier/stop-claim/long-phase/crash-after-commit/current-policy |
+| Independent reviewer | [Koreksi](reviewer/20261117T160500Z-0020-correction-independent.md); [lifecycle](reviewer/20261117T140000Z-0020-lifecycle-independent.md), [authority](reviewer/20261117T140000Z-0020-authority-independent.md) histori R1 |
+| Next actor | **controller_reviewer** |
+| Exact next action | Review exact SHA koreksi atas REV-1711-01–09 (jalankan ulang probe R1 + matriks [laporan koreksi §5](orchestrator/20261117T160000Z-0020-correction-delivery.md)), delta main/candidate+CI; changes-requested membuka kembali ID0020 yang sama; jangan buka task0030 sebelum prasyarat terpenuhi |
+| Accepted predecessor | **Task0010/PA-006 tetap accepted/integrated**, PR24/25 merged; P3 R5 thread assertions preserved; tidak dibuka kembali |
+| Other refs | PR26 instruction, PR27 kandidat pertama bd37c14, PR28@8204ba0 report-only, PR29 decision, histori PR task0010 serta PR7/8/14 dipertahankan; tidak ada merge/close/force-push pekerjaan pihak lain |
+| Beta / limits | **NOT_READY**; sandbox engine/PG/proses nyata saja — installer/upgrade/restore/secret/scheduler/DEC-01/02 dan host/GNS3/pilot/kapasitas tetap terpisah. OS/device/live RADIUS/browser/benchmark NOT_RUN; simulator bukan perangkat nyata |
+
+## Histori — resume checkpoint & R1 (digantikan penyerahan koreksi di atas)
 
 **Resume 17 November ~21:48 WIB:** 31 branches/14 open PRs diperiksa;
 belum ada penyerahan koreksi baru (**correction delivery not_submitted**).
@@ -18,16 +49,14 @@ ancestor/readback mengikuti checkpoint §6; final-head CI mengikuti PR29.
 
 | Field | Current state / pointer |
 |---|---|
-| Canonical main teramati | **41d1f33f16508491a34f66b767830b9dd3e5954e**; main tidak diubah sesi ini |
-| Active task | **[ID0020 PA-002+PA-003](../task/0020-job-lifecycle-authority.md)** — **ready / changes_requested / not integrated** |
+| Active task (saat resume) | **[ID0020](../task/0020-job-lifecycle-authority.md)** — **ready / changes_requested / not integrated** |
 | Exact reviewed candidate | **[PR27](https://github.com/smahud/MicroTix_Project/pull/27)** `bd37c14e6c41339a8743b3d4b723ee74f13bef08`; executor tested ancestor7118cce, source/app delta kosong |
-| Decision ref | **[PR29](https://github.com/smahud/MicroTix_Project/pull/29)** `review/0020-controller-20261117`, initial decision **3c4b71fa75ab0619bf12b84660a8678b99294e20/tree9b7d2405** verified; [controller R1](controller/20261117T134100Z-0020-job-lifecycle-review.md), publication/readback §8. Branch ini membawa source kandidat + packet reopened, bukan main yang masih lama |
-| Evidence root R1 (historis, tidak diulang saat resume) | Full backend **554 passed,1 skipped,3 warnings**; **11 acceptance probes FAIL / 0 harness errors** pada fresh PG17.11 migrator-owned schema + runtime nonowner/NOBYPASSRLS/FORCE RLS; [summary](controller-evidence/20261117T134100Z-0020-review/review-results.json) |
+| Decision ref | **[PR29](https://github.com/smahud/MicroTix_Project/pull/29)** `review/0020-controller-20261117`, initial decision **3c4b71fa75ab0619bf12b84660a8678b99294e20/tree9b7d2405** verified |
+| Evidence root R1 | Full backend **554 passed,1 skipped,3 warnings**; **11 acceptance probes FAIL / 0 harness errors** pada fresh PG17.11 migrator-owned schema + runtime nonowner/NOBYPASSRLS/FORCE RLS; [summary](controller-evidence/20261117T134100Z-0020-review/review-results.json) |
 | Blocking findings | **REV-1711-01–08**: stale domain commit, blind retry setelah efek, retry lineage unknown, router unreadback hold, after-preflight authority, HTTP router scope, B6 I/O transaction dan B6 false success; **09** missing required evidence (drain SIGINT/active DB, long-phase/policy/recovery) |
 | Candidate CI | Existing run43994355914 exact **bd37c14 success backend/frontend/docs3/3**; tidak menutup probe acceptance gagal |
-| Independent reviewers | [Lifecycle](reviewer/20261117T140000Z-0020-lifecycle-independent.md), [authority](reviewer/20261117T140000Z-0020-authority-independent.md); root memeriksa source+menjalankan PG probes |
-| Next actor | **coding_agent** |
-| Exact next action | Fetch decision ref, lanjut **ID0020 yang sama**, tutup REV-1711-01–09 menurut packet/controller §3, preserve PA-001/006, submit kode+tes+matriks evidence+exact SHA baru+CI. Jangan mengulang implementasi dari main atau membuka task0030 |
+| Independent reviewers R1 | [Lifecycle](reviewer/20261117T140000Z-0020-lifecycle-independent.md), [authority](reviewer/20261117T140000Z-0020-authority-independent.md); root memeriksa source+menjalankan PG probes |
+| Next actor (saat resume) | **coding_agent**: fetch decision ref, tutup REV-1711-01–09 menurut packet/controller §3, preserve PA-001/006, submit kode+tes+matriks evidence+exact SHA baru+CI |
 | Accepted predecessor | **Task0010/PA-006 tetap accepted/integrated**, PR24/25 merged; P3 R5 thread assertions preserved; tidak dibuka kembali |
 | Other refs | PR26 instruction, PR28@8204ba0 report-only state check, histori PR task0010 serta PR7/8/14 dipertahankan; tidak ada merge/close/force-push |
 | Beta / limits | **NOT_READY**; sandbox defects di atas + installer/upgrade/restore/secret/scheduler/DEC-01/02 dan host/GNS3/pilot/kapasitas tetap terpisah. OS/device/live RADIUS/browser/benchmark NOT_RUN; simulator bukan perangkat nyata |

@@ -253,21 +253,44 @@ def _b5_authoritative(run: CutoverRun, ctx: JobContext, router: Router) -> None:
 
 
 def _b6_rollback(run: CutoverRun, ctx: JobContext, router: Router) -> None:
+    """B6 rollback — readback menentukan outcome yang jujur (REV-1711-08).
+
+    PLAN murni; APPLY/VERIFY = I/O di luar transaksi DB (REV-1711-07 — fase ini
+    dipanggil dari luar unit scope luar). Evidence + mode router di-commit
+    dalam unit pendek ter-fence TERPISAH setelah I/O selesai. Readback
+    negatif/unknown TIDAK boleh mengklaim LOCAL/ROLLED_BACK/succeeded:
+    run FAILED dengan error jujur, enforcement router tidak ditimpa.
+    """
     from adapters.routeros.simulator import RouterOsSimulator as SimulatorAdapter
 
     adapter = SimulatorAdapter()
     baseline = run.evidence.get("B2", {})
-    # PLAN murni; APPLY/VERIFY = I/O di luar transaksi DB.
     plan = adapter.rollback_radius(_router_ctx(router), baseline)
+    # APPLY → VERIFY = I/O jaringan — DI LUAR transaksi DB (REV-1711-07).
     adapter.apply_action(_router_ctx(router), plan)
     readback = adapter.verify_action(_router_ctx(router), plan)
+    ok = bool(readback.get("verified", False))
+    error: JobError | None = None
     with ctx.scope():
-        _ev(run)["rollback_readback_ok"] = bool(readback.get("verified", False))
-        Router.objects.filter(id=run.router_id, tenant_id=run.tenant_id).update(
-            enforcement_mode=Router.Enforcement.LOCAL
-        )
-        run.state = CutoverRun.State.ROLLED_BACK
-        _save(run)
+        _ev(run)["rollback_readback_ok"] = ok
+        if not ok:
+            # Readback negatif: TIDAK ada klaim LOCAL/ROLLED_BACK/succeeded —
+            # evidence tersimpan, run gagal jujur (REV-1711-08).
+            run.state = CutoverRun.State.FAILED
+            _save(run)
+            error = JobError(
+                code="cutover_rollback_readback_failed",
+                retryable=False,
+                message="readback rollback negatif — tidak ada klaim rolled_back",
+            )
+        else:
+            Router.objects.filter(id=run.router_id, tenant_id=run.tenant_id).update(
+                enforcement_mode=Router.Enforcement.LOCAL
+            )
+            run.state = CutoverRun.State.ROLLED_BACK
+            _save(run)
+    if error:
+        raise error
 
 
 _PHASE_FN = {
@@ -314,7 +337,11 @@ class RadiusCutoverStepHandler(JobHandler):
             base = dict(getattr(ctx, "_cutover_result", {}) or {})
             if run is None:
                 return {**base, "ok": False, "reason": "cutover_run_missing"}
-            # Hasil yang sah: terminal B5, pending observasi, atau rollback.
+            # Hasil yang sah: terminal B5, pending observasi, atau rollback
+            # TERBUKTI (readback positif). Run FAILED ≠ sukses (REV-1711-08:
+            # verifier menilai state/evidence, bukan sekadar run ada).
+            if run.state == CutoverRun.State.FAILED:
+                return {**base, "ok": False, "reason": "cutover_run_failed", "state": run.state}
             return {
                 **base,
                 "ok": True,
@@ -338,20 +365,27 @@ class RadiusCutoverStepHandler(JobHandler):
                 .order_by("-created_at")
                 .first()
             )
+            rollback_run = None
             if rollback:
                 if run is None:
                     raise JobError(code="cutover_no_run", retryable=False, message="tidak ada run untuk rollback")
                 run.phase = CutoverRun.Phase.B6
-                _PHASE_FN[CutoverRun.Phase.B6](run, ctx, router)
-                return {"phase": run.phase, "state": run.state}
-            if run is None or run.state == CutoverRun.State.FAILED:
-                run = CutoverRun.objects.create(
-                    tenant_id=ctx.job.tenant_id, router=router, created_by=ctx.job.actor
-                )
-            if run.state in (CutoverRun.State.AUTHORITATIVE, CutoverRun.State.ROLLED_BACK):
-                raise JobError(
-                    code="cutover_terminal", retryable=False, message="run terminal; buat run baru"
-                )
+                rollback_run = run
+            else:
+                if run is None or run.state == CutoverRun.State.FAILED:
+                    run = CutoverRun.objects.create(
+                        tenant_id=ctx.job.tenant_id, router=router, created_by=ctx.job.actor
+                    )
+                if run.state in (CutoverRun.State.AUTHORITATIVE, CutoverRun.State.ROLLED_BACK):
+                    raise JobError(
+                        code="cutover_terminal", retryable=False, message="run terminal; buat run baru"
+                    )
+        if rollback_run is not None:
+            # B6 dipanggil DI LUAR unit scope luar (REV-1711-07): APPLY/VERIFY
+            # adapter berjalan tanpa transaksi DB terbuka; fase mengelola unit
+            # commit evidence tersendiri.
+            _PHASE_FN[CutoverRun.Phase.B6](rollback_run, ctx, router)
+            return {"phase": rollback_run.phase, "state": rollback_run.state}
 
         while run.phase in _PHASES_ORDER:
             if run.phase in (CutoverRun.Phase.B2, CutoverRun.Phase.B5):

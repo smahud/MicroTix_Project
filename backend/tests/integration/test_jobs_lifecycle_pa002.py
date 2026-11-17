@@ -263,8 +263,10 @@ class TestOwnershipFencing:
         assert after.state == JobState.SUCCEEDED
 
     def test_heartbeat_progress_report_ownership_loss(self):
-        """heartbeat/progress ter-fence: kehilangan lease dilaporkan (False),
-        bukan diam-diam diabaikan; worker berhenti di batas berikutnya."""
+        """heartbeat/progress ter-fence: kehilangan lease MELEMPAR
+        OwnershipLost (bukan return False yang bisa diabaikan pemanggil) —
+        efek berikutnya (unit DB / kirim adapter) berhenti di batas itu
+        (REV-1711-01: helper yang return-nya diabaikan tidak cukup)."""
         tenant, owner = _make_tenant("rtrw-pa02-a01c")
         job = engine.create_job(tenant_id=tenant.id, kind="_test_router_send", actor=owner)
         claimed = engine.claim_next()
@@ -273,8 +275,10 @@ class TestOwnershipFencing:
         assert ctx.progress(phase="bekerja", done=1, total=1) is True
 
         engine.cancel_job(claimed, "uji")  # epoch naik, token dibersihkan
-        assert ctx.heartbeat() is False
-        assert ctx.progress(phase="bekerja", done=2, total=2) is False
+        with pytest.raises(engine.OwnershipLost):
+            ctx.heartbeat()
+        with pytest.raises(engine.OwnershipLost):
+            ctx.progress(phase="bekerja", done=2, total=2)
         assert ctx.lost is True
         with pytest.raises(engine.OwnershipLost):
             with ctx.scope():
@@ -1126,3 +1130,223 @@ class TestReviewerCorrections:
         finished = engine.run_claimed(reclaimed)
         assert finished.state == JobState.SUCCEEDED
         assert _send(job.id) == 1
+
+
+# ---------------------------------------------------------------------------
+# REV-1711-09 — bukti tambahan: fase panjang/heartbeat vs reconciler serentak,
+# crash setelah commit domain, dan current-policy/SUB-05 pada jalur aktif.
+# ---------------------------------------------------------------------------
+
+
+class _LongPhaseHandler(JobHandler):
+    """Fase panjang berskala: iterasi progress+sleep pendek (LEASE_S diskalakan).
+
+    Mensimulasikan pekerjaan panjang nyata (backup 1800 s) terhadap lease
+    pendek: renewal progress per fase mempertahankan lease hidup sehingga
+    reconciler serentak tidak boleh menandai uncertain (LEASE30s vs fase
+    panjang; skala dikecilkan agar tes bounded).
+    """
+
+    kind = "_test_long_phase"
+    iterations = 10
+    step_sleep_s = 0.3
+
+    def execute(self, ctx: JobContext) -> dict:
+        for i in range(_LongPhaseHandler.iterations):
+            ctx.progress(phase=f"fase-{i}", done=i, total=_LongPhaseHandler.iterations)
+            _time_sleep(_LongPhaseHandler.step_sleep_s)
+        return {"ok": True, "kind": "long"}
+
+    def verify(self, ctx: JobContext) -> dict:
+        return {"ok": True}
+
+
+def _time_sleep(seconds: float) -> None:
+    import time
+
+    time.sleep(seconds)
+
+
+class _DomainCommitHandler(JobHandler):
+    """Commit domain nyata (RouterHealthSample); verify tertahan gate.
+
+    Mapping jujur crash SETELAH commit domain: execute meng-commit efek
+    domain ter-fence; verify menunggu gate — lease kedaluwarsa saat gate
+    meniru worker mati setelah efek (tanpa tulisan terminal dari worker lama).
+    """
+
+    kind = "_test_domain_commit"
+    verify_gate: threading.Event | None = None
+
+    def execute(self, ctx: JobContext) -> dict:
+        from django.db import transaction
+
+        from domains.network.models import RouterHealthSample
+
+        with tenant_scope(ctx.job.tenant_id):
+            with transaction.atomic():
+                ctx.assert_owned()  # guard DI DALAM unit (REV-1711-01)
+                RouterHealthSample.objects.create(
+                    tenant_id=ctx.job.tenant_id,
+                    router=ctx.job.router,
+                    vpn_up=True,
+                    api_up=True,
+                    source="simulator",
+                )
+        return {"ok": True, "kind": "domain"}
+
+    def verify(self, ctx: JobContext) -> dict:
+        gate = _DomainCommitHandler.verify_gate
+        if gate is not None:
+            gate.wait(timeout=30)  # worker "mati" di sini (lease berakhir)
+        from domains.network.models import RouterHealthSample
+
+        with tenant_scope(ctx.job.tenant_id):
+            count = RouterHealthSample.objects.filter(router=ctx.job.router).count()
+        return {"ok": count == 1, "samples": count}
+
+
+@pytest.fixture(autouse=True)
+def _register_long_phase_handlers():
+    for handler in (_LongPhaseHandler(), _DomainCommitHandler()):
+        try:
+            engine.register(handler)
+        except ValueError:
+            pass
+    _DomainCommitHandler.verify_gate = None
+    yield
+    if _DomainCommitHandler.verify_gate is not None:
+        _DomainCommitHandler.verify_gate.set()
+
+
+class TestLongPhaseHeartbeat:
+    def test_active_phase_renews_lease_against_concurrent_reconciler(self, monkeypatch):
+        """REV-1711-09/A05: fase panjang AKTIF (progress per fase + sleep nyata)
+        dengan reconciler serentak — lease diperbarui setiap fase sehingga job
+        TIDAK pernah dipaksa uncertain; hasil akhir jujur succeeded."""
+        monkeypatch.setattr(engine, "LEASE_S", 1)
+        tenant, owner = _make_tenant("rtrw-pa02-lp01")
+        job = engine.create_job(tenant_id=tenant.id, kind="_test_long_phase", actor=owner)
+        claimed = engine.claim_next()
+        assert claimed is not None and str(claimed.id) == str(job.id)
+
+        results: dict = {}
+        worker = _run_in_thread(claimed, results)
+
+        def _reconciler_loop() -> int:
+            import time as _t
+
+            touched = 0
+            deadline = _t.monotonic() + 20
+            while _t.monotonic() < deadline:
+                touched += engine.reconcile_expired_leases()
+                fresh = Job.objects.filter(id=job.id).first()
+                if fresh is None or fresh.state in (
+                    JobState.SUCCEEDED, JobState.FAILED, JobState.CANCELLED,
+                ):
+                    return touched
+                _t.sleep(0.15)
+            return touched
+
+        reconciled: dict = {}
+        reconciler = threading.Thread(target=lambda: reconciled.update(n=_reconciler_loop()))
+        reconciler.start()
+        worker.join(timeout=30)
+        reconciler.join(timeout=25)
+        assert not worker.is_alive(), "worker fase panjang wajib selesai (bounded)"
+        assert not reconciler.is_alive(), "reconciler wajib selesai (bounded)"
+        assert "exception" not in results.get("final", {}), results
+        # Fase panjang AKTIF dengan renewal progress: tidak pernah uncertain.
+        assert results["final"]["state"] == JobState.SUCCEEDED, results
+        fresh = Job.objects.get(id=job.id)
+        assert fresh.state == JobState.SUCCEEDED
+        assert fresh.error_code is None
+
+    def test_crash_after_domain_commit_resolves_without_duplicate_effect(self):
+        """REV-1711-09/A05: crash SETELAH commit domain (worker mati tanpa
+        tulisan terminal) → lease habis → reconcile → uncertain; readback
+        applied=True → verify-only sukses TANPA efek domain kedua."""
+        tenant, owner = _make_tenant("rtrw-pa02-lp02")
+        router = _make_router(tenant, code="PA02-LP2", ip="100.127.60.2")
+        job = engine.create_job(
+            tenant_id=tenant.id, kind="_test_domain_commit", actor=owner, router=router
+        )
+        claimed = engine.claim_next()
+        assert claimed is not None and str(claimed.id) == str(job.id)
+
+        # Worker menjalankan execute (commit domain) lalu "mati" di verify.
+        gate = threading.Event()
+        _DomainCommitHandler.verify_gate = gate
+        results: dict = {}
+        worker = _run_in_thread(claimed, results)
+        try:
+            assert _wait_up_to(15, lambda: _health_count(router) == 1), (
+                "efek domain commit pertama harus durable dan terlihat"
+            )
+            from django.utils import timezone as tz
+
+            Job.objects.filter(id=job.id).update(
+                lease_expires_at=tz.now() - tz.timedelta(seconds=1)
+            )
+            assert engine.reconcile_expired_leases() >= 1
+            assert Job.objects.get(id=job.id).state == JobState.UNCERTAIN
+        finally:
+            gate.set()
+            worker.join(timeout=30)
+        assert not worker.is_alive(), "worker wajib berhenti bounded"
+        assert _health_count(router) == 1
+
+        # Readback membuktikan efek SUDAH diterapkan → verify-only tanpa resend.
+        resolved = engine.resolve_uncertain(Job.objects.get(id=job.id), applied=True)
+        assert resolved.state == JobState.SUCCEEDED
+        assert _health_count(router) == 1, (
+            "pemulihan apply-verify tidak boleh menulis efek domain kedua"
+        )
+
+
+def _health_count(router) -> int:
+    from domains.network.models import RouterHealthSample
+
+    with tenant_scope(router.tenant_id):
+        return RouterHealthSample.objects.filter(router=router).count()
+
+
+class TestCurrentPolicySubscription:
+    """REV-1711-09/A06: current-policy pada jalur AKTIF (SUB-05).
+
+    Restricted bukan mematikan operasi layanan existing; ended tidak
+    mengisolir internet karena utang SaaS. Job operasi existing tetap sah,
+    policy tidak diubah oleh eksekusi job, dan tidak ada efek isolasi akun
+    yang diperkenalkan jalur job.
+    """
+
+    @pytest.mark.parametrize("sub_state", ["restricted", "ended"])
+    def test_existing_operation_still_runs_under_policy_state(self, sub_state):
+        from domains.network.models import RouterHealthSample
+        from domains.subscriptions.models import Subscription
+
+        tenant, owner = _make_tenant(f"rtrw-pa02-sub-{sub_state}")
+        router = _make_router(tenant, code=f"PA02-{sub_state.upper()[:4]}", ip="100.127.61.1")
+        with tenant_scope(tenant.id):
+            Subscription.objects.filter(tenant_id=tenant.id).update(state=sub_state)
+            assert Subscription.objects.get(tenant_id=tenant.id).state == sub_state
+
+        job = engine.create_job(
+            tenant_id=tenant.id, kind="discover_router", actor=owner, router=router
+        )
+        claimed = engine.claim_next()
+        assert claimed is not None and str(claimed.id) == str(job.id)
+        result = engine.run_claimed(claimed)
+        assert result.state == JobState.SUCCEEDED, (
+            "operasi existing (discovery) harus tetap sah pada policy state ini"
+        )
+
+        with tenant_scope(tenant.id):
+            # Policy tidak diubah oleh eksekusi job (jujur, bukan auto-fix).
+            assert Subscription.objects.get(tenant_id=tenant.id).state == sub_state
+            # Nol efek isolasi akun diperkenalkan jalur job (SUB-05):
+            from domains.customers.models import AccessAccount
+
+            assert AccessAccount.objects.filter(tenant_id=tenant.id).count() == 0
+            # Discovery sehat tetap berjalan (sumber jujur simulator).
+            assert RouterHealthSample.objects.filter(router=router).count() >= 1

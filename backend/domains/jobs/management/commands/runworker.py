@@ -77,6 +77,11 @@ class Command(BaseCommand):
             signal.signal(signal.SIGALRM, _drain_deadline)
         except ValueError:  # pragma: no cover - bukan thread utama (uji proses selalu utama)
             pass
+        # Marker kesiapan (flush): drain handler sudah terpasang — sinyal
+        # yang tiba setelah baris ini ditangani sebagai drain, bukan kill
+        # default. Uji proses memakai ini untuk deterministis (A08).
+        self.stdout.write("worker siap: klaim dibuka, drain handler terpasang")
+        self.stdout.flush()
 
         exit_code = EXIT_DRAINED
         try:

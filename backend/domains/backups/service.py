@@ -20,7 +20,14 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone as dj_timezone
 
-from adapters.routeros.base import RouterContext, RouterOsError, TimeoutAfterSendError, UnreachableError
+from adapters.routeros.base import (
+    PermissionDeniedError,
+    RevisionConflictError,
+    RouterContext,
+    RouterOsError,
+    TimeoutAfterSendError,
+    UnreachableError,
+)
 from adapters.routeros.simulator import RouterOsSimulator
 from domains.backups.models import BackupArtifact, BackupSchedule
 from domains.common import crypto
@@ -205,11 +212,23 @@ class BackupRunHandler(JobHandler):
             with ctx.scope():
                 artifact.state = BackupArtifact.State.FAILED
                 artifact.save(update_fields=["state"])
-            raise JobError(code="router_unreachable", retryable=True) from None
+            # Koneksi tidak pernah terbangun → terbukti belum ada kirim: retry
+            # eksplisit no-effect (REV-1711-02).
+            raise JobError(code="router_unreachable", retryable=True, no_effect=True) from None
+        except (PermissionDeniedError, RevisionConflictError) as exc:
+            with ctx.scope():
+                artifact.state = BackupArtifact.State.FAILED
+                artifact.save(update_fields=["state"])
+            # Perintah ditolak/tahan sebelum diterapkan adapter → no-effect
+            # eksplisit (pra-kirim; CORR-REV-01 menutup klaim blanket).
+            raise JobError(code=exc.code, retryable=True, no_effect=True) from None
         except RouterOsError as exc:
             with ctx.scope():
                 artifact.state = BackupArtifact.State.FAILED
                 artifact.save(update_fields=["state"])
+            # RouterOsError generik dapat terbit pasca-kirim (trap protokol):
+            # tanpa bukti pra-efek → default engine menahan uncertain untuk
+            # readback ops — TIDAK blanket no_effect (CORR-REV-01).
             raise JobError(code=exc.code, retryable=True) from None
 
         # Staging manifest di penyimpanan privat (opaque; tidak via API).

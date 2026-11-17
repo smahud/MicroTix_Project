@@ -803,7 +803,8 @@ def complete_enrollment(token: str, wg_public_key: str) -> dict:
     return {"status": "bootstrap_accepted", "router_id": None, "replay": False}
 
 
-def finalize_verification(enrollment: RouterEnrollment, *, source: str = "simulator") -> Router:
+def finalize_verification(enrollment: RouterEnrollment, *, source: str = "simulator",
+                          ownership_guard=None) -> Router:
     """Selesaikan verifikasi → buat Router read-only + pasang peer.
 
     Kejujuran bukti (ROUTEROS.md §2.8; master directive §10): `source` = nama
@@ -816,6 +817,10 @@ def finalize_verification(enrollment: RouterEnrollment, *, source: str = "simula
       di-retry bounded — enrollment TIDAK diselesaikan palsu). Login API +
       pembandingan pin menunggu skrip v2 + lab G1 (perangkat belum memiliki
       akun API platform — celah terdokumentasi, bukan klaim).
+
+    ``ownership_guard`` (REV-1711-01): dipanggil DI DALAM transaksi commit
+    router/peer/enrollment — worker basi (lease dipindah/dicabut selama probe
+    I/O) tidak dapat menulis domain hasil verifikasi.
     """
     from adapters.routeros.base import RouterContext
 
@@ -869,9 +874,12 @@ def finalize_verification(enrollment: RouterEnrollment, *, source: str = "simula
     from domains.common.tenant_context import tenant_scope
 
     # Unit tenant pendek (atomic + GUC RLS) — commit router/peer/enrollment
-    # terpisah dari probe I/O di atas (PA-002).
+    # terpisah dari probe I/O di atas (PA-002); guard ownership DI DALAM unit
+    # (REV-1711-01).
     with tenant_scope(enrollment.tenant_id):
         with transaction.atomic():
+            if ownership_guard is not None:
+                ownership_guard()
             router = Router.objects.create(
                 tenant_id=enrollment.tenant_id,
                 display_name=enrollment.display_name,
@@ -903,7 +911,7 @@ def finalize_verification(enrollment: RouterEnrollment, *, source: str = "simula
     return router
 
 
-def run_discovery(router: Router) -> dict:
+def run_discovery(router: Router, ownership_guard=None) -> dict:
     """Discovery bounded — TIDAK membaca password (ROUTEROS.md §3).
 
     Unit DB pendek dipisah dari I/O adapter (PA-002/task0020): snapshot
@@ -912,6 +920,10 @@ def run_discovery(router: Router) -> dict:
     yang tertahan melintasi send/readback. Kegagalan adapter meninggalkan
     snapshot berstatus failed yang jujur terlihat, bukan rollback diam-diam.
     Scope luar pemanggil tetap dihormati (tenant_scope reentrant).
+
+    ``ownership_guard`` (REV-1711-01): dipanggil DI DALAM transaksi tiap unit
+    commit domain — kehilangan lease job membatalkan unit SEBELUM commit dan
+    menghentikan efek berikutnya (guard melempar OwnershipLost).
     """
     from adapters.routeros.base import RouterContext
     from adapters.routeros.factory import active_adapter_name, active_routeros_adapter
@@ -926,17 +938,23 @@ def run_discovery(router: Router) -> dict:
     )
     adapter = active_routeros_adapter()
     with tenant_scope(router.tenant_id):
+        if ownership_guard is not None:
+            ownership_guard()
         snapshot = DiscoverySnapshot.objects.create(tenant_id=router.tenant_id, router=router)
     try:
         accounts = adapter.list_accounts(ctx)  # I/O — di luar transaksi DB
     except Exception:
         with tenant_scope(router.tenant_id):
+            if ownership_guard is not None:
+                ownership_guard()
             snapshot.status = DiscoverySnapshot.Status.FAILED
             snapshot.finished_at = timezone.now()
             snapshot.save(update_fields=["status", "finished_at"])
         raise
     count = 0
     with tenant_scope(router.tenant_id):
+        if ownership_guard is not None:
+            ownership_guard()
         for account in accounts:
             DiscoveryObject.objects.create(
                 tenant_id=router.tenant_id,
@@ -965,6 +983,8 @@ def run_discovery(router: Router) -> dict:
 
     health = adapter.read_health(ctx)  # I/O — di luar transaksi DB
     with tenant_scope(router.tenant_id):
+        if ownership_guard is not None:
+            ownership_guard()
         RouterHealthSample.objects.create(
             tenant_id=router.tenant_id,
             router=router,

@@ -95,7 +95,29 @@ def _wait_state(job_id, states, timeout_s: float = 20.0) -> Job:
     return Job.objects.get(id=job_id)
 
 
-def _make_job(kind: str, payload: dict | None = None):
+def _await_ready(proc: subprocess.Popen, timeout_s: float = 25.0) -> str:
+    """Tunggu marker kesiapan worker (drain handler terpasang) sebelum sinyal.
+
+    Tanpa ini, SIGTERM/SIGINT dapat tiba sebelum handler terpasang → proses
+    mati sebagai kill default (-15), bukan drain yang diuji.
+    """
+    import select
+
+    deadline = time.monotonic() + timeout_s
+    buf: list[str] = []
+    while time.monotonic() < deadline and proc.poll() is None:
+        ready, _, _ = select.select([proc.stdout], [], [], 0.2)
+        if ready:
+            line = proc.stdout.readline()
+            if not line:
+                break
+            buf.append(line)
+            if "worker siap" in line:
+                return "".join(buf)
+    return "".join(buf)
+
+
+def _make_job(kind: str, payload: dict | None = None, priority: int = 100):
     from domains.identity.models import User
     from domains.tenancy.models import Membership, Role, Tenant
 
@@ -107,7 +129,10 @@ def _make_job(kind: str, payload: dict | None = None):
         display_name=f"Drain {kind}", namespace=f"rtrw-drain-{int(time.time()*1000)%100000}"
     )
     Membership.objects.create(user=owner, tenant=tenant, role=Role.OWNER)
-    return engine.create_job(tenant_id=tenant.id, kind=kind, actor=owner, payload=payload or {})
+    return engine.create_job(
+        tenant_id=tenant.id, kind=kind, actor=owner, payload=payload or {},
+        priority=priority,
+    )
 
 
 class TestDrainProcesses:
@@ -115,15 +140,34 @@ class TestDrainProcesses:
         """Worker idle menerima SIGTERM: berhenti mengklaim, keluar 0."""
         proc = _spawn("--loop", "--interval", "0.2", "--drain-timeout", "5")
         try:
-            time.sleep(1.5)  # biarkan beberapa siklus polling idle
+            pre = _await_ready(proc)
+            assert "worker siap" in pre, "worker belum siap saat sinyal"
+            time.sleep(0.8)  # beberapa siklus polling idle setelah siap
             proc.send_signal(signal.SIGTERM)
             out, _ = proc.communicate(timeout=15)
         finally:
             if proc.poll() is None:  # pragma: no cover
                 proc.kill()
                 proc.communicate()
-        assert proc.returncode == EXIT_DRAINED, out
-        assert "drain selesai" in out
+        assert proc.returncode == EXIT_DRAINED, pre + (out or "")
+        assert "drain selesai" in (pre + out)
+
+    def test_sigint_idle_exits_drained(self):
+        """REV-1711-09: worker idle menerima SIGINT — jalur stop sama dengan
+        SIGTERM: berhenti mengklaim, keluar 0 (bounded), tanpa job aktif."""
+        proc = _spawn("--loop", "--interval", "0.2", "--drain-timeout", "5")
+        try:
+            pre = _await_ready(proc)
+            assert "worker siap" in pre, "worker belum siap saat sinyal"
+            time.sleep(0.8)  # beberapa siklus polling idle setelah siap
+            proc.send_signal(signal.SIGINT)
+            out, _ = proc.communicate(timeout=15)
+        finally:
+            if proc.poll() is None:  # pragma: no cover
+                proc.kill()
+                proc.communicate()
+        assert proc.returncode == EXIT_DRAINED, pre + (out or "")
+        assert "drain selesai" in (pre + out)
 
     def test_sigterm_completes_cooperative_db_job(self):
         """SIGTERM saat job DB kooperatif berjalan: job DISELESAIKAN, worker
@@ -141,6 +185,80 @@ class TestDrainProcesses:
         assert done.state == JobState.SUCCEEDED
         assert proc.returncode == EXIT_DRAINED, out
         assert str(job.id) in out
+
+    @pytest.mark.parametrize("sig", [signal.SIGTERM, signal.SIGINT], ids=["sigterm", "sigint"])
+    def test_signal_during_active_db_phase_completes_and_stops_claiming(self, tmp_path, sig):
+        """REV-1711-09 / A08: sinyal NYATA (SIGTERM dan SIGINT) tiba SAAT job
+        DB kooperatif AKTIF di balik barrier — bukan setelah terminal.
+
+        - job aktif diselesaikan kooperatif (exit 0, job SUCCEEDED);
+        - klaim baru dihentikan segera: job kedua yang sudah antri TIDAK
+          diklaim (state tetap queued, attempt 0) — stop-claim assertion;
+        - urutan runbook drain terjaga (stop claims → selesaikan aktif).
+        """
+        sentinel = tmp_path / "sentinel-active.txt"
+        first = _make_job("_test_drain_active", {"sentinel": str(sentinel)}, priority=10)
+        second = _make_job("_test_drain_db")
+        proc = _spawn("--loop", "--interval", "0.2", "--drain-timeout", "15")
+        try:
+            # Tunggu job PERTAMA mencapai fase aktif (progress fase-1 terkomit
+            # — poll state+phase bersama agar tidak race dengan commit progress).
+            active = None
+            deadline = time.monotonic() + 25
+            while time.monotonic() < deadline:
+                row = Job.objects.filter(id=first.id).first()
+                if row.state == JobState.EXECUTING and row.phase_label_code == "active-1":
+                    active = row
+                    break
+                time.sleep(0.1)
+            assert active is not None, "job aktif tidak mencapai fase barrier"
+            proc.send_signal(sig)  # sinyal tiba SAAT job aktif (barrier)
+            time.sleep(0.6)  # worker menyelesaikan claim-check; job tetap aktif
+            assert Job.objects.get(id=second.id).state == JobState.QUEUED
+            sentinel.write_text("go")  # lepaskan barrier: job aktif diselesaikan
+            out, _ = proc.communicate(timeout=20)
+        finally:
+            if proc.poll() is None:  # pragma: no cover
+                proc.kill()
+                proc.communicate()
+        assert proc.returncode == EXIT_DRAINED, out
+        finished = Job.objects.get(id=first.id)
+        assert finished.state == JobState.SUCCEEDED
+        assert finished.items_done == 2
+        # Stop-claim: job kedua tidak pernah diklaim oleh proses yang sudah stop.
+        unclaimed = Job.objects.get(id=second.id)
+        assert unclaimed.state == JobState.QUEUED
+        assert unclaimed.attempt == 0
+        assert str(first.id) in out
+        assert str(second.id) not in out
+
+    def test_sigint_blocked_io_deadline_holds_job_honestly(self, tmp_path):
+        """REV-1711-09: SIGINT pada I/O terblokir melebihi batas drain —
+        job ditahan jujur uncertain, keluar 3 (incomplete), dapat dipulihkan."""
+        sentinel = tmp_path / "sentinel-int.txt"
+        job = _make_job("_test_drain_io", {"sentinel": str(sentinel)})
+        proc = _spawn("--loop", "--interval", "0.2", "--drain-timeout", "2")
+        try:
+            executing = _wait_state(job.id, {JobState.EXECUTING}, timeout_s=25)
+            assert executing.state == JobState.EXECUTING
+            proc.send_signal(signal.SIGINT)
+            out, _ = proc.communicate(timeout=20)
+        finally:
+            if proc.poll() is None:  # pragma: no cover
+                proc.kill()
+                proc.communicate()
+        assert proc.returncode == EXIT_DRAIN_DEADLINE, out
+        held = Job.objects.get(id=job.id)
+        assert held.state == JobState.UNCERTAIN
+        assert held.error_code == "drained_mid_execute", held.error_code
+        # Pemulihan: sentinel tersedia → resolve(not applied) → klaim ulang.
+        sentinel.write_text("go")
+        resolved = engine.resolve_uncertain(Job.objects.get(id=job.id), applied=False)
+        assert resolved.state == JobState.RETRY_WAIT
+        reclaimed = engine.claim_next()
+        assert reclaimed is not None and str(reclaimed.id) == str(job.id)
+        finished = engine.run_claimed(reclaimed)
+        assert finished.state == JobState.SUCCEEDED
 
     def test_drain_deadline_on_blocked_io_holds_job_honestly(self, tmp_path):
         """I/O terblokir melebihi batas drain: job ditahan jujur (uncertain),

@@ -2,6 +2,39 @@
 
 Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-17 (Asia/Jakarta).
 
+## Checkpoint 2026-11-17, ~23:59 WIB — executor menyerahkan koreksi task0020 (done, pending review)
+
+Coding agent menutup **REV-1711-01–09 pada ID0020 yang sama** dari decision
+ref **[PR29](https://github.com/smahud/MicroTix_Project/pull/29)** (fetched
+sampai `0e45157`; base membawa source PR27). Perubahan minimum stack
+existing: guard ownership DI DALAM transaksi unit domain (`scope()`+`
+assert_owned()`, heartbeat/progress melempar OwnershipLost; guard diteruskan
+ke `run_discovery`/`finalize_verification`), `JobError.no_effect` eksplisit
++ default uncertain pasca-efek (komposisi transisi executing→uncertain→
+retry_wait sah tabel §6), retry lineage root-lock+BFS seluruh descendant,
+hold durable router outcome-unknown (+executing/verifying lease expired),
+authority di batas efek setelah preflight, HTTP job menghormati
+membership.router_scope (404 non-scope), B6 APPLY/VERIFY di luar transaksi
++ readback negatif jujur (run FAILED, tanpa klaim LOCAL/ROLLED_BACK), serta
++8 tes bukti REV-1711-09 (SIGTERM/SIGINT idle/active-barrier/stop-claim,
+fase panjang vs reconciler serentak, crash setelah commit domain,
+current-policy/SUB-05 restricted/ended). Tanpa migrasi schema.
+
+Bukti: **probe controller R1 failing-before 11 failed → passing-after
+11 passed** (diulang pada DB split-role migrator-owned + runtime
+NOSUPERUSER/NOBYPASSRLS/FORCE RLS); **suite penuh 562 passed/1skip**;
+PA-001 33, PA-006 125, RLS 8 lulus; check/makemigrations/docs PASS.
+[Reviewer independen](../report/reviewer/20261117T160500Z-0020-correction-independent.md):
+REV-1711-01–09 CLOSED, nol pelemahan assertion; temuan P2 reviewer
+(CORR-REV-01 no_effect blanket backup, CORR-REV-02 jendela hard-crash
+pra-reconcile) **ditutup sebelum commit**. Execution **done / review
+pending** pada [packet0020_done](../task/0020-job-lifecycle-authority_done.md);
+[laporan koreksi + matriks A01–A09](../report/orchestrator/20261117T160000Z-0020-correction-delivery.md)
++ [evidence](../report/executor-evidence/20261117T150000Z-0020-correction/).
+Next **controller_reviewer** mereview exact SHA koreksi; task0010 tetap
+accepted/integrated; task0030 belum eligible. Beta **NOT_READY**;
+host/perangkat/GNS3/live RADIUS/browser/benchmark tetap NOT_RUN.
+
 ## Checkpoint 2026-11-17, ~21:48 WIB — controller resume task0020
 
 GitHub/fresh clone **31 branches/14 open PRs**: main41d1f33, PR27bd37c14,

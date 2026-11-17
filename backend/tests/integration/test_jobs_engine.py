@@ -36,7 +36,9 @@ class _RetryableHandler(JobHandler):
     kind = "_test_retry"
 
     def execute(self, ctx: JobContext):
-        raise JobError(code="router_unreachable", retryable=True)
+        # Kegagalan pra-efek dengan bukti eksplisit no_effect (REV-1711-02):
+        # handler menegaskan tidak ada efek yang terjadi saat galat dilempar.
+        raise JobError(code="router_unreachable", retryable=True, no_effect=True)
 
     def verify(self, ctx: JobContext):
         return {}

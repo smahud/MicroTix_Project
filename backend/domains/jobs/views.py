@@ -45,14 +45,24 @@ def job_record(job: Job) -> dict:
 
 
 def _require_job_authority(view: ActiveTenantApiView, request: Request, job: Job) -> None:
-    """Izin operasi yang mendasari job untuk aksi HTTP (A07).
+    """Izin operasi + membership router scope untuk aksi HTTP (A07).
 
     - Job di luar tenant sesi aktif → 404 generik (jangan bocorkan).
-    - Anggota tanpa izin operasi → 403.
+    - Router job di luar membership.router_scope → 404 generik (REV-1711-06:
+      endpoint job menghormati scope membership; nol perubahan state/job).
+    - Anggota tanpa izin operasi (in-scope) → 403.
     - Aksi mutasi pada kind sensitif → step-up reauth (ARCHITECTURE §3).
     """
     if not view.in_scope(job.tenant_id):
         raise ApiError.not_found()
+    membership = request.mt_membership
+    if job.router_id is not None and membership.router_scope is not None:
+        scope = membership.router_scope
+        allowed = {
+            str(r) for r in (scope if isinstance(scope, (list, tuple)) else [scope])
+        }
+        if str(job.router_id) not in allowed:
+            raise ApiError.not_found()
     requirement = engine.authority_requirement(job)
     if requirement is None:
         return

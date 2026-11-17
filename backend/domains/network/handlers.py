@@ -73,13 +73,18 @@ class VerifyApiSslHandler(JobHandler):
         source = active_adapter_name()
         try:
             # Probe (I/O) di luar transaksi DB; commit router+peer dalam unit
-            # tenant tersendiri di dalam service.
-            router = services.finalize_verification(enrollment, source=source)
+            # tenant tersendiri di dalam service — difence guard ownership
+            # (REV-1711-01).
+            router = services.finalize_verification(
+                enrollment, source=source, ownership_guard=ctx.assert_owned
+            )
         except RouterOsError as exc:
             # Probe API-SSL nyata gagal (router belum bootstrap penuh / tunnel
-            # belum naik) — retry bounded (re-entry VERIFYING), tanpa penyelesaian palsu.
+            # belum naik) — probe BACA-SAJA tanpa efek: retry bounded eksplisit
+            # no-effect (re-entry VERIFYING), tanpa penyelesaian palsu.
             raise JobError(
-                code="api_ssl_unreachable", retryable=True, message=f"verifikasi API-SSL gagal: {exc.message}"
+                code="api_ssl_unreachable", retryable=True, no_effect=True,
+                message=f"verifikasi API-SSL gagal: {exc.message}",
             ) from exc
         return {"status": "completed", "router_id": str(router.id), "evidence": source}
 
@@ -109,9 +114,11 @@ class DiscoverRouterHandler(JobHandler):
 
         with ctx.scope():
             router = _ctx_router(ctx)
-        # run_discovery mengelola unit DB pendeknya sendiri; list_accounts /
+        # run_discovery mengelola unit DB pendeknya sendiri; guard ownership
+        # dipanggil DI DALAM tiap unit sehingga kehilangan lease membatalkan
+        # commit domain sebelum terjadi (REV-1711-01); list_accounts /
         # read_health (I/O adapter) berjalan di luar transaksi.
-        return services.run_discovery(router)
+        return services.run_discovery(router, ownership_guard=ctx.assert_owned)
 
     def verify(self, ctx: JobContext) -> dict:
         from domains.network.models import DiscoverySnapshot

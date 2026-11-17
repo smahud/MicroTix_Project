@@ -16,11 +16,14 @@ def _to_job_error(exc: ApiError) -> JobError:
     """Konversi ApiError layanan → JobError (kode mesin stabil; §5/§6).
 
     quota/conflict/not_found/validation tidak diulang otomatis;
-    dependency_unavailable retryable (ketergantungan mungkin pulih).
+    dependency_unavailable retryable (ketergantungan mungkin pulih) dan
+    terbukti pra-efek: kegagalan berjalan dalam transaksi domain yang
+    rollback bersih → no_effect eksplisit (REV-1711-02).
     """
     return JobError(
         code=exc.code,
         retryable=exc.code == "dependency_unavailable",
+        no_effect=exc.code == "dependency_unavailable",
         message=str(exc.detail),
     )
 
