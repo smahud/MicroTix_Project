@@ -1,0 +1,341 @@
+{
+  "status": "PUBLISHED_AND_VERIFIED",
+  "initial_commit": "35e0d61e411482a244958448c2695c9a56185ab1",
+  "tree": "7e6bb3b106a0b8a478b3244eaae29d10b3b40e05",
+  "parent": "4b03efedd76815af3f1c6fdf99d0739cd8dccc87",
+  "branch": "review/0020-controller-r3-20261118",
+  "pr": 33,
+  "url": "https://github.com/smahud/MicroTix_Project/pull/33",
+  "remote_tree_entries": 1090,
+  "tree_truncated": false,
+  "all_changed_paths_match": true,
+  "checks": [
+    {
+      "path": "docs/progress.md",
+      "expected_sha": "221b28485b5cf079d811a2d0f61d2d4e5fcc9693",
+      "actual_sha": "221b28485b5cf079d811a2d0f61d2d4e5fcc9693",
+      "match": true
+    },
+    {
+      "path": "report/LATEST_HANDOFF.md",
+      "expected_sha": "bc5f435d11f985529fa86293de9d327a605b88f2",
+      "actual_sha": "bc5f435d11f985529fa86293de9d327a605b88f2",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/check.log",
+      "expected_sha": "7883fe46f105a9220370c1e6d26f0a1a6665783d",
+      "actual_sha": "7883fe46f105a9220370c1e6d26f0a1a6665783d",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/create-roles.log",
+      "expected_sha": "5b54a4e03cc5b4e66920ddc0c995bcf497cff2d7",
+      "actual_sha": "5b54a4e03cc5b4e66920ddc0c995bcf497cff2d7",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/docs-final.log",
+      "expected_sha": "8262f55dfa7221aafedee9add73e06564ecbfd90",
+      "actual_sha": "8262f55dfa7221aafedee9add73e06564ecbfd90",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/docs.log",
+      "expected_sha": "8262f55dfa7221aafedee9add73e06564ecbfd90",
+      "actual_sha": "8262f55dfa7221aafedee9add73e06564ecbfd90",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/environment.log",
+      "expected_sha": "445c7a6f1889415c9aa76e3b64b4ec6d1a9e5d49",
+      "actual_sha": "445c7a6f1889415c9aa76e3b64b4ec6d1a9e5d49",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/exit-codes.txt",
+      "expected_sha": "7e85673ab7a981394f99681ad70efdd68d100d80",
+      "actual_sha": "7e85673ab7a981394f99681ad70efdd68d100d80",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/full-suite.log",
+      "expected_sha": "63c5e1d0e96e0cde1c200fa717c4fb9439dec1b3",
+      "actual_sha": "63c5e1d0e96e0cde1c200fa717c4fb9439dec1b3",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/initdb.log",
+      "expected_sha": "a41b119fa4c291807221ef41c7ae11286b382145",
+      "actual_sha": "a41b119fa4c291807221ef41c7ae11286b382145",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/local-ref-inventory.json",
+      "expected_sha": "b650f9301e5a808b8648e16ed76640206e99d4eb",
+      "actual_sha": "b650f9301e5a808b8648e16ed76640206e99d4eb",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/makemigrations.log",
+      "expected_sha": "8e3e881e0acb37cc6447055799fb8e3dc8bed220",
+      "actual_sha": "8e3e881e0acb37cc6447055799fb8e3dc8bed220",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/r1-authority.log",
+      "expected_sha": "ab0f93629b2129b07f56d12df7e628eafae02d5f",
+      "actual_sha": "ab0f93629b2129b07f56d12df7e628eafae02d5f",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/r1-lifecycle.log",
+      "expected_sha": "ef54a58f79ec6a6364042966876b72972091654b",
+      "actual_sha": "ef54a58f79ec6a6364042966876b72972091654b",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/r2-authority.log",
+      "expected_sha": "7bdfd32918f7fe7bccab7b2268d6856607fbaf55",
+      "actual_sha": "7bdfd32918f7fe7bccab7b2268d6856607fbaf55",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/r2-lifecycle.log",
+      "expected_sha": "1eaa767bd7f52e73929fa3d4e6a96795109b56fa",
+      "actual_sha": "1eaa767bd7f52e73929fa3d4e6a96795109b56fa",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/remote-inputs.json",
+      "expected_sha": "479a987e7f8a7e96d64102406f091cce0226916a",
+      "actual_sha": "479a987e7f8a7e96d64102406f091cce0226916a",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/review-results.json",
+      "expected_sha": "bd1846e57a0eaf837068daed7c709804ede6bb3e",
+      "actual_sha": "bd1846e57a0eaf837068daed7c709804ede6bb3e",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/run_review.sh",
+      "expected_sha": "06338002d484cf302386ecb3ce6baa3e3c184b10",
+      "actual_sha": "06338002d484cf302386ecb3ce6baa3e3c184b10",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/run_supplemental.sh",
+      "expected_sha": "e8c13e566757fdd3cffa8af128c548f2afe96732",
+      "actual_sha": "e8c13e566757fdd3cffa8af128c548f2afe96732",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/split-grant.log",
+      "expected_sha": "0875a7cf8377c42fbb7443ad36859d8fd27a1686",
+      "actual_sha": "0875a7cf8377c42fbb7443ad36859d8fd27a1686",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/split-migrate.log",
+      "expected_sha": "d09e4bd01c6f8cf2998e9d89c5dd66aaa6ade48d",
+      "actual_sha": "d09e4bd01c6f8cf2998e9d89c5dd66aaa6ade48d",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/split-roles-rls.log",
+      "expected_sha": "3b51a478504d9652f98faf9b5493251fc7d63d89",
+      "actual_sha": "3b51a478504d9652f98faf9b5493251fc7d63d89",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/split-test-cleanup-grant.log",
+      "expected_sha": "9a061cd9bc96cd83ced6569e15fd3ed1fb7b49f0",
+      "actual_sha": "9a061cd9bc96cd83ced6569e15fd3ed1fb7b49f0",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/supplemental/create-roles.log",
+      "expected_sha": "5b54a4e03cc5b4e66920ddc0c995bcf497cff2d7",
+      "actual_sha": "5b54a4e03cc5b4e66920ddc0c995bcf497cff2d7",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/supplemental/environment.log",
+      "expected_sha": "445c7a6f1889415c9aa76e3b64b4ec6d1a9e5d49",
+      "actual_sha": "445c7a6f1889415c9aa76e3b64b4ec6d1a9e5d49",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/supplemental/exit-codes.txt",
+      "expected_sha": "a4a166984ab3dfeff1beb3848a53dc0db908a228",
+      "actual_sha": "a4a166984ab3dfeff1beb3848a53dc0db908a228",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/supplemental/initdb.log",
+      "expected_sha": "b11f5f0cdba94cf56189f3a1066cfa2a55bb12cf",
+      "actual_sha": "b11f5f0cdba94cf56189f3a1066cfa2a55bb12cf",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/supplemental/r3-authority.log",
+      "expected_sha": "7ee180fc6ccaf20d6e08ed5cc69b64dcb0528d59",
+      "actual_sha": "7ee180fc6ccaf20d6e08ed5cc69b64dcb0528d59",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/supplemental/r3-lifecycle.log",
+      "expected_sha": "882fc94cd375e908025af95bf1f318de4e5c4173",
+      "actual_sha": "882fc94cd375e908025af95bf1f318de4e5c4173",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/supplemental/split-grant.log",
+      "expected_sha": "0875a7cf8377c42fbb7443ad36859d8fd27a1686",
+      "actual_sha": "0875a7cf8377c42fbb7443ad36859d8fd27a1686",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/supplemental/split-migrate.log",
+      "expected_sha": "d09e4bd01c6f8cf2998e9d89c5dd66aaa6ade48d",
+      "actual_sha": "d09e4bd01c6f8cf2998e9d89c5dd66aaa6ade48d",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/supplemental/split-roles-rls.log",
+      "expected_sha": "3b51a478504d9652f98faf9b5493251fc7d63d89",
+      "actual_sha": "3b51a478504d9652f98faf9b5493251fc7d63d89",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/supplemental/split-test-cleanup-grant.log",
+      "expected_sha": "9a061cd9bc96cd83ced6569e15fd3ed1fb7b49f0",
+      "actual_sha": "9a061cd9bc96cd83ced6569e15fd3ed1fb7b49f0",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/test_r3_authority.py",
+      "expected_sha": "43e8df74a23dc7f6a1fd61de6d3870b98179de7e",
+      "actual_sha": "43e8df74a23dc7f6a1fd61de6d3870b98179de7e",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T212042Z-0020-r3/test_r3_lifecycle_edges.py",
+      "expected_sha": "74a82f82da0047e9673d2223d727447bc7e08421",
+      "actual_sha": "74a82f82da0047e9673d2223d727447bc7e08421",
+      "match": true
+    },
+    {
+      "path": "report/controller/20261116T231131Z-0020-job-lifecycle-review.md",
+      "expected_sha": "4e0593960830c3cfcdaebf657a92e59686d31b30",
+      "actual_sha": "4e0593960830c3cfcdaebf657a92e59686d31b30",
+      "match": true
+    },
+    {
+      "path": "report/controller/20261117T134100Z-0020-job-lifecycle-review.md",
+      "expected_sha": "8c589253b166e22c7c5015872ac83ce140482616",
+      "actual_sha": "8c589253b166e22c7c5015872ac83ce140482616",
+      "match": true
+    },
+    {
+      "path": "report/controller/20261117T144620Z-0020-resume-review.md",
+      "expected_sha": "ac388446cb3032043ad7d9039bb0a18f6b11cfe6",
+      "actual_sha": "ac388446cb3032043ad7d9039bb0a18f6b11cfe6",
+      "match": true
+    },
+    {
+      "path": "report/controller/20261117T170000Z-0020-r2-review.md",
+      "expected_sha": "1d52c6d884ae3098887a7f5b129a4028ea50f28f",
+      "actual_sha": "1d52c6d884ae3098887a7f5b129a4028ea50f28f",
+      "match": true
+    },
+    {
+      "path": "report/controller/20261117T212042Z-0020-r3-review.md",
+      "expected_sha": "f6fc075f757828ab787f0f4ad36dddf3c166c5f7",
+      "actual_sha": "f6fc075f757828ab787f0f4ad36dddf3c166c5f7",
+      "match": true
+    },
+    {
+      "path": "report/orchestrator/20261117T010218Z-0020-job-lifecycle-authority.md",
+      "expected_sha": "24686c88f1ea7d40836a17c344690a4d268d3f6b",
+      "actual_sha": "24686c88f1ea7d40836a17c344690a4d268d3f6b",
+      "match": true
+    },
+    {
+      "path": "report/orchestrator/20261117T160000Z-0020-correction-delivery.md",
+      "expected_sha": "2b54d87f05568adb139673884e99a7090179a465",
+      "actual_sha": "2b54d87f05568adb139673884e99a7090179a465",
+      "match": true
+    },
+    {
+      "path": "report/orchestrator/20261117T194548Z-0020-r2-correction.md",
+      "expected_sha": "3c52b4eef46b02ca7c1a2329634160b92bd2fd24",
+      "actual_sha": "3c52b4eef46b02ca7c1a2329634160b92bd2fd24",
+      "match": true
+    },
+    {
+      "path": "report/reviewer/20261117T212042Z-0020-r3-authority.md",
+      "expected_sha": "846765390b13b72f79ff7920964a617d78f0c7b2",
+      "actual_sha": "846765390b13b72f79ff7920964a617d78f0c7b2",
+      "match": true
+    },
+    {
+      "path": "report/reviewer/20261117T212042Z-0020-r3-lifecycle.md",
+      "expected_sha": "a972f3b4d6b879dd8dbcfeb9eef7d1431cd953c0",
+      "actual_sha": "a972f3b4d6b879dd8dbcfeb9eef7d1431cd953c0",
+      "match": true
+    },
+    {
+      "path": "task/0010-pa006-idempotency_done.md",
+      "expected_sha": "c0fa988b66ce18b1fac1aa9972a9e7fa812805d2",
+      "actual_sha": "c0fa988b66ce18b1fac1aa9972a9e7fa812805d2",
+      "match": true
+    },
+    {
+      "path": "task/0020-job-lifecycle-authority.md",
+      "expected_sha": "358b0788b7e2b2bb6aae31dd63d6255ecf5b4425",
+      "actual_sha": "358b0788b7e2b2bb6aae31dd63d6255ecf5b4425",
+      "match": true
+    },
+    {
+      "path": "task/0020-job-lifecycle-authority_done.md",
+      "expected_sha": null,
+      "actual_sha": null,
+      "match": true
+    }
+  ],
+  "key_file_readback": [
+    {
+      "path": "task/0020-job-lifecycle-authority.md",
+      "sha": "358b0788b7e2b2bb6aae31dd63d6255ecf5b4425",
+      "match": true
+    },
+    {
+      "path": "report/controller/20261117T212042Z-0020-r3-review.md",
+      "sha": "f6fc075f757828ab787f0f4ad36dddf3c166c5f7",
+      "match": true
+    },
+    {
+      "path": "report/LATEST_HANDOFF.md",
+      "sha": "bc5f435d11f985529fa86293de9d327a605b88f2",
+      "match": true
+    },
+    {
+      "path": "docs/progress.md",
+      "sha": "221b28485b5cf079d811a2d0f61d2d4e5fcc9693",
+      "match": true
+    }
+  ],
+  "local_fetch_clean": true,
+  "protected_source_diff_empty": true,
+  "ci_initial_observation": [
+    {
+      "id": 44181028820,
+      "head_sha": "35e0d61e411482a244958448c2695c9a56185ab1",
+      "status": "in_progress",
+      "conclusion": null
+    }
+  ],
+  "note": "Initial decision commit already exists and was read back. This publication record is a later metadata-only descendant; CI observation is tied only to initial SHA."
+}

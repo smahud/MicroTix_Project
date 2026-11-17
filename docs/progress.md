@@ -22,7 +22,9 @@ adapter/readback,09 mapping/healthy long-phase CLOSED within stated limits
 [Controller R3](../report/controller/20261117T212042Z-0020-r3-review.md),
 [evidence](../report/controller-evidence/20261117T212042Z-0020-r3/),
 [packet0020 reopened](../task/0020-job-lifecycle-authority.md).
-Decision ref **review/0020-controller-r3-20261118**, publication R3 §8.
+Decision **[PR33](https://github.com/smahud/MicroTix_Project/pull/33)**
+review/0020-controller-r3-20261118, initial35e0d61/tree7e6bb3b verified
+all49 path checks +4 key file readbacks +clean fetch; publication R3 §8.
 Next **coding_agent** menutup residual pada ID sama, all7 new probes PASS
 without weakening + preserve17/full regression, publish new SHA+CI+reports.
 Task0010 accepted/integrated;0030 belum eligible; Beta NOT_READY. Source
