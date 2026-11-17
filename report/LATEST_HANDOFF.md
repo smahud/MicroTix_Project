@@ -9,7 +9,7 @@ menggantikan status historis di bawah; tanggal pengguna Asia/Jakarta.
 | Canonical main teramati | **41d1f33f16508491a34f66b767830b9dd3e5954e**; main tidak diubah sesi ini |
 | Active task | **[ID0020 PA-002+PA-003](../task/0020-job-lifecycle-authority.md)** — **ready / changes_requested / not integrated** |
 | Exact reviewed candidate | **[PR27](https://github.com/smahud/MicroTix_Project/pull/27)** `bd37c14e6c41339a8743b3d4b723ee74f13bef08`; executor tested ancestor7118cce, source/app delta kosong |
-| Decision ref | **`review/0020-controller-20261117`**; [controller R1](controller/20261117T134100Z-0020-job-lifecycle-review.md), publication/readback §8. Branch ini membawa source kandidat + packet reopened, bukan main yang masih lama |
+| Decision ref | **[PR29](https://github.com/smahud/MicroTix_Project/pull/29)** `review/0020-controller-20261117`, initial decision **3c4b71fa75ab0619bf12b84660a8678b99294e20/tree9b7d2405** verified; [controller R1](controller/20261117T134100Z-0020-job-lifecycle-review.md), publication/readback §8. Branch ini membawa source kandidat + packet reopened, bukan main yang masih lama |
 | Evidence root | Full backend **554 passed,1 skipped,3 warnings**; **11 acceptance probes FAIL / 0 harness errors** pada fresh PG17.11 migrator-owned schema + runtime nonowner/NOBYPASSRLS/FORCE RLS; [summary](controller-evidence/20261117T134100Z-0020-review/review-results.json) |
 | Blocking findings | **REV-1711-01–08**: stale domain commit, blind retry setelah efek, retry lineage unknown, router unreadback hold, after-preflight authority, HTTP router scope, B6 I/O transaction dan B6 false success; **09** missing required evidence (drain SIGINT/active DB, long-phase/policy/recovery) |
 | Candidate CI | Existing run43994355914 exact **bd37c14 success backend/frontend/docs3/3**; tidak menutup probe acceptance gagal |
@@ -20,8 +20,9 @@ menggantikan status historis di bawah; tanggal pengguna Asia/Jakarta.
 | Other refs | PR26 instruction, PR28@8204ba0 report-only state check, histori PR task0010 serta PR7/8/14 dipertahankan; tidak ada merge/close/force-push |
 | Beta / limits | **NOT_READY**; sandbox defects di atas + installer/upgrade/restore/secret/scheduler/DEC-01/02 dan host/GNS3/pilot/kapasitas tetap terpisah. OS/device/live RADIUS/browser/benchmark NOT_RUN; simulator bukan perangkat nyata |
 
-Publikasi final dicatat setelah verifikasi ref/tree/file, bukan diinferensikan
-dari chat. Packet tidak otomatis memulai external coding agent.
+Initial decision commit/ref/tree +39path readback MATCH, clean local fetch
+terverifikasi; metadata descendant hanya mencatat publikasi yang sudah ada.
+Final head/CI mengikuti PR29; packet tidak otomatis memulai external coding agent.
 
 ## Histori — penyerahan executor task0020 (digantikan review R1 di atas)
 

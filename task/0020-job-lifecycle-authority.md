@@ -8,7 +8,7 @@
 | Controller / executor | ChatGPT Work controller / coding agent sandbox |
 | Baseline | `main@41d1f33f16508491a34f66b767830b9dd3e5954e`; fetch ulang dan periksa delta sebelum bekerja |
 | Original instruction ref | PR26 `review/0020-job-lifecycle-authority-20261117` @ `ea7b8a17ad8d6339eed45769bbff1626ea279665`; histori instruksi awal |
-| Current correction instruction ref | **`review/0020-controller-20261117`**, [controller R1 §3/§7](../report/controller/20261117T134100Z-0020-job-lifecycle-review.md); fetch ref ini untuk koreksi, bukan packet awal PR26 atau main yang lama |
+| Current correction instruction ref | **[PR29](https://github.com/smahud/MicroTix_Project/pull/29)** `review/0020-controller-20261117` (initial decision3c4b71f verified), [controller R1 §3/§7](../report/controller/20261117T134100Z-0020-job-lifecycle-review.md); fetch ref ini untuk koreksi, bukan packet awal PR26 atau main yang lama |
 | Accepted predecessor | [0010 / PA-006](0010-pa006-idempotency_done.md), accepted exact `a301a94c2b3268679065e85bbef66f35949483f7` pada [R5 review](../report/controller/20261116T101809Z-0010-pa006-r5-review.md); PR24+PR25 merged ke main, [integrasi](../report/orchestrator/20261116T111835Z-0010-pa006-integration.md) |
 | Authority | [CONTRACT](../CONTRACT.md) §§5–6A/8–13; [PRODUCT](../docs/PRODUCT.md) TEN-03, JOB-02–05, SEC-01/04/05, SUB-05; [ARCHITECTURE](../docs/ARCHITECTURE.md) §§3–6; [OPERATIONS](../docs/OPERATIONS.md) §§3–4; [ACCEPTANCE](../docs/ACCEPTANCE.md) §4 |
 | Backlog / tests | Existing TK-101/102/103 dan bagian drain TK-1002; katalog T06-CRASH-01/02/03, T10-TEN-03; T05/T14 hanya invariant current-state yang relevan, bukan seluruh fitur R2/DR |

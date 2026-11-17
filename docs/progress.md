@@ -19,8 +19,10 @@ gap mandatory evidence **09** dicatat terpisah; [evidence summary](../report/con
 **[Packet0020](../task/0020-job-lifecycle-authority.md) reopened ready /
 changes_requested**, next **coding_agent** fetch `review/0020-controller-20261117`
 dan tutup finding pada ID sama, submit exact SHA baru+tes/evidence/CI.
-Decision dipublikasikan terpisah dari kandidat; readback/commit/PR mengikuti
-controller report §8. PA-006/task0010 tetap accepted/integrated dan P3 R5
+Decision dipublikasikan pada **[PR29](https://github.com/smahud/MicroTix_Project/pull/29)**,
+initial commit **3c4b71f/tree9b7d2405**, ref/commit/tree+39path readback MATCH
+dan clean local fetch; metadata descendant hanya mencatat publikasi ini.
+Final head/CI mengikuti PR29 dan controller report §8. PA-006/task0010 tetap accepted/integrated dan P3 R5
 assertions preserved. Tidak ada task0030, app patch, main merge, deployment,
 aktivasi atau tag. Beta **NOT_READY**; host/perangkat/GNS3/live RADIUS/
 browser/benchmark tidak diklaim terverifikasi. Checkpoint di bawah histori.

@@ -299,9 +299,22 @@ tetap keputusan terpisah. File packet tidak otomatis menjalankan external agent.
 
 ## 8. Publication record
 
-Saat file pertama ditulis: **NOT PUSHED**. Root menerbitkan commit branch/PR,
-memverifikasi remote commit/tree/file dan source delta kosong, lalu mencatat
-SHA publikasi yang sudah ada pada metadata descendant dan `publication.json`.
-Jangan menafsirkan placeholder ini sebagai klaim push/CI yang belum terjadi.
-Hasil final publikasi dicatat sesudah readback; candidate bd37c14 tetap SHA
-verdict, bukan commit dokumen review.
+**PUBLISHED_AND_VERIFIED**: initial decision commit
+**`3c4b71fa75ab0619bf12b84660a8678b99294e20`**, tree
+**`9b7d2405b61be23f333f83dc4a6e3999b63790e7`**, branch
+`review/0020-controller-20261117`, **[PR29](https://github.com/smahud/MicroTix_Project/pull/29)**
+open, targets PR27 candidate branch at exact **bd37c14**.
+
+GitHub ref/commit/parent/full tree dan **39 changed/deleted paths** dibandingkan
+ke staged blob IDs lokal: seluruhnya MATCH, tanpa truncated tree. Local fetch
++content/index equality dan clean worktree terverifikasi; source/config
+protected delta terhadap bd37c14 kosong. Main tetap41d1f33, PR27 tetapbd37c14;
+PR26/28 dan pekerjaan lain tidak diubah. [Publication record](../controller-evidence/20261117T134100Z-0020-review/publication.json)
+menyimpan readback dan observasi CI awal pada commit tersebut.
+
+Bagian ini serta publication record ditambahkan **sesudah** commit di atas
+benar-benar terbit, pada descendant metadata-only. Commit descendant tidak
+mengklaim SHA masa depannya sendiri. Root memverifikasi ulang head/ref/PR/file
+final dan mencatat current-head CI pada deskripsi PR29; CI candidate bd37c14
+atau ancestor dokumen tidak diinferensikan sebagai CI head baru. Verdict
+review tetap terkait bd37c14; commit dokumen tidak menjadi acceptance kode.
