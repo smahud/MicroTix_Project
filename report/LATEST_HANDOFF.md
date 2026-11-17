@@ -7,7 +7,9 @@ koreksi task0020 (PR30 lineage) + branch historis; keputusan penyelesaian
 record-only vs kode-canonical tercatat pada
 [integrasi merge-all](orchestrator/20261117T170000Z-merge-all-integration.md).
 Suite penuh 580 passed/1 skip + checks/docs PASS pada tree final sebelum
-push. PR historis ter-tutup otomatis karena head kini ancestor main.
+push. PR historis stale (16/18/20/23/29) ditutup dengan komentar penjelasan
+karena head kini ancestor main — bukan close paksa: kontennya sudah
+terintegrasi penuh di main.
 REVIEW TASK0020 TETAP PENDING di PR30 — merge pemilik bukan acceptance
 controller.
 
