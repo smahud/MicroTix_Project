@@ -31,7 +31,7 @@ pra-reconcile) **ditutup sebelum commit**. Execution **done / review
 pending** pada [packet0020_done](../task/0020-job-lifecycle-authority_done.md);
 [laporan koreksi + matriks A01–A09](../report/orchestrator/20261117T160000Z-0020-correction-delivery.md)
 + [evidence](../report/executor-evidence/20261117T150000Z-0020-correction/).
-Next **controller_reviewer** mereview exact SHA koreksi; task0010 tetap
+Candidate **[PR30](https://github.com/smahud/MicroTix_Project/pull/30)** published head `062a017` (impl/tested `2681a3d`), CI exact head **[run44119619011](https://github.com/smahud/MicroTix_Project/actions/runs/44119619011) backend/frontend/docs success 3/3** terverifikasi. Next **controller_reviewer** mereview exact SHA koreksi; task0010 tetap
 accepted/integrated; task0030 belum eligible. Beta **NOT_READY**;
 host/perangkat/GNS3/live RADIUS/browser/benchmark tetap NOT_RUN.
 
