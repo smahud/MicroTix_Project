@@ -53,10 +53,19 @@ def _register_drain_handlers():
 
 
 def _db_url() -> str:
+    """URL koneksi DB uji untuk subprocess (termasuk password bila ada —
+    CI memakai password auth, sandbox lokal trust)."""
+    from urllib.parse import quote
+
     from django.db import connection
 
     settings = connection.settings_dict
-    return f"postgresql://{settings['USER']}@{settings['HOST']}:{settings['PORT']}/{settings['NAME']}"
+    user = quote(settings["USER"] or "", safe="")
+    password = quote(settings.get("PASSWORD") or "", safe="")
+    auth = f"{user}:{password}@" if password else f"{user}@"
+    return (
+        f"postgresql://{auth}{settings['HOST']}:{settings['PORT']}/{settings['NAME']}"
+    )
 
 
 def _spawn(*args: str) -> subprocess.Popen:
