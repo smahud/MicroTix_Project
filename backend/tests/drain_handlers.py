@@ -35,6 +35,10 @@ class DrainActiveHandler(JobHandler):
     kind = "_test_drain_active"
 
     def execute(self, ctx: JobContext) -> dict:
+        # Efek durable fase aktif ini adalah tulisan envelope/progress job
+        # (CAS lease: items_done/phase_label + perpanjangan lease), BUKAN
+        # unit domain — mapping evidence A08 (REV-1711-09 R2) menyatakan
+        # ini secara eksplisit, tanpa mengklaim transaksi domain.
         ctx.progress(phase="active-1", done=1, total=2)
         sentinel = str(ctx.payload.get("sentinel") or "")
         deadline = time.monotonic() + 120
@@ -43,7 +47,9 @@ class DrainActiveHandler(JobHandler):
                 break
             time.sleep(0.05)
         with ctx.scope():
-            # Unit DB kedua pendek (efek DB kooperatif di balik barrier).
+            # Unit DB kedua pendek (efek DB kooperatif di balik barrier) —
+            # guard entry+commit terkunci; payload dibaca sebagai bagian
+            # unit, bukan efek domain tersendiri.
             _ = ctx.payload
         ctx.progress(phase="active-2", done=2, total=2)
         return {"ok": True, "kind": "active", "sentinel_seen": bool(sentinel)}

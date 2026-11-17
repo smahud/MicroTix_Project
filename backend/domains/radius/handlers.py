@@ -146,19 +146,36 @@ def _b2_install(run: CutoverRun, ctx: JobContext, router: Router) -> None:
     Unit DB (nas read, evidence commit) terpisah dari APPLY/VERIFY adapter
     yang berjalan di luar transaksi (PA-002).
     """
-    from adapters.routeros.factory import active_routeros_adapter
+    from adapters.routeros.base import RouterOsError
+    from adapters.routeros.factory import active_adapter_name, active_routeros_adapter
 
     from domains.radius.projection import nas_state
     from domains.radius.services import radius_primary
 
     adapter = active_routeros_adapter()
+    plan = None
+    error: JobError | None = None
     with ctx.scope():
         nas = nas_state(router)
-        # PLAN murni (tanpa I/O): boleh dalam unit DB.
-        plan = adapter.install_radius_client(
-            _router_ctx(router),
-            {"primary": radius_primary(), "secret": nas[1], "tunnel_ip": str(router.tunnel_ip)},
-        )
+        # PLAN murni (tanpa I/O): boleh dalam unit DB. Kegagalan lab gate
+        # adapter live dipetakan jujur no-effect (REV-R2C-05) — evidence
+        # di-commit dalam unit, JobError dilempar SETELAH unit (pola B0).
+        try:
+            plan = adapter.install_radius_client(
+                _router_ctx(router),
+                {"primary": radius_primary(), "secret": nas[1], "tunnel_ip": str(router.tunnel_ip)},
+            )
+        except RouterOsError as exc:
+            _ev(run).update({"lab_gate": exc.message, "adapter": active_adapter_name()})
+            _save(run)
+            error = JobError(
+                code=exc.message if exc.message and exc.message != exc.code else exc.code,
+                retryable=False,
+                no_effect=True,
+                message=f"install radius client {active_adapter_name()} lab-gated: {exc.message}",
+            )
+    if error is not None:
+        raise error
     # APPLY → VERIFY = I/O jaringan — DI LUAR transaksi DB.
     adapter.apply_action(_router_ctx(router), plan)
     readback = adapter.verify_action(_router_ctx(router), plan)
@@ -227,15 +244,39 @@ def _b4_shadow(run: CutoverRun, ctx: JobContext, router: Router) -> None:
 def _b5_authoritative(run: CutoverRun, ctx: JobContext, router: Router) -> None:
     """B5: AAA authoritative — PLAN dalam unit DB; APPLY/VERIFY adapter di
     luar transaksi; evidence + mode router commit dalam unit berikutnya."""
+    from adapters.routeros.base import RouterOsError
     from adapters.routeros.factory import active_adapter_name, active_routeros_adapter
 
     adapter = active_routeros_adapter()
-    # PLAN murni (tanpa I/O).
-    plan = adapter.set_aaa(_router_ctx(router), {"use_radius": "yes"})
+    try:
+        # PLAN murni (tanpa I/O). Kegagalan lab gate adapter live dipetakan
+        # jujur no-effect (REV-R2C-05); evidence di-commit unit terpisah.
+        plan = adapter.set_aaa(_router_ctx(router), {"use_radius": "yes"})
+    except RouterOsError as exc:
+        with ctx.scope():
+            _ev(run).update({"lab_gate": exc.message, "adapter": active_adapter_name()})
+            _save(run)
+        raise JobError(
+            code=exc.message if exc.message and exc.message != exc.code else exc.code,
+            retryable=False,
+            no_effect=True,
+            message=f"set aaa {active_adapter_name()} lab-gated: {exc.message}",
+        ) from exc
     # APPLY → VERIFY = I/O jaringan — DI LUAR transaksi DB (PA-002).
     adapter.apply_action(_router_ctx(router), plan)
     readback = adapter.verify_action(_router_ctx(router), plan)
     ok = bool(readback.get("verified", False))
+    # Kewenangan AKTUAL SETELAH I/O APPLY/VERIFY, sebelum unit commit efek
+    # (REV-R2C-01): pencabutan selama I/O menghentikan flip enforcement tanpa
+    # efek baru — lease yang valid bukan izin aktor.
+    try:
+        ctx.recheck_authority()
+    except JobError as exc:
+        with ctx.scope():
+            _ev(run).update({"authority_lost": exc.code, "aaa_readback_ok": ok})
+            run.state = CutoverRun.State.FAILED
+            _save(run)
+        raise
     error: JobError | None = None
     with ctx.scope():
         _ev(run).update({"aaa_readback_ok": ok, "method": f"{active_adapter_name()}_disable"})
@@ -255,24 +296,57 @@ def _b5_authoritative(run: CutoverRun, ctx: JobContext, router: Router) -> None:
 def _b6_rollback(run: CutoverRun, ctx: JobContext, router: Router) -> None:
     """B6 rollback — readback menentukan outcome yang jujur (REV-1711-08).
 
-    PLAN murni; APPLY/VERIFY = I/O di luar transaksi DB (REV-1711-07 — fase ini
-    dipanggil dari luar unit scope luar). Evidence + mode router di-commit
-    dalam unit pendek ter-fence TERPISAH setelah I/O selesai. Readback
-    negatif/unknown TIDAK boleh mengklaim LOCAL/ROLLED_BACK/succeeded:
+    Adapter AKTIF via factory (REV-1711-08 R2): adapter live yang di-gate lab
+    menolak jujur fail-closed pada PLAN — TIDAK ada klaim LOCAL/ROLLED_BACK/
+    succeeded palsu dan tidak ada bypass simulator terhadap pilihan adapter.
+    PLAN murni; APPLY/VERIFY = I/O di luar transaksi DB (REV-1711-07 — fase
+    ini dipanggil dari luar unit scope luar). Evidence + mode router
+    di-commit dalam unit pendek ter-fence TERPISAH setelah I/O selesai.
+    Readback negatif/unknown TIDAK boleh mengklaim LOCAL/ROLLED_BACK/succeeded:
     run FAILED dengan error jujur, enforcement router tidak ditimpa.
     """
-    from adapters.routeros.simulator import RouterOsSimulator as SimulatorAdapter
+    from adapters.routeros.base import RouterOsError
+    from adapters.routeros.factory import active_adapter_name, active_routeros_adapter
 
-    adapter = SimulatorAdapter()
+    adapter = active_routeros_adapter()
+    adapter_label = active_adapter_name()
     baseline = run.evidence.get("B2", {})
-    plan = adapter.rollback_radius(_router_ctx(router), baseline)
+    try:
+        plan = adapter.rollback_radius(_router_ctx(router), baseline)
+    except RouterOsError as exc:
+        # Gerbang lab fail-closed pada adapter terpilih: jujur gagal TANPA
+        # efek (PLAN belum diterapkan) — tidak ada klaim rolled_back/local,
+        # tidak menyalakan kemampuan mutasi live baru (REV-1711-08 R2).
+        with ctx.scope():
+            _ev(run).update({"rollback_adapter": adapter_label, "lab_gate": exc.message})
+            _save(run)
+        raise JobError(
+            code=exc.message if exc.message and exc.message != exc.code else exc.code,
+            retryable=False,
+            no_effect=True,
+            message=f"rollback {adapter_label} lab-gated: {exc.message}",
+        ) from exc
     # APPLY → VERIFY = I/O jaringan — DI LUAR transaksi DB (REV-1711-07).
     adapter.apply_action(_router_ctx(router), plan)
     readback = adapter.verify_action(_router_ctx(router), plan)
     ok = bool(readback.get("verified", False))
+    # Kewenangan AKTUAL SETELAH I/O APPLY/VERIFY, sebelum unit commit efek
+    # (REV-R2C-01): pencabutan selama I/O menghentikan rollback lokal tanpa
+    # efek baru — lease yang valid bukan izin aktor.
+    try:
+        ctx.recheck_authority()
+    except JobError as exc:
+        with ctx.scope():
+            _ev(run).update(
+                {"authority_lost": exc.code, "rollback_adapter": adapter_label}
+            )
+            run.state = CutoverRun.State.FAILED
+            _save(run)
+        raise
     error: JobError | None = None
     with ctx.scope():
         _ev(run)["rollback_readback_ok"] = ok
+        _ev(run)["rollback_adapter"] = adapter_label
         if not ok:
             # Readback negatif: TIDAK ada klaim LOCAL/ROLLED_BACK/succeeded —
             # evidence tersimpan, run gagal jujur (REV-1711-08).
@@ -381,6 +455,15 @@ class RadiusCutoverStepHandler(JobHandler):
                         code="cutover_terminal", retryable=False, message="run terminal; buat run baru"
                     )
         if rollback_run is not None:
+            # Recheck pra-I/O pada batas kirim sensitif (A06; REV-R2C-01):
+            # kewenangan diperiksa ulang sebelum APPLY/VERIFY B6.
+            try:
+                ctx.recheck_authority()
+            except JobError as exc:
+                with ctx.scope():
+                    run.state = CutoverRun.State.FAILED
+                    _save(run)
+                raise exc
             # B6 dipanggil DI LUAR unit scope luar (REV-1711-07): APPLY/VERIFY
             # adapter berjalan tanpa transaksi DB terbuka; fase mengelola unit
             # commit evidence tersendiri.

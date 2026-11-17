@@ -8,7 +8,13 @@ DB yang tertahan melintasi send/readback.
 from __future__ import annotations
 
 from django.utils import timezone
-from domains.jobs.engine import JobContext, JobError, JobHandler, register
+from domains.jobs.engine import (
+    JobContext,
+    JobError,
+    JobHandler,
+    check_current_authority,
+    register,
+)
 
 from adapters.routeros.base import RouterOsError
 from domains.network.models import Router, RouterEnrollment, SstpAccount, WireGuardPeer
@@ -74,9 +80,15 @@ class VerifyApiSslHandler(JobHandler):
         try:
             # Probe (I/O) di luar transaksi DB; commit router+peer dalam unit
             # tenant tersendiri di dalam service — difence guard ownership
-            # (REV-1711-01).
+            # (REV-1711-01) + kewenangan AKTUAL dibaca segar SETELAH I/O pada
+            # entry unit efek (REV-1711-05 R2) + guard terkunci sebelum commit
+            # (REV-1711-01 R2).
             router = services.finalize_verification(
-                enrollment, source=source, ownership_guard=ctx.assert_owned
+                enrollment,
+                source=source,
+                ownership_guard=ctx.assert_owned,
+                authority_guard=lambda: check_current_authority(ctx.job, ctx.payload),
+                commit_guard=ctx.guard_commit,
             )
         except RouterOsError as exc:
             # Probe API-SSL nyata gagal (router belum bootstrap penuh / tunnel
@@ -119,10 +131,13 @@ class DiscoverRouterHandler(JobHandler):
         with ctx.scope():
             router = _ctx_router(ctx)
         # run_discovery mengelola unit DB pendeknya sendiri; guard ownership
-        # dipanggil DI DALAM tiap unit sehingga kehilangan lease membatalkan
-        # commit domain sebelum terjadi (REV-1711-01); list_accounts /
-        # read_health (I/O adapter) berjalan di luar transaksi.
-        return services.run_discovery(router, ownership_guard=ctx.assert_owned)
+        # dipanggil DI DALAM tiap unit pada entry, dan commit_guard terkunci
+        # (FOR UPDATE) sesaat sebelum commit tiap unit sehingga kehilangan
+        # lease membatalkan commit domain sebelum terjadi (REV-1711-01 R2);
+        # list_accounts / read_health (I/O adapter) berjalan di luar transaksi.
+        return services.run_discovery(
+            router, ownership_guard=ctx.assert_owned, commit_guard=ctx.guard_commit
+        )
 
     def verify(self, ctx: JobContext) -> dict:
         from domains.network.models import DiscoverySnapshot
