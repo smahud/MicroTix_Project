@@ -1,0 +1,3 @@
+{"case": "r2-db-session-loss-live-adapter", "sends": 1, "info": {"worker_pid": 7298, "lock_released": true, "old_adapter_still_live_at_successor_end": true}, "outcomes": {"successor-after-db-loss": {"state": "retry_wait"}, "live-adapter": {"exception": "OperationalError: terminating connection due to administrator command"}}, "first": "executing", "second": "retry_wait"}
+.
+1 passed in 0.58s

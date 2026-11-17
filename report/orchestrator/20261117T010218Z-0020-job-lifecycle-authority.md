@@ -1,7 +1,7 @@
 # Laporan eksekusi task0020 — PA-002 + PA-003: job aman terhadap stale worker dan perubahan kewenangan
 
 - **Executor:** coding agent Z.ai (sandbox), sesi `session/2026-11-17-0020-job-lifecycle-authority`
-- **Task:** [0020](../../task/0020-job-lifecycle-authority.md) — execution `done`, review `pending`
+- **Task:** [0020](../../task/0020-job-lifecycle-authority_done.md) — execution `done`, review `pending`
 - **Instruction ref:** `review/0020-job-lifecycle-authority-20261117` @ `ea7b8a1` (PR26; packet + laporan controller/reviewer di-baca dari ref tersebut)
 - **Baseline kode:** `main@41d1f33f16508491a34f66b767830b9dd3e5954e` (delta terhadap main saat mulai: kosong — verifikasi `git diff 41d1f33..ea7b8a1 --stat` hanya docs/report)
 - **Implementation/tested SHA:** `7118cce0db330acb02be0b3b774b1b1628d55d7a` = engine `6e96ce33` + perbaikan test-infra (password DB URL untuk subprocess drain di CI; tanpa perubahan engine/handler). Commit laporan ini adalah descendant report-only

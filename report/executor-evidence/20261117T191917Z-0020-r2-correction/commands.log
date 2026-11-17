@@ -1,0 +1,23 @@
+# Perintah persis yang menghasilkan log di direktori ini (runner: run_probes_r2.sh).
+# Lingkungan: PG 17.12 loopback disposable port 55447 (initdb -U postgres -A trust),
+# peran mtx_app CREATEDB NOSUPERUSER NOBYPASSRLS + mtx_migrator NOSUPERUSER NOBYPASSRLS,
+# DB microtix_r2_edges/test_microtix_r2_edges owned mtx_migrator; migrate+grant_runtime
+# sebagai mtx_migrator (DJANGO_SETTINGS_MODULE=microtix.settings); TRUNCATE grant utk
+# cleanup pytest; Python 3.13.5 venv (pip -e backend; pytest 8.4.2; pytest-django 4.14.0;
+# Django 5.2.19; psycopg 3.2.13). Suite penuh/check/frontend dijalankan pada cluster
+# terpisah 127.0.0.1:5432 (microtix, peran mtx_app) — lingkungan identik ci.yml.
+# Urutan eksekusi: environment -> edges-migrate -> edges-grant -> edges-test-cleanup-grant
+# -> edges-roles-rls -> r2-lifecycle -> r2-authority -> r2-sender-session
+# -> r1-lifecycle -> r1-authority; SEKARANG suite penuh + check/makemigrations/docs/frontend.
+MT_REVIEW_WORK=... MT_REVIEW_PGROOT=... MT_REVIEW_PY=venv313/bin/python MT_REVIEW_PORT=55447 bash run_probes_r2.sh
+env MT_ENV=test DATABASE_URL=postgresql://mtx_app:ci-app-0123456789@127.0.0.1:5432/microtix \
+  MT_SECRET_KEY=ci-secret-key-0123456789abcdef0123456789 \
+  MT_SECRET_BOX_KEY=ci-secret-box-0123456789abcdef0123456789 \
+  MT_STORAGE_ROOT=/tmp/mtx-ci-storage \
+  python manage.py check
+  python manage.py makemigrations --check --dry-run
+  python -m pytest tests -q --tb=short
+python3 docs/tools/check_docs.py   # dari akar repo
+cd apps/web && pnpm exec tsc -b --pretty false && pnpm exec eslint src --ext ts,tsx \
+  && pnpm exec vitest run && python3 scripts/check_i18n.py \
+  && VITE_API_MODE=live pnpm exec vite build

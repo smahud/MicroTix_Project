@@ -125,7 +125,7 @@ Final recommendation remains **changes_requested on exact candidate bd37c14**, r
 
 ## Final documentation/record QA before publication
 
-On root request, this reviewer read the final controller report `report/controller/20261117T134100Z-0020-job-lifecycle-review.md`, reopened `task/0020-job-lifecycle-authority.md`, current top of LATEST_HANDOFF/progress, and `review-results.json`.
+On root request, this reviewer read the final controller report `report/controller/20261117T134100Z-0020-job-lifecycle-review.md`, reopened `task/0020-job-lifecycle-authority_done.md`, current top of LATEST_HANDOFF/progress, and `review-results.json`.
 
 - Exact reviewed PR27 `bd37c14`, executor ancestor `7118cce`, base/main `41d1f33`, original PR26 instruction `ea7b8a1`, current decision branch and coding-agent next action agree across current records.
 - Eight confirmed defects REV-1711-01–08 are distinguished from eleven failed probes and the separate REV-1711-09 evidence gap. Full-suite 554/1skip/3warnings and focused split-role 11 failed/0errors are attributed and bounded correctly; no acceptance/main integration/deployment is claimed for task0020. PA-006 remains accepted/integrated.
