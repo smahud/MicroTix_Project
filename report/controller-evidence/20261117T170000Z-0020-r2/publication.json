@@ -1,0 +1,251 @@
+{
+  "status": "PUBLISHED_AND_VERIFIED",
+  "commit": "443b1dc48c85b023f92f88432af39e38964a92ca",
+  "tree": "d86c12167956b44ac81c541d80d654f9473d716c",
+  "parent": "64b68f8d74b0aa593f379c75d6b5702402fd9d78",
+  "branch": "review/0020-controller-r2-20261117",
+  "pr": 31,
+  "url": "https://github.com/smahud/MicroTix_Project/pull/31",
+  "changed_paths": [
+    {
+      "path": "docs/progress.md",
+      "sha": "a2d2e0206cc86e9d5eafd81a571dbe0716b4cc21",
+      "match": true
+    },
+    {
+      "path": "report/LATEST_HANDOFF.md",
+      "sha": "023a00b733b8608c27f08d93ea4aa0a528210357",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/authority/test_authority_r2.py",
+      "sha": "360d81ed328de9e07082a45923cd14402fe2bb98",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/before-publish.json",
+      "sha": "001d734d3a12ce7335887d39b568dcb90d83f1ed",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/check.log",
+      "sha": "7883fe46f105a9220370c1e6d26f0a1a6665783d",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/create-roles.log",
+      "sha": "5b54a4e03cc5b4e66920ddc0c995bcf497cff2d7",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/docs-final.log",
+      "sha": "8262f55dfa7221aafedee9add73e06564ecbfd90",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/docs.log",
+      "sha": "8262f55dfa7221aafedee9add73e06564ecbfd90",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/edges-grant.log",
+      "sha": "0875a7cf8377c42fbb7443ad36859d8fd27a1686",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/edges-migrate.log",
+      "sha": "d09e4bd01c6f8cf2998e9d89c5dd66aaa6ade48d",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/edges-roles-rls.log",
+      "sha": "3b51a478504d9652f98faf9b5493251fc7d63d89",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/edges-test-cleanup-grant.log",
+      "sha": "9a061cd9bc96cd83ced6569e15fd3ed1fb7b49f0",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/environment.log",
+      "sha": "445c7a6f1889415c9aa76e3b64b4ec6d1a9e5d49",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/exit-codes.txt",
+      "sha": "1afdcf696ee153a0e6867468a087f4c13f20ce54",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/full-suite.log",
+      "sha": "6bc5cb7181c19a905394149f1d124a385b9280d6",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/initdb.log",
+      "sha": "2bfb45bc8e97a9a0d310460c59c926749c4703e2",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/lifecycle/test_r2_lifecycle_edges.py",
+      "sha": "0e86c2d5e8386349418c84fbff1ea0cb1098f028",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/makemigrations.log",
+      "sha": "8e3e881e0acb37cc6447055799fb8e3dc8bed220",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/r1-authority.log",
+      "sha": "5a3ad84d4d5e47087210d45da10ae69b5abcaa33",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/r1-lifecycle.log",
+      "sha": "120f5160952d700c2db899c772542579c8e21587",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/r2-authority.log",
+      "sha": "6ea688ee6962448d18dce488dcb08969f279c88d",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/r2-lifecycle.log",
+      "sha": "1f9e155590276de083d283428f2f0ba3b47deb71",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/r2-sender-session.log",
+      "sha": "3c7ea0d4eb11e7927d90cbb0d1484b68320fffc1",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/record-checks.json",
+      "sha": "db85dcb82f4cc1b2b32b75feacb8ee2f2154a12d",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/remote-inputs.json",
+      "sha": "26b9e9abc306941b9e4e7faed2e784b1f1dde714",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/review-results.json",
+      "sha": "f604e06409f8fb6f32e95377e7a5a244bd42cb42",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/run_edge_probes.sh",
+      "sha": "5911c8fdff4bbd17af8b1602a96c06c5362fced8",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/run_review.sh",
+      "sha": "336e277a1af0ed41854a62de222e041bef749d6a",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/run_sender_session_probe.sh",
+      "sha": "e6916ee1dbd2cd36c5453809540e6a9039d629ed",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/split-grant.log",
+      "sha": "0875a7cf8377c42fbb7443ad36859d8fd27a1686",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/split-migrate.log",
+      "sha": "d09e4bd01c6f8cf2998e9d89c5dd66aaa6ade48d",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/split-roles-rls.log",
+      "sha": "3b51a478504d9652f98faf9b5493251fc7d63d89",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261117T170000Z-0020-r2/split-test-cleanup-grant.log",
+      "sha": "9a061cd9bc96cd83ced6569e15fd3ed1fb7b49f0",
+      "match": true
+    },
+    {
+      "path": "report/controller/20261117T170000Z-0020-r2-review.md",
+      "sha": "1456b311cd605146eeed2cd5599281d9d066025d",
+      "match": true
+    },
+    {
+      "path": "report/orchestrator/20261117T131403Z-0020-job-lifecycle-state-check.md",
+      "sha": "262c8e79cc3509d12b134e0e1ce2053110f1db38",
+      "match": true
+    },
+    {
+      "path": "report/orchestrator/20261117T160000Z-0020-correction-delivery.md",
+      "sha": "2b54d87f05568adb139673884e99a7090179a465",
+      "match": true
+    },
+    {
+      "path": "report/reviewer/20261117T170000Z-0020-r2-authority.md",
+      "sha": "66efa14d8467d499001d66014108120fe0852c91",
+      "match": true
+    },
+    {
+      "path": "report/reviewer/20261117T170000Z-0020-r2-lifecycle.md",
+      "sha": "682c51e2661c2e1db853e8b4c42ef3b2bb3c66fc",
+      "match": true
+    },
+    {
+      "path": "task/0020-job-lifecycle-authority.md",
+      "sha": "3a9e5e6d8cebd69a0dd0e9996e02a070e3f645af",
+      "match": true
+    },
+    {
+      "path": "task/0020-job-lifecycle-authority_done.md",
+      "sha": null,
+      "match": true
+    }
+  ],
+  "tree_truncated": false,
+  "local_fetch_and_clean_index_match": true,
+  "key_files_readback": [
+    {
+      "path": "task/0020-job-lifecycle-authority.md",
+      "sha": "3a9e5e6d8cebd69a0dd0e9996e02a070e3f645af"
+    },
+    {
+      "path": "report/LATEST_HANDOFF.md",
+      "sha": "023a00b733b8608c27f08d93ea4aa0a528210357"
+    },
+    {
+      "path": "report/controller/20261117T170000Z-0020-r2-review.md",
+      "sha": "1456b311cd605146eeed2cd5599281d9d066025d"
+    }
+  ],
+  "ci_at_initial_readback": [
+    {
+      "name": "backend",
+      "status": "in_progress",
+      "conclusion": null,
+      "head_sha": "443b1dc48c85b023f92f88432af39e38964a92ca",
+      "html_url": "https://github.com/smahud/MicroTix_Project/actions/runs/44152629593/job/134284790517"
+    },
+    {
+      "name": "docs",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "443b1dc48c85b023f92f88432af39e38964a92ca",
+      "html_url": "https://github.com/smahud/MicroTix_Project/actions/runs/44152629593/job/134284790437"
+    },
+    {
+      "name": "frontend",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "443b1dc48c85b023f92f88432af39e38964a92ca",
+      "html_url": "https://github.com/smahud/MicroTix_Project/actions/runs/44152629593/job/134284789806"
+    }
+  ],
+  "source_diff_to_reviewed_main": "empty across backend/apps/.github/instalasi.sh/locales/CONTRACT.md"
+}

@@ -23,8 +23,10 @@ SUB-05 tests dipertahankan; bukan production/device/domain-kill evidence.
 [Laporan R2](../report/controller/20261117T170000Z-0020-r2-review.md),
 [evidence](../report/controller-evidence/20261117T170000Z-0020-r2/),
 [packet0020 reopened](../task/0020-job-lifecycle-authority.md).
-Decision branch **`review/0020-controller-r2-20261117`**; publikasi/readback
-sesuai report §8. Next **coding_agent** menutup residual pada **ID sama**,
+Decision **[PR31](https://github.com/smahud/MicroTix_Project/pull/31)**
+`review/0020-controller-r2-20261117`, initial443b1dc/tree d86c1216 verified
+all40 path/blob checks + clean fetch; publication/readback report §8.
+Metadata descendants tidak mengubah reviewed source64b68f8. Next **coding_agent** menutup residual pada **ID sama**,
 mempertahankan perbaikan yang lulus, lalu publish SHA baru untuk review.
 Source aplikasi tidak diubah reviewer. Task0010 tetap accepted/integrated;
 task0030 belum eligible; Production Beta **NOT_READY**.
