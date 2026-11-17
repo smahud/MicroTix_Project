@@ -1,0 +1,6 @@
+           relname           | relrowsecurity | relforcerowsecurity
+-----------------------------+----------------+---------------------
+ customers_migration_session | t              | t
+ subs_payment_submission     | t              | t
+ subs_saas_invoice           | t              | t
+(3 rows)

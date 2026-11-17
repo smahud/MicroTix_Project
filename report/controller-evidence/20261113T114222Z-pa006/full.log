@@ -1,0 +1,84 @@
+........................................................................ [ 17%]
+........................................................................ [ 35%]
+........................................................................ [ 52%]
+........................................................................ [ 70%]
+........................................................................ [ 88%]
+................................................                         [100%]
+=============================== warnings summary ===============================
+tests/unit/test_apiclient.py::TestApiSslAdapter::test_list_accounts
+  /workspace/scratch/9b9247ab90da/MicroTix_Project/backend/.venv/lib/python3.13/site-packages/_pytest/threadexception.py:58: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-19
+
+  Traceback (most recent call last):
+    File "/usr/lib/python3.13/threading.py", line 1043, in _bootstrap_inner
+      self.run()
+      ~~~~~~~~^^
+    File "/workspace/scratch/9b9247ab90da/MicroTix_Project/backend/tests/unit/test_apiclient.py", line 119, in run
+      sentence = read_sentence(tls)
+    File "/workspace/scratch/9b9247ab90da/MicroTix_Project/backend/adapters/routeros/apiclient.py", line 98, in read_sentence
+      length = _read_length(sock)
+    File "/workspace/scratch/9b9247ab90da/MicroTix_Project/backend/adapters/routeros/apiclient.py", line 79, in _read_length
+      first = _read_exact(sock, 1)[0]
+              ~~~~~~~~~~~^^^^^^^^^
+    File "/workspace/scratch/9b9247ab90da/MicroTix_Project/backend/adapters/routeros/apiclient.py", line 73, in _read_exact
+      raise UnreachableError("connection_closed")
+  adapters.routeros.base.UnreachableError: connection_closed
+
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+tests/unit/test_apiclient.py::TestApiSslAdapter::test_list_accounts
+  /workspace/scratch/9b9247ab90da/MicroTix_Project/backend/.venv/lib/python3.13/site-packages/_pytest/threadexception.py:58: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-20
+
+  Traceback (most recent call last):
+    File "/usr/lib/python3.13/threading.py", line 1043, in _bootstrap_inner
+      self.run()
+      ~~~~~~~~^^
+    File "/workspace/scratch/9b9247ab90da/MicroTix_Project/backend/tests/unit/test_apiclient.py", line 119, in run
+      sentence = read_sentence(tls)
+    File "/workspace/scratch/9b9247ab90da/MicroTix_Project/backend/adapters/routeros/apiclient.py", line 98, in read_sentence
+      length = _read_length(sock)
+    File "/workspace/scratch/9b9247ab90da/MicroTix_Project/backend/adapters/routeros/apiclient.py", line 79, in _read_length
+      first = _read_exact(sock, 1)[0]
+              ~~~~~~~~~~~^^^^^^^^^
+    File "/workspace/scratch/9b9247ab90da/MicroTix_Project/backend/adapters/routeros/apiclient.py", line 73, in _read_exact
+      raise UnreachableError("connection_closed")
+  adapters.routeros.base.UnreachableError: connection_closed
+
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+tests/unit/test_audit_permissions.py::test_sensitive_permissions_flag
+  /workspace/scratch/9b9247ab90da/MicroTix_Project/backend/.venv/lib/python3.13/site-packages/_pytest/threadexception.py:58: PytestUnhandledThreadExceptionWarning: Exception in thread Thread-22
+
+  Traceback (most recent call last):
+    File "/usr/lib/python3.13/threading.py", line 1043, in _bootstrap_inner
+      self.run()
+      ~~~~~~~~^^
+    File "/workspace/scratch/9b9247ab90da/MicroTix_Project/backend/tests/unit/test_apiclient.py", line 116, in run
+      tls = context.wrap_socket(conn, server_side=True)
+    File "/usr/lib/python3.13/ssl.py", line 455, in wrap_socket
+      return self.sslsocket_class._create(
+             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+          sock=sock,
+          ^^^^^^^^^^
+      ...<5 lines>...
+          session=session
+          ^^^^^^^^^^^^^^^
+      )
+      ^
+    File "/usr/lib/python3.13/ssl.py", line 1076, in _create
+      self.do_handshake()
+      ~~~~~~~~~~~~~~~~~^^
+    File "/usr/lib/python3.13/ssl.py", line 1372, in do_handshake
+      self._sslobj.do_handshake()
+      ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  ssl.SSLEOFError: [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1029)
+
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+    warnings.warn(pytest.PytestUnhandledThreadExceptionWarning(msg))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+408 passed, 3 warnings in 117.25s (0:01:57)
