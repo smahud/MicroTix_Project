@@ -1,6 +1,32 @@
 # MicroTix — checkpoint kemajuan
 
-Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-18 (Asia/Jakarta), ~02:47 WIB.
+Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-18 (Asia/Jakarta), controller R3.
+
+## Checkpoint 2026-11-18 — controller R3 task0020: changes_requested
+
+Reviewed exact integrated main **4b03efe**, source/config identik implcd6eea3
+PR32 head48b83d9 (sudah merged8a26a1f). Root **583 passed/1skip/3warnings**,
+semua17 frozen R1/R2 probes PASS, check/makemigrations/docs PASS, exact-main
+CI run44166000632 backend/frontend/docs success3/3.
+
+Tetapi7 new PG17.11 split-role assertions memberi **6 FAIL/1 PASS/0 errors**:
+expired lease dihidupkan lagi oleh progress atau returning-I/O heartbeat;
+same-job resolve-negative setelah DB session mati mengirim kedua saat old
+adapter masih hidup; WG/SSTP create Router+apply credential setelah revoke
+committed selama enrollment row-lock wait; duplicate finalize undefined
+JobError → internal_error/uncertain. **REV01/04/05 PARTIAL P1**, new
+**REV-1811-01 P2 OPEN**. Preserve02/03/06/07 CLOSED;08 now CLOSED active
+adapter/readback,09 mapping/healthy long-phase CLOSED within stated limits
+(root positive crosses initial expiry,25 reconciler attempts).
+
+[Controller R3](../report/controller/20261117T212042Z-0020-r3-review.md),
+[evidence](../report/controller-evidence/20261117T212042Z-0020-r3/),
+[packet0020 reopened](../task/0020-job-lifecycle-authority.md).
+Decision ref **review/0020-controller-r3-20261118**, publication R3 §8.
+Next **coding_agent** menutup residual pada ID sama, all7 new probes PASS
+without weakening + preserve17/full regression, publish new SHA+CI+reports.
+Task0010 accepted/integrated;0030 belum eligible; Beta NOT_READY. Source
+aplikasi tidak diubah; host/device/GNS3/live RADIUS/browser/scale NOT_RUN.
 
 ## Checkpoint 2026-11-18 ~02:47 WIB — executor: koreksi R2 task0020 diserahkan (done/pending review)
 
@@ -48,7 +74,7 @@ SUB-05 tests dipertahankan; bukan production/device/domain-kill evidence.
 
 [Laporan R2](../report/controller/20261117T170000Z-0020-r2-review.md),
 [evidence](../report/controller-evidence/20261117T170000Z-0020-r2/),
-[packet0020 reopened](../task/0020-job-lifecycle-authority_done.md).
+[packet0020 reopened](../task/0020-job-lifecycle-authority.md).
 Decision **[PR31](https://github.com/smahud/MicroTix_Project/pull/31)**
 `review/0020-controller-r2-20261117`, initial443b1dc/tree d86c1216 verified
 all40 path/blob checks + clean fetch; publication/readback report §8.
@@ -83,7 +109,7 @@ PA-001 33, PA-006 125, RLS 8 lulus; check/makemigrations/docs PASS.
 REV-1711-01–09 CLOSED, nol pelemahan assertion; temuan P2 reviewer
 (CORR-REV-01 no_effect blanket backup, CORR-REV-02 jendela hard-crash
 pra-reconcile) **ditutup sebelum commit**. Execution **done / review
-pending** pada [packet0020_done](../task/0020-job-lifecycle-authority_done.md);
+pending** pada [packet0020_done](../task/0020-job-lifecycle-authority.md);
 [laporan koreksi + matriks A01–A09](../report/orchestrator/20261117T160000Z-0020-correction-delivery.md)
 + [evidence](../report/executor-evidence/20261117T150000Z-0020-correction/).
 Candidate **[PR30](https://github.com/smahud/MicroTix_Project/pull/30)** published head `062a017` (impl/tested `2681a3d`), CI exact head **[run44119619011](https://github.com/smahud/MicroTix_Project/actions/runs/44119619011) backend/frontend/docs success 3/3** terverifikasi. Next **controller_reviewer** mereview exact SHA koreksi; task0010 tetap
@@ -123,7 +149,7 @@ revoke/demote setelah preflight, HTTP router-scope bypass, B6 I/O transaction
 serta false-success negative verifier. Delapan defect **REV-1711-01–08**,
 gap mandatory evidence **09** dicatat terpisah; [evidence summary](../report/controller-evidence/20261117T134100Z-0020-review/review-results.json).
 
-**[Packet0020](../task/0020-job-lifecycle-authority_done.md) reopened ready /
+**[Packet0020](../task/0020-job-lifecycle-authority.md) reopened ready /
 changes_requested**, next **coding_agent** fetch `review/0020-controller-20261117`
 dan tutup finding pada ID sama, submit exact SHA baru+tes/evidence/CI.
 Decision dipublikasikan pada **[PR29](https://github.com/smahud/MicroTix_Project/pull/29)**,
@@ -136,7 +162,7 @@ browser/benchmark tidak diklaim terverifikasi. Checkpoint di bawah histori.
 
 ## Checkpoint 2026-11-17, ~08:10 WIB — executor menyerahkan task0020 PA-002+PA-003 (done, pending review)
 
-Executor Z.ai sandbox menjalankan [packet0020](../task/0020-job-lifecycle-authority_done.md)
+Executor Z.ai sandbox menjalankan [packet0020](../task/0020-job-lifecycle-authority.md)
 dari instruction ref PR26 `review/0020-job-lifecycle-authority-20261117` @ ea7b8a1,
 base main **41d1f33** (delta kosong). Implementation/tested **6e96ce33** pada branch
 `session/2026-11-17-0020-job-lifecycle-authority` (penyerahan report-only di atasnya;
@@ -160,7 +186,7 @@ passing-after 41/41; PA-001 + PA-006 (R4/R5 replay migrasi) lulus; check/makemig
 docs PASS; frontend tsc/eslint/vitest 66/i18n/build lulus; P3 REV-1611-TEST-01 ditutup
 test-only. [Review independen](../report/reviewer/20261117T010218Z-0020-job-lifecycle-independent.md)
 pra-koreksi CHANGES_REQUESTED (REV-2011-01 P1 .. 10) — seluruh temuan ditindaklanjuti
-dengan tes; [laporan eksekusi + matriks A01–A09 + runbook](../report/orchestrator/20261117T010218Z-0020-job-lifecycle-authority_done.md),
+dengan tes; [laporan eksekusi + matriks A01–A09 + runbook](../report/orchestrator/20261117T010218Z-0020-job-lifecycle-authority.md),
 [evidence](../report/executor-evidence/20261117T000000Z-0020-job-lifecycle/).
 Task0020 **done / pending**; next **controller_reviewer** review exact SHA 6e96ce3.
 PA-006 tetap accepted/integrated; Beta tetap **NOT_READY** (installer/upgrade/restore/
@@ -175,7 +201,7 @@ Exact main CI43857508367 success3/3; decoded log backend **513 passed,1 skipped,
 (FreeRADIUS binary unavailable), frontend66, docs PASS24/106.
 Ini bukti CI existing; root runtime lokal unavailable, tidak mengklaim rerun514.
 
-[Task0020 PA-002+PA-003](../task/0020-job-lifecycle-authority_done.md) disiapkan
+[Task0020 PA-002+PA-003](../task/0020-job-lifecycle-authority.md) disiapkan
 **ready / not_submitted** pada instruction ref
 `review/0020-job-lifecycle-authority-20261117`: lifecycle fencing seluruh write,
 short RLS DB/I/O boundary, cancel/uncertain/readback/per-router writer,

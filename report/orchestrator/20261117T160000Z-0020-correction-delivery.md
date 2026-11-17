@@ -4,7 +4,7 @@
 
 | Field | Nilai |
 |---|---|
-| Task ID / packet | **0020** [PA-002+PA-003](../../task/0020-job-lifecycle-authority_done.md) — koreksi `changes_requested` R1, ID sama, bukan task baru |
+| Task ID / packet | **0020** [PA-002+PA-003](../../task/0020-job-lifecycle-authority.md) — koreksi `changes_requested` R1, ID sama, bukan task baru |
 | Peran | coding agent (executor) Z.ai sandbox |
 | Instruction ref | [PR29](https://github.com/smahud/MicroTix_Project/pull/29) `review/0020-controller-20261117` — fetched sampai `0e45157` (checkpoint resume 21:48 WIB); keputusan acceptance tetap [controller R1 §3](../controller/20261117T134100Z-0020-job-lifecycle-review.md) |
 | Baseline canonical main | `41d1f33f16508491a34f66b767830b9dd3e5954e` — tidak berubah saat sesi; delta dicek ulang sebelum kerja |

@@ -3,26 +3,59 @@
 | Field | Nilai |
 |---|---|
 | Task ID | `0020`; satu packet untuk lifecycle + authority yang saling bergantung |
-| Execution status | **`done`** — koreksi R2 selesai dan diserahkan (sesi 18 Nov 2026 WIB); menunggu review controller R3 |
-| Review status | **`pending`** — kandidat koreksi R2 diserahkan untuk review exact SHA; changes_requested R2 adalah histori keputusan yang dikerjakan |
+| Execution status | **ready** — controller R3 membuka kembali ID0020 untuk koreksi residual; hasil R2 tetap histori |
+| Review status | **changes_requested** — [R3 exact main4b03efe](../report/controller/20261117T212042Z-0020-r3-review.md); 3 residual P1 + 1 P2 baru, 6 assertion gagal/0 harness errors |
 | Resume controller 17 Nov ~21:48 WIB | Histori checkpoint sebelum koreksi: [checkpoint](../report/controller/20261117T144620Z-0020-resume-review.md); REV-1711-01–09 ditutup pada sesi koreksi berikutnya |
 | Controller / executor | ChatGPT Work controller / coding agent sandbox |
-| Baseline | **`main@64b68f8d74b0aa593f379c75d6b5702402fd9d78`** untuk koreksi R2; baseline awal41d1f33 adalah histori, bukan current main |
+| Baseline | **main@4b03efedd76815af3f1c6fdf99d0739cd8dccc87** untuk koreksi R3; source identik implementation cd6eea3 yang sudah merged PR32; fetch current main dan periksa delta sebelum eksekusi |
 | Original instruction ref | PR26 `review/0020-job-lifecycle-authority-20261117` @ `ea7b8a17ad8d6339eed45769bbff1626ea279665`; histori instruksi awal |
-| Current correction instruction ref | **[PR31](https://github.com/smahud/MicroTix_Project/pull/31)** `review/0020-controller-r2-20261117`, initial verified443b1dc/tree d86c1216; [controller R2](../report/controller/20261117T170000Z-0020-r2-review.md) §§3/7; PR29/R1 tetap histori |
+| Current correction instruction ref | **review/0020-controller-r3-20261118** — [controller R3](../report/controller/20261117T212042Z-0020-r3-review.md) §§3/7; PR31/R2 dan PR29/R1 tetap histori |
 | Accepted predecessor | [0010 / PA-006](0010-pa006-idempotency_done.md), accepted exact `a301a94c2b3268679065e85bbef66f35949483f7` pada [R5 review](../report/controller/20261116T101809Z-0010-pa006-r5-review.md); PR24+PR25 merged ke main, [integrasi](../report/orchestrator/20261116T111835Z-0010-pa006-integration.md) |
 | Authority | [CONTRACT](../CONTRACT.md) §§5–6A/8–13; [PRODUCT](../docs/PRODUCT.md) TEN-03, JOB-02–05, SEC-01/04/05, SUB-05; [ARCHITECTURE](../docs/ARCHITECTURE.md) §§3–6; [OPERATIONS](../docs/OPERATIONS.md) §§3–4; [ACCEPTANCE](../docs/ACCEPTANCE.md) §4 |
 | Backlog / tests | Existing TK-101/102/103 dan bagian drain TK-1002; katalog T06-CRASH-01/02/03, T10-TEN-03; T05/T14 hanya invariant current-state yang relevan, bukan seluruh fitur R2/DR |
-| Controller report | **[R2 changes_requested](../report/controller/20261117T170000Z-0020-r2-review.md)** pada main64b68f8; [R1](../report/controller/20261117T134100Z-0020-job-lifecycle-review.md) dan instruksi awal dipertahankan |
+| Controller report | **[R3 changes_requested](../report/controller/20261117T212042Z-0020-r3-review.md)** pada exact4b03efe; [R2](../report/controller/20261117T170000Z-0020-r2-review.md) dan R1 dipertahankan |
 | Correction implementation / tested / candidate | **Koreksi R2 (sesi ini):** impl/tested **`cd6eea378cd2134ca38924e8b181d1cd601f33ec`** (kode+tes saja) dari base main `0c6403de` (PR31 merged); published candidate = head PR32 (commit penyerahan, report-only descendant). Histori koreksi R1: impl2681a3d, PR30 head19023737 merged (9eb5dacf) |
 | Koreksi R2 — laporan & bukti | [Laporan eksekusi](../report/orchestrator/20261117T194548Z-0020-r2-correction.md) — matriks A01–A09 + pemetaan presisi A05/A08; [reviewer independen](../report/reviewer/20261117T194548Z-0020-r2-correction-independent.md): 5/5 temuan R2 CLOSED + 5 temuan baru REV-R2C-01..05 (semua ditutup sesi ini); [evidence](../report/executor-evidence/20261117T191917Z-0020-r2-correction/) — probe R2 6/6 + R1 11/11 lulus tanpa pelemahan (file probe controller FROZEN), suite penuh 583 passed/1 skip, check/makemigrations/docs/frontend PASS |
 | Histori bukti executor R1 | **Probe controller R1: failing-before 11 failed → passing-after 11 passed** (diulang pada DB split-role migrator-owned + FORCE RLS); **suite penuh 562 passed + 1 skip** (+8 tes bukti REV-1711-09: SIGINT/active-barrier/stop-claim, fase panjang vs reconciler, crash setelah commit domain, current-policy/SUB-05); PA-001 33 + PA-006 125 + RLS 8 lulus; check/makemigrations/docs PASS; [evidence root](../report/executor-evidence/20261117T150000Z-0020-correction/) |
 | Historical correction execution report | [Orchestrator koreksi](../report/orchestrator/20261117T160000Z-0020-correction-delivery.md) — matriks A01–A09 + temuan→perubahan→bukti; [reviewer independen](../report/reviewer/20261117T160500Z-0020-correction-independent.md): REV-1711-01–09 CLOSED, temuan P2 CORR-REV-01/02 ditutup sebelum commit; [laporan penyerahan pertama](../report/orchestrator/20261117T010218Z-0020-job-lifecycle-authority_done.md) histori |
-| Next actor / action | **controller_reviewer**: review exact SHA kandidat PR32 terhadap instruksi R2 ([laporan §3/§7](../report/controller/20261117T170000Z-0020-r2-review.md)); acceptance/integrasi/deploy tetap keputusan terpisah — `_done` bukan acceptance |
+| Next actor / action | **coding_agent**: fetch decision branch R3, tutup REV-1711-01/04/05 + REV-1811-01 pada ID0020 yang sama; all7 R3 probes PASS tanpa pelemahan + preserve original17/full regression; koreksi R3 **not_submitted** |
 
 PA-002/PA-003 adalah label kontinuitas audit, bukan otoritas baru. PR8 planning_audit kini terintegrasi sebagai record historis melalui merge-all; kebutuhan packet ini tetap diturunkan dari kontrak/domain requirements di atas. Prasyarat PA-006 sudah accepted/integrated dan tidak dibuka kembali. PA-001 pembayaran juga dipertahankan. Packet ini tidak memberi izin merge, deploy, tag atau aktivasi fitur.
 
-## Koreksi controller R2 — instruksi current pada ID0020 yang sama
+## Koreksi controller R3 — instruksi current pada ID0020 yang sama
+
+**ready / changes_requested pada exact integrated main4b03efe.** PR32 sudah
+merged sebelum review; merge bukan acceptance. Controller menjalankan sendiri
+**583 passed/1 skipped/3 warnings**, seluruh **17 frozen probe R1/R2 PASS**,
+check/makemigrations/docs PASS; exact-main CI backend/frontend/docs success3/3.
+Namun **6 assertion baru gagal/0 harness errors**, satu probe positif PASS.
+[Laporan R3](../report/controller/20261117T212042Z-0020-r3-review.md) §3
+berisi source lines, reproduksi, actual/expected dan minimum closure;
+[evidence](../report/controller-evidence/20261117T212042Z-0020-r3/).
+
+| Finding | Koreksi minimum / acceptance penutup |
+|---|---|
+| **REV-1711-01 P1 PARTIAL** | Seluruh worker renewal/transition/domain/terminal boundary wajib token+epoch+expected active state+valid lease, tanpa menunggu reconciler. Watchdog sudah menolak expiry tetapi ctx.progress dan returning-I/O heartbeat masih revive lalu succeeded. Dua probe R3 harus nol new-send/verify/success; preserve locked commit/healthy renewal. |
+| **REV-1711-04 P1 PARTIAL** | resolve_uncertain(applied=False) setelah sesi DB mati tidak boleh menganggap advisory lock bebas sebagai old-writer-safe proof. Reclaim job ID sama kini mengirim kedua saat old adapter hidup. Hold sampai writer benar-benar aman + readback applicable; unknown tetap tertahan, router lain maju. |
+| **REV-1711-05 P1 PARTIAL** | Enrollment WG/SSTP: acquire potentially blocking enrollment lock sebelum fresh authority check di sensitive write boundary. Probe pg_blocking_pids membuktikan revoke committed selama worker menunggu; saat ini tetap Router1/credentials applied. Closure nol Router/activation pasca-revoke. |
+| **REV-1811-01 P2 OPEN** | Duplicate finalize references undefined JobError → internal_error/uncertain. Gunakan typed nonretryable enrollment_state atau safe verified replay, exactly1 Router dan dua worker outcomes lengkap. |
+
+**CLOSED tetap: REV-1711-02/03/06/07; REV08 kini CLOSED** (active B6 adapter,
+lab gate/negative readback jujur). **REV09 evidence mapping/healthy long phase
+CLOSED within sandbox/process limits**: tambahan root satu I/O melewati expiry
+awal,25 reconciler attempts PASS; expiry resurrection tetap defect REV01.
+Preserve atomic domain commit fix, different-job hold/session-loss fix,
+post-TLS authority check, B5/B6 checks, PA001/PA006/SSTP, seluruh17 probe lama.
+
+**Jalankan semua7 probe R3**, bukan hanya6 yang gagal: file
+[life4](../report/controller-evidence/20261117T212042Z-0020-r3/test_r3_lifecycle_edges.py)
+dan [authority3](../report/controller-evidence/20261117T212042Z-0020-r3/test_r3_authority.py).
+FROZEN assertions tidak dilemahkan; gate bersifat observation/control timing,
+bukan substitusi product decisions. Seluruh A01–A09 di bawah tetap berlaku.
+Koreksi R3 **not_submitted**. Task0010 accepted/integrated; task0030/deploy/
+aktivasi belum eligible. Application fixes tetap responsibility executor.
+
+## Histori koreksi controller R2 — hasil dinilai ulang oleh R3
 
 **R2 changes_requested pada actual integrated main64b68f8.** Koreksi PR30
 sudah merged; merge bukan acceptance. Full backend **580 passed/1skip/3warnings**
