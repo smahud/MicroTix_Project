@@ -4,7 +4,7 @@
 - **Task:** [0020](../../task/0020-job-lifecycle-authority_done.md) — execution `done`, review `pending`
 - **Instruction ref:** `review/0020-job-lifecycle-authority-20261117` @ `ea7b8a1` (PR26; packet + laporan controller/reviewer di-baca dari ref tersebut)
 - **Baseline kode:** `main@41d1f33f16508491a34f66b767830b9dd3e5954e` (delta terhadap main saat mulai: kosong — verifikasi `git diff 41d1f33..ea7b8a1 --stat` hanya docs/report)
-- **Implementation/tested SHA:** `6e96ce33a2708e204a72ff3b6814deaf62195444` (commit laporan ini adalah descendant report-only)
+- **Implementation/tested SHA:** `7118cce0db330acb02be0b3b774b1b1628d55d7a` = engine `6e96ce33` + perbaikan test-infra (password DB URL untuk subprocess drain di CI; tanpa perubahan engine/handler). Commit laporan ini adalah descendant report-only
 - **Lingkungan:** PostgreSQL 17.11 nyata, peran runtime `mtx_app` NOSUPERUSER NOBYPASSRLS CREATEDB (FORCE RLS via migrasi), Python 3.13.5, Django 5.2.19, psycopg 3.2.13, pytest 8.4.2 ([environment.txt](../executor-evidence/20261117T000000Z-0020-job-lifecycle/environment.txt)). Host/lab/GNS3 tidak tersedia — tidak ada klaim perangkat nyata.
 
 ## 1. Inventaris kind aktif (prasyarat packet, sebelum edit)
@@ -230,15 +230,17 @@ Bukan rehearsal installer/systemd produksi (NOT_RUN).
 |---|---|
 | Instruction ref | `review/0020-job-lifecycle-authority-20261117` @ `ea7b8a17ad8d6339eed45769bbff1626ea279665` (PR26) |
 | Base | `main@41d1f33f16508491a34f66b767830b9dd3e5954e` |
-| Implementation/tested SHA | **`6e96ce33a2708e204a72ff3b6814deaf62195444`** (seluruh evidence laporan ini dijalankan pada tree kode tersebut) |
-| Published candidate | branch `session/2026-11-17-0020-job-lifecycle-authority` + PR (readback remote diverifikasi; SHA final dicatat di bawah setelah push) |
+| Implementation/tested SHA | **`7118cce0db330acb02be0b3b774b1b1628d55d7a`** (engine `6e96ce33` + fix test-infra CI; seluruh evidence dijalankan pada tree kode tersebut) |
+| Published candidate | branch `session/2026-11-17-0020-job-lifecycle-authority` + [PR27](https://github.com/smahud/MicroTix_Project/pull/27); remote readback head diverifikasi; SHA final + CI dicatat di handoff |
 | Candidate CI | exact head — hasil diobservasi dan dicatat di PR setelah push |
 | Review independen | [reviewer/20261117T010218Z-0020-job-lifecycle-independent.md](../reviewer/20261117T010218Z-0020-job-lifecycle-independent.md) — verdict pra-koreksi CHANGES_REQUESTED (REV-2011-01..10); seluruh temuan ditindaklanjuti di penyerahan ini (matriks §3) |
 | Evidence dir | [executor-evidence/20261117T000000Z-0020-job-lifecycle/](../executor-evidence/20261117T000000Z-0020-job-lifecycle/) |
 
 Laporan ini + packet `_done` + handoff/progress adalah descendant report-only
-di atas implementation commit: `git diff 6e96ce33 HEAD -- backend/ apps/` kosong
-(hanya task/report/docs metadata).
+di atas implementation commit: `git diff 7118cce0db330acb02be0b3b774b1b1628d55d7a HEAD -- backend/ apps/` kosong
+(hanya task/report/docs metadata). Perbaikan test-infra `7118cce0`: _db_url
+subprocess drain kini menyertakan password (CI password auth) — tanpa perubahan
+engine/handler; suite penuh diulang 554 passed pada tree ini.
 
 ## 9. Risiko, batas, dan next actor/action
 
