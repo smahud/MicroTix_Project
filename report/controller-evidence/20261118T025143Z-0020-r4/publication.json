@@ -1,0 +1,291 @@
+{
+  "initial_sha": "bc90619a41d18cae1dd67c440ca6f033b82e32c3",
+  "tree_sha": "d782fc819b950fc183e961cd05d2ad83cc9030b4",
+  "pr": 35,
+  "ref": "review/0020-controller-r4-20261118",
+  "all_paths": [
+    {
+      "path": "docs/progress.md",
+      "sha": "7857a5673123ba2bf8779b2decc123376c92448a",
+      "remote_sha": "7857a5673123ba2bf8779b2decc123376c92448a",
+      "match": true
+    },
+    {
+      "path": "report/LATEST_HANDOFF.md",
+      "sha": "e7c5de10a4126f10963c757a947ec6cb04daf0b1",
+      "remote_sha": "e7c5de10a4126f10963c757a947ec6cb04daf0b1",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/base-cleanup.log",
+      "sha": "bdc448af42aa24144e661f647c52557f2e0d9b3c",
+      "remote_sha": "bdc448af42aa24144e661f647c52557f2e0d9b3c",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/base-no-effect-control.log",
+      "sha": "885982becdaab85ecd592c2a6517c64c145eb813",
+      "remote_sha": "885982becdaab85ecd592c2a6517c64c145eb813",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/check.log",
+      "sha": "7883fe46f105a9220370c1e6d26f0a1a6665783d",
+      "remote_sha": "7883fe46f105a9220370c1e6d26f0a1a6665783d",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/cleanup.log",
+      "sha": "bdc448af42aa24144e661f647c52557f2e0d9b3c",
+      "remote_sha": "bdc448af42aa24144e661f647c52557f2e0d9b3c",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/create-roles.log",
+      "sha": "5b54a4e03cc5b4e66920ddc0c995bcf497cff2d7",
+      "remote_sha": "5b54a4e03cc5b4e66920ddc0c995bcf497cff2d7",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/docs-final.log",
+      "sha": "8262f55dfa7221aafedee9add73e06564ecbfd90",
+      "remote_sha": "8262f55dfa7221aafedee9add73e06564ecbfd90",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/docs.log",
+      "sha": "8262f55dfa7221aafedee9add73e06564ecbfd90",
+      "remote_sha": "8262f55dfa7221aafedee9add73e06564ecbfd90",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/environment.log",
+      "sha": "445c7a6f1889415c9aa76e3b64b4ec6d1a9e5d49",
+      "remote_sha": "445c7a6f1889415c9aa76e3b64b4ec6d1a9e5d49",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/exit-codes.txt",
+      "sha": "59b39eb6a10991ffec17219638ce6cb5cfb93a3c",
+      "remote_sha": "59b39eb6a10991ffec17219638ce6cb5cfb93a3c",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/full-suite.log",
+      "sha": "053b69bd8fd8f650949d7b270671f026b2eac93d",
+      "remote_sha": "053b69bd8fd8f650949d7b270671f026b2eac93d",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/initdb.log",
+      "sha": "8f9886dbe7ba2d958ad32e49737404db2bc9d423",
+      "remote_sha": "8f9886dbe7ba2d958ad32e49737404db2bc9d423",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/local-ref-inventory.json",
+      "sha": "b3f9dbf6b92e3de616c865ce1fec6f65725dd8cb",
+      "remote_sha": "b3f9dbf6b92e3de616c865ce1fec6f65725dd8cb",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/makemigrations.log",
+      "sha": "8e3e881e0acb37cc6447055799fb8e3dc8bed220",
+      "remote_sha": "8e3e881e0acb37cc6447055799fb8e3dc8bed220",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/r1-authority.log",
+      "sha": "d2bf8045e4a3d4a43412ee81506d27b2144538c2",
+      "remote_sha": "d2bf8045e4a3d4a43412ee81506d27b2144538c2",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/r1-lifecycle.log",
+      "sha": "c62a4d80ae61acb71109ff7cb1ded5c2e83d6cde",
+      "remote_sha": "c62a4d80ae61acb71109ff7cb1ded5c2e83d6cde",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/r2-authority.log",
+      "sha": "f57348eff6118acd38ff3af535cc0b9447fba185",
+      "remote_sha": "f57348eff6118acd38ff3af535cc0b9447fba185",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/r2-lifecycle.log",
+      "sha": "2095dc3c4e869eee2cecdcac48652f82ab34f261",
+      "remote_sha": "2095dc3c4e869eee2cecdcac48652f82ab34f261",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/r3-authority.log",
+      "sha": "19631866c74da9a4d3fcb86bd08d4a9f45615f41",
+      "remote_sha": "19631866c74da9a4d3fcb86bd08d4a9f45615f41",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/r3-lifecycle.log",
+      "sha": "1c0356d0d36c4e4899ab8e4ef52757bad8718590",
+      "remote_sha": "1c0356d0d36c4e4899ab8e4ef52757bad8718590",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/r4-authority-harness-error.log",
+      "sha": "2e8fa4af25578d861f5eae65e83dc2f5beec3cf4",
+      "remote_sha": "2e8fa4af25578d861f5eae65e83dc2f5beec3cf4",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/r4-authority.log",
+      "sha": "b2569f987326615cbcef583f54d0cf1f281978a3",
+      "remote_sha": "b2569f987326615cbcef583f54d0cf1f281978a3",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/r4-lifecycle-harness-error.log",
+      "sha": "8751724c7523202430ef4e79dfa09534eed29f22",
+      "remote_sha": "8751724c7523202430ef4e79dfa09534eed29f22",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/r4-lifecycle.log",
+      "sha": "f533660e07e2b53fa73949c33c904eabb7dcfbcb",
+      "remote_sha": "f533660e07e2b53fa73949c33c904eabb7dcfbcb",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/remote-inputs.json",
+      "sha": "3a00b274235df6ce9963f3c1bdab1b127f79c9ed",
+      "remote_sha": "3a00b274235df6ce9963f3c1bdab1b127f79c9ed",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/review-file-hashes.json",
+      "sha": "7c43d4bbd9c459b5b4bbf0fd14f20c4f00393675",
+      "remote_sha": "7c43d4bbd9c459b5b4bbf0fd14f20c4f00393675",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/review-results.json",
+      "sha": "6bcfa0bef943cc591380fd1364b0a7f2fae5c29e",
+      "remote_sha": "6bcfa0bef943cc591380fd1364b0a7f2fae5c29e",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/run_base_control.sh",
+      "sha": "2e41e4bed4cb20aaceb8d4190e737e79802a54ed",
+      "remote_sha": "2e41e4bed4cb20aaceb8d4190e737e79802a54ed",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/run_review.sh",
+      "sha": "c09c479298d14705b08a47500c213187903b32f9",
+      "remote_sha": "c09c479298d14705b08a47500c213187903b32f9",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/run_supplemental.sh",
+      "sha": "3787814acc4922a4ddd82fcf07a2d6d0b2f3548c",
+      "remote_sha": "3787814acc4922a4ddd82fcf07a2d6d0b2f3548c",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/split-grant.log",
+      "sha": "0875a7cf8377c42fbb7443ad36859d8fd27a1686",
+      "remote_sha": "0875a7cf8377c42fbb7443ad36859d8fd27a1686",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/split-migrate.log",
+      "sha": "d09e4bd01c6f8cf2998e9d89c5dd66aaa6ade48d",
+      "remote_sha": "d09e4bd01c6f8cf2998e9d89c5dd66aaa6ade48d",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/split-roles-rls.log",
+      "sha": "657def44d13d28d4865292f335ce53789d2b9094",
+      "remote_sha": "657def44d13d28d4865292f335ce53789d2b9094",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/split-test-cleanup-grant.log",
+      "sha": "9a061cd9bc96cd83ced6569e15fd3ed1fb7b49f0",
+      "remote_sha": "9a061cd9bc96cd83ced6569e15fd3ed1fb7b49f0",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/test_r4_authority_credentials.py",
+      "sha": "03068492e481ce914fd2530663c99d15b326e79f",
+      "remote_sha": "03068492e481ce914fd2530663c99d15b326e79f",
+      "match": true
+    },
+    {
+      "path": "report/controller-evidence/20261118T025143Z-0020-r4/test_r4_lifecycle_edges.py",
+      "sha": "7dbe3ab3b61e44ed2be6c62c5ff32de1cd4364ff",
+      "remote_sha": "7dbe3ab3b61e44ed2be6c62c5ff32de1cd4364ff",
+      "match": true
+    },
+    {
+      "path": "report/controller/20261118T025143Z-0020-r4-review.md",
+      "sha": "f69e874e6e4499b770fe508f5630970e3ec31f1d",
+      "remote_sha": "f69e874e6e4499b770fe508f5630970e3ec31f1d",
+      "match": true
+    },
+    {
+      "path": "report/orchestrator/20261118T022200Z-0020-r3-correction.md",
+      "sha": "93f10bf21b2db25927be66b082a6cac7b4ca2d28",
+      "remote_sha": "93f10bf21b2db25927be66b082a6cac7b4ca2d28",
+      "match": true
+    },
+    {
+      "path": "report/reviewer/20261118T025143Z-0020-r4-authority.md",
+      "sha": "7e3b4a1e81ddaeeb0facf77993ef4a8b75c57c65",
+      "remote_sha": "7e3b4a1e81ddaeeb0facf77993ef4a8b75c57c65",
+      "match": true
+    },
+    {
+      "path": "report/reviewer/20261118T025143Z-0020-r4-lifecycle.md",
+      "sha": "192e9526398f2db28d03f4bdf1d28d552bbb5299",
+      "remote_sha": "192e9526398f2db28d03f4bdf1d28d552bbb5299",
+      "match": true
+    },
+    {
+      "path": "task/0020-job-lifecycle-authority.md",
+      "sha": "b65547dcf9ac8c232f414d768ffe67907bf85ecb",
+      "remote_sha": "b65547dcf9ac8c232f414d768ffe67907bf85ecb",
+      "match": true
+    },
+    {
+      "path": "task/0020-job-lifecycle-authority_done.md",
+      "sha": null,
+      "remote_sha": null,
+      "match": true
+    }
+  ],
+  "key_file_readback": [
+    {
+      "path": "task/0020-job-lifecycle-authority.md",
+      "content_match": true
+    },
+    {
+      "path": "report/LATEST_HANDOFF.md",
+      "content_match": true
+    },
+    {
+      "path": "report/controller/20261118T025143Z-0020-r4-review.md",
+      "content_match": true
+    },
+    {
+      "path": "docs/progress.md",
+      "content_match": true
+    }
+  ],
+  "local_verification": {
+    "command": "git fetch origin review/0020-controller-r4-20261118; git diff --cached --exit-code bc90619; guarded git update-ref to verified commit; git status --short",
+    "source_difference": [],
+    "status": "verified_clean",
+    "application_ancestor": "a636166ece610f23a1cdafb491e3a5ecc9e9caf9"
+  },
+  "pr_url": "https://github.com/smahud/MicroTix_Project/pull/35"
+}

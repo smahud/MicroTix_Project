@@ -23,8 +23,11 @@ within sandbox/process limits. PA001/PA006/task0010 tetap accepted/integrated.
 [Controller R4](../report/controller/20261118T025143Z-0020-r4-review.md),
 [evidence](../report/controller-evidence/20261118T025143Z-0020-r4/),
 [packet0020 reopened](../task/0020-job-lifecycle-authority.md).
-Decision ref **review/0020-controller-r4-20261118**; publication SHA/PR/readback
-dicatat setelah verifikasi. Next **coding_agent** tutup3 findings pada ID
+Decision **[PR35](https://github.com/smahud/MicroTix_Project/pull/35)**,
+**review/0020-controller-r4-20261118**, initial **bc90619a41d18cae1dd67c440ca6f033b82e32c3**,
+treed782fc81; all43 path hashes+4 key content readbacks MATCH dan clean local
+fetch. [Receipt](../report/controller-evidence/20261118T025143Z-0020-r4/publication.json).
+Metadata descendants preserve reviewed source. Next **coding_agent** tutup3 findings pada ID
 sama,4 assertions baru PASS tanpa pelemahan+preserve24/full checks; publish
 SHA+CI+report untuk controller. Task0030 ineligible; Beta NOT_READY.
 Host/device/GNS3/live RADIUS/browser E2E/systemd/scale NOT_RUN; aplikasi tidak
