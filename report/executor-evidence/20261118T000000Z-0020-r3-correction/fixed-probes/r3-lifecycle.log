@@ -1,0 +1,6 @@
+{"case": "r3-cross-initial-expiry", "initial_expiry": "2026-11-18 02:12:30.254791+00:00", "observed_at": "2026-11-18 02:12:30.919465+00:00", "lease": "2026-11-18 02:12:32.873905+00:00", "reconcile_attempts": 26}
+.{"case": "r3-expired-progress-resurrection", "effects": [], "expired_at": "2026-11-18 02:12:30.262612+00:00", "final_lease": "2026-11-18 02:12:30.262612+00:00", "state": "executing", "outcomes": {"expired-progress": {"state": "executing"}}}
+.{"case": "r3-expired-return-resurrection", "verified": [], "expired_at": "2026-11-18 02:12:30.675310+00:00", "final_lease": "2026-11-18 02:12:30.675310+00:00", "state": "executing", "outcomes": {"expired-return": {"state": "executing"}}}
+.{"case": "r3-resolve-db-session-loss", "sends": 1, "resolve_rejected": "writer_active: attempt job ini masih berjalan di proses (sesi DB mati \u2260 penulis lama aman; readback not-applied ditolak)", "info": {"worker_pid": 4628, "old_writer_live_at_resume": true}, "outcomes": {"old-live-adapter": {"exception": "OperationalError: terminating connection due to administrator command"}}, "final": "uncertain"}
+.
+4 passed in 4.47s

@@ -3,8 +3,8 @@
 | Field | Nilai |
 |---|---|
 | Task ID | `0020`; satu packet untuk lifecycle + authority yang saling bergantung |
-| Execution status | **ready** — controller R3 membuka kembali ID0020 untuk koreksi residual; hasil R2 tetap histori |
-| Review status | **changes_requested** — [R3 exact main4b03efe](../report/controller/20261117T212042Z-0020-r3-review.md); 3 residual P1 + 1 P2 baru, 6 assertion gagal/0 harness errors |
+| Execution status | **done** — koreksi R3 selesai pada sesi 18 Nov (executor); hasil R2/R1 tetap histori |
+| Review status | **pending** — koreksi R3 diserahkan untuk review controller exact SHA; [R3 changes_requested awal](../report/controller/20261117T212042Z-0020-r3-review.md) 3 residual P1 + 1 P2, 6 assertion gagal/0 harness errors — seluruhnya ditutup sesi koreksi |
 | Resume controller 17 Nov ~21:48 WIB | Histori checkpoint sebelum koreksi: [checkpoint](../report/controller/20261117T144620Z-0020-resume-review.md); klaim closure executor REV-1711-01–09 dinilai ulang pada R2/R3 |
 | Controller / executor | ChatGPT Work controller / coding agent sandbox |
 | Baseline | **main@4b03efedd76815af3f1c6fdf99d0739cd8dccc87** untuk koreksi R3; source identik implementation cd6eea3 yang sudah merged PR32; fetch current main dan periksa delta sebelum eksekusi |
@@ -18,20 +18,28 @@
 | Koreksi R2 — laporan & bukti | [Laporan eksekusi](../report/orchestrator/20261117T194548Z-0020-r2-correction.md) — matriks A01–A09 + pemetaan presisi A05/A08; [reviewer independen](../report/reviewer/20261117T194548Z-0020-r2-correction-independent.md): 5/5 temuan R2 CLOSED + 5 temuan baru REV-R2C-01..05 (semua ditutup sesi ini); [evidence](../report/executor-evidence/20261117T191917Z-0020-r2-correction/) — probe R2 6/6 + R1 11/11 lulus tanpa pelemahan (file probe controller FROZEN), suite penuh 583 passed/1 skip, check/makemigrations/docs/frontend PASS |
 | Histori bukti executor R1 | **Probe controller R1: failing-before 11 failed → passing-after 11 passed** (diulang pada DB split-role migrator-owned + FORCE RLS); **suite penuh 562 passed + 1 skip** (+8 tes bukti REV-1711-09: SIGINT/active-barrier/stop-claim, fase panjang vs reconciler, crash setelah commit domain, current-policy/SUB-05); PA-001 33 + PA-006 125 + RLS 8 lulus; check/makemigrations/docs PASS; [evidence root](../report/executor-evidence/20261117T150000Z-0020-correction/) |
 | Historical correction execution report | [Orchestrator koreksi](../report/orchestrator/20261117T160000Z-0020-correction-delivery.md) — matriks A01–A09 + temuan→perubahan→bukti; [reviewer independen](../report/reviewer/20261117T160500Z-0020-correction-independent.md): REV-1711-01–09 CLOSED, temuan P2 CORR-REV-01/02 ditutup sebelum commit; [laporan penyerahan pertama](../report/orchestrator/20261117T010218Z-0020-job-lifecycle-authority.md) histori |
-| Next actor / action | **coding_agent**: fetch decision branch R3, tutup REV-1711-01/04/05 + REV-1811-01 pada ID0020 yang sama; all7 R3 probes PASS tanpa pelemahan + preserve original17/full regression; koreksi R3 **not_submitted** |
+| Next actor / action | **controller_reviewer**: review exact SHA kandidat koreksi R3 terhadap [instruksi R3 §§3/7](../report/controller/20261117T212042Z-0020-r3-review.md) — 7 probe R3 tanpa pelemahan, 17 frozen, matriks A01–A09, penutupan REV-1711-01/04/05 + REV-1811-01, dan penilaian temuan baru reviewer REV-R3C-01/02 (terdokumentasi, lihat batas laporan eksekusi §6) |
+| Koreksi R3 implementation / tested | **`16db545`** (kode+tes saja; base decision head `05d268d`) |
+| Koreksi R3 — laporan & bukti | [Laporan eksekusi](../report/orchestrator/20261118T022200Z-0020-r3-correction.md) — matriks A01–A09 + failing-before/passing-after executor; [reviewer independen](../report/reviewer/20261118T022200Z-0020-r3-correction-independent.md): 01/05/1811-01 CLOSED, 04 cukup untuk scope probe + residual REV-R3C-01 (P2 laten, terdokumentasi dengan analisis konflik terhadap closure R1) & REV-R3C-02 (P3, didokumentasikan); [evidence](../report/executor-evidence/20261118T000000Z-0020-r3-correction/) — probe R3 7/7 + frozen R1/R2 17/17 lulus tanpa pelemahan (file probe FROZEN), suite penuh 589 passed/0 skip (583 baseline + 1 radius unskip sandbox + 5 tes baru), check/makemigrations/docs PASS |
 
 PA-002/PA-003 adalah label kontinuitas audit, bukan otoritas baru. PR8 planning_audit kini terintegrasi sebagai record historis melalui merge-all; kebutuhan packet ini tetap diturunkan dari kontrak/domain requirements di atas. Prasyarat PA-006 sudah accepted/integrated dan tidak dibuka kembali. PA-001 pembayaran juga dipertahankan. Packet ini tidak memberi izin merge, deploy, tag atau aktivasi fitur.
 
-## Koreksi controller R3 — instruksi current pada ID0020 yang sama
+## Koreksi controller R3 — penyerahan koreksi (executor 18 Nov)
 
-**ready / changes_requested pada exact integrated main4b03efe.** PR32 sudah
-merged sebelum review; merge bukan acceptance. Controller menjalankan sendiri
-**583 passed/1 skipped/3 warnings**, seluruh **17 frozen probe R1/R2 PASS**,
-check/makemigrations/docs PASS; exact-main CI backend/frontend/docs success3/3.
-Namun **6 assertion baru gagal/0 harness errors**, satu probe positif PASS.
-[Laporan R3](../report/controller/20261117T212042Z-0020-r3-review.md) §3
-berisi source lines, reproduksi, actual/expected dan minimum closure;
-[evidence](../report/controller-evidence/20261117T212042Z-0020-r3/).
+**done / pending review.** Executor menutup REV-1711-01/04/05 +
+REV-1811-01 pada ID0020 yang sama di atas decision head05d268d
+(main4b03efe + records R3). Probe controller R3 **FROZEN 7/7 PASS tanpa
+pelemahan** (failing-before executor di wt-base identik temuan controller:
+3+3 gagal/1 positif), frozen R1/R2 **17/17 PASS**, suite penuh **589 passed/
+0 skipped** (583 baseline + 1 radius unskip sandbox + 5 tes baru
+`test_jobs_r3_residuals.py`), check/makemigrations/docs PASS.
+[Laporan R3 eksekusi](../report/orchestrator/20261118T022200Z-0020-r3-correction.md)
+berisi temuan→perubahan→bukti + matriks A01–A09 + batas;
+[evidence](../report/executor-evidence/20261118T000000Z-0020-r3-correction/).
+Reviewer independen: 01/05/1811-01 CLOSED; REV-1711-04 PARTIAL pada lingkup
+probe (residual lintas-proses REV-R3C-01 P2 laten terdokumentasi — tidak
+dapat ditutup otomatis tanpa berkonflik dengan closure R1; next step konkret
+tercatat). Next actor: **controller_reviewer** mereview exact SHA.
 
 | Finding | Koreksi minimum / acceptance penutup |
 |---|---|

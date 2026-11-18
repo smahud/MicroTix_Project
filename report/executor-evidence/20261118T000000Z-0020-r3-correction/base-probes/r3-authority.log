@@ -1,0 +1,56 @@
+{"credential": "applied", "enrollment": "completed", "error": null, "membership_revoked": true, "postgres_observed_lock_wait": true, "probe": "enrollment-lock-wait-authority", "protocol": "wireguard", "routers_created": 1, "separate_connections": true, "state": "succeeded"}
+F{"credential": "applied", "enrollment": "completed", "error": null, "membership_revoked": true, "postgres_observed_lock_wait": true, "probe": "enrollment-lock-wait-authority", "protocol": "sstp", "routers_created": 1, "separate_connections": true, "state": "succeeded"}
+F2026-11-18 09:04:00,105 ERROR domains.jobs.engine job 81db3807-cc20-4760-b938-41c25cf21497 gagal tak terduga
+Traceback (most recent call last):
+  File "/home/z/my-project/wt-base/backend/domains/jobs/engine.py", line 831, in run_claimed
+    result = handler.execute(ctx) or {}
+             ~~~~~~~~~~~~~~~^^^^^
+  File "/home/z/my-project/wt-base/backend/domains/network/handlers.py", line 86, in execute
+    router = services.finalize_verification(
+        enrollment,
+    ...<3 lines>...
+        commit_guard=ctx.guard_commit,
+    )
+  File "/home/z/my-project/wt-base/backend/domains/network/services.py", line 1290, in finalize_verification
+    raise JobError(
+          ^^^^^^^^
+NameError: name 'JobError' is not defined. Did you mean: 'TabError'?
+{"outcomes": {"0": {"error": null, "state": "succeeded"}, "1": {"error": "internal_error", "state": "uncertain"}}, "probe": "duplicate-finalize", "routers_created": 1}
+F
+=================================== FAILURES ===================================
+___ test_enrollment_lock_wait_does_not_outlive_current_authority[wireguard] ____
+../report/controller-evidence/20261117T212042Z-0020-r3/test_r3_authority.py:201: in test_enrollment_lock_wait_does_not_outlive_current_authority
+    assert routers == 0 and credential.state == "pending", observed
+E   AssertionError: {'credential': 'applied', 'enrollment': 'completed', 'error': None, 'membership_revoked': True, ...}
+E   assert (1 == 0)
+______ test_enrollment_lock_wait_does_not_outlive_current_authority[sstp] ______
+../report/controller-evidence/20261117T212042Z-0020-r3/test_r3_authority.py:201: in test_enrollment_lock_wait_does_not_outlive_current_authority
+    assert routers == 0 and credential.state == "pending", observed
+E   AssertionError: {'credential': 'applied', 'enrollment': 'completed', 'error': None, 'membership_revoked': True, ...}
+E   assert (1 == 0)
+____ test_concurrent_enrollment_finalize_has_typed_non_uncertain_rejection _____
+../report/controller-evidence/20261117T212042Z-0020-r3/test_r3_authority.py:284: in test_concurrent_enrollment_finalize_has_typed_non_uncertain_rejection
+    assert outcomes[1]["error"] != "internal_error", observed
+E   AssertionError: {'outcomes': {0: {'error': None, 'state': 'succeeded'}, 1: {'error': 'internal_error', 'state': 'uncertain'}}, 'probe': 'duplicate-finalize', 'routers_created': 1}
+E   assert 'internal_error' != 'internal_error'
+------------------------------ Captured log call -------------------------------
+ERROR    domains.jobs.engine:engine.py:843 job 81db3807-cc20-4760-b938-41c25cf21497 gagal tak terduga
+Traceback (most recent call last):
+  File "/home/z/my-project/wt-base/backend/domains/jobs/engine.py", line 831, in run_claimed
+    result = handler.execute(ctx) or {}
+             ~~~~~~~~~~~~~~~^^^^^
+  File "/home/z/my-project/wt-base/backend/domains/network/handlers.py", line 86, in execute
+    router = services.finalize_verification(
+        enrollment,
+    ...<3 lines>...
+        commit_guard=ctx.guard_commit,
+    )
+  File "/home/z/my-project/wt-base/backend/domains/network/services.py", line 1290, in finalize_verification
+    raise JobError(
+          ^^^^^^^^
+NameError: name 'JobError' is not defined. Did you mean: 'TabError'?
+=========================== short test summary info ============================
+FAILED ::test_enrollment_lock_wait_does_not_outlive_current_authority[wireguard]
+FAILED ::test_enrollment_lock_wait_does_not_outlive_current_authority[sstp]
+FAILED ::test_concurrent_enrollment_finalize_has_typed_non_uncertain_rejection
+3 failed in 1.04s

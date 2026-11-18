@@ -1,4 +1,39 @@
-# LATEST_HANDOFF — controller R3 task0020, 18 November 2026
+# LATEST_HANDOFF — executor menyerahkan koreksi R3 task0020, 18 November 2026 (WIB ~09:2x)
+
+**Current delivery: koreksi R3 task0020 selesai dan `done/pending review`.**
+Executor menutup REV-1711-01/04/05 (P1) + REV-1811-01 (P2) pada ID0020 yang
+sama di atas decision head `05d268d` (main `4b03efe` + records R3 dari PR33).
+Probe controller R3 **FROZEN 7/7 PASS tanpa pelemahan** — failing-before
+executor pada wt-base identik temuan controller (3+3 gagal/1 positif);
+frozen R1/R2 **17/17 PASS**; suite penuh **589 passed/0 skipped/3 warnings**
+(583 baseline + 1 tes radius yang unskip karena binary FreeRADIUS tersedia di
+sandbox executor + 5 tes baru), check/makemigrations/docs PASS. Reviewer
+independen read-only: REV-1711-01/05 + REV-1811-01 CLOSED; REV-1711-04 cukup
+untuk scope probe dengan residual lintas-proses **REV-R3C-01 (P2 laten)**
+terdokumentasi (resolve_uncertain belum punya pemanggil produksi; penutupan
+otomatis berkonflik dengan closure R1 — analisis + next step pada laporan).
+Tabel ini menggantikan seluruh status historis di bawah.
+
+| Field | Current state / pointer |
+|---|---|
+| Canonical main saat mulai | **`4b03efedd76815af3f1c6fdf99d0739cd8dccc87`**; basis koreksi = decision head `05d268d` (branch `review/0020-controller-r3-20261118`, PR33 — protected-source diff kosong terhadap main menurut controller §1) |
+| Active task | **[ID0020 PA002+PA003](../task/0020-job-lifecycle-authority_done.md)** — **done / pending review**; task0010 tetap accepted/integrated; task0030 belum eligible |
+| Implementation / tested SHA | **`16db545`** (kode+tes saja; seluruh probe/suite/gate dijalankan pada tree kode-identik ini) |
+| Published candidate | Head branch `session/2026-11-18-0020-r3-correction` (commit penyerahan — report-only descendant dari `16db545`; kode identik) |
+| Laporan / bukti | [Eksekusi orchestrator](orchestrator/20261118T022200Z-0020-r3-correction.md) (matriks A01–A09 + failing-before/passing-after); [reviewer independen](reviewer/20261118T022200Z-0020-r3-correction-independent.md) (01/05/1811-01 CLOSED; 04 + REV-R3C-01/02 terdokumentasi); [evidence](executor-evidence/20261118T000000Z-0020-r3-correction/) (probe R3 7/7, frozen 17/17, suite 589/0skip, check/makemigrations/docs PASS) |
+| Perubahan inti | `jobs/engine.py`: klausa lease-validity pada `_fenced`/`_fenced_update`/commit-terminal/`_verify_only` (REV01) + registry in-flight proses untuk tolakan `resolve_uncertain(applied=False)` job sama saat attempt masih berjalan (REV04); `network/services.py`: import `JobError` ter-tipe untuk penolakan duplicate finalize (REV-1811-01) + `authority_guard()` dibaca segar DI BAWAH kunci baris enrollment sebelum Router/kredensial dibuat (REV05) |
+| Tes baru | `backend/tests/integration/test_jobs_r3_residuals.py` — 5 tes regresi CI (fencing expiry renewal/CAS, tolakan resolve in-flight + pemulihan, duplicate ter-tipe, guard bawah-kunci dengan lock enrollment nyata) |
+| Next actor | **controller_reviewer** |
+| Exact next action | Review exact SHA kandidat terhadap instruksi [R3 §3/§7](controller/20261117T212042Z-0020-r3-review.md): 7 probe R3 tanpa pelemahan, 17 frozen, matriks A01–A09, penutupan REV-1711-01/04/05 + REV-1811-01, dan penilaian residual terdokumentasi REV-R3C-01 (P2 laten, dengan analisis konflik terhadap closure R1) & REV-R3C-02 (P3). Acceptance/integrasi/deploy/tag tetap keputusan terpisah; `_done`/CI hijau bukan acceptance. |
+| Dependency / Beta | Task0030 ineligible sampai review R3 selesai. Production Beta **NOT_READY**; install/upgrade/restore/secrets/scheduler/DEC01/02/host/lab/pilot/capacity gates terpisah. NOT_RUN: perangkat nyata/GNS3, RADIUS daemon produksi, browser E2E, systemd rehearsal, scale/soak. |
+
+GitHub records do not automatically start an external coding agent. Entry
+remains [task/0000-start-here.md](../task/0000-start-here.md). Pada sesi ini
+pemilik repo menginstruksikan merge-all + push (PAT) — merge bukan acceptance.
+
+## Historical handoffs — superseded by current table above
+
+### LATEST_HANDOFF — controller R3 task0020, 18 November 2026
 
 **Current verdict: ready / changes_requested pada exact main4b03efe.**
 Tiga residual P1 + satu P2 baru dikonfirmasi melalui **6 assertion gagal,

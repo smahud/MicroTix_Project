@@ -1,6 +1,32 @@
 # MicroTix — checkpoint kemajuan
 
-Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-18 (Asia/Jakarta), controller R3.
+Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-18 (Asia/Jakarta), executor koreksi R3.
+
+## Checkpoint 2026-11-18 ~09:2x WIB — executor: koreksi R3 task0020 diserahkan (done/pending review)
+
+Di atas decision head `05d268d` (main `4b03efe` + records R3 PR33), executor
+menutup REV-1711-01/04/05 + REV-1811-01 pada ID0020 yang sama:
+**probe controller R3 FROZEN 7/7 lulus tanpa pelemahan** (failing-before
+executor pada wt-base identik temuan controller 3+3 gagal/1 positif),
+**frozen R1/R2 17/17 tetap lulus**, suite penuh **589 passed/0 skipped**
+(583 baseline + 1 tes radius unskip karena binary FreeRADIUS tersedia di
+sandbox + 5 tes baru `test_jobs_r3_residuals.py`), check/makemigrations/docs
+PASS. Perubahan: klausa lease-validity seluruh CAS renewal/transisi/terminal
+worker; registry in-flight tolakan resolve job sama saat attempt masih
+berjalan; authority_guard di bawah kunci baris enrollment; JobError ter-tipe
+duplicate finalize. Reviewer independen read-only: 01/05/1811-01 CLOSED;
+REV-1711-04 cukup untuk scope probe; residual lintas-proses REV-R3C-01 (P2
+laten) + REV-R3C-02 (P3) terdokumentasi dengan analisis konflik terhadap
+closure R1 — bukan klaim aman lintas proses.
+
+[Eksekusi](../report/orchestrator/20261118T022200Z-0020-r3-correction.md),
+[reviewer independen](../report/reviewer/20261118T022200Z-0020-r3-correction-independent.md),
+[evidence](../report/executor-evidence/20261118T000000Z-0020-r3-correction/),
+[packet0020 _done](../task/0020-job-lifecycle-authority_done.md).
+Next **controller_reviewer** mereview exact SHA kandidat branch
+`session/2026-11-18-0020-r3-correction`. Task0010 accepted/integrated; task0030
+belum eligible; Beta NOT_READY. Host/device/GNS3/live RADIUS produksi/browser
+E2E/systemd/scale NOT_RUN; merge/push atas instruksi pemilik bukan acceptance.
 
 ## Checkpoint 2026-11-18 — controller R3 task0020: changes_requested
 
