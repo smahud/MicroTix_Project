@@ -1,5 +1,19 @@
 # LATEST_HANDOFF — executor menyerahkan koreksi R5 task0020, 18 November 2026 (WIB ~18:5x)
 
+**Update integrasi (sesi sama, ~19:1x WIB):** atas instruksi pemilik repo
+(merge all branch, main selalu hijau, PAT commit/merge/push — preseden
+PR24/25/30/31/32/33/34/36), PR #37 (decision records controller R4-correction,
+merge `e59a57d`) dan PR #38 (koreksi R5) di-merge ke main: merge commit
+**`e19b08f`** (membawa koreksi impl/tested **`3301c29`** + head penyerahan
+`ccea781` report-only descendant). **Exact-main CI diverifikasi:
+[run44300491651](https://github.com/smahud/MicroTix_Project/actions/runs/44300491651)
+backend/frontend/docs 3/3 success** pada head `e19b08f`; CI kandidat PR #38
+head `ccea781` [run44299725440](https://github.com/smahud/MicroTix_Project/actions/runs/44299725440)
+juga 3/3 success. Seluruh remote branch kini ancestor main (**0 unmerged**,
+0 PR terbuka). Merge pemilik bukan acceptance controller — **review koreksi
+R5 tetap pending** untuk exact SHA `3301c29` (next actor controller_reviewer).
+Bukti CI: [ci-integration.txt](executor-evidence/20261118T113641Z-0020-r5-correction/ci-integration.txt).
+
 **Current delivery: koreksi R5 task0020 selesai dan `done / pending review`.**
 Executor menutup empat residual **changes_requested** controller ([keputusan
 R4-correction](controller/20261118T050714Z-0020-r4-correction-review.md)) pada
@@ -30,7 +44,7 @@ branch kerja `session/2026-11-18-0020-r5-correction`:
 | Field | Current state / pointer |
 |---|---|
 | Active task | **[ID0020 PA002+PA003](../task/0020-job-lifecycle-authority_done.md)** — **done / pending review**; task0010 accepted/integrated |
-| Implementation / tested SHA | Commit kode+tes pada `session/2026-11-18-0020-r5-correction` (base `2d5b7f1`); published candidate = head PR (report-only descendant) |
+| Implementation / tested SHA | **`3301c29`** (kode+tes+evidence) pada branch `session/2026-11-18-0020-r5-correction` (base decision head `2d5b7f1`); published candidate = head PR `ccea781` (report-only descendant); terintegrasi ke main melalui merge `e19b08f` (PR #38) |
 | Execution report | [Koreksi R5](orchestrator/20261118T115321Z-0020-r5-correction.md) — temuan→perubahan→bukti + matriks A01–A09 + batas; [evidence](executor-evidence/20261118T113641Z-0020-r5-correction/) 18 check exit=0 |
 | Probe beku R1–R4 (FROZEN) | **28/28 PASS tanpa pelemahan** (R1 4+7, R2 3+3, R3 4+3, R4 2+2) pada DB split-role migrator-owned, runtime `mtx_app` NOSUPERUSER/NOBYPASSRLS FORCE RLS, PG17.12 |
 | Regresi controller | `test_terminal_lease_review.py` **2/2 PASS** (failing-before BASE: 2 FAIL identik temuan) |

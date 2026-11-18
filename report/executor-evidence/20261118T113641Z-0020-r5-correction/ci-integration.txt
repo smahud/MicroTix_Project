@@ -1,0 +1,8 @@
+CI integrasi main setelah merge koreksi R5
+Wed Nov 18 12:08:01 UTC 2026
+main head: e19b08f5e020e63b1353c2b27b04c7c922e46932 (merge PR38; merge PR37 = e59a57d)
+backend: completed / success — run https://github.com/smahud/MicroTix_Project/actions/runs/44300491651/job/134788646098
+docs: completed / success — run https://github.com/smahud/MicroTix_Project/actions/runs/44300491651/job/134788645588
+frontend: completed / success — run https://github.com/smahud/MicroTix_Project/actions/runs/44300491651/job/134788645945
+
+Kandidat PR38 head ccea781: run 44299725440 backend/frontend/docs 3/3 success (lihat ci-pr38.txt)

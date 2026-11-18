@@ -1,6 +1,21 @@
 # MicroTix — checkpoint kemajuan
 
-Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-18 (Asia/Jakarta), penyerahan koreksi R5 task 0020.
+Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-18 (Asia/Jakarta), integrasi merge koreksi R5 task 0020.
+
+## Checkpoint 2026-11-18 ~19:1x WIB — integrasi merge koreksi R5 ke main (wewenang pemilik)
+
+Pemilik repo menginstruksikan merge-all branch ke main dengan PAT (preseden
+PR24/25/30/31/32/33/34/36). PR #37 (decision records controller R4-correction,
+merge `e59a57d`) dan PR #38 (koreksi R5, impl/tested `3301c29`, head penyerahan
+`ccea781`) di-merge: merge commit **`e19b08f`**. **Exact-main CI diverifikasi:
+[run44300491651](https://github.com/smahud/MicroTix_Project/actions/runs/44300491651)
+backend/frontend/docs 3/3 success** pada head `e19b08f`; CI kandidat PR #38
+head `ccea781` [run44299725440](https://github.com/smahud/MicroTix_Project/actions/runs/44299725440)
+juga 3/3 success. Seluruh remote branch kini ancestor main (0 unmerged, 0 PR
+terbuka). Merge pemilik bukan acceptance controller — review koreksi R5 tetap
+pending untuk exact SHA `3301c29` (next actor controller_reviewer); task0030
+belum eligible; Production Beta **NOT_READY**. [Bukti
+CI](../report/executor-evidence/20261118T113641Z-0020-r5-correction/ci-integration.txt).
 
 ## Checkpoint 2026-11-18 ~18:5x WIB — executor menyerahkan koreksi R5 task0020 (done/pending review)
 
