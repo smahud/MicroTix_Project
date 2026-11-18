@@ -1,6 +1,20 @@
 # MicroTix — checkpoint kemajuan
 
-Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-18 (Asia/Jakarta), executor koreksi R4 task0020.
+Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-18 (Asia/Jakarta), integrasi koreksi R4 ke main.
+
+## Checkpoint 2026-11-18 ~11:1x WIB — integrasi merge koreksi R4 ke main (wewenang pemilik)
+
+Pemilik repo menginstruksikan merge-all branch ke main dengan PAT (preseden
+PR24/25/30/31/32/33/34). PR36 di-merge: merge commit **dffb0c7** (membawa
+koreksi impl/tested 77a4a90 + head penyerahan 3eaae2a + decision records R4
+PR35/e0d306a). **Exact-main CI diverifikasi: run44234563802 backend/frontend/
+docs 3/3 success** pada head dffb0c7 (job docs: seluruh step completed/success;
+status record "in_progress" = artefak API — run-level conclusion success).
+CI kandidat PR36 head3eaae2a run44234124841 juga 3/3 success. Seluruh remote
+branch kini ancestor main (0 unmerged); PR35/PR36 ter-merge. Merge pemilik
+bukan acceptance controller — review koreksi R4 tetap pending untuk exact
+SHA77a4a90 (next controller_reviewer); task0030 belum eligible; Beta NOT_READY.
+[Bukti CI](../report/executor-evidence/20261118T035535Z-0020-r4-correction/ci-integration.txt).
 
 ## Checkpoint 2026-11-18 ~11:0x WIB — executor: koreksi R4 task0020 diserahkan (done/pending review)
 

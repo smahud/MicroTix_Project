@@ -1,0 +1,21 @@
+== CI kandidat PR36 (head 3eaae2a, push branch) ==
+run 44234124841 — backend success / frontend success / docs success
+  https://github.com/smahud/MicroTix_Project/actions/runs/44234124841
+  job backend: 134566023041 | frontend: 134566023474 | docs: 134566023557
+
+== Merge (wewenang pemilik repo: merge-all, main selalu hijau, PAT; preseden PR24/25/30/31/32/33/34) ==
+PR36 merged dffb0c73709d02db7d2c4dc37a89678340c16711 (merge commit, membawa
+koreksi 77a4a90/3eaae2a + decision records R4 PR35 e0d306a).
+
+== Exact-main CI (push event, head dffb0c7) ==
+run 44234563802 — status completed / conclusion success
+  https://github.com/smahud/MicroTix_Project/actions/runs/44234563802
+  job backend: completed/success (134567459136)
+  job frontend: completed/success (134567459327)
+  job docs: semua step completed/success, completed_at 2026-11-18T04:02:52Z
+            (134567459578; status "in_progress" pada record job = artefak API
+            GitHub — run-level conclusion success; step "Complete job" success)
+
+== Merge-all verifikasi ==
+git merge-base --is-ancestor <setiap remote branch> origin/main → 0 unmerged.
+PR35 closed/merged (commits masuk via PR36); PR36 closed/merged.

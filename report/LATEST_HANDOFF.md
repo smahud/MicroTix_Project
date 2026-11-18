@@ -1,5 +1,18 @@
 # LATEST_HANDOFF — executor menyerahkan koreksi R4 task0020, 18 November 2026 (WIB ~11:0x)
 
+**Update integrasi (sesi sama, ~11:1x WIB):** atas instruksi pemilik repo
+(merge all branch, main selalu hijau, PAT commit/merge/push — preseden
+PR24/25/30/31/32/33/34), PR36 di-merge ke main: merge commit **`dffb0c7`**
+(membawa koreksi impl/tested **`77a4a90`** + head penyerahan `3eaae2a`
+report-only descendant + decision records R4 PR35 `e0d306a`).
+**Exact-main CI diverifikasi: [run44234563802](https://github.com/smahud/MicroTix_Project/actions/runs/44234563802)
+backend/frontend/docs success** pada head dffb0c7; CI kandidat PR36 head3eaae2a
+[run44234124841](https://github.com/smahud/MicroTix_Project/actions/runs/44234124841)
+juga 3/3 success. Seluruh remote branch kini ancestor main (**0 unmerged**);
+PR35/PR36 ter-merge. Merge pemilik bukan acceptance controller — **review
+koreksi R4 tetap pending** untuk exact SHA `77a4a90` (next actor
+controller_reviewer). Bukti CI: [ci-integration.txt](executor-evidence/20261118T035535Z-0020-r4-correction/ci-integration.txt).
+
 **Current delivery: koreksi R4 task0020 selesai dan `done / pending review`.**
 Executor menutup **REV-1711-04** (bukti penulis lintas proses: identitas
 writer pid/host/starttime dipersist ATOMIK saat entering EXECUTING via
@@ -23,7 +36,7 @@ yang sama di atas decision head `e0d306a` (main `a636166` + records R4 PR35).
 | Regresi penuh | Suite backend **596 passed/1 skip/3 warnings** (baseline 588 + 8 regresi CI baru `test_jobs_r4_residuals`: final/nonfinal no-effect, stale CAS, cross-process live/dead writer, legacy unverifiable, credential-wait ×2 protokol); `check`/`makemigrations --check`/`docs` PASS. 1 skip = binary FreeRADIUS tidak tersedia di sandbox (bukan defect). |
 | Harness repair (dijustify A09) | Tes migrasi PA-006 (0003↔0004/0005) meninggalkan state migrasi historis — kebocoran laten jinak saat 0005 data-only, merusak suite setelah 0006 additive. Fixture autouse `_restore_latest_migrations` (3 file pa006) memulihkan state ke terbaru; TIDAK ada asersi yang diubah. |
 | Residual terdokumentasi | REV-R3C-01 (→ mekanisme bukti penulis ini, batas host-sama/`/proc` dinyatakan jujur); REV-R3C-02 (→ ditutup REV-1811-02). Verdict penutupan milik controller. |
-| CI kandidat | Required CI pada exact published head PR (backend/frontend/docs) — diverifikasi/dicatat setelah push; laporan eksekusi tidak mengklaim CI sebelum terverifikasi |
+| CI kandidat + integrasi | Kandidat PR36 head3eaae2a [run44234124841](https://github.com/smahud/MicroTix_Project/actions/runs/44234124841) backend/frontend/docs 3/3 success; merge pemilik → main **dffb0c7** [run44234563802](https://github.com/smahud/MicroTix_Project/actions/runs/44234563802) 3/3 success terverifikasi; 0 unmerged branch |
 | Next actor | **controller_reviewer** |
 | Exact next action | Review exact SHA `77a4a9056c1c5cf9b0b0874b0630a16dd350aa09`: jalankan ulang probe R4 (4) + seluruh 24 frozen tanpa pelemahan + regresi required; nilai matriks A01–A09 dan batas §5 laporan; verdict pada ID0020 (accepted ⇒ siapkan task dependent; changes_requested ⇒ buka ID sama). |
 | Dependency / Beta | Task0030 ineligible hingga review. Production Beta **NOT_READY**. Installer/upgrade/restore/secrets/scheduler/DEC01/02/host/GNS3/pilot/capacity tetap scope/gates terpisah. Device/live RADIUS/browser E2E/systemd/scale NOT_RUN. |
