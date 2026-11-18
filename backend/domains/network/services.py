@@ -39,6 +39,7 @@ from django.utils import timezone
 from domains.common.crypto import SecretBox
 from domains.common.envelope import ApiError
 from domains.common.tenant_context import tenant_scope
+from domains.jobs.engine import JobError  # REV-1811-01 (R3): galat ter-tipe bukan NameError
 
 from domains.network.models import (
     DiscoveryObject,
@@ -1277,7 +1278,9 @@ def finalize_verification(
             # dan validasi ulang status DI BAWAH kunci: finalize konkuren pada
             # enrollment sama (job verify_api_ssl tidak memegang router_id /
             # sender per-router) tidak dapat membuat Router kedua. Re-entry
-            # sah (status VERIFYING) tetap lolos; COMPLETED konkuren ditolak.
+            # sah (status VERIFYING) tetap lolos; COMPLETED konkuren ditolak
+            # dengan galat ter-tipe JobError(enrollment_state) — REV-1811-01
+            # (R3): sebelumnya NameError → internal_error → uncertain palsu.
             locked = (
                 RouterEnrollment.objects.select_for_update()
                 .filter(id=enrollment.id)
@@ -1292,6 +1295,16 @@ def finalize_verification(
                     retryable=False,
                     message="enrollment sudah difinalisasi oleh worker konkuren",
                 )
+            # REV-1711-05 (R3): kewenangan DIBACA SEGAR DI BAWAH kunci baris
+            # enrollment yang berpotensi memblokir lama. Pemeriksaan
+            # pra-lock (entry unit) saja tidak membuktikan kewenangan masih
+            # sah pada batas tulisan sensitif: pencabutan/demosi/scope yang
+            # ter-commit SELAMA worker menunggu lock enrollment harus
+            # membatalkan unit efek ini sebelum Router/kredensial dibuat
+            # (lease yang valid bukan izin aktor). pg_blocking_pids membuktikan
+            # jendela tunggu nyata; guard di bawah kunci menutupnya.
+            if authority_guard is not None:
+                authority_guard()
             router = Router.objects.create(
                 tenant_id=enrollment.tenant_id,
                 display_name=enrollment.display_name,
