@@ -2,6 +2,18 @@
 
 Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-18 (Asia/Jakarta), executor koreksi R3.
 
+## Checkpoint 2026-11-18 ~09:3x WIB — integrasi merge-all ke main (wewenang pemilik)
+
+Pemilik repo menginstruksikan merge-all branch ke main dengan PAT
+(preseden PR24/25/30/31/32). Branch koreksi R3 di-merge: merge commit
+**906bfe0** (membawa decision records R3 05d268d + koreksi), kode identik
+tested **16db545** (head penyerahan 19cb430 report-only descendant).
+**Exact-main CI diverifikasi: run44223255529 backend/frontend/docs 3/3
+success** pada head906bfe0. Seluruh remote branch kini ancestor main
+(0 unmerged); PR33/PR34 ter-merge otomatis. Merge pemilik bukan acceptance
+controller — review koreksi R3 tetap pending untuk exact SHA16db545;
+task0030 belum eligible; Beta NOT_READY.
+
 ## Checkpoint 2026-11-18 ~09:2x WIB — executor: koreksi R3 task0020 diserahkan (done/pending review)
 
 Di atas decision head `05d268d` (main `4b03efe` + records R3 PR33), executor

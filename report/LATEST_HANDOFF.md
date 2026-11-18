@@ -1,5 +1,16 @@
 # LATEST_HANDOFF — executor menyerahkan koreksi R3 task0020, 18 November 2026 (WIB ~09:2x)
 
+**Update integrasi (sesi sama, ~09:3x WIB):** atas instruksi pemilik repo
+(merge all branch, main selalu hijau, PAT commit/merge/push — preseden
+PR24/25/30/31/32), branch koreksi di-merge ke main: merge commit **`906bfe0`**
+(includes decision records R3 `05d268d`), kode identik dengan tested
+**`16db545`** (head penyerahan `19cb430` report-only descendant).
+**Exact-main CI diverifikasi: [run44223255529](https://github.com/smahud/MicroTix_Project/actions/runs/44223255529) backend/frontend/docs 3/3 success** pada head906bfe0. Seluruh remote branch kini ancestor main (**0 unmerged**); PR33/PR34
+ter-merge otomatis (head kini ancestor main). Merge pemilik bukan acceptance
+controller — **review koreksi R3 tetap pending** untuk exact SHA `16db545`
+(next actor controller_reviewer); residual terdokumentasi REV-R3C-01/02 tetap
+terbuka sebagai catatan batas.
+
 **Current delivery: koreksi R3 task0020 selesai dan `done/pending review`.**
 Executor menutup REV-1711-01/04/05 (P1) + REV-1811-01 (P2) pada ID0020 yang
 sama di atas decision head `05d268d` (main `4b03efe` + records R3 dari PR33).
