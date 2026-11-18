@@ -7,6 +7,7 @@ DB yang tertahan melintasi send/readback.
 """
 from __future__ import annotations
 
+from django.db import connection
 from django.utils import timezone
 from domains.jobs.engine import (
     JobContext,
@@ -18,6 +19,31 @@ from domains.jobs.engine import (
 
 from adapters.routeros.base import RouterOsError
 from domains.network.models import Router, RouterEnrollment, SstpAccount, WireGuardPeer
+
+
+def _lock_tenant_referential(tenant_id) -> None:
+    """REV-1711-01 (R6): akuisisi kunci referensial baris tenant DI DALAM unit.
+
+    FK Django ke tenancy_tenant adalah DEFERRABLE INITIALLY DEFERRED —
+    pemeriksaan referensial berlangsung pada COMMIT dan dapat MENUNGGU kunci
+    baris tenant yang dipegang transaksi lain (penomoran billing memakai
+    SELECT FOR UPDATE baris tenant). Tunggu SETELAH guard lease terakhir
+    membiarkan lease habis selama penantian dan efek tetap commit. Kunci
+    referensial (FOR KEY SHARE — mode minimal validasi FK) diambil SEBELUM
+    fence akhir unit sehingga seluruh tunggu selesai lebih dulu dan expiry
+    divalidasi segar pada batas commit.
+    """
+    with connection.cursor() as cur:
+        cur.execute(
+            "SELECT 1 FROM tenancy_tenant WHERE id = %s FOR KEY SHARE",
+            [str(tenant_id)],
+        )
+        if cur.fetchone() is None:
+            raise JobError(
+                code="enrollment_state",
+                retryable=False,
+                message="tenant tidak ditemukan",
+            )
 
 
 def _ctx_router(ctx: JobContext) -> Router:
@@ -186,6 +212,16 @@ class RouterReleaseHandler(JobHandler):
                 nas_removed = True
             except Exception:
                 nas_removed = False
+            # REV-1711-05 (R6): kewenangan DIBACA SEGAR DI BAWAH KUNCI pada
+            # batas efek sensitif — SETELAH seluruh tulisan unit yang dapat
+            # menunggu lock domain (baris router/peer/SSTP/NAS) dan SEBELUM
+            # guard_commit (fence lease terakhir): guard terkunci memegang
+            # baris user + membership sampai commit. Pencabutan/demosi/
+            # penonaktifan yang ter-commit SELAMA worker menunggu lock domain
+            # terlihat statement segar ini (READ COMMITTED) → unit di-rollback:
+            # router tetap aktif, kredensial/NAS tetap. Lease yang valid bukan
+            # izin aktor (A06); kontrol operasi berizin tetap commit sekali.
+            check_current_authority(ctx.job, ctx.payload, lock_membership=True)
             return {"released": True, "nas_deprojected": nas_removed,
                     "note": "objek rtrw pada router dihapus operator (dokumen runbook)"}
 
@@ -217,6 +253,12 @@ class RouterReplaceHandler(JobHandler):
             WireGuardPeer.objects.filter(router=router).update(state=WireGuardPeer.State.REMOVED)
             # Revoke kredensial SSTP saat penggantian perangkat (§8 audit revoke).
             SstpAccount.objects.filter(router=router).update(state=SstpAccount.State.REMOVED)
+            # REV-1711-01 (R6): enrollment pengganti INSERT baris dengan FK
+            # DEFERRABLE ke tenant — akuisisi kunci referensial tenant
+            # SEBELUM tulisan dan fence akhir (bukan ditunda ke COMMIT yang
+            # bisa menunggu lock tenant pihak lain setelah guard lease
+            # terakhir dilewati).
+            _lock_tenant_referential(router.tenant_id)
             # create_enrollment mengikuti konvensi caller-provides-scope
             # (scope bersarang reentrant).
             enrollment = services.create_enrollment(
@@ -229,6 +271,16 @@ class RouterReplaceHandler(JobHandler):
                 actor=ctx.job.actor,
             )
             Router.objects.filter(id=router.id).update(replaced_by=None)
+            # REV-1711-05 (R6): kewenangan DIBACA SEGAR DI BAWAH KUNCI pada
+            # batas efek sensitif — SETELAH seluruh tulisan unit (release
+            # router lama, revoke kredensial, INSERT enrollment pengganti —
+            # termasuk tunggu lock domain dan kunci referensial tenant) dan
+            # SEBELUM guard_commit: guard terkunci memegang baris user +
+            # membership sampai commit; FK created_by enrollment pengganti
+            # juga tercakup kunci user ini pada COMMIT. Pencabutan yang
+            # ter-commit selama tunggu → unit di-rollback: router lama tetap
+            # aktif, kredensial tetap, NOL enrollment pengganti baru.
+            check_current_authority(ctx.job, ctx.payload, lock_membership=True)
             return {
                 "released_router_id": str(router.id),
                 "new_enrollment_id": str(enrollment.id),

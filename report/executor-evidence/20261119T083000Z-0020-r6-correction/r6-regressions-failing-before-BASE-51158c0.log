@@ -1,0 +1,15 @@
+..FFFFFFFFFF.F.                                                          [100%]
+=========================== short test summary info ============================
+FAILED tests/integration/test_jobs_r6_residuals.py::TestSettlementLeaseAfterJobRowLockWait::test_settlement_lease_checked_after_job_row_lock[expired-final]
+FAILED tests/integration/test_jobs_r6_residuals.py::TestSettlementLeaseAfterJobRowLockWait::test_settlement_lease_checked_after_job_row_lock[expired-nonfinal]
+FAILED tests/integration/test_jobs_r6_residuals.py::TestWatchdogLeaseAfterJobRowLockWait::test_watchdog_cannot_extend_expired_lease_after_job_row_lock
+FAILED tests/integration/test_jobs_r6_residuals.py::TestEnrollmentLeaseCoversDeferredForeignKeyWait::test_lease_expiry_during_tenant_referential_wait_cancels_unit
+FAILED tests/integration/test_jobs_r6_residuals.py::TestEnrollmentLeaseCoversDeferredForeignKeyWait::test_valid_lease_under_same_tenant_wait_commits_once
+FAILED tests/integration/test_jobs_r6_residuals.py::TestNegativeReadbackStopProofOrdering::test_prestop_observation_is_rejected_and_holds
+FAILED tests/integration/test_jobs_r6_residuals.py::TestNegativeReadbackStopProofOrdering::test_poststop_observation_opens_recovery_without_duplicate_send
+FAILED tests/integration/test_jobs_r6_residuals.py::TestNegativeReadbackStopProofOrdering::test_naive_attestation_rejected
+FAILED tests/integration/test_jobs_r6_residuals.py::TestNegativeReadbackStopProofOrdering::test_explicit_attestation_without_receipt_fails_closed
+FAILED tests/integration/test_jobs_r6_residuals.py::TestReleaseReplaceAuthorityBoundary::test_release_deactivation_during_router_wait_cancels_unit
+FAILED tests/integration/test_jobs_r6_residuals.py::TestReleaseReplaceAuthorityBoundary::test_replace_membership_revocation_during_router_wait_cancels_unit
+11 failed, 4 passed in 13.90s
+failing-before exit=1

@@ -1,0 +1,11 @@
+jobs.0004 idempotency identity backfill: kept_with_response=0 kept_no_response=0 platform_remapped=0 legacy_opaque_group=0 unparsed_retained=0 duplicate_deleted=0
+jobs.0005 idempotency secret-preview scrub: scanned=0 scrubbed=0 guards_deleted=0
+settlement max_attempts=1 expired_while_blocked=False pg_wait=SELECT actual=failed error=controlled_no_effect token_preserved=False epoch_preserved=True
+.settlement max_attempts=2 expired_while_blocked=False pg_wait=SELECT actual=retry_wait error=controlled_no_effect token_preserved=False epoch_preserved=True
+.settlement max_attempts=1 expired_while_blocked=True pg_wait=SELECT actual=executing error=None token_preserved=True epoch_preserved=True
+.settlement max_attempts=2 expired_while_blocked=True pg_wait=SELECT actual=executing error=None token_preserved=True epoch_preserved=True
+.watchdog pg_wait=SELECT expiry_preserved=True state=executing token_preserved=True lease_extended_after_wait=False
+.enrollment pg_wait=SELECT router_count=0 credential=pending enrollment=verifying job=executing
+.
+6 passed in 13.86s
+probe exit=0
