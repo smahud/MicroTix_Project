@@ -1,3 +1,23 @@
+# LATEST_HANDOFF — keputusan controller untuk task 0020, 18 November 2026
+
+**Task 0020 kembali ready / changes_requested.** Koreksi R4 sudah
+terintegrasi lewat PR #36. Review controller pada exact `77a4a9056c1c5cf9b0b0874b0630a16dd350aa09`
+memverifikasi 28/28 probe beku dan suite 596 passed/1 skip. Dua
+assertion expired no-effect FAIL, dengan residual source pada
+hold router, akun aktif dan validitas lease di batas commit.
+
+| Field | Current state / pointer |
+|---|---|
+| Canonical main saat review | `5c452763e8c8fb8976d06dad16d0b68c7da14f95`, source/config identik dengan tested SHA. [CI 44235979563](https://github.com/smahud/MicroTix_Project/actions/runs/44235979563) 3/3 success. |
+| Task aktif | [ID 0020 / PA-002+PA-003](../task/0020-job-lifecycle-authority.md) — **ready / changes_requested**. Koreksi lanjutan belum diserahkan. |
+| Kandidat dan integrasi | [PR #36](https://github.com/smahud/MicroTix_Project/pull/36) `3eaae2a`, merge `dffb0c7`, exact reviewed `77a4a9056c1c5cf9b0b0874b0630a16dd350aa09`. |
+| Keputusan | `review/0020-r4-correction-20261118-0507`, [review controller](controller/20261118T050714Z-0020-r4-correction-review.md), [evidence](controller-evidence/20261118T050714Z-0020-r4-correction/runtime.md). Ref keputusan dipublikasikan via PR dokumentasi. |
+| Temuan aktif | REV-1711-04 P1 hold/epoch, REV-1711-05 P1 akun aktif, REV-1711-01 P1 lease di commit, REV-1811-02 P2 expired settlement. |
+| Next actor / action | **coding_agent**. Fetch ref keputusan, koreksi empat temuan pada ID yang sama dan serahkan exact SHA, report dan CI. |
+| Dependency / Beta | 0010 accepted/integrated, 0030 menunggu acceptance 0020. Production Beta **NOT_READY**. Installer/upgrade/restore/secrets/scheduler/topology, perangkat/GNS3, pilot dan kapasitas masih memiliki gate sendiri. |
+
+## Histori — penyerahan dan keputusan sebelumnya
+
 # LATEST_HANDOFF — executor menyerahkan koreksi R4 task0020, 18 November 2026 (WIB ~11:0x)
 
 **Update integrasi (sesi sama, ~11:1x WIB):** atas instruksi pemilik repo
@@ -28,7 +48,7 @@ yang sama di atas decision head `e0d306a` (main `a636166` + records R4 PR35).
 
 | Field | Current state / pointer |
 |---|---|
-| Active task | **[ID0020 PA002+PA003](../task/0020-job-lifecycle-authority_done.md)** — **done / pending review**; task0010 accepted/integrated |
+| Active task | **[ID0020 PA002+PA003](https://github.com/smahud/MicroTix_Project/blob/3eaae2add1a4b4e9415bd51fabcf1eb0601444de/task/0020-job-lifecycle-authority_done.md)** — **done / pending review**; task0010 accepted/integrated |
 | Implementation / tested SHA | **`77a4a9056c1c5cf9b0b0874b0630a16dd350aa09`** (kode+tes+evidence) pada branch `session/2026-11-18-0020-r4-correction` (base `e0d306a`); published candidate = head PR (commit penyerahan, report-only descendant) |
 | Execution report | [Koreksi R4](orchestrator/20261118T035535Z-0020-r4-correction.md) — temuan→perubahan→bukti + matriks A01–A09 + batas; [evidence](executor-evidence/20261118T035535Z-0020-r4-correction/) 18 check exit=0 |
 | Probe R4 (FROZEN, tanpa modifikasi) | **4/4 PASS**: cross-process resolve DITOLAK `writer_active` + nol successor send selama proses lama hidup; no-effect final FAILED `router_unreachable`; credential-wait WG+SSTP Router0/kredensial pending/failed `authority_denied` — failing-before executor 4 gagal identik temuan controller |
