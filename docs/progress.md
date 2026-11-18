@@ -1,6 +1,20 @@
 # MicroTix — checkpoint kemajuan
 
-Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-18 (Asia/Jakarta), integrasi koreksi R4 ke main.
+Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-18 (Asia/Jakarta), keputusan review atas koreksi R4.
+
+## Checkpoint 2026-11-18 WIB — controller mereview koreksi R4 task 0020
+
+**changes_requested** pada exact `77a4a9056c1c5cf9b0b0874b0630a16dd350aa09`, source setara main
+`5c45276`. PR #36 sudah terintegrasi. Controller memverifikasi
+CI kandidat dan main 3/3, 28/28 probe beku dan suite backend
+596 passed/1 skip. Dua assertion expired no-effect FAIL. Source
+review menemukan sisa masalah hold router/epoch, akun aktif dan
+validitas lease pada batas commit.
+
+Task 0020 kembali **ready** pada [packet yang sama](../task/0020-job-lifecycle-authority.md).
+Coding agent melanjutkan empat temuan pada [keputusan controller](../report/controller/20261118T050714Z-0020-r4-correction-review.md)
+dari ref `review/0020-r4-correction-20261118-0507`. Task0030 menunggu acceptance 0020.
+Production Beta **NOT_READY**.
 
 ## Checkpoint 2026-11-18 ~11:1x WIB — integrasi merge koreksi R4 ke main (wewenang pemilik)
 
@@ -50,7 +64,7 @@ tes pa006 (0003↔0004/0005 meninggalkan state historis — jinak saat 0005
 data-only, merusak setelah 0006 additive; tanpa asersi berubah).
 [Laporan](../report/orchestrator/20261118T035535Z-0020-r4-correction.md),
 [evidence](../report/executor-evidence/20261118T035535Z-0020-r4-correction/),
-[packet _done](../task/0020-job-lifecycle-authority_done.md).
+[packet _done](https://github.com/smahud/MicroTix_Project/blob/3eaae2add1a4b4e9415bd51fabcf1eb0601444de/task/0020-job-lifecycle-authority_done.md).
 Next **controller_reviewer** pada exact SHA77a4a90 (probe R4+24 frozen+regresi;
 matriks A01–A09; verdict ID0020). Task0030 ineligible; Beta NOT_READY.
 Device/GNS3/live RADIUS/browser E2E/systemd/scale tetap NOT_RUN.
