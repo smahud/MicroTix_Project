@@ -1,4 +1,25 @@
-# LATEST_HANDOFF — executor menyerahkan koreksi R5 task0020, 18 November 2026 (WIB ~18:5x)
+# LATEST_HANDOFF — keputusan controller R5 task 0020, 19 November 2026 WIB
+
+**Task 0020 kembali `ready / changes_requested`.** Controller mereview
+exact `3301c2940dbfa9293ae52b8d8479b2050c16ebef`. Seluruh 48 tes yang diserahkan lulus. Empat assertion
+tambahan gagal pada PostgreSQL karena lease terlewati saat menunggu
+kunci. Keputusan lengkap dan acceptance koreksi ada di
+[laporan controller](controller/20261118T172344Z-0020-r5-correction-review.md).
+
+| Field | Current state / pointer |
+|---|---|
+| Canonical main | `0616a8063f6f40b370495aa7cfe8ae1d4db656dc`, source/config setara reviewed SHA. [CI 44301173623](https://github.com/smahud/MicroTix_Project/actions/runs/44301173623) backend/frontend/docs **3/3 success**. Saat discovery: 40 branch ancestor main, 0 PR terbuka. |
+| Active task | [0020 / PA-002 + PA-003](../task/0020-job-lifecycle-authority.md) — **ready / changes_requested**. Koreksi berikutnya belum diserahkan. |
+| Candidate dan integrasi | [PR #38](https://github.com/smahud/MicroTix_Project/pull/38) `ccea781458b4b90a40f97f5b07139965b4a85963` / reviewed `3301c2940dbfa9293ae52b8d8479b2050c16ebef` / merge `e19b08f`. [CI 44299725440](https://github.com/smahud/MicroTix_Project/actions/runs/44299725440) head PR 3/3 success. |
+| Keputusan / ref lanjutan | `review/0020-r5-correction-20261118-1723`, [laporan](controller/20261118T172344Z-0020-r5-correction-review.md) dan [bukti runtime](controller-evidence/20261118T172344Z-0020-r5-correction/runtime.md). Branch keputusan memuat packet yang dibuka kembali. |
+| Bukti controller | 28/28 probe beku, 2/2 regresi controller, 18/18 regresi R5. Backend 614 passed / 1 skip / 3 warnings. Probe baru 4 gagal, 2 lulus, 0 error harness. |
+| Temuan aktif | REV-1711-01 lease watchdog dan commit enrollment, REV-1811-02 settlement, REV-1711-04 keterikatan bukti readback, REV-1711-05 authority unit release/replace. |
+| Next actor / action | **coding_agent**. Fetch branch keputusan, koreksi temuan pada ID0020, jalankan seluruh probe dan serahkan SHA baru dengan evidence serta CI. |
+| Dependency / Beta | 0010 accepted/integrated. Task0030 menunggu acceptance 0020. Production Beta **NOT_READY**. Installer/upgrade/restore, topologi, systemd, RADIUS/CHR/GNS3, pilot dan kapasitas mengikuti gate terpisah. |
+
+## Histori handoff
+
+### Penyerahan dan integrasi executor R5 — 18 November 2026 WIB
 
 **Update integrasi (sesi sama, ~19:1x WIB):** atas instruksi pemilik repo
 (merge all branch, main selalu hijau, PAT commit/merge/push — preseden
@@ -43,7 +64,7 @@ branch kerja `session/2026-11-18-0020-r5-correction`:
 
 | Field | Current state / pointer |
 |---|---|
-| Active task | **[ID0020 PA002+PA003](../task/0020-job-lifecycle-authority_done.md)** — **done / pending review**; task0010 accepted/integrated |
+| Active task | **[ID0020 PA002+PA003](https://github.com/smahud/MicroTix_Project/blob/ccea781458b4b90a40f97f5b07139965b4a85963/task/0020-job-lifecycle-authority_done.md)** — **done / pending review**; task0010 accepted/integrated |
 | Implementation / tested SHA | **`3301c29`** (kode+tes+evidence) pada branch `session/2026-11-18-0020-r5-correction` (base decision head `2d5b7f1`); published candidate = head PR `ccea781` (report-only descendant); terintegrasi ke main melalui merge `e19b08f` (PR #38) |
 | Execution report | [Koreksi R5](orchestrator/20261118T115321Z-0020-r5-correction.md) — temuan→perubahan→bukti + matriks A01–A09 + batas; [evidence](executor-evidence/20261118T113641Z-0020-r5-correction/) 18 check exit=0 |
 | Probe beku R1–R4 (FROZEN) | **28/28 PASS tanpa pelemahan** (R1 4+7, R2 3+3, R3 4+3, R4 2+2) pada DB split-role migrator-owned, runtime `mtx_app` NOSUPERUSER/NOBYPASSRLS FORCE RLS, PG17.12 |
@@ -57,8 +78,6 @@ branch kerja `session/2026-11-18-0020-r5-correction`:
 `_done`/CI hijau bukan acceptance, merge, release tag, deployment atau
 aktivasi fitur. Merge main mengikuti wewenang pemilik; review controller
 tetap pemilik verdict. Entry tetap [task/0000-start-here.md](../task/0000-start-here.md).
-
-## Historical handoffs — superseded by current table above
 
 ### LATEST_HANDOFF — keputusan controller untuk task 0020, 18 November 2026
 
