@@ -1205,16 +1205,22 @@ def finalize_verification(
     selama I/O membatalkan unit efek sebelum ada router/enrollment/kredensial
     yang ditulis (lease yang valid bukan izin aktor).
     ``commit_guard`` (REV-1711-01 R2): dipanggil DI DALAM transaksi yang sama
-    sesaat SEBELUM commit dengan lock baris job — update ownership-changing
-    pihak lain ter-serialisasi terhadap commit unit (window check-to-commit
-    tertutup), atau unit di-rollback.
-    ``final_authority_guard`` (REV-1711-05 R4): dipanggil DI DALAM transaksi
+    dengan lock baris job — update ownership-changing pihak lain ter-serialisasi
+    terhadap commit unit (window check-to-commit tertutup), atau unit
+    di-rollback. REV-1711-01 (R5) menempatkannya pada POSISI TERAKHIR, SETELAH
+    seluruh guard authority yang dapat menunggu (lihat bawah).
+    ``final_authority_guard`` (REV-1711-05 R4+R5): dipanggil DI DALAM transaksi
     yang sama SETELAH seluruh tulisan sensitif unit (termasuk UPDATE
-    kredensial yang dapat MENUNGGU row lock pihak lain) dan SETELAH
-    ``commit_guard`` — kewenangan dibaca segar pada batas commit; pencabutan
-    yang ter-commit SELAMA worker menunggu lock kredensial membatalkan seluruh
-    unit (rollback) sebelum commit. Bila ``final_authority_guard`` None,
-    ``authority_guard`` dipakai pada batas yang sama (fallback kompatibel).
+    kredensial yang dapat MENUNGGU row lock pihak lain) — kewenangan dibaca
+    segar pada batas commit dengan lock baris user + membership DIPEGANG
+    sampai commit; pencabutan/penonaktifan yang ter-commit SELAMA worker
+    menunggu lock membatalkan seluruh unit (rollback) sebelum commit. Bila
+    ``final_authority_guard`` None, ``authority_guard`` dipakai pada batas yang
+    sama (fallback kompatibel). Urutan R5: final_authority_guard SEBELUM
+    commit_guard — selama guard authority menunggu lock membership/user, baris
+    job TIDAK dikunci worker sehingga watchdog renewal tidak terhalang; expiry
+    divalidasi ulang DI BAWAH kunci baris job pada commit_guard terakhir
+    (lease basi tanpa renewal efektif → nol efek domain commit).
     """
     from adapters.routeros.base import RouterContext
 
@@ -1356,27 +1362,42 @@ def finalize_verification(
                 WireGuardPeer.objects.filter(enrollment=enrollment).update(
                     router=router, state=WireGuardPeer.State.APPLIED, applied_revision=1
                 )
-            if commit_guard is not None:
-                # Guard terkunci sesaat sebelum commit unit efek (REV-1711-01 R2):
-                # seluruh efek router/enrollment/kredensial di atas di-rollback bila
-                # kepemilikan berpindah sebelum commit; transfer ter-serialisasi.
-                commit_guard()
-            # REV-1711-05 (R4): kewenangan dibaca segar pada BATAS COMMIT —
-            # SETELAH seluruh akuisisi/tulisan yang berpotensi memblokir dalam
-            # unit ini (lock enrollment, INSERT router, UPDATE enrollment,
-            # UPDATE kredensial WG/SSTP) dan SETELAH commit_guard (akuisisi
-            # lock baris job). Pencabutan membership yang ter-commit SELAMA
-            # worker menunggu lock kredensial terlihat statement SELECT segar
-            # ini (READ COMMITTED) → unit di-rollback: Router tidak dibuat,
-            # kredensial tetap PENDING, enrollment tidak COMPLETED. Guard
-            # terkunci (select_for_update membership) menyerialisasi
-            # pencabutan berkompetisi terhadap commit unit: kewenangan sah
-            # MELALUI commit, atau pencabutan menang dan unit batal.
+            # REV-1711-05 (R4) + REV-1711-01 (R5): kewenangan dibaca segar
+            # pada batas commit — SETELAH seluruh akuisisi/tulisan yang
+            # berpotensi memblokir dalam unit ini (lock enrollment, INSERT
+            # router, UPDATE enrollment, UPDATE kredensial WG/SSTP) — dengan
+            # lock membership DAN baris user DIPEGANG sampai commit (guard
+            # terkunci select_for_update user→membership). Pencabutan/
+            # penonaktifan yang ter-commit SELAMA worker menunggu lock
+            # kredensial terlihat statement SELECT segar ini (READ COMMITTED)
+            # → unit di-rollback: Router tidak dibuat, kredensial tetap
+            # PENDING, enrollment tidak COMPLETED. Lock user/membership tetap
+            # dipegang hingga commit sehingga fakta authority tidak berubah
+            # di bawah guard (kewenangan sah MELALUI commit, atau perubahan
+            # menang dan unit batal).
             boundary_guard = final_authority_guard
             if boundary_guard is None and authority_guard is not None:
                 boundary_guard = authority_guard
             if boundary_guard is not None:
                 boundary_guard()
+            # REV-1711-01 (R5): guard ownership/lease TERAKHIR — SETELAH
+            # seluruh penguncian guard yang dapat MENUNGGU (membership/user
+            # di atas). Pada urutan R4 (commit_guard sebelum guard authority)
+            # baris job terkunci selama guard authority menunggu lock
+            # membership: watchdog (UPDATE baris job yang sama pada koneksi
+            # lain) terhalang lock itu sehingga renewal tidak commit, waktu
+            # lease dapat lewat selama penantian, dan unit tetap commit tanpa
+            # penilaian ulang expiry — efek DB (Router/enrollment/kredensial)
+            # ter-commit dengan lease basi. Urutan sekarang: selama tunggu
+            # lock kredensial/membership baris job TIDAK dikunci worker →
+            # watchdog dapat memperbarui lease; bila lease habis tanpa
+            # renewal efektif, validasi token+epoch+state+expiry DI BAWAH
+            # kunci baris job ini membatalkan commit unit (nol efek domain) —
+            # bukan commit dengan lease basi. Lock job dipegang sampai commit
+            # (transfer/cancel ter-serialisasi) dan lock membership/user juga
+            # masih dipegang hingga commit.
+            if commit_guard is not None:
+                commit_guard()
     return router
 
 

@@ -1,0 +1,4 @@
+{"case": "r4-cross-process-resolve", "old": {"event": "old-send-entered", "os_pid": 25717, "pg_pid": 25718, "database": "test_test_microtix_split_r5", "registry": true}, "old_outcome": {"event": "old-outcome", "exception": "OperationalError: terminating connection due to administrator command"}, "resolve_rejected": "writer_active: penulis attempt uncertain tidak terbukti berhenti (receipt/liveness lintas proses; readback not-applied ditolak)", "successor_sends": [], "successor_outcome": null, "old_writer_live_at_resume": true, "total_send_entries": 1, "state": "uncertain"}
+.{"case": "r4-no-effect-max-attempts", "state": "failed", "returned_state": "failed", "error": "router_unreachable", "retryable": true, "lease_token": null, "lease_expires_at": null, "attempt": 1, "max_attempts": 1, "executions": ["definitive-no-effect"]}
+.
+2 passed in 0.78s

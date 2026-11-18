@@ -168,15 +168,31 @@ def _writer_verifiably_stopped(job: Job) -> tuple[bool, str]:
     if writer_host != my_host:
         return False, "writer_unverifiable"
     if int(writer_pid) == os.getpid():
+        # REV-1711-04 (R5): PID sendiri tetap dicocokkan starttime — PID
+        # reuse (starttime beda) berarti proses penulis asli sudah keluar
+        # (process_terminated, bukan same_process). Identitas tidak terekam
+        # → registry in-flight di atas + receipt yang absen yang menutup
+        # kasus ini; registry in-flight sudah dilewati berarti attempt
+        # proses ini sudah kembali.
+        my_ticks, _own_alive = _proc_start_ticks(os.getpid())
+        if start_ticks is not None and my_ticks is not None and start_ticks != my_ticks:
+            return True, "process_terminated"
         return True, "same_process_completed"
     # Proses lain di host sama: bukti liveness nyata dari OS.
+    if start_ticks is None:
+        # REV-1711-04 (R5): identitas penulis tidak lengkap (starttime tidak
+        # terekam saat entering EXECUTING) → keberadaan/identitas proses TIDAK
+        # dapat dibuktikan; /proc/<pid> yang hilang pun tidak bisa dipercaya
+        # sebagai bukti berhenti (visibilitas namespace/identitas belum
+        # pasti) → unknown, ditahan (fail-closed).
+        return False, "writer_unverifiable"
     observed, alive = _proc_start_ticks(int(writer_pid))
     if alive is False:
-        # /proc/<pid> tidak ada → proses penulis pasti sudah berhenti.
+        # /proc/<pid> tidak ada DAN identitas lengkap (starttime terekam,
+        # host sama) → proses penulis pasti sudah berhenti.
         return True, "process_terminated"
-    if observed is None or start_ticks is None:
-        # Stat tidak terbaca/diparse atau identitas awal tidak terekam →
-        # tidak bisa membedakan hidup/mati (termasuk kemungkinan PID reuse)
+    if observed is None:
+        # Stat tidak terbaca/diparse → tidak bisa membedakan hidup/mati
         # → unknown, ditahan (fail-closed).
         return False, "writer_unverifiable"
     if observed == start_ticks:
@@ -687,7 +703,24 @@ def check_current_authority(
                 retryable=True,
                 message="Job tanpa provenance aktor sah; karantina (retryable) hingga retry dengan provenance",
             )
-        if not actor.is_active:
+        if lock_membership:
+            # REV-1711-05 (R5): baris User dan Membership adalah baris BERBEDA —
+            # penonaktifan akun (UPDATE identity_user.is_active) dapat commit
+            # selama guard menunggu lock membership, sementara finalisasi masih
+            # memakai snapshot aktor aktif lama. Kunci baris USER TERLEBIH
+            # DAHULU (urutan konsisten user → membership; deactivator yang
+            # mengunci user lebih dulu ter-serialisasi, bukan deadlock) lalu
+            # validasi ulang is_active DI BAWAH kunci: fakta akun aktif
+            # ter-serialisasi bersama membership sampai commit unit efek.
+            locked_actor = User.objects.select_for_update().filter(id=actor.id).first()
+            if locked_actor is None or not locked_actor.is_active:
+                raise JobError(
+                    code="authority_denied",
+                    retryable=False,
+                    message="Aktor tidak lagi aktif",
+                )
+            actor = locked_actor
+        elif not actor.is_active:
             # Aktor dinonaktifkan: penolakan definitif, bukan karantina.
             raise JobError(
                 code="authority_denied",
@@ -1184,28 +1217,22 @@ def _retry_no_effect(job: Job, exc: JobError) -> Job:
     no_effect handler. Backoff/attempt mengikuti kebijakan retry lama.
     """
     now = dj_timezone.now()
-    rows = Job.objects.filter(
-        id=job.id,
-        lease_token=job.lease_token,
-        lease_epoch=job.lease_epoch,
-        state=JobState.EXECUTING,
-    ).update(
-        state=JobState.UNCERTAIN,
-        error_code=exc.code,
-        retryable=True,
-        lease_token=None,
-        lease_expires_at=None,
-        updated_at=now,
-    )
-    if not rows:
-        raise OwnershipLost(f"job {job.id}: no-effect step-1")
-    if job.attempt < job.max_attempts:
-        backoff = min(BACKOFF_CAP_S, 2 ** job.attempt * 5)
+    final_attempt = job.attempt >= job.max_attempts
+    with transaction.atomic():
+        # Step-1: EXECUTING → UNCERTAIN dengan bukti kepemilikan attempt ini
+        # (CAS token+epoch) DAN lease MASIH BERLAKU. REV-1811-02 (R5): worker
+        # yang kehilangan waktu lease (kedaluwarsa tanpa renewal efektif)
+        # tidak boleh memulai settlement — row tetap executing dengan
+        # token/epoch awal sampai reconciler memutuskan (OwnershipLost →
+        # run_claimed mengembalikan job tanpa menulis apa pun).
         rows = Job.objects.filter(
-            id=job.id, state=JobState.UNCERTAIN, lease_token=None,
+            id=job.id,
+            lease_token=job.lease_token,
+            lease_epoch=job.lease_epoch,
+            state=JobState.EXECUTING,
+            lease_expires_at__gt=now,
         ).update(
-            state=JobState.RETRY_WAIT,
-            available_at=now + dj_timezone.timedelta(seconds=backoff),
+            state=JobState.UNCERTAIN,
             error_code=exc.code,
             retryable=True,
             lease_token=None,
@@ -1213,43 +1240,61 @@ def _retry_no_effect(job: Job, exc: JobError) -> Job:
             updated_at=now,
         )
         if not rows:
-            raise OwnershipLost(f"job {job.id}: no-effect step-2")
-        job.refresh_from_db()
-        handler = handler_for(job.kind)
-        if handler is not None:
-            ctx = _ctx_for(job)
-            try:
-                with tenant_scope(job.tenant_id):
-                    handler.on_retry(ctx)
-            except Exception:  # pragma: no cover - on_retry tidak boleh membalikkan state
-                logger.exception("job %s on_retry gagal (diabaikan)", job.id)
-        return job
-    # Attempt final (attempt == max_attempts): transisi terminal UNCERTAIN →
-    # FAILED. Step-1 (di atas) sudah membuktikan kepemilikan attempt ini via
-    # CAS token+epoch SAAT MEMASUKI uncertain, lalu melepas lease sesuai
-    # kontrak uncertain (penulis tidak lagi memperbarui lease; reconciler /
-    # pemilik baru bergerak bebas). CAS terminal umum (_fenced_update) mensyaratkan
-    # lease MASIH berlaku — syarat itu mustahil dipenuhi pada jalur ini dan
-    # menyandarkan attempt no-effect terakhir di UNCERTAIN (REV-1811-02).
-    # CAS koheren untuk jalur ini: expected state UNCERTAIN + lease TELEPAS
-    # (lease_token NULL persis seperti yang ditulis step-1) — komponen fence:
-    # state machine (hanya jalur sah yang menulis UNCERTAIN+lease NULL),
-    # attempt sudah dikonsumsi (claim berikutnya menaikkan epoch), dan
-    # resolve/cancel/reconcile yang memindahkan job keluar UNCERTAIN membuat
-    # CAS ini kalah (0 baris) → OwnershipLost, bukan menimpa state pihak lain.
-    rows = Job.objects.filter(
-        id=job.id,
-        state=JobState.UNCERTAIN,
-        lease_token=None,
-    ).update(
-        state=JobState.FAILED,
-        error_code=exc.code,
-        retryable=True,
-        updated_at=dj_timezone.now(),
-    )
-    if not rows:
-        raise OwnershipLost(f"job {job.id}: no-effect terminal (state berubah) — attempt final tidak menimpa")
+            raise OwnershipLost(
+                f"job {job.id}: no-effect step-1 (lease kedaluwarsa/kepemilikan berubah) — "
+                "settlement menunggu reconciler"
+            )
+        # Step-2 dalam SATU transaksi dengan step-1, terikat EPOCH attempt yang
+        # sama: bentuk uncertain+lease-NULL dari attempt lain (epoch berbeda)
+        # tidak dapat ditimpa; row lock UPDATE step-1 meng-serialisasi penulis
+        # lain hingga commit unit ini — tidak ada jendela antar-step.
+        if not final_attempt:
+            backoff = min(BACKOFF_CAP_S, 2 ** job.attempt * 5)
+            rows = Job.objects.filter(
+                id=job.id, state=JobState.UNCERTAIN, lease_token=None,
+                lease_epoch=job.lease_epoch,
+            ).update(
+                state=JobState.RETRY_WAIT,
+                available_at=now + dj_timezone.timedelta(seconds=backoff),
+                error_code=exc.code,
+                retryable=True,
+                lease_token=None,
+                lease_expires_at=None,
+                updated_at=now,
+            )
+        else:
+            # Attempt final (attempt == max_attempts): transisi terminal
+            # UNCERTAIN → FAILED. Step-1 di atas sudah membuktikan kepemilikan
+            # attempt ini (CAS token+epoch+lease valid) lalu melepas lease
+            # sesuai kontrak uncertain — CAS umum _fenced_update yang
+            # mensyaratkan lease masih berlaku mustahil dipenuhi di jalur ini
+            # (sandaran REV-1811-02 R4). CAS koheren jalur ini: expected
+            # UNCERTAIN + lease TELEPAS + EPOCH attempt yang sama; penulis lain
+            # yang memindahkan row membuat filter kalah (0 baris) →
+            # OwnershipLost, bukan menimpa state pihak lain.
+            rows = Job.objects.filter(
+                id=job.id, state=JobState.UNCERTAIN, lease_token=None,
+                lease_epoch=job.lease_epoch,
+            ).update(
+                state=JobState.FAILED,
+                error_code=exc.code,
+                retryable=True,
+                updated_at=now,
+            )
+        if not rows:
+            raise OwnershipLost(f"job {job.id}: no-effect step-2 (state/epoch berubah)")
     job.refresh_from_db()
+    if final_attempt:
+        return job
+    # Callback retry DI LUAR unit settlement (keputusan DB sudah commit).
+    handler = handler_for(job.kind)
+    if handler is not None:
+        ctx = _ctx_for(job)
+        try:
+            with tenant_scope(job.tenant_id):
+                handler.on_retry(ctx)
+        except Exception:  # pragma: no cover - on_retry tidak boleh membalikkan state
+            logger.exception("job %s on_retry gagal (diabaikan)", job.id)
     return job
 
 
@@ -1362,6 +1407,19 @@ def resolve_uncertain(job: Job, *, applied: bool | None, error_code: str | None 
     router bebas (penulis hidup lintas sesi masih memegang router — jalur
     R1 tetap berlaku). Status yang tidak dapat diverifikasi → ditolak
     (unknown tetap tertahan).
+
+    applied=True (REV-1711-04 R5): bukti penulis yang sama diberlakukan —
+    readback positif membuktikan efek SUDAH terlihat, tetapi TIDAK
+    mengakhiri kemungkinan pengiriman lama yang masih berjalan (writer bisa
+    masih mengirim perintah lanjutan pada attempt yang sama). Verify-only
+    tanpa resend hanya berjalan SETELAH penulis attempt terbukti berhenti;
+    sampai bukti itu ada, resolve ditolak (hold router tetap aktif — nol
+    kirim penerus router sama).
+
+    Seluruh CAS pemulihan (applied=False/None/True) terikat EPOCH snapshot
+    yang dibaca (REV-1711-04 R5): bukti writer/readback epoch lama tidak
+    berlaku untuk row uncertain pada epoch berikutnya (attempt baru) —
+    perpindahan epoch di antara pembacaan dan penulisan ditolak.
     """
     if job.state != JobState.UNCERTAIN:
         raise ValueError("Bukan uncertain")
@@ -1393,7 +1451,9 @@ def resolve_uncertain(job: Job, *, applied: bool | None, error_code: str | None 
             # (REV-2011-03; §6 "retry hanya setelah old writer aman").
             raise ValueError("writer_active")
         try:
-            rows = Job.objects.filter(id=job.id, state=JobState.UNCERTAIN).update(
+            rows = Job.objects.filter(
+                id=job.id, state=JobState.UNCERTAIN, lease_epoch=job.lease_epoch,
+            ).update(
                 state=JobState.RETRY_WAIT,
                 available_at=now,
                 error_code=error_code or "readback_not_applied",
@@ -1403,26 +1463,43 @@ def resolve_uncertain(job: Job, *, applied: bool | None, error_code: str | None 
                 updated_at=now,
             )
             if not rows:
-                raise ValueError("Bukan uncertain")
+                raise _stale_uncertain(job)
         finally:
             if job.router_id is not None:
                 release_router_sender(job.router_id)
         job.refresh_from_db()
         return job
     if applied is None:
-        rows = Job.objects.filter(id=job.id, state=JobState.UNCERTAIN).update(
+        rows = Job.objects.filter(
+            id=job.id, state=JobState.UNCERTAIN, lease_epoch=job.lease_epoch,
+        ).update(
             state=JobState.RECOVERY_REQUIRED,
             error_code=error_code or "readback_unknown",
             retryable=False,
             updated_at=now,
         )
         if not rows:
-            raise ValueError("Bukan uncertain")
+            raise _stale_uncertain(job)
         job.refresh_from_db()
         return job
-    # applied=True: efek terbukti sudah terjadi — jalankan verifier readback
-    # ulang tanpa resend, di lease baru milik pemanggil.
-    rows = Job.objects.filter(id=job.id, state=JobState.UNCERTAIN).update(
+    # applied=True: efek terbukti sudah terjadi — REV-1711-04 (R5): bukti
+    # penulis attempt tetap WAJIB (readback positif ≠ writer berhenti;
+    # adapter lama bisa masih mengirim pada attempt yang sama) sebelum
+    # verify readback ulang tanpa resend, di lease baru milik pemanggil.
+    if _attempt_inflight(job.id):
+        raise ValueError(
+            "writer_active: attempt job ini masih berjalan di proses "
+            "(readback applied ditolak; pengiriman lama bisa masih berjalan)"
+        )
+    stopped, reason = _writer_verifiably_stopped(job)
+    if not stopped:
+        raise ValueError(
+            f"{reason}: penulis attempt uncertain tidak terbukti berhenti "
+            "(readback applied ditolak; pengiriman lama bisa masih berjalan)"
+        )
+    rows = Job.objects.filter(
+        id=job.id, state=JobState.UNCERTAIN, lease_epoch=job.lease_epoch,
+    ).update(
         state=JobState.VERIFYING,
         lease_token=uuid.uuid4(),
         lease_epoch=F("lease_epoch") + 1,
@@ -1431,9 +1508,21 @@ def resolve_uncertain(job: Job, *, applied: bool | None, error_code: str | None 
         updated_at=now,
     )
     if not rows:
-        raise ValueError("Bukan uncertain")
+        raise _stale_uncertain(job)
     job.refresh_from_db()
     return _verify_only(job)
+
+
+def _stale_uncertain(job: Job) -> ValueError:
+    """Row uncertain berpindah epoch sejak snapshot dibaca — bukti/readback
+    snapshot lama tidak berlaku untuk attempt baru (REV-1711-04 R5)."""
+    current = Job.objects.filter(id=job.id).values_list("state", "lease_epoch").first()
+    if current and current[0] == JobState.UNCERTAIN:
+        return ValueError(
+            "stale_epoch: baris uncertain berpindah epoch sejak dibaca — "
+            "bukti/readback epoch lama tidak berlaku untuk attempt baru"
+        )
+    return ValueError("Bukan uncertain")
 
 
 def _verify_only(job: Job) -> Job:
