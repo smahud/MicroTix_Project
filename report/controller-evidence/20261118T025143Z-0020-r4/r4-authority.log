@@ -1,0 +1,18 @@
+{"blocked_query_table": "network_wireguard_peer", "credential": "applied", "enrollment": "completed", "error": null, "membership_revoked": true, "postgres_observed_lock_wait": true, "probe": "credential-lock-wait-authority", "protocol": "wireguard", "routers_created": 1, "separate_connections": true, "state": "succeeded"}
+F{"blocked_query_table": "network_sstp_account", "credential": "applied", "enrollment": "completed", "error": null, "membership_revoked": true, "postgres_observed_lock_wait": true, "probe": "credential-lock-wait-authority", "protocol": "sstp", "routers_created": 1, "separate_connections": true, "state": "succeeded"}
+F
+=================================== FAILURES ===================================
+_______ test_credential_lock_wait_does_not_outlive_authority[wireguard] ________
+../report/controller-evidence/20261118T025143Z-0020-r4/test_r4_authority_credentials.py:188: in test_credential_lock_wait_does_not_outlive_authority
+    assert routers == 0 and credential.state == "pending", observed
+E   AssertionError: {'blocked_query_table': 'network_wireguard_peer', 'credential': 'applied', 'enrollment': 'completed', 'error': None, ...}
+E   assert (1 == 0)
+__________ test_credential_lock_wait_does_not_outlive_authority[sstp] __________
+../report/controller-evidence/20261118T025143Z-0020-r4/test_r4_authority_credentials.py:188: in test_credential_lock_wait_does_not_outlive_authority
+    assert routers == 0 and credential.state == "pending", observed
+E   AssertionError: {'blocked_query_table': 'network_sstp_account', 'credential': 'applied', 'enrollment': 'completed', 'error': None, ...}
+E   assert (1 == 0)
+=========================== short test summary info ============================
+FAILED ::test_credential_lock_wait_does_not_outlive_authority[wireguard] - As...
+FAILED ::test_credential_lock_wait_does_not_outlive_authority[sstp] - Asserti...
+2 failed in 0.71s

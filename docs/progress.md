@@ -1,6 +1,35 @@
 # MicroTix — checkpoint kemajuan
 
-Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-18 (Asia/Jakarta), executor koreksi R3.
+Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-18 (Asia/Jakarta), controller review R4.
+
+## Checkpoint 2026-11-18 — controller R4 task0020: changes_requested
+
+Reviewed actual main **a636166**, source/config identik impl/tested16db545
+PR34 (merged906bfe0). Root **588 passed/1skip/3warnings**, seluruh **24 frozen
+R1/R2/R3 PASS**, check/makemigrations/docs PASS; exact-main CI
+[44223659118](https://github.com/smahud/MicroTix_Project/actions/runs/44223659118)
+backend/frontend/docs success3/3. Satu skip karena binary FreeRADIUS tidak
+tersedia; executor589/0skip bukan perbedaan source.
+
+Empat assertion baru PG17.11 split-role **FAIL/0errors**: same-job resolve
+lintas-proses setelah sesi DB mati masih send2 saat old adapter hidup;
+WG/SSTP credential UPDATE wait outlives committed revoke sehingga
+Router1/APPLIED/succeeded; final proven-no-effect attempt tersangkut uncertain.
+Same no-effect assertion pada clean4b03efe **PASS/FAILED terminal**, jadi
+regresi current. **REV-1711-04/05 PARTIAL P1; REV-1811-02 P2 OPEN.**
+Retain REV01 expiry-resurrection, duplicate1811-01,02/03/06/07/08/09 closures
+within sandbox/process limits. PA001/PA006/task0010 tetap accepted/integrated.
+
+[Controller R4](../report/controller/20261118T025143Z-0020-r4-review.md),
+[evidence](../report/controller-evidence/20261118T025143Z-0020-r4/),
+[packet0020 reopened](../task/0020-job-lifecycle-authority.md).
+Decision ref **review/0020-controller-r4-20261118**; publication SHA/PR/readback
+dicatat setelah verifikasi. Next **coding_agent** tutup3 findings pada ID
+sama,4 assertions baru PASS tanpa pelemahan+preserve24/full checks; publish
+SHA+CI+report untuk controller. Task0030 ineligible; Beta NOT_READY.
+Host/device/GNS3/live RADIUS/browser E2E/systemd/scale NOT_RUN; aplikasi tidak
+diubah. Initial supplemental4 connection errors retained separately; final
+runs4 assertion failures bukan harness errors. Merge bukan acceptance.
 
 ## Checkpoint 2026-11-18 ~09:3x WIB — integrasi merge-all ke main (wewenang pemilik)
 
@@ -34,7 +63,7 @@ closure R1 — bukan klaim aman lintas proses.
 [Eksekusi](../report/orchestrator/20261118T022200Z-0020-r3-correction.md),
 [reviewer independen](../report/reviewer/20261118T022200Z-0020-r3-correction-independent.md),
 [evidence](../report/executor-evidence/20261118T000000Z-0020-r3-correction/),
-[packet0020 _done](../task/0020-job-lifecycle-authority_done.md).
+[packet0020 _done](../task/0020-job-lifecycle-authority.md).
 Next **controller_reviewer** mereview exact SHA kandidat branch
 `session/2026-11-18-0020-r3-correction`. Task0010 accepted/integrated; task0030
 belum eligible; Beta NOT_READY. Host/device/GNS3/live RADIUS produksi/browser

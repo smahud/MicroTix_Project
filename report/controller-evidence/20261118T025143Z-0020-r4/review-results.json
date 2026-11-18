@@ -1,0 +1,87 @@
+{
+  "reviewed_sha": "a636166ece610f23a1cdafb491e3a5ecc9e9caf9",
+  "source_identical_implementation": "16db545442efd33d6dd3ca13f5222efb0e80c6c4",
+  "verdict": "changes_requested",
+  "execution_status": "ready",
+  "correction_submission": "not_submitted",
+  "full_suite": {
+    "passed": 588,
+    "skipped": 1,
+    "warnings": 3,
+    "exit": 0,
+    "seconds": 95.65
+  },
+  "frozen_probes": {
+    "R1": 11,
+    "R2": 6,
+    "R3": 7,
+    "passed": 24,
+    "failed": 0
+  },
+  "new_probes": {
+    "assertion_failures": 4,
+    "errors": 0,
+    "lifecycle_seconds": 0.96,
+    "authority_seconds": 0.71
+  },
+  "baseline_control": {
+    "sha": "4b03efedd76815af3f1c6fdf99d0739cd8dccc87",
+    "passed": 1,
+    "exit": 0,
+    "seconds": 0.47,
+    "same_assertion": "test_proven_no_effect_at_max_attempts_reaches_terminal_failure"
+  },
+  "findings": [
+    {
+      "id": "REV-1711-04",
+      "severity": "P1",
+      "status": "PARTIAL",
+      "observed": "cross-process same-job successor send while old adapter live; send entries2"
+    },
+    {
+      "id": "REV-1711-05",
+      "severity": "P1",
+      "status": "PARTIAL",
+      "observed": "WG/SSTP credential lock wait; committed revoke; Router1/applied/succeeded"
+    },
+    {
+      "id": "REV-1811-02",
+      "severity": "P2",
+      "status": "OPEN",
+      "observed": "last no-effect attempt uncertain after nulling lease; baseline failed terminal"
+    }
+  ],
+  "retained_closures": [
+    "REV-1711-01",
+    "REV-1711-02",
+    "REV-1711-03",
+    "REV-1711-06",
+    "REV-1711-07",
+    "REV-1711-08",
+    "REV-1711-09",
+    "REV-1811-01"
+  ],
+  "initial_harness_errors": {
+    "count": 4,
+    "cause": "connection refused after baseline command ended; restarted same disposable cluster then reran all4 probes",
+    "separate_logs": [
+      "r4-lifecycle-harness-error.log",
+      "r4-authority-harness-error.log"
+    ],
+    "product_failures": false
+  },
+  "next_actor": "coding_agent",
+  "task_id": "0020",
+  "dependent0030_eligible": false,
+  "production_beta": "NOT_READY",
+  "application_changed": false,
+  "not_run": [
+    "production_install_reinstall_upgrade_restore_DR",
+    "systemd_rehearsal",
+    "RouterOS_CHR_GNS3",
+    "live_RADIUS_daemon",
+    "browser_E2E",
+    "scale_soak_1M_clients"
+  ],
+  "generated_at_utc": "2026-11-18T03:02:02Z"
+}

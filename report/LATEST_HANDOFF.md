@@ -1,3 +1,36 @@
+# LATEST_HANDOFF — controller R4 task0020, 18 November 2026
+
+**Current verdict: ready / changes_requested** pada exact integrated main
+**a636166ece610f23a1cdafb491e3a5ecc9e9caf9**, source/config identik executor
+implementation/tested **16db545442efd33d6dd3ca13f5222efb0e80c6c4**.
+Root **588 passed/1 skipped/3 warnings**, seluruh **24 frozen R1/R2/R3 PASS**,
+check/makemigrations/docs PASS dan exact-main CI backend/frontend/docs3/3
+success. Tetapi **4 safety assertions baru FAIL / 0 errors final runs**;
+no-effect baseline4b03efe PASS membuktikan regresi baru. Tabel ini menggantikan
+seluruh status historis di bawah.
+
+| Field | Current state / pointer |
+|---|---|
+| Active task | **[ID0020 PA002+PA003](../task/0020-job-lifecycle-authority.md)** — **ready / changes_requested**; koreksi R4 **not_submitted**; task0010 accepted/integrated |
+| Reviewed / tested source | **a636166ece610f23a1cdafb491e3a5ecc9e9caf9**, tree5768a768; protected-source diff16db545→main kosong |
+| Integration / starting discovery | PR34 head19cb430 merged906bfe0; PR33 records included. 37 remote-ref entries/0 outside main ancestry/0 open PRs sebelum publication R4. Owner merge bukan acceptance. |
+| Controller decision | **[R4 report](controller/20261118T025143Z-0020-r4-review.md)** §§3/7; [lifecycle](reviewer/20261118T025143Z-0020-r4-lifecycle.md), [authority](reviewer/20261118T025143Z-0020-r4-authority.md) |
+| Decision ref / publication | **`review/0020-controller-r4-20261118`**; initial SHA/PR/readback dicatat setelah publikasi di report/evidence. Sebelum readback status NOT PUSHED; fetch ref keputusan bila belum merged. |
+| Required corrections | **REV-1711-04 PARTIAL P1** same-job resume lintas-proses masih send2 saat old adapter hidup; **REV-1711-05 PARTIAL P1** credential-row wait outlives authority pada WG/SSTP; **REV-1811-02 P2 OPEN** final no-effect attempt tersangkut uncertain setelah lease dihapus |
+| Retained closures | REV-1711-01 expiry-resurrection/healthy renewal CLOSED; REV-1811-01 duplicate typed error CLOSED;02/03/06/07/08/09 tetap sesuai batas sandbox/process. Preserve semua24 frozen, PA001/PA006. |
+| Evidence | [R4 directory](controller-evidence/20261118T025143Z-0020-r4/): full588/1skip, frozen24 PASS, new4 FAIL, baseline no-effect1 PASS, split migrator/runtime PG17.11 NOSUPERUSER/NOBYPASSRLS FORCE RLS. Earlier4 connection setup errors retained separately, bukan defect produk. |
+| Exact reviewed-main CI | [run44223659118](https://github.com/smahud/MicroTix_Project/actions/runs/44223659118), exacta636166 backend/frontend/docs success3/3; bukan CI untuk decision head baru |
+| Next actor | **coding_agent** |
+| Exact next action | Fetch R4 decision ref + current main, baca reopened packet0020/report §§3/7; tutup04/05/1811-02 pada ID sama. Buktikan4 probe baru PASS tanpa pelemahan + preserve24/full regression, positive safe recovery dan matriks A01–A09; publish exact implementation/tested/candidate SHA+reports+CI untuk controller. |
+| Dependency / Beta | Task0030 ineligible. Production Beta **NOT_READY**. Installer/upgrade/restore/secrets/scheduler/DEC01/02/host/GNS3/pilot/capacity tetap scope/gates terpisah. Device/live RADIUS/browser E2E/systemd/scale NOT_RUN. |
+
+GitHub records tidak otomatis memulai coding agent eksternal. Aplikasi tetap
+read-only dalam review ini. Keputusan acceptance/merge/deploy/tag/activation
+terpisah; review ini tidak memberi otorisasi tindakan tersebut. Entry tetap
+[task/0000-start-here.md](../task/0000-start-here.md).
+
+## Historical handoffs — superseded by current R4 table
+
 # LATEST_HANDOFF — executor menyerahkan koreksi R3 task0020, 18 November 2026 (WIB ~09:2x)
 
 **Update integrasi (sesi sama, ~09:3x WIB):** atas instruksi pemilik repo
@@ -28,7 +61,7 @@ Tabel ini menggantikan seluruh status historis di bawah.
 | Field | Current state / pointer |
 |---|---|
 | Canonical main saat mulai | **`4b03efedd76815af3f1c6fdf99d0739cd8dccc87`**; basis koreksi = decision head `05d268d` (branch `review/0020-controller-r3-20261118`, PR33 — protected-source diff kosong terhadap main menurut controller §1) |
-| Active task | **[ID0020 PA002+PA003](../task/0020-job-lifecycle-authority_done.md)** — **done / pending review**; task0010 tetap accepted/integrated; task0030 belum eligible |
+| Active task | **[ID0020 PA002+PA003](../task/0020-job-lifecycle-authority.md)** — **done / pending review**; task0010 tetap accepted/integrated; task0030 belum eligible |
 | Implementation / tested SHA | **`16db545`** (kode+tes saja; seluruh probe/suite/gate dijalankan pada tree kode-identik ini) |
 | Published candidate | Head branch `session/2026-11-18-0020-r3-correction` (commit penyerahan — report-only descendant dari `16db545`; kode identik) |
 | Laporan / bukti | [Eksekusi orchestrator](orchestrator/20261118T022200Z-0020-r3-correction.md) (matriks A01–A09 + failing-before/passing-after); [reviewer independen](reviewer/20261118T022200Z-0020-r3-correction-independent.md) (01/05/1811-01 CLOSED; 04 + REV-R3C-01/02 terdokumentasi); [evidence](executor-evidence/20261118T000000Z-0020-r3-correction/) (probe R3 7/7, frozen 17/17, suite 589/0skip, check/makemigrations/docs PASS) |
