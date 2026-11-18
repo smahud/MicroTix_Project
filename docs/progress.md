@@ -1,6 +1,21 @@
 # MicroTix — checkpoint kemajuan
 
-Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-18 (Asia/Jakarta), integrasi merge koreksi R5 task 0020.
+Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-19 (Asia/Jakarta), keputusan controller atas koreksi R5 task 0020.
+
+## Checkpoint 2026-11-19 WIB — keputusan controller R5 task 0020
+
+**Changes requested** pada exact `3301c2940dbfa9293ae52b8d8479b2050c16ebef`, aplikasi setara main
+`0616a80` dan kandidat PR #38. CI backend, frontend dan docs lulus.
+Pada PostgreSQL 17.11 controller mengulang **28/28 probe beku, 2/2
+settlement, 18/18 R5**, dan suite **614 passed / 1 skip**. Empat assertion
+tambahan gagal untuk lease yang terlewati saat lock wait pada settlement,
+watchdog dan commit enrollment. [Laporan](../report/controller/20261118T172344Z-0020-r5-correction-review.md) ·
+[Bukti runtime](../report/controller-evidence/20261118T172344Z-0020-r5-correction/runtime.md).
+
+Task0020 kembali **ready** pada [packet yang sama](../task/0020-job-lifecycle-authority.md).
+Coding agent mengambil ref `review/0020-r5-correction-20261118-1723`, mengoreksi empat finding
+dan menyerahkan tested SHA baru dengan bukti. Task0030 menunggu acceptance
+0020. Production Beta **NOT_READY**.
 
 ## Checkpoint 2026-11-18 ~19:1x WIB — integrasi merge koreksi R5 ke main (wewenang pemilik)
 
