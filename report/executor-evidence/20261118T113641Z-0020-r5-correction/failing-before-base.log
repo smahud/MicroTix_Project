@@ -1,0 +1,24 @@
+=== BASE: 2d5b7f1be4dbe2ed49203b8a7a97545125500c94 (decision head R4-correction) ===
+--- controller-terminal-lease (diharapkan 2 FAIL: temuan controller) ---
+/home/z/my-project/MicroTix_Project/report/controller-evidence/20261118T050714Z-0020-r4-correction/test_terminal_lease_review.py:58: AssertionError: An expired lease must not settle the job before reconciliation
+/home/z/my-project/MicroTix_Project/report/controller-evidence/20261118T050714Z-0020-r4-correction/test_terminal_lease_review.py:58: AssertionError: An expired lease must not settle the job before reconciliation
+=========================== short test summary info ============================
+FAILED ::test_expired_attempt_leaves_settlement_to_reconcile[final] - Asserti...
+FAILED ::test_expired_attempt_leaves_settlement_to_reconcile[nonfinal] - Asse...
+2 failed in 3.23s
+--- r5-residuals pada BASE (diharapkan FAIL pada tes residual R5) ---
+/tmp/wt-r5-base/backend/tests/integration/test_jobs_r5_residuals.py:705: AssertionError: {'exception': "AssertionError('lock membership tidak dilepas\
+=========================== short test summary info ============================
+FAILED tests/integration/test_jobs_r5_residuals.py::TestExpiredLeaseSettlement::test_expired_attempt_leaves_settlement_to_reconcile[final]
+FAILED tests/integration/test_jobs_r5_residuals.py::TestExpiredLeaseSettlement::test_expired_attempt_leaves_settlement_to_reconcile[nonfinal]
+FAILED tests/integration/test_jobs_r5_residuals.py::TestExpiredLeaseSettlement::test_no_effect_settlement_rejects_competing_reconcile
+FAILED tests/integration/test_jobs_r5_residuals.py::TestAppliedReadbackWriterProof::test_positive_readback_rejected_while_cross_process_writer_alive
+FAILED tests/integration/test_jobs_r5_residuals.py::TestAppliedReadbackWriterProof::test_stale_epoch_resolution_rejected[not-applied]
+FAILED tests/integration/test_jobs_r5_residuals.py::TestAppliedReadbackWriterProof::test_stale_epoch_resolution_rejected[applied]
+FAILED tests/integration/test_jobs_r5_residuals.py::TestAppliedReadbackWriterProof::test_stale_epoch_resolution_rejected[unknown]
+FAILED tests/integration/test_jobs_r5_residuals.py::TestMembershipWaitCommitBoundary::test_membership_wait_deactivation_serialized_under_user_lock[wireguard]
+FAILED tests/integration/test_jobs_r5_residuals.py::TestMembershipWaitCommitBoundary::test_membership_wait_deactivation_serialized_under_user_lock[sstp]
+FAILED tests/integration/test_jobs_r5_residuals.py::TestMembershipWaitCommitBoundary::test_membership_wait_lease_expiry_cancels_unit[wireguard]
+FAILED tests/integration/test_jobs_r5_residuals.py::TestMembershipWaitCommitBoundary::test_membership_wait_lease_expiry_cancels_unit[sstp]
+11 failed, 7 passed in 56.32s
+exit=1

@@ -1,0 +1,12 @@
+2026-11-18 18:48:25,099 WARNING django.request Not Found: /api/v1/jobs/8f364631-cc44-4df0-8d49-fc2236393597
+{"http_status": 404, "job_count_after": 1, "job_count_before": 1, "job_router_in_membership_scope": false, "job_state_after": "queued", "job_state_before": "queued", "probe": "http_scope_detail"}
+.2026-11-18 18:48:25,316 WARNING django.request Not Found: /api/v1/jobs/a57965f8-83b0-4334-b534-de67d034f84d/cancel
+{"http_status": 404, "job_count_after": 1, "job_count_before": 1, "job_router_in_membership_scope": false, "job_state_after": "queued", "job_state_before": "queued", "probe": "http_scope_cancel"}
+.2026-11-18 18:48:25,517 WARNING django.request Not Found: /api/v1/jobs/75664596-ddb2-4c04-9e95-23213e139f93/retry
+{"http_status": 404, "job_count_after": 1, "job_count_before": 1, "job_router_in_membership_scope": false, "job_state_after": "failed", "job_state_before": "failed", "probe": "http_scope_retry"}
+.{"distinct_db_connections": true, "error_code": "authority_denied", "probe": "after_preflight_revoke", "router_released": false, "state": "failed"}
+.{"distinct_db_connections": true, "error_code": "authority_denied", "probe": "after_preflight_demote", "router_released": false, "state": "failed"}
+.{"calls": [{"autocommit": true, "in_atomic_block": false, "op": "apply", "pid": 24605}, {"autocommit": true, "in_atomic_block": false, "op": "verify", "pid": 24605}], "job_error": "cutover_rollback_readback_failed", "job_state": "failed", "probe": "b6_negative_verifier", "readback_ok": false, "result": {}, "router_enforcement": "radius_authoritative", "run_state": "failed"}
+.{"calls": [{"autocommit": true, "in_atomic_block": false, "op": "apply", "pid": 24671}, {"autocommit": true, "in_atomic_block": false, "op": "verify", "pid": 24671}], "job_error": null, "job_state": "succeeded", "probe": "b6_transaction_boundary", "readback_ok": true, "result": {"note": "state cutover tersimpan dengan evidence per fase", "ok": true, "phase": "B6", "state": "rolled_back"}, "router_enforcement": "local", "run_state": "rolled_back"}
+.
+7 passed in 2.70s
