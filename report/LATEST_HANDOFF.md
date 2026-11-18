@@ -1,3 +1,62 @@
+# LATEST_HANDOFF — executor menyerahkan koreksi R4 task0020, 18 November 2026 (WIB ~11:0x)
+
+**Current delivery: koreksi R4 task0020 selesai dan `done / pending review`.**
+Executor menutup **REV-1711-04** (bukti penulis lintas proses: identitas
+writer pid/host/starttime dipersist ATOMIK saat entering EXECUTING via
+migration additive `jobs/0006` + receipt `writer_ended_at` di finally
+`run_claimed` + liveness `/proc` starttime anti PID-reuse; unknown fail-closed
+ditahan), **REV-1711-05** (kewenangan dibaca segar TERKUNCI
+`lock_membership` pada batas commit unit `finalize_verification` SETELAH
+seluruh tulisan sensitif termasuk tunggu lock kredensial WG/SSTP dan SETELAH
+`commit_guard`; revoke yang ter-commit selama tunggu ⇒ rollback unit: Router0,
+kredensial PENDING) dan **REV-1811-02** (CAS terminal attempt-final no-effect
+koheren dengan lease yang dilepas step-1 ⇒ FAILED tepat sekali) pada ID0020
+yang sama di atas decision head `e0d306a` (main `a636166` + records R4 PR35).
+
+| Field | Current state / pointer |
+|---|---|
+| Active task | **[ID0020 PA002+PA003](../task/0020-job-lifecycle-authority_done.md)** — **done / pending review**; task0010 accepted/integrated |
+| Implementation / tested SHA | **`77a4a9056c1c5cf9b0b0874b0630a16dd350aa09`** (kode+tes+evidence) pada branch `session/2026-11-18-0020-r4-correction` (base `e0d306a`); published candidate = head PR (commit penyerahan, report-only descendant) |
+| Execution report | [Koreksi R4](orchestrator/20261118T035535Z-0020-r4-correction.md) — temuan→perubahan→bukti + matriks A01–A09 + batas; [evidence](executor-evidence/20261118T035535Z-0020-r4-correction/) 18 check exit=0 |
+| Probe R4 (FROZEN, tanpa modifikasi) | **4/4 PASS**: cross-process resolve DITOLAK `writer_active` + nol successor send selama proses lama hidup; no-effect final FAILED `router_unreachable`; credential-wait WG+SSTP Router0/kredensial pending/failed `authority_denied` — failing-before executor 4 gagal identik temuan controller |
+| Frozen R1/R2/R3 | **24/24 PASS tanpa pelemahan** (4+7, 3+3, 4+3) pada DB split-role migrator-owned, runtime `mtx_app` NOSUPERUSER/NOBYPASSRLS FORCE RLS, PG17.12 |
+| Regresi penuh | Suite backend **596 passed/1 skip/3 warnings** (baseline 588 + 8 regresi CI baru `test_jobs_r4_residuals`: final/nonfinal no-effect, stale CAS, cross-process live/dead writer, legacy unverifiable, credential-wait ×2 protokol); `check`/`makemigrations --check`/`docs` PASS. 1 skip = binary FreeRADIUS tidak tersedia di sandbox (bukan defect). |
+| Harness repair (dijustify A09) | Tes migrasi PA-006 (0003↔0004/0005) meninggalkan state migrasi historis — kebocoran laten jinak saat 0005 data-only, merusak suite setelah 0006 additive. Fixture autouse `_restore_latest_migrations` (3 file pa006) memulihkan state ke terbaru; TIDAK ada asersi yang diubah. |
+| Residual terdokumentasi | REV-R3C-01 (→ mekanisme bukti penulis ini, batas host-sama/`/proc` dinyatakan jujur); REV-R3C-02 (→ ditutup REV-1811-02). Verdict penutupan milik controller. |
+| CI kandidat | Required CI pada exact published head PR (backend/frontend/docs) — diverifikasi/dicatat setelah push; laporan eksekusi tidak mengklaim CI sebelum terverifikasi |
+| Next actor | **controller_reviewer** |
+| Exact next action | Review exact SHA `77a4a9056c1c5cf9b0b0874b0630a16dd350aa09`: jalankan ulang probe R4 (4) + seluruh 24 frozen tanpa pelemahan + regresi required; nilai matriks A01–A09 dan batas §5 laporan; verdict pada ID0020 (accepted ⇒ siapkan task dependent; changes_requested ⇒ buka ID sama). |
+| Dependency / Beta | Task0030 ineligible hingga review. Production Beta **NOT_READY**. Installer/upgrade/restore/secrets/scheduler/DEC01/02/host/GNS3/pilot/capacity tetap scope/gates terpisah. Device/live RADIUS/browser E2E/systemd/scale NOT_RUN. |
+
+`_done`/CI hijau bukan acceptance, merge, release tag, deployment atau
+aktivasi fitur. Merge main mengikuti wewenang pemilik; review controller
+tetap pemilik verdict. Entry tetap [task/0000-start-here.md](../task/0000-start-here.md).
+
+## Historical handoffs — superseded by current table above
+
+### LATEST_HANDOFF — controller R4 task0020, 18 November 2026
+
+**Verdict saat itu: ready / changes_requested** pada exact integrated main
+**a636166ece610f23a1cdafb491e3a5ecc9e9caf9**, source/config identik executor
+implementation/tested **16db545442efd33d6dd3ca13f5222efb0e80c6c4**.
+Root **588 passed/1 skipped/3 warnings**, seluruh **24 frozen R1/R2/R3 PASS**,
+check/makemigrations/docs PASS dan exact-main CI backend/frontend/docs3/3
+success. Tetapi **4 safety assertions baru FAIL / 0 errors final runs**;
+no-effect baseline4b03efe PASS membuktikan regresi baru. Tabel ini menggantikan
+seluruh status historis di bawah.
+
+| Field | Current state / pointer |
+|---|---|
+| Active task | **ID0020 PA002+PA003** — **ready / changes_requested**; koreksi R4 **not_submitted**; task0010 accepted/integrated |
+| Reviewed / tested source | **a636166ece610f23a1cdafb491e3a5ecc9e9caf9**, tree5768a768; protected-source diff16db545→main kosong |
+| Integration / starting discovery | PR34 head19cb430 merged906bfe0; PR33 records included. 37 remote-ref entries/0 outside main ancestry/0 open PRs sebelum publication R4. Owner merge bukan acceptance. |
+| Controller decision | **[R4 report](controller/20261118T025143Z-0020-r4-review.md)** §§3/7; [lifecycle](reviewer/20261118T025143Z-0020-r4-lifecycle.md), [authority](reviewer/20261118T025143Z-0020-r4-authority.md) |
+| Decision ref / publication | **[PR35](https://github.com/smahud/MicroTix_Project/pull/35)**, `review/0020-controller-r4-20261118`; initial **bc90619a41d18cae1dd67c440ca6f033b82e32c3**, treed782fc81, all43 paths+4 key readbacks MATCH dan clean local fetch. [Receipt](controller-evidence/20261118T025143Z-0020-r4/publication.json); metadata descendants preserve reviewed source. |
+| Required corrections | **REV-1711-04 PARTIAL P1** same-job resume lintas-proses masih send2 saat old adapter hidup; **REV-1711-05 PARTIAL P1** credential-row wait outlives authority pada WG/SSTP; **REV-1811-02 P2 OPEN** final no-effect attempt tersangkut uncertain setelah lease dihapus |
+| Evidence | [R4 directory](controller-evidence/20261118T025143Z-0020-r4/): full588/1skip, frozen24 PASS, new4 FAIL, baseline no-effect1 PASS, split migrator/runtime PG17.11 NOSUPERUSER/NOBYPASSRLS FORCE RLS. Earlier4 connection setup errors retained separately, bukan defect produk. |
+| Exact reviewed-main CI | [run44223659118](https://github.com/smahud/MicroTix_Project/actions/runs/44223659118), exacta636166 backend/frontend/docs success3/3 |
+| Next actor (saat itu) | **coding_agent** — ditindaklanjuti penyerahan di atas |
+
 # LATEST_HANDOFF — executor menyerahkan koreksi R3 task0020, 18 November 2026 (WIB ~09:2x)
 
 **Update integrasi (sesi sama, ~09:3x WIB):** atas instruksi pemilik repo
@@ -28,7 +87,7 @@ Tabel ini menggantikan seluruh status historis di bawah.
 | Field | Current state / pointer |
 |---|---|
 | Canonical main saat mulai | **`4b03efedd76815af3f1c6fdf99d0739cd8dccc87`**; basis koreksi = decision head `05d268d` (branch `review/0020-controller-r3-20261118`, PR33 — protected-source diff kosong terhadap main menurut controller §1) |
-| Active task | **[ID0020 PA002+PA003](../task/0020-job-lifecycle-authority_done.md)** — **done / pending review**; task0010 tetap accepted/integrated; task0030 belum eligible |
+| Active task | **[ID0020 PA002+PA003](../task/0020-job-lifecycle-authority.md)** — **done / pending review**; task0010 tetap accepted/integrated; task0030 belum eligible |
 | Implementation / tested SHA | **`16db545`** (kode+tes saja; seluruh probe/suite/gate dijalankan pada tree kode-identik ini) |
 | Published candidate | Head branch `session/2026-11-18-0020-r3-correction` (commit penyerahan — report-only descendant dari `16db545`; kode identik) |
 | Laporan / bukti | [Eksekusi orchestrator](orchestrator/20261118T022200Z-0020-r3-correction.md) (matriks A01–A09 + failing-before/passing-after); [reviewer independen](reviewer/20261118T022200Z-0020-r3-correction-independent.md) (01/05/1811-01 CLOSED; 04 + REV-R3C-01/02 terdokumentasi); [evidence](executor-evidence/20261118T000000Z-0020-r3-correction/) (probe R3 7/7, frozen 17/17, suite 589/0skip, check/makemigrations/docs PASS) |

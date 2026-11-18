@@ -70,6 +70,25 @@ def _plans_available():
     yield
 
 
+@pytest.fixture(autouse=True)
+def _restore_latest_migrations():
+    """Pulihkan state migrasi ke TERBARU setelah tiap tes (task0020 R4).
+
+    Tes migrasi PA-006 (0003<->0004/0005) meninggalkan app jobs pada state
+    historis tanpa pemulihan; kebocoran ini laten selama 0005 masih migrasi
+    data-only (skema identik antar state). Migration additive task0020 R4
+    (0006 writer receipt) mengubah skema, sehingga tanpa pemulihan tes
+    berikutnya gagal pada kolom yang absen. Fixture ini TIDAK mengubah
+    asersi mana pun — hanya mengembalikan state migrasi ke terbaru.
+    """
+    yield
+    from django.db import connection
+    from django.db.migrations.executor import MigrationExecutor
+
+    executor = MigrationExecutor(connection)
+    executor.migrate(executor.loader.graph.leaf_nodes())
+
+
 def _migration_module():
     return importlib.import_module("domains.jobs.migrations.0004_idempotency_identity")
 

@@ -1,0 +1,57 @@
+{
+  "reviewed_main": "a636166ece610f23a1cdafb491e3a5ecc9e9caf9",
+  "implementation": "16db545442efd33d6dd3ca13f5222efb0e80c6c4",
+  "open_prs": [],
+  "ci": [
+    {
+      "name": "docs",
+      "head_sha": "a636166ece610f23a1cdafb491e3a5ecc9e9caf9",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/smahud/MicroTix_Project/actions/runs/44223659118/job/134531441597"
+    },
+    {
+      "name": "backend",
+      "head_sha": "a636166ece610f23a1cdafb491e3a5ecc9e9caf9",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/smahud/MicroTix_Project/actions/runs/44223659118/job/134531441485"
+    },
+    {
+      "name": "frontend",
+      "head_sha": "a636166ece610f23a1cdafb491e3a5ecc9e9caf9",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/smahud/MicroTix_Project/actions/runs/44223659118/job/134531441091"
+    }
+  ],
+  "runs": [
+    {
+      "id": 44223659118,
+      "head_sha": "a636166ece610f23a1cdafb491e3a5ecc9e9caf9",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/smahud/MicroTix_Project/actions/runs/44223659118"
+    }
+  ],
+  "prior_prs": [
+    {
+      "number": 34,
+      "state": "closed",
+      "merged": true,
+      "merged_at": "2026-11-18T02:26:22Z",
+      "head": "19cb43094608045b4c98c4a647d9a225ef0c5f7c",
+      "base": "4b03efedd76815af3f1c6fdf99d0739cd8dccc87",
+      "merge_commit_sha": "906bfe03c37617732ebad2ca431219d1bb10447f"
+    },
+    {
+      "number": 33,
+      "state": "closed",
+      "merged": true,
+      "merged_at": "2026-11-18T02:26:22Z",
+      "head": "05d268defc3126cf12f2dcb0d3733e0d733d844d",
+      "base": "4b03efedd76815af3f1c6fdf99d0739cd8dccc87",
+      "merge_commit_sha": "05d268defc3126cf12f2dcb0d3733e0d733d844d"
+    }
+  ]
+}

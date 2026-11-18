@@ -1,0 +1,24 @@
+2026-11-18 10:34:48,213 ERROR domains.jobs.engine job 9c5e1adb-2b75-47d9-a904-312d52815713 gagal tak terduga
+Traceback (most recent call last):
+  File "/home/z/my-project/MicroTix_Project/backend/domains/jobs/engine.py", line 997, in run_claimed
+    result = handler.execute(ctx) or {}
+             ~~~~~~~~~~~~~~~^^^^^
+  File "/home/z/my-project/MicroTix_Project/backend/domains/backups/service.py", line 237, in execute
+    _write_manifest(
+    ~~~~~~~~~~~~~~~^
+        artifact.storage_path,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<8 lines>...
+        },
+        ^^
+    )
+    ^
+  File "/home/z/my-project/MicroTix_Project/report/controller-evidence/20261117T134100Z-0020-review/test_lifecycle_review.py", line 83, in fail_staging
+    raise OSError("controlled ENOSPC after successful create_backup")
+OSError: controlled ENOSPC after successful create_backup
+{"artifact_count": 1, "case": "backup-generic-after-send", "effect_state": "maybe", "first_state": "uncertain", "reclaimed": false, "send_count": 1}
+.{"case": "stale-discovery-domain-commit", "health_count": 0, "job_state": "uncertain", "object_count": 0, "outcomes": {"worker": {"state": "uncertain"}}, "snapshot_status": ["running"]}
+.{"case": "retry-uncertain-grandchild", "error": "retry_active_exists", "extra_retry_created": false, "grandchild_state": "uncertain", "send_count": 1}
+.{"case": "router-unknown-predecessor", "first_state": "uncertain", "second_job": "d381f93e-382c-4cfe-a6cf-75f96efb578a", "second_state": "retry_wait", "send_count": 1}
+.
+4 passed in 1.08s

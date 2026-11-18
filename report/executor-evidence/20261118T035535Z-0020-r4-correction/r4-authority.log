@@ -1,0 +1,4 @@
+{"blocked_query_table": "network_wireguard_peer", "credential": "pending", "enrollment": "verifying", "error": "authority_denied", "membership_revoked": true, "postgres_observed_lock_wait": true, "probe": "credential-lock-wait-authority", "protocol": "wireguard", "routers_created": 0, "separate_connections": true, "state": "failed"}
+.{"blocked_query_table": "network_sstp_account", "credential": "pending", "enrollment": "verifying", "error": "authority_denied", "membership_revoked": true, "postgres_observed_lock_wait": true, "probe": "credential-lock-wait-authority", "protocol": "sstp", "routers_created": 0, "separate_connections": true, "state": "failed"}
+.
+2 passed in 0.72s

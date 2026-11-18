@@ -1,0 +1,14 @@
+E    +    where wait = <threading.Event at 0x7f347f143e30: unset>.wait
+__________ test_credential_lock_wait_does_not_outlive_authority[sstp] __________
+../report/controller-evidence/20261118T025143Z-0020-r4/test_r4_authority_credentials.py:131: in test_credential_lock_wait_does_not_outlive_authority
+    assert probe_active.wait(15), "handler never reached TLS"
+E   AssertionError: handler never reached TLS
+E   assert False
+E    +  where False = wait(15)
+E    +    where wait = <threading.Event at 0x7f347f20fb60: unset>.wait
+=========================== short test summary info ============================
+FAILED ::test_cross_process_not_applied_resolution_cannot_resume_live_old_writer
+FAILED ::test_proven_no_effect_at_max_attempts_reaches_terminal_failure - Typ...
+FAILED ::test_credential_lock_wait_does_not_outlive_authority[wireguard] - As...
+FAILED ::test_credential_lock_wait_does_not_outlive_authority[sstp] - Asserti...
+4 failed in 31.36s

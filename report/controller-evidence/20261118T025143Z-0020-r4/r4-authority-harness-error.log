@@ -1,0 +1,282 @@
+EE
+==================================== ERRORS ====================================
+_ ERROR at setup of test_credential_lock_wait_does_not_outlive_authority[wireguard] _
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:279: in ensure_connection
+    self.connect()
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/utils/asyncio.py:26: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:256: in connect
+    self.connection = self.get_new_connection(conn_params)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/utils/asyncio.py:26: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/postgresql/base.py:332: in get_new_connection
+    connection = self.Database.connect(**conn_params)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/psycopg/connection.py:120: in connect
+    raise last_ex.with_traceback(None)
+E   psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 55518 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+
+The above exception was the direct cause of the following exception:
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/postgresql/base.py:507: in _nodb_cursor
+    with super()._nodb_cursor() as cursor:
+         ^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.13/contextlib.py:141: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:712: in _nodb_cursor
+    with conn.cursor() as cursor:
+         ^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/utils/asyncio.py:26: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:320: in cursor
+    return self._cursor()
+           ^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:296: in _cursor
+    self.ensure_connection()
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/utils/asyncio.py:26: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:278: in ensure_connection
+    with self.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/utils.py:91: in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:279: in ensure_connection
+    self.connect()
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/utils/asyncio.py:26: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:256: in connect
+    self.connection = self.get_new_connection(conn_params)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/utils/asyncio.py:26: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/postgresql/base.py:332: in get_new_connection
+    connection = self.Database.connect(**conn_params)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/psycopg/connection.py:120: in connect
+    raise last_ex.with_traceback(None)
+E   django.db.utils.OperationalError: connection failed: connection to server at "127.0.0.1", port 55518 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+
+During handling of the above exception, another exception occurred:
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:279: in ensure_connection
+    self.connect()
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/utils/asyncio.py:26: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:256: in connect
+    self.connection = self.get_new_connection(conn_params)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/utils/asyncio.py:26: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/postgresql/base.py:332: in get_new_connection
+    connection = self.Database.connect(**conn_params)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/psycopg/connection.py:120: in connect
+    raise last_ex.with_traceback(None)
+E   psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 55518 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+
+The above exception was the direct cause of the following exception:
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/pytest_django/fixtures.py:186: in django_db_setup
+    db_cfg = setup_databases(
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/test/utils.py:204: in setup_databases
+    connection.creation.create_test_db(
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/creation.py:62: in create_test_db
+    self._create_test_db(verbosity, autoclobber, keepdb)
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/creation.py:202: in _create_test_db
+    with self._nodb_cursor() as cursor:
+         ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.13/contextlib.py:141: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/postgresql/base.py:533: in _nodb_cursor
+    with conn.cursor() as cursor:
+         ^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/utils/asyncio.py:26: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:320: in cursor
+    return self._cursor()
+           ^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:296: in _cursor
+    self.ensure_connection()
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/utils/asyncio.py:26: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:278: in ensure_connection
+    with self.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/utils.py:91: in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:279: in ensure_connection
+    self.connect()
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/utils/asyncio.py:26: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:256: in connect
+    self.connection = self.get_new_connection(conn_params)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/utils/asyncio.py:26: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/postgresql/base.py:332: in get_new_connection
+    connection = self.Database.connect(**conn_params)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/psycopg/connection.py:120: in connect
+    raise last_ex.with_traceback(None)
+E   django.db.utils.OperationalError: connection failed: connection to server at "127.0.0.1", port 55518 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+_ ERROR at setup of test_credential_lock_wait_does_not_outlive_authority[sstp] _
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:279: in ensure_connection
+    self.connect()
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/utils/asyncio.py:26: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:256: in connect
+    self.connection = self.get_new_connection(conn_params)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/utils/asyncio.py:26: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/postgresql/base.py:332: in get_new_connection
+    connection = self.Database.connect(**conn_params)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/psycopg/connection.py:120: in connect
+    raise last_ex.with_traceback(None)
+E   psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 55518 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+
+The above exception was the direct cause of the following exception:
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/postgresql/base.py:507: in _nodb_cursor
+    with super()._nodb_cursor() as cursor:
+         ^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.13/contextlib.py:141: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:712: in _nodb_cursor
+    with conn.cursor() as cursor:
+         ^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/utils/asyncio.py:26: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:320: in cursor
+    return self._cursor()
+           ^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:296: in _cursor
+    self.ensure_connection()
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/utils/asyncio.py:26: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:278: in ensure_connection
+    with self.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/utils.py:91: in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:279: in ensure_connection
+    self.connect()
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/utils/asyncio.py:26: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:256: in connect
+    self.connection = self.get_new_connection(conn_params)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/utils/asyncio.py:26: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/postgresql/base.py:332: in get_new_connection
+    connection = self.Database.connect(**conn_params)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/psycopg/connection.py:120: in connect
+    raise last_ex.with_traceback(None)
+E   django.db.utils.OperationalError: connection failed: connection to server at "127.0.0.1", port 55518 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+
+During handling of the above exception, another exception occurred:
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:279: in ensure_connection
+    self.connect()
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/utils/asyncio.py:26: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:256: in connect
+    self.connection = self.get_new_connection(conn_params)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/utils/asyncio.py:26: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/postgresql/base.py:332: in get_new_connection
+    connection = self.Database.connect(**conn_params)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/psycopg/connection.py:120: in connect
+    raise last_ex.with_traceback(None)
+E   psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 55518 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+
+The above exception was the direct cause of the following exception:
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/pytest_django/fixtures.py:186: in django_db_setup
+    db_cfg = setup_databases(
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/test/utils.py:204: in setup_databases
+    connection.creation.create_test_db(
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/creation.py:62: in create_test_db
+    self._create_test_db(verbosity, autoclobber, keepdb)
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/creation.py:202: in _create_test_db
+    with self._nodb_cursor() as cursor:
+         ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.13/contextlib.py:141: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/postgresql/base.py:533: in _nodb_cursor
+    with conn.cursor() as cursor:
+         ^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/utils/asyncio.py:26: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:320: in cursor
+    return self._cursor()
+           ^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:296: in _cursor
+    self.ensure_connection()
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/utils/asyncio.py:26: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:278: in ensure_connection
+    with self.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/utils.py:91: in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:279: in ensure_connection
+    self.connect()
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/utils/asyncio.py:26: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/base/base.py:256: in connect
+    self.connection = self.get_new_connection(conn_params)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/utils/asyncio.py:26: in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/postgresql/base.py:332: in get_new_connection
+    connection = self.Database.connect(**conn_params)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/psycopg/connection.py:120: in connect
+    raise last_ex.with_traceback(None)
+E   django.db.utils.OperationalError: connection failed: connection to server at "127.0.0.1", port 55518 failed: Connection refused
+E   	Is the server running on that host and accepting TCP/IP connections?
+=============================== warnings summary ===============================
+::test_credential_lock_wait_does_not_outlive_authority[wireguard]
+  /workspace/scratch/2c3ec21ce9a5/review-venv/lib/python3.13/site-packages/django/db/backends/postgresql/base.py:512: RuntimeWarning: Normally Django will use a connection to the 'postgres' database to avoid running initialization queries against the production database when it's not needed (for example, when running tests). Django was unable to create a connection to the 'postgres' database and will use the first PostgreSQL database instead.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+ERROR ::test_credential_lock_wait_does_not_outlive_authority[wireguard] - dja...
+ERROR ::test_credential_lock_wait_does_not_outlive_authority[sstp] - django.d...
+1 warning, 2 errors in 0.23s
