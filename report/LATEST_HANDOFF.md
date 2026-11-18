@@ -1,5 +1,17 @@
 # LATEST_HANDOFF — executor menyerahkan koreksi R6 task0020, 19 November 2026 (WIB)
 
+**Update integrasi (sesi sama, 19 Nov):** atas instruksi pemilik repo
+(merge all branch, main selalu hijau, PAT commit/merge/push — preseden
+PR24/25/30/31/32/33/34/36/37/38/39), PR #40 (koreksi R6) di-merge ke main:
+merge commit **`54b4ca8`** (membawa koreksi impl/tested **`6ba52c7`** + head
+penyerahan `371dc26` report-only descendant). **Exact-main CI diverifikasi:
+[run44372470325](https://github.com/smahud/MicroTix_Project/actions/runs/44372470325)
+backend/frontend/docs 3/3 success** pada head `54b4ca8`; CI kandidat PR #40
+head `371dc26` [run44371732137](https://github.com/smahud/MicroTix_Project/actions/runs/44371732137)
+juga 3/3 success. Seluruh remote branch kini ancestor main (**0 unmerged**,
+0 PR terbuka). Merge pemilik bukan acceptance controller — **review koreksi
+R6 tetap pending** untuk exact SHA `6ba52c7` (next actor controller_reviewer).
+
 **Update integrasi awal sesi (19 Nov):** atas instruksi pemilik repo (merge
 all branch, main selalu hijau, PAT commit/merge/push — preseden
 PR24/25/30/31/32/33/34/36/37/38), PR #39 (decision records review R5,
