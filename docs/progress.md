@@ -1,6 +1,45 @@
 # MicroTix — checkpoint kemajuan
 
-Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-18 (Asia/Jakarta), controller review R4.
+Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-18 (Asia/Jakarta), executor koreksi R4 task0020.
+
+## Checkpoint 2026-11-18 ~11:0x WIB — executor: koreksi R4 task0020 diserahkan (done/pending review)
+
+Executor menutup tiga temuan R4 pada ID0020 yang sama di atas decision head
+**e0d306a** (main a636166 + records R4 PR35); implementation/tested
+**77a4a9056c1c5cf9b0b0874b0630a16dd350aa09**, branch
+`session/2026-11-18-0020-r4-correction`.
+
+- **REV-1711-04**: identitas penulis attempt (pid/host/starttime `/proc`)
+  dipersist ATOMIK saat entering EXECUTING (migration additive `jobs/0006`
+  writer_pid/host/start_ticks/ended_at, nullable) + receipt `writer_ended_at`
+  CAS epoch-attempt di finally `run_claimed`; `resolve_uncertain(applied=False)`
+  memakai receipt/liveness/`/proc`-starttime — unknown (host lain, stat tak
+  terbaca, baris legacy NULL) ditahan fail-closed. Probe R4 cross-process
+  2/2 PASS (nol successor send selama proses lama hidup; pemulihan positif
+  setelah proses mati tetap lolos — drain SIGKILL suite).
+- **REV-1711-05**: `finalize_verification` memvalidasi kewenangan TERKUNCI
+  (`check_current_authority(lock_membership=True)`) pada batas commit unit —
+  setelah seluruh tulisan sensitif (termasuk tunggu lock kredensial WG/SSTP)
+  dan setelah `commit_guard`; revoke yang ter-commit selama tunggu ⇒ rollback
+  unit (Router0, kredensial PENDING, FAILED authority_denied). Probe 2/2 PASS.
+- **REV-1811-02**: transisi terminal attempt-final no-effect memakai CAS
+  koheren dengan lease yang dilepas step-1 (UNCERTAIN+lease-NULL → FAILED);
+  guard lease-valid umum R3 tidak diubah. Probe PASS (FAILED tepat sekali).
+
+Probe controller R4 **FROZEN 4/4 PASS tanpa pelemahan** (failing-before
+executor 4 gagal identik controller); frozen R1/R2/R3 **24/24 PASS**;
+suite penuh **596 passed/1skip/3warnings** (baseline 588 + 8 regresi baru
+`test_jobs_r4_residuals`); check/makemigrations/docs PASS; split-role
+migrator-owned + `mtx_app` NOSUPERUSER/NOBYPASSRLS FORCE RLS PG17.12.
+Harness repair A09: fixture autouse `_restore_latest_migrations` pada 3 file
+tes pa006 (0003↔0004/0005 meninggalkan state historis — jinak saat 0005
+data-only, merusak setelah 0006 additive; tanpa asersi berubah).
+[Laporan](../report/orchestrator/20261118T035535Z-0020-r4-correction.md),
+[evidence](../report/executor-evidence/20261118T035535Z-0020-r4-correction/),
+[packet _done](../task/0020-job-lifecycle-authority_done.md).
+Next **controller_reviewer** pada exact SHA77a4a90 (probe R4+24 frozen+regresi;
+matriks A01–A09; verdict ID0020). Task0030 ineligible; Beta NOT_READY.
+Device/GNS3/live RADIUS/browser E2E/systemd/scale tetap NOT_RUN.
 
 ## Checkpoint 2026-11-18 — controller R4 task0020: changes_requested
 
