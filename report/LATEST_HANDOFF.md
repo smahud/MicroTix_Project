@@ -1,6 +1,54 @@
-# LATEST_HANDOFF — keputusan controller untuk task 0020, 18 November 2026
+# LATEST_HANDOFF — executor menyerahkan koreksi R5 task0020, 18 November 2026 (WIB ~18:5x)
 
-**Task 0020 kembali ready / changes_requested.** Koreksi R4 sudah
+**Current delivery: koreksi R5 task0020 selesai dan `done / pending review`.**
+Executor menutup empat residual **changes_requested** controller ([keputusan
+R4-correction](controller/20261118T050714Z-0020-r4-correction-review.md)) pada
+ID0020 yang sama di atas decision head `2d5b7f1` (branch instruksi
+`review/0020-r4-correction-20261118-0507`/PR #37; main saat mulai `5c45276`),
+branch kerja `session/2026-11-18-0020-r5-correction`:
+
+- **REV-1811-02** — settlement no-effect final/nonfinal kini SATU transaksi
+  pendek dengan step-1 wajib lease berlaku: lease kedaluwarsa → row tetap
+  EXECUTING (token/epoch awal) sampai reconciler; step-2 terikat epoch;
+  `on_retry` di luar unit; penyelesaian ganda ditolak.
+- **REV-1711-04** — readback applied=True wajib bukti penulis berhenti
+  (in-flight + receipt/liveness): readback positif saat writer lintas-proses
+  hidup DITOLAK, nol kirim penerus router sama, router lain maju, verify-only
+  tanpa resend hanya setelah penulis terbukti berhenti; CAS resolve terikat
+  epoch snapshot (tolak `stale_epoch`); identitas tidak lengkap → karantina.
+- **REV-1711-05** — guard authority terkunci mengunci baris user (urutan
+  user→membership) + `is_active` dibaca segar DI BAWAH kunci sampai commit:
+  penonaktifan akun selama tunggu lock kredensial/membership → unit batal
+  (Router 0, PENDING, belum completed, FAILED authority_denied); serialisasi
+  lock user terbukti (BASE membiarkan penonaktifan lolos).
+- **REV-1711-01** — urutan guard batas commit dibalik: final_authority_guard
+  (kunci user+membership, dapat menunggu) SEBELUM commit_guard (kunci baris
+  job + validasi expiry) TERAKHIR: lease basi selama tunggu tanpa renewal
+  efektif → NOL efek domain; watchdog tidak lagi terhalang lock job; kontrol
+  lease valid commit tepat sekali.
+
+| Field | Current state / pointer |
+|---|---|
+| Active task | **[ID0020 PA002+PA003](../task/0020-job-lifecycle-authority_done.md)** — **done / pending review**; task0010 accepted/integrated |
+| Implementation / tested SHA | Commit kode+tes pada `session/2026-11-18-0020-r5-correction` (base `2d5b7f1`); published candidate = head PR (report-only descendant) |
+| Execution report | [Koreksi R5](orchestrator/20261118T115321Z-0020-r5-correction.md) — temuan→perubahan→bukti + matriks A01–A09 + batas; [evidence](executor-evidence/20261118T113641Z-0020-r5-correction/) 18 check exit=0 |
+| Probe beku R1–R4 (FROZEN) | **28/28 PASS tanpa pelemahan** (R1 4+7, R2 3+3, R3 4+3, R4 2+2) pada DB split-role migrator-owned, runtime `mtx_app` NOSUPERUSER/NOBYPASSRLS FORCE RLS, PG17.12 |
+| Regresi controller | `test_terminal_lease_review.py` **2/2 PASS** (failing-before BASE: 2 FAIL identik temuan) |
+| Regresi R5 baru | **18/18 PASS** `test_jobs_r5_residuals.py` (failing-before BASE: 11 FAIL/7 kontrol PASS) — settlement expired, readback applied hidup/mati, stale epoch ×3, deaktivasi akun & expiry lease pada tunggu kredensial DAN membership, kontrol commit-once |
+| Suite penuh | Backend **614 passed/1 skip/3 warnings** (baseline 596 + 18 R5); `check`/`makemigrations --check`/`docs` PASS; tanpa migration baru |
+| Next actor | **controller_reviewer** |
+| Exact next action | Review exact implementation/tested SHA koreksi R5: ulang 28 probe beku + 18 regresi R5 tanpa pelemahan + suite penuh; nilai matriks A01–A09 dan batas §5 laporan; verdict pada ID0020 (accepted ⇒ siapkan task dependent; changes_requested ⇒ buka ID sama). |
+| Dependency / Beta | Task0030 ineligible hingga review. Production Beta **NOT_READY**. Perangkat/CHR/GNS3, RADIUS daemon, browser E2E, systemd, installer/upgrade/restore host, mixed-version live upgrade, liveness lintas-host/namespace (fail-closed), kapasitas NOT_RUN. CI kandidat frontend menunggu GitHub Actions (perubahan tidak menyentuh `apps/`). |
+
+`_done`/CI hijau bukan acceptance, merge, release tag, deployment atau
+aktivasi fitur. Merge main mengikuti wewenang pemilik; review controller
+tetap pemilik verdict. Entry tetap [task/0000-start-here.md](../task/0000-start-here.md).
+
+## Historical handoffs — superseded by current table above
+
+### LATEST_HANDOFF — keputusan controller untuk task 0020, 18 November 2026
+
+**Task 0020 kembali ready / changes_requested (saat itu; ditindaklanjuti penyerahan R5 di atas).** Koreksi R4 sudah
 terintegrasi lewat PR #36. Review controller pada exact `77a4a9056c1c5cf9b0b0874b0630a16dd350aa09`
 memverifikasi 28/28 probe beku dan suite 596 passed/1 skip. Dua
 assertion expired no-effect FAIL, dengan residual source pada
@@ -16,9 +64,7 @@ hold router, akun aktif dan validitas lease di batas commit.
 | Next actor / action | **coding_agent**. Fetch ref keputusan, koreksi empat temuan pada ID yang sama dan serahkan exact SHA, report dan CI. |
 | Dependency / Beta | 0010 accepted/integrated, 0030 menunggu acceptance 0020. Production Beta **NOT_READY**. Installer/upgrade/restore/secrets/scheduler/topology, perangkat/GNS3, pilot dan kapasitas masih memiliki gate sendiri. |
 
-## Histori — penyerahan dan keputusan sebelumnya
-
-# LATEST_HANDOFF — executor menyerahkan koreksi R4 task0020, 18 November 2026 (WIB ~11:0x)
+### LATEST_HANDOFF — executor menyerahkan koreksi R4 task0020, 18 November 2026 (WIB ~11:0x)
 
 **Update integrasi (sesi sama, ~11:1x WIB):** atas instruksi pemilik repo
 (merge all branch, main selalu hijau, PAT commit/merge/push — preseden

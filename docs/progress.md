@@ -1,6 +1,39 @@
 # MicroTix — checkpoint kemajuan
 
-Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-18 (Asia/Jakarta), keputusan review atas koreksi R4.
+Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-18 (Asia/Jakarta), penyerahan koreksi R5 task 0020.
+
+## Checkpoint 2026-11-18 ~18:5x WIB — executor menyerahkan koreksi R5 task0020 (done/pending review)
+
+Executor menutup empat residual changes_requested controller (REV-1711-01/04/05
++ REV-1811-02) pada ID0020 yang sama di atas decision head `2d5b7f1`
+(PR #37; main saat mulai `5c45276`), branch `session/2026-11-18-0020-r5-correction`.
+
+- **REV-1811-02**: settlement no-effect final/nonfinal kini SATU transaksi pendek —
+  step-1 wajib lease berlaku (lease basi → row tetap EXECUTING dengan token/epoch
+  awal sampai reconciler; regresi controller terminal-lease 2/2 PASS), step-2
+  terikat epoch attempt, `on_retry` di luar unit, penyelesaian ganda ditolak.
+- **REV-1711-04**: readback applied=True wajib bukti penulis berhenti — readback
+  positif saat writer lintas-proses hidup DITOLAK, nol kirim penerus router sama,
+  router lain maju, verify-only tanpa resend setelah penulis terbukti berhenti;
+  CAS resolve terikat epoch snapshot (`stale_epoch`); identitas writer tidak
+  lengkap → karantina fail-closed meski /proc hilang.
+- **REV-1711-05**: guard authority terkunci mengunci baris user (user→membership)
+  + `is_active` dibaca segar DI BAWAH kunci sampai commit — penonaktifan akun
+  selama tunggu lock kredensial/membership → unit batal (Router 0, PENDING,
+  belum completed, FAILED authority_denied); serialisasi lock user terbukti.
+- **REV-1711-01**: urutan guard batas commit dibalik (final_authority_guard
+  sebelum commit_guard TERAKHIR) — lease basi selama tunggu tanpa renewal
+  efektif → NOL efek domain; watchdog tidak lagi terhalang lock job; kontrol
+  lease valid commit tepat sekali.
+
+Bukti: 28/28 probe beku R1–R4 PASS tanpa pelemahan + regresi controller 2/2 +
+18 regresi R5 baru (failing-before BASE `2d5b7f1`: 2+11 FAIL identik temuan) +
+suite penuh 614 passed/1 skip/3 warnings + check/makemigrations/docs PASS pada
+PostgreSQL 17.12 split-role migrator-owned + mtx_app NOSUPERUSER/NOBYPASSRLS
+FORCE RLS. Tanpa migration baru. [Laporan R5](../report/orchestrator/20261118T115321Z-0020-r5-correction.md)
++ [evidence](../report/executor-evidence/20261118T113641Z-0020-r5-correction/).
+Next actor **controller_reviewer** pada exact tested SHA; task0030 menunggu
+acceptance 0020; Production Beta **NOT_READY**.
 
 ## Checkpoint 2026-11-18 WIB — controller mereview koreksi R4 task 0020
 
