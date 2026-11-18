@@ -1,0 +1,33 @@
+{"case": "r3-cross-initial-expiry", "initial_expiry": "2026-11-17 21:24:37.258146+00:00", "observed_at": "2026-11-17 21:24:37.860526+00:00", "lease": "2026-11-17 21:24:39.704192+00:00", "reconcile_attempts": 25}
+.{"case": "r3-expired-progress-resurrection", "effects": ["new-send-after-expiry"], "expired_at": "2026-11-17 21:24:37.202447+00:00", "final_lease": "2026-11-17 21:25:08.314581+00:00", "state": "succeeded", "outcomes": {"expired-progress": {"state": "succeeded"}}}
+F{"case": "r3-expired-return-resurrection", "verified": ["verify-after-expiry"], "expired_at": "2026-11-17 21:24:37.724861+00:00", "final_lease": "2026-11-17 21:25:08.836313+00:00", "state": "succeeded", "outcomes": {"expired-return": {"state": "succeeded"}}}
+F{"case": "r3-resolve-db-session-loss", "sends": 2, "resolve_rejected": null, "info": {"worker_pid": 333, "old_writer_live_at_resume": true}, "outcomes": {"new-same-job": {"state": "succeeded"}, "old-live-adapter": {"exception": "OperationalError: terminating connection due to administrator command"}}, "final": "succeeded"}
+F
+=================================== FAILURES ===================================
+______ test_progress_cannot_revive_expired_worker_after_watchdog_stopped _______
+../report/controller-evidence/20261117T212042Z-0020-r3/test_r3_lifecycle_edges.py:175: in test_progress_cannot_revive_expired_worker_after_watchdog_stopped
+    assert effects == [], "progress resurrected an expired lease and allowed a new send"
+E   AssertionError: progress resurrected an expired lease and allowed a new send
+E   assert ['new-send-after-expiry'] == []
+E
+E     Left contains one more item: 'new-send-after-expiry'
+E     Use -v to get more diff
+______ test_returning_io_worker_cannot_revive_expired_lease_before_verify ______
+../report/controller-evidence/20261117T212042Z-0020-r3/test_r3_lifecycle_edges.py:230: in test_returning_io_worker_cannot_revive_expired_lease_before_verify
+    assert verified == [], "phase transition/heartbeat revived expired worker before verify"
+E   AssertionError: phase transition/heartbeat revived expired worker before verify
+E   assert ['verify-after-expiry'] == []
+E
+E     Left contains one more item: 'verify-after-expiry'
+E     Use -v to get more diff
+__ test_readback_not_applied_cannot_resume_after_db_loss_with_live_old_writer __
+../report/controller-evidence/20261117T212042Z-0020-r3/test_r3_lifecycle_edges.py:318: in test_readback_not_applied_cannot_resume_after_db_loss_with_live_old_writer
+    assert len(sends) == 1, "not-applied resolution reopened send while old adapter remained live"
+E   AssertionError: not-applied resolution reopened send while old adapter remained live
+E   assert 2 == 1
+E    +  where 2 = len(['35aa07fd-d432-4104-9f95-b9caf01e00c9', '35aa07fd-d432-4104-9f95-b9caf01e00c9'])
+=========================== short test summary info ============================
+FAILED ::test_progress_cannot_revive_expired_worker_after_watchdog_stopped - ...
+FAILED ::test_returning_io_worker_cannot_revive_expired_lease_before_verify
+FAILED ::test_readback_not_applied_cannot_resume_after_db_loss_with_live_old_writer
+3 failed, 1 passed in 4.70s

@@ -1,0 +1,96 @@
+{
+  "reviewed_sha": "4b03efedd76815af3f1c6fdf99d0739cd8dccc87",
+  "implementation_sha": "cd6eea378cd2134ca38924e8b181d1cd601f33ec",
+  "verdict": "changes_requested",
+  "execution_status": "ready",
+  "next_actor": "coding_agent",
+  "full_suite": {
+    "passed": 583,
+    "skipped": 1,
+    "warnings": 3,
+    "exit": 0,
+    "seconds": 183.8
+  },
+  "frozen_r1": {
+    "passed": 11,
+    "exit": 0
+  },
+  "frozen_r2": {
+    "passed": 6,
+    "exit": 0
+  },
+  "r3_lifecycle": {
+    "failed": 3,
+    "passed": 1,
+    "errors": 0,
+    "exit": 1,
+    "seconds": 4.7
+  },
+  "r3_authority": {
+    "failed": 3,
+    "passed": 0,
+    "errors": 0,
+    "exit": 1,
+    "seconds": 1.51
+  },
+  "findings": [
+    {
+      "id": "REV-1711-01",
+      "severity": "P1",
+      "status": "PARTIAL",
+      "residual": "expired lease resurrection"
+    },
+    {
+      "id": "REV-1711-04",
+      "severity": "P1",
+      "status": "PARTIAL",
+      "residual": "same-job resolution after DB death while old writer live"
+    },
+    {
+      "id": "REV-1711-05",
+      "severity": "P1",
+      "status": "PARTIAL",
+      "residual": "authority stale during enrollment lock wait"
+    },
+    {
+      "id": "REV-1811-01",
+      "severity": "P2",
+      "status": "OPEN",
+      "residual": "undefined JobError duplicate finalize"
+    }
+  ],
+  "closed": [
+    "REV-1711-02",
+    "REV-1711-03",
+    "REV-1711-06",
+    "REV-1711-07",
+    "REV-1711-08"
+  ],
+  "evidence_mapping_closed_with_limits": [
+    "REV-1711-09"
+  ],
+  "not_run": [
+    "real RouterOS/CHR/GNS3",
+    "live RADIUS daemon",
+    "local browser E2E",
+    "install/upgrade/restore/DR",
+    "systemd rehearsal",
+    "scale/soak/pilot"
+  ],
+  "root_runners": {
+    "baseline_port": 55457,
+    "supplemental_port": 55458,
+    "schema_owner": "mtx_migrator",
+    "runtime": "mtx_app",
+    "runtime_superuser": false,
+    "runtime_bypassrls": false,
+    "postgres": "17.11"
+  },
+  "reviewed_main_ci": {
+    "run_id": 44166000632,
+    "sha": "4b03efedd76815af3f1c6fdf99d0739cd8dccc87",
+    "backend": "success",
+    "frontend": "success",
+    "docs": "success"
+  }
+}

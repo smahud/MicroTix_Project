@@ -57,6 +57,27 @@ CLAIM_SCAN_LIMIT = 50
 # tidak mengirim mutasi ke router yang sama bersamaan; router lain mandiri.
 _SENDER_LOCK_NS = 0x6D745253  # 'mtRS'
 
+# Registry attempt in-flight per PROSES ini (REV-1711-04 R3).
+# Kehilangan sesi DB (pg_terminate_backend / putus koneksi) melepas advisory
+# lock pengirim dan lease bisa direkonsiliasi menjadi uncertain, TETAPI
+# adapter/penulis lama bisa masih hidup di luar DB dan mendaratkan kirimnya
+# SETELAH readback negatif diamati. Lock yang terlepas + epoch baru saja
+# TIDAK membedakan "penulis lama masih berjalan" dari "penulis sudah
+# selesai". Satu-satunya bukti yang tersedia bagi engine adalah attempt
+# run_claimed itu sendiri: selama masih berjalan di proses ini (handler
+# belum kembali/beres), resolve_uncertain(applied=False) menolak membuka
+# kirim ulang pada job ID yang sama. Bukti lintas proses tetap terbatas
+# (advisory lock sesi hidup menutup jalur itu); pembatasan dicatat jujur di
+# report — bukan klaim penulis lama aman lintas proses.
+_INFLIGHT_ATTEMPTS: set[str] = set()
+_INFLIGHT_LOCK = threading.Lock()
+
+
+def _attempt_inflight(job_id) -> bool:
+    """Attempt run_claimed untuk job ini masih berjalan di proses ini."""
+    with _INFLIGHT_LOCK:
+        return str(job_id) in _INFLIGHT_ATTEMPTS
+
 
 class JobError(Exception):
     """Galat handler: kategorisasi hasil untuk engine.
@@ -143,16 +164,22 @@ class JobContext:
     lost: bool = False
 
     def _fenced(self, **fields) -> bool:
+        # REV-1711-01 (R3): renewal worker hanya bila lease MASIH BERLAKU saat
+        # pembaruan berjalan — token+epoch+state nonterminal saja tidak cukup;
+        # lease kedaluwarsa berarti kepemilikan hilang (watchdog bersyarat R2
+        # sudah menolaknya; jalur progress/heartbeat tidak boleh menghidupkan
+        # kembali lease yang sudah mati tanpa menunggu reconciler).
         rows = Job.objects.filter(
             id=self.job.id,
             lease_token=self.job.lease_token,
             lease_epoch=self.job.lease_epoch,
+            lease_expires_at__gt=timezone.now(),
         ).exclude(state__in=TERMINAL_STATES).update(**fields)
         owned = rows > 0
         if not owned:
             self.lost = True
             raise OwnershipLost(
-                f"job {self.job.id}: kepemilikan hilang (lease/state berubah) — efek dihentikan"
+                f"job {self.job.id}: kepemilikan hilang (lease/state berubah atau lease kedaluwarsa) — efek dihentikan"
             )
         return owned
 
@@ -410,13 +437,19 @@ def claim_next(worker_id: str | None = None) -> Job | None:
 
 
 def _fenced_update(job: Job, expected_states, **fields) -> bool:
-    """CAS tulisan envelope: hanya bila lease+epoch milik worker dan state
-    sesuai salah satu expected. Terminal tidak pernah tertimpa."""
+    """CAS tulisan envelope: hanya bila lease+epoch milik worker, state
+    sesuai salah satu expected, dan lease MASIH BERLAKU (R3 REV-1711-01).
+
+    Terminal tidak pernah tertimpa; lease kedaluwarsa = kepemilikan hilang
+    untuk seluruh batas transisi/terminal worker — termasuk sukses terminal
+    — tanpa menunggu reconciler dijadwalkan (watchdog bersyarat R2 hanya
+    menutup jalur pembaruannya sendiri)."""
     rows = Job.objects.filter(
         id=job.id,
         lease_token=job.lease_token,
         lease_epoch=job.lease_epoch,
         state__in=expected_states,
+        lease_expires_at__gt=dj_timezone.now(),
     ).exclude(state__in=TERMINAL_STATES).update(**fields)
     return rows > 0
 
@@ -665,6 +698,11 @@ def run_claimed(job: Job, *, stop_check: Callable[[], bool] | None = None) -> Jo
     """
     handler = handler_for(job.kind)
     sender_router_id = None
+    # REV-1711-04 (R3): attempt ini in-flight di proses ini dari awal sampai
+    # finally — resolve_uncertain(applied=False) job yang sama ditolak
+    # selama attempt masih berjalan (sesi DB mati ≠ penulis lama aman).
+    with _INFLIGHT_LOCK:
+        _INFLIGHT_ATTEMPTS.add(str(job.id))
 
     try:
         if handler is None:
@@ -908,6 +946,7 @@ def run_claimed(job: Job, *, stop_check: Callable[[], bool] | None = None) -> Jo
                     lease_token=job.lease_token,
                     lease_epoch=job.lease_epoch,
                     state=JobState.VERIFYING,
+                    lease_expires_at__gt=dj_timezone.now(),  # R3 REV-1711-01: sukses terminal wajib lease berlaku
                 ).update(**updates)
                 if not rows:
                     raise OwnershipLost(f"job {job.id}: result commit")
@@ -921,6 +960,15 @@ def run_claimed(job: Job, *, stop_check: Callable[[], bool] | None = None) -> Jo
         job.refresh_from_db()
         return job
     finally:
+        # REV-1711-04 (R3): attempt ini selesai sepenuhnya (semua I/O handler
+        # sudah kembali) — keluarkan dari registry in-flight proses INI.
+        # Bukan bukti penulis aman lintas proses; registry hanya menahan
+        # resolve not-applied selama attempt masih benar-benar berjalan.
+        try:
+            with _INFLIGHT_LOCK:
+                _INFLIGHT_ATTEMPTS.discard(str(job.id))
+        except Exception:  # pragma: no cover - pembersihan registry tidak boleh gagal
+            pass
         if sender_router_id is not None:
             release_router_sender(sender_router_id)
 
@@ -1146,11 +1194,28 @@ def resolve_uncertain(job: Job, *, applied: bool | None, error_code: str | None 
     """Readback uncertain (ops): terbukti belum diterapkan → antrian ulang
     (dengan fence penulis lama); terbukti diterapkan → verify TANPA resend;
     tidak diketahui → recovery_required (tetap tertahan, bukan blind retry).
+
+    applied=False (bukti "belum diterapkan" hanya membuka antrian ulang bila
+    penulis lama terbukti aman): dua bukti dipakai — (1) attempt run_claimed
+    untuk job ID sama TIDAK masih berjalan di proses ini (REV-1711-04 R3:
+    sesi DB yang mati melepas advisory lock, tetapi adapter lama bisa masih
+    hidup dan mendaratkan kirimnya setelah readback negatif; reclaim job
+    sama dengan epoch baru tidak boleh membuka kirim kedua), dan (2) advisory
+    lock sesi pengirim router bebas (penulis hidup lintas sesi masih memegang
+    router — jalur R1 tetap berlaku).
     """
     if job.state != JobState.UNCERTAIN:
         raise ValueError("Bukan uncertain")
     now = dj_timezone.now()
     if applied is False:
+        if _attempt_inflight(job.id):
+            # REV-1711-04 (R3): attempt untuk job ini masih berjalan — sesi DB
+            # mati/lock terlepas/epoch naik TIDAK membuktikan penulis lama
+            # berhenti; readback negatif bisa dikejar kirim in-flight.
+            raise ValueError(
+                "writer_active: attempt job ini masih berjalan di proses "
+                "(sesi DB mati ≠ penulis lama aman; readback not-applied ditolak)"
+            )
         if job.router_id is not None and not acquire_router_sender(job.router_id):
             # Readback "belum diterapkan" tidak dapat dipercaya selama penulis
             # lama masih hidup (send in-flight bisa mendarat SETELAH readback):
@@ -1236,6 +1301,7 @@ def _verify_only(job: Job) -> Job:
                 lease_token=job.lease_token,
                 lease_epoch=job.lease_epoch,
                 state=JobState.VERIFYING,
+                lease_expires_at__gt=dj_timezone.now(),  # R3 REV-1711-01: lease berlaku saat commit
             ).update(
                 state=JobState.SUCCEEDED,
                 effect_state=EffectState.CONFIRMED,
