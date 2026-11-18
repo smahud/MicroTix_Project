@@ -1,4 +1,72 @@
-# LATEST_HANDOFF — keputusan controller R5 task 0020, 19 November 2026 WIB
+# LATEST_HANDOFF — executor menyerahkan koreksi R6 task0020, 19 November 2026 (WIB)
+
+**Update integrasi awal sesi (19 Nov):** atas instruksi pemilik repo (merge
+all branch, main selalu hijau, PAT commit/merge/push — preseden
+PR24/25/30/31/32/33/34/36/37/38), PR #39 (decision records review R5,
+branch `review/0020-r5-correction-20261118-1723` head `b32203a`) di-merge ke
+main: merge commit **`51158c0`**. **Exact-main CI diverifikasi:
+[run44366479593](https://github.com/smahud/MicroTix_Project/actions/runs/44366479593)
+backend/frontend/docs 3/3 success** pada head `51158c0` (0 unmerged branch, 0
+PR terbuka setelah merge). Merge pemilik bukan acceptance controller.
+
+**Current delivery: koreksi R6 task0020 selesai dan `done / pending review`.**
+Executor menutup empat residual **changes_requested** controller ([keputusan
+R5-correction](controller/20261118T172344Z-0020-r5-correction-review.md)) pada
+ID0020 yang sama di atas decision head `b32203a` (branch instruksi
+`review/0020-r5-correction-20261118-1723`/PR #39; main saat mulai `51158c0`),
+branch kerja `session/2026-11-19-0020-r6-correction`:
+
+- **REV-1811-02** — settlement no-effect kini step-0 **lock-first**: kunci
+  baris job dulu (SELECT FOR UPDATE filter token+epoch+state), nilai expiry
+  SEGAR pasca-lock, settlement+step-2 tetap SATU transaksi terikat epoch;
+  final/nonfinal yang lease habis SELAMA tunggu tetap EXECUTING dengan
+  token/epoch awal tanpa error sampai reconciler.
+- **REV-1711-01 (watchdog + seluruh fence worker)** — pola lock-first pada
+  `_heartbeat_watchdog`, `_fenced` (heartbeat/progress), `_fenced_update`
+  (transisi/terminal/error), result commit `run_claimed` dan `_verify_only`:
+  parameter waktu tidak lagi membeku sebelum tunggu lock; lease kedaluwarsa
+  selama tunggu tidak pernah dihidupkan kembali / tidak menerima tulisan.
+- **REV-1711-01 (enrollment FK deferred)** — akuisisi kunci referensial
+  tenant (`FOR KEY SHARE`) DI DALAM unit efek `finalize_verification`
+  SETELAH lock enrollment dan SEBELUM INSERT Router + fence akhir: tunggu
+  pemeriksaan FK DEFERRABLE di COMMIT (kontensi baris tenant, mis. billing)
+  selesai SEBELUM final_authority_guard + commit_guard → lease yang habis
+  selama tunggu divalidasi segar pada fence terakhir → NOL efek domain
+  (Router 0, kredensial PENDING, enrollment VERIFYING).
+- **REV-1711-04** — readback negatif terikat urutan bukti stop→observasi
+  pada job/epoch sama: `resolve_uncertain(applied=False,
+  readback_observed_at=...)`; attestasi pra-stop DITOLAK
+  (`readback_before_stop`), attestasi eksplisit tanpa receipt DITOLAK
+  fail-closed (`readback_unbound`), pasca-stop sah membuka pemulihan tanpa
+  kirim duplikat; tanpa attestasi observasi default = saat resolve setelah
+  bukti stop diperiksa (jalur suite lama tidak berubah).
+- **REV-1711-05** — `router_release`/`router_replace` memakai guard
+  authority TERKUNCI (user+membership sampai commit) pada batas efek,
+  SETELAH seluruh tulisan unit yang dapat menunggu lock domain dan SEBELUM
+  guard_commit; replace juga mengunci referensial tenant sebelum INSERT
+  enrollment pengganti — penonaktifan/pencabutan yang ter-commit selama
+  tunggu → rollback unit (router tetap aktif, kredensial/NAS tetap, NOL
+  enrollment pengganti, job FAILED authority_denied).
+
+| Field | Current state / pointer |
+|---|---|
+| Active task | **[ID0020 PA002+PA003](../task/0020-job-lifecycle-authority_done.md)** — **done / pending review** (koreksi R6); task0010 accepted/integrated |
+| Implementation / tested SHA | **`6ba52c720f43dd6ca1587e095f91b3b011f2a994`** (kode+tes+evidence) pada branch `session/2026-11-19-0020-r6-correction` (base `51158c0`); published candidate = head PR (report-only descendant) |
+| Execution report | [Koreksi R6](orchestrator/20261119T083000Z-0020-r6-correction.md) — temuan→perubahan→bukti + matriks A01–A09 + batas; [evidence](executor-evidence/20261119T083000Z-0020-r6-correction/) 18 check |
+| Probe controller lock-wait | **6/6 PASS** pada koreksi R6 (review R5: 4 assertion FAIL / 2 kontrol PASS) — [log](executor-evidence/20261119T083000Z-0020-r6-correction/controller-lock-wait-probe.log) |
+| Probe beku R1–R4 (FROZEN) | **28/28 PASS tanpa pelemahan** + regresi controller terminal-lease **2/2 PASS** pada DB split-role migrator-owned, runtime `mtx_app` NOSUPERUSER/NOBYPASSRLS FORCE RLS, PG17.4 |
+| Regresi R3/R4/R5 + R6 baru | **31/31 PASS** (7+8+16) + **15 regresi R6 baru PASS** (failing-before BASE `51158c0`: 11 FAIL / 4 kontrol PASS identik temuan controller) |
+| Suite penuh | Backend **629 passed/1 skip/3 warnings** (baseline 614 + 15 R6); `check`/`makemigrations --check`/`docs` PASS; tanpa migration baru |
+| Next actor | **controller_reviewer** |
+| Exact next action | Review exact implementation/tested SHA koreksi R6: ulang probe lock-wait 6/6 + 28 probe beku + 18 regresi R5 + 15 regresi R6 tanpa pelemahan + suite penuh; nilai matriks A01–A09 dan batas §5 laporan; verdict pada ID0020 (accepted ⇒ siapkan task dependent; changes_requested ⇒ buka ID sama). |
+| Dependency / Beta | Task0030 ineligible hingga review. Production Beta **NOT_READY**. Perangkat/CHR/GNS3, RADIUS daemon, browser E2E, systemd, installer/upgrade/restore host, mixed-version live upgrade, liveness lintas-host/namespace, kapasitas NOT_RUN. Perubahan tidak menyentuh `apps/`. |
+
+`_done`/CI hijau bukan acceptance, merge, release tag, deployment atau
+aktivasi fitur. Entry tetap [task/0000-start-here.md](../task/0000-start-here.md).
+
+## Histori handoff
+
+### Keputusan controller R5 task 0020, 19 November 2026 WIB
 
 **Task 0020 kembali `ready / changes_requested`.** Controller mereview
 exact `3301c2940dbfa9293ae52b8d8479b2050c16ebef`. Seluruh 48 tes yang diserahkan lulus. Empat assertion
@@ -16,8 +84,6 @@ kunci. Keputusan lengkap dan acceptance koreksi ada di
 | Temuan aktif | REV-1711-01 lease watchdog dan commit enrollment, REV-1811-02 settlement, REV-1711-04 keterikatan bukti readback, REV-1711-05 authority unit release/replace. |
 | Next actor / action | **coding_agent**. Fetch branch keputusan, koreksi temuan pada ID0020, jalankan seluruh probe dan serahkan SHA baru dengan evidence serta CI. |
 | Dependency / Beta | 0010 accepted/integrated. Task0030 menunggu acceptance 0020. Production Beta **NOT_READY**. Installer/upgrade/restore, topologi, systemd, RADIUS/CHR/GNS3, pilot dan kapasitas mengikuti gate terpisah. |
-
-## Histori handoff
 
 ### Penyerahan dan integrasi executor R5 — 18 November 2026 WIB
 

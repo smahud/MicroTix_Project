@@ -1,8 +1,37 @@
 # MicroTix — checkpoint kemajuan
 
-Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-19 (Asia/Jakarta), keputusan controller atas koreksi R5 task 0020.
+Rekam jejak eksekusi agent per IMPLEMENTATION_PLAN.md §2.5. Terakhir diperbarui: 2026-11-19 (Asia/Jakarta), executor menyerahkan koreksi R6 task 0020.
 
-## Checkpoint 2026-11-19 WIB — keputusan controller R5 task 0020
+## Checkpoint 2026-11-19 WIB — integrasi PR #39 + executor menyerahkan koreksi R6 task0020 (done/pending review)
+
+Awal sesi: PR #39 (decision records review R5, head `b32203a`) di-merge ke
+main atas wewenang pemilik (merge-all, PAT): merge **`51158c0`**, exact-main
+CI [run44366479593](https://github.com/smahud/MicroTix_Project/actions/runs/44366479593)
+backend/frontend/docs 3/3 success; 0 unmerged branch/0 PR terbuka.
+
+Executor menutup empat residual PARTIAL controller (REV-1711-01/04/05 +
+REV-1811-02, [keputusan R5](../report/controller/20261118T172344Z-0020-r5-correction-review.md))
+pada ID0020 di atas main `51158c0`, branch `session/2026-11-19-0020-r6-correction`:
+pola **lock-first** seluruh fence worker (watchdog/heartbeat/progress/
+transisi/terminal/result commit menilai expiry SEGAR pasca-lock), settlement
+step-0 lock baris job, kunci referensial tenant (`FOR KEY SHARE`) di dalam
+unit efek sebelum fence akhir (menutup tunggu FK DEFERRABLE di COMMIT),
+readback negatif terikat urutan bukti stop→observasi + epoch
+(`readback_observed_at`; pra-stop/tanpa-receipt fail-closed), dan guard
+authority TERKUNCI pada batas efek `router_release`/`router_replace`.
+
+Bukti: probe controller lock-wait **6/6 PASS** (review R5: 4 FAIL) +
+**28/28 probe beku R1–R4** + regresi controller terminal-lease 2/2 + regresi
+R3/R4/R5 **31/31** + **15 regresi R6 baru** (failing-before BASE `51158c0`:
+11 FAIL/4 kontrol) + suite **629 passed/1 skip** + check/makemigrations/docs
+PASS; PostgreSQL 17.4 split-role migrator-owned, `mtx_app`
+NOBYPASSRLS/FORCE RLS; tanpa migration baru. [Laporan R6](../report/orchestrator/20261119T083000Z-0020-r6-correction.md) ·
+[Evidence](../report/executor-evidence/20261119T083000Z-0020-r6-correction/).
+Task0020 **done/pending review** pada [packet `_done`](../task/0020-job-lifecycle-authority_done.md);
+next actor **controller_reviewer**. Task0030 menunggu acceptance 0020.
+Production Beta **NOT_READY**.
+
+## Checkpoint 2026-11-19 WIB — keputusan controller R5 task 0020 (histori, ditindaklanjuti R6)
 
 **Changes requested** pada exact `3301c2940dbfa9293ae52b8d8479b2050c16ebef`, aplikasi setara main
 `0616a80` dan kandidat PR #38. CI backend, frontend dan docs lulus.
@@ -12,9 +41,8 @@ tambahan gagal untuk lease yang terlewati saat lock wait pada settlement,
 watchdog dan commit enrollment. [Laporan](../report/controller/20261118T172344Z-0020-r5-correction-review.md) ·
 [Bukti runtime](../report/controller-evidence/20261118T172344Z-0020-r5-correction/runtime.md).
 
-Task0020 kembali **ready** pada [packet yang sama](../task/0020-job-lifecycle-authority.md).
-Coding agent mengambil ref `review/0020-r5-correction-20261118-1723`, mengoreksi empat finding
-dan menyerahkan tested SHA baru dengan bukti. Task0030 menunggu acceptance
+Task0020 kembali **ready** pada packet yang sama (histori; koreksi R6 di atas
+menindaklanjuti). Task0030 menunggu acceptance
 0020. Production Beta **NOT_READY**.
 
 ## Checkpoint 2026-11-18 ~19:1x WIB — integrasi merge koreksi R5 ke main (wewenang pemilik)
