@@ -1275,7 +1275,7 @@ def finalize_verification(
                 else "TLS API-SSL tercapai via tunnel SSTP (sesi PPP nyata); login API + pin menunggu skrip v2 lab G1"
             ),
         }
-    from django.db import transaction
+    from django.db import connection, transaction
 
     from domains.common.tenant_context import tenant_scope
 
@@ -1309,6 +1309,30 @@ def finalize_verification(
                     retryable=False,
                     message="enrollment sudah difinalisasi oleh worker konkuren",
                 )
+            # REV-1711-01 (R6): FK Router→Tenant adalah DEFERRABLE INITIALLY
+            # DEFERRED (default Django di PostgreSQL) — pemeriksaan
+            # referensial terjadi pada COMMIT dan dapat MENUNGGU kunci baris
+            # tenant yang dipegang transaksi lain (mis. penomoran billing
+            # memakai SELECT FOR UPDATE baris tenant). Tunggu itu terjadi
+            # SETELAH guard lease terakhir → lease bisa habis selama menunggu
+            # dan efek tetap commit (temuan controller R6). Selesaikan
+            # akuisisi kunci referensial DI SINI — SEBELUM seluruh tulisan
+            # dan fence akhir (authority terkunci + commit_guard): seluruh
+            # tunggu yang mungkin selesai lebih dulu, lalu expiry divalidasi
+            # segar pada fence terakhir. FOR KEY SHARE = mode minimal yang
+            # dipakai validasi FK; pemilik tenant tetap bisa memperbarui
+            # kolom non-kunci.
+            with connection.cursor() as cur:
+                cur.execute(
+                    "SELECT 1 FROM tenancy_tenant WHERE id = %s FOR KEY SHARE",
+                    [str(enrollment.tenant_id)],
+                )
+                if cur.fetchone() is None:
+                    raise JobError(
+                        code="enrollment_state",
+                        retryable=False,
+                        message="tenant enrollment tidak ditemukan",
+                    )
             # REV-1711-05 (R3): kewenangan DIBACA SEGAR DI BAWAH kunci baris
             # enrollment yang berpotensi memblokir lama. Pemeriksaan
             # pra-lock (entry unit) saja tidak membuktikan kewenangan masih

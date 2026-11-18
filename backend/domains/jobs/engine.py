@@ -293,19 +293,35 @@ class JobContext:
         # lease kedaluwarsa berarti kepemilikan hilang (watchdog bersyarat R2
         # sudah menolaknya; jalur progress/heartbeat tidak boleh menghidupkan
         # kembali lease yang sudah mati tanpa menunggu reconciler).
-        rows = Job.objects.filter(
-            id=self.job.id,
-            lease_token=self.job.lease_token,
-            lease_epoch=self.job.lease_epoch,
-            lease_expires_at__gt=timezone.now(),
-        ).exclude(state__in=TERMINAL_STATES).update(**fields)
-        owned = rows > 0
-        if not owned:
-            self.lost = True
-            raise OwnershipLost(
-                f"job {self.job.id}: kepemilikan hilang (lease/state berubah atau lease kedaluwarsa) — efek dihentikan"
+        # REV-1711-01 (R6): expiry dinilai SEGAR SETELAH akuisisi kunci baris.
+        # UPDATE lama mengevaluasi parameter waktu SEBELUM menunggu lock;
+        # PostgreSQL memakai nilai itu ketika lock akhirnya diperoleh, sehingga
+        # lease yang habis SELAMA tunggu tetap lolos filter basi. Kunci baris
+        # dulu (SELECT ... FOR UPDATE — tunggu terjadi di sini), lalu validasi
+        # expiry dengan waktu nyata PASCA-lock, baru tulis.
+        with transaction.atomic():
+            locked = (
+                Job.objects.select_for_update()
+                .filter(
+                    id=self.job.id,
+                    lease_token=self.job.lease_token,
+                    lease_epoch=self.job.lease_epoch,
+                )
+                .exclude(state__in=TERMINAL_STATES)
+                .first()
             )
-        return owned
+            owned = (
+                locked is not None
+                and locked.lease_expires_at is not None
+                and locked.lease_expires_at > timezone.now()
+            )
+            if not owned:
+                self.lost = True
+                raise OwnershipLost(
+                    f"job {self.job.id}: kepemilikan hilang (lease/state berubah atau lease kedaluwarsa) — efek dihentikan"
+                )
+            Job.objects.filter(id=locked.id).update(**fields)
+        return True
 
     def heartbeat(self) -> bool:
         """Perpanjang lease (transaksi pendek sendiri — terlihat observer).
@@ -567,15 +583,35 @@ def _fenced_update(job: Job, expected_states, **fields) -> bool:
     Terminal tidak pernah tertimpa; lease kedaluwarsa = kepemilikan hilang
     untuk seluruh batas transisi/terminal worker — termasuk sukses terminal
     — tanpa menunggu reconciler dijadwalkan (watchdog bersyarat R2 hanya
-    menutup jalur pembaruannya sendiri)."""
-    rows = Job.objects.filter(
-        id=job.id,
-        lease_token=job.lease_token,
-        lease_epoch=job.lease_epoch,
-        state__in=expected_states,
-        lease_expires_at__gt=dj_timezone.now(),
-    ).exclude(state__in=TERMINAL_STATES).update(**fields)
-    return rows > 0
+    menutup jalur pembaruannya sendiri).
+
+    REV-1711-01 (R6): kunci baris job TERLEBIH DAHULU (SELECT ... FOR UPDATE),
+    lalu validasi token+epoch+state+expiry dengan waktu SEGAR PASCA-lock.
+    Filter UPDATE lama membekukan parameter waktu sebelum tunggu lock;
+    PostgreSQL mengevaluasi kondisi dengan nilai basi itu ketika lock
+    diperoleh, sehingga lease yang kedaluwarsa SELAMA tunggu tetap lolos.
+    Dengan kunci di tangan tidak ada jendela antar-pemeriksaan dan tulisan.
+    """
+    with transaction.atomic():
+        locked = (
+            Job.objects.select_for_update()
+            .filter(
+                id=job.id,
+                lease_token=job.lease_token,
+                lease_epoch=job.lease_epoch,
+                state__in=expected_states,
+            )
+            .exclude(state__in=TERMINAL_STATES)
+            .first()
+        )
+        if (
+            locked is None
+            or locked.lease_expires_at is None
+            or locked.lease_expires_at <= dj_timezone.now()
+        ):
+            return False
+        Job.objects.filter(id=locked.id).update(**fields)
+        return True
 
 
 def transition_claimed(job: Job, new_state: str, **fields) -> None:
@@ -785,26 +821,42 @@ def _heartbeat_watchdog(ctx: JobContext, stop: threading.Event, done: threading.
     WHERE). 0 baris (hilang kepemilikan/lease habis) atau kegagalan koneksi →
     berhenti jujur; thread tidak menahan transaksi/lock melintasi I/O.
     Koneksi thread-nya sendiri ditutup saat keluar (tidak ada sesi menggantung).
+
+    REV-1711-01 (R6): kunci baris job DULU (SELECT ... FOR UPDATE), lalu nilai
+    expiry dengan waktu SEGAR PASCA-lock. UPDATE lama mengevaluasi parameter
+    waktu sebelum menunggu lock job; nilai basi itu dipakai ketika lock
+    diperoleh, sehingga lease yang habis SELAMA tunggu dihidupkan kembali
+    oleh watchdog. Dengan urutan lock→cek-segar→tulis, lease kedaluwarsa
+    tidak pernah diperpanjang (expiry dipertahankan untuk reconciler).
     """
-    from django.db import connections
+    from django.db import connections, transaction as db_transaction
 
     try:
         while not stop.wait(HEARTBEAT_S):
             try:
-                rows = (
-                    Job.objects.filter(
-                        id=ctx.job.id,
-                        lease_token=ctx.job.lease_token,
-                        lease_epoch=ctx.job.lease_epoch,
-                        lease_expires_at__gt=timezone.now(),
+                renewed = False
+                with db_transaction.atomic():
+                    locked = (
+                        Job.objects.select_for_update()
+                        .filter(
+                            id=ctx.job.id,
+                            lease_token=ctx.job.lease_token,
+                            lease_epoch=ctx.job.lease_epoch,
+                        )
+                        .exclude(state__in=TERMINAL_STATES)
+                        .first()
                     )
-                    .exclude(state__in=TERMINAL_STATES)
-                    .update(
-                        lease_expires_at=timezone.now()
-                        + timezone.timedelta(seconds=LEASE_S)
-                    )
-                )
-                if not rows:
+                    if (
+                        locked is not None
+                        and locked.lease_expires_at is not None
+                        and locked.lease_expires_at > timezone.now()
+                    ):
+                        Job.objects.filter(id=locked.id).update(
+                            lease_expires_at=timezone.now()
+                            + timezone.timedelta(seconds=LEASE_S)
+                        )
+                        renewed = True
+                if not renewed:
                     break
             except Exception:
                 break
@@ -1085,11 +1137,31 @@ def run_claimed(job: Job, *, stop_check: Callable[[], bool] | None = None) -> Jo
                                 error_code="verification_error", retryable=True)
 
         # --- hasil + terminal SATU transaksi tenant (result RLS + CAS state) ---
-        # CAS sungguhan di klausa WHERE (token+epoch+state) — bukan
+        # CAS sungguhan pada baris terkunci (token+epoch+state) — bukan
         # read-then-write — sehingga keputusan reconcile/resolve/pemilik baru
         # tidak dapat ditimpa window TOCTOU (REV-2011-02, A01).
+        # REV-1711-01 (R6): kunci baris job DULU, lalu nilai expiry SEGAR
+        # PASCA-lock — filter UPDATE lama membekukan waktu sebelum tunggu
+        # lock sehingga lease yang habis selama tunggu tetap menerima
+        # sukses terminal.
         with tenant_scope(job.tenant_id):
             with transaction.atomic():
+                locked = (
+                    Job.objects.select_for_update()
+                    .filter(
+                        id=job.id,
+                        lease_token=job.lease_token,
+                        lease_epoch=job.lease_epoch,
+                        state=JobState.VERIFYING,
+                    )
+                    .first()
+                )
+                if (
+                    locked is None
+                    or locked.lease_expires_at is None
+                    or locked.lease_expires_at <= dj_timezone.now()
+                ):
+                    raise OwnershipLost(f"job {job.id}: result commit")
                 updates: dict[str, Any] = {
                     "state": JobState.SUCCEEDED,
                     "effect_state": EffectState.CONFIRMED,
@@ -1097,20 +1169,9 @@ def run_claimed(job: Job, *, stop_check: Callable[[], bool] | None = None) -> Jo
                     "retryable": False,
                     "updated_at": dj_timezone.now(),
                 }
-                current_items = Job.objects.filter(id=job.id).values_list(
-                    "items_total", "items_done"
-                ).first()
-                if current_items and current_items[0] is not None and current_items[1] is None:
-                    updates["items_done"] = current_items[0]
-                rows = Job.objects.filter(
-                    id=job.id,
-                    lease_token=job.lease_token,
-                    lease_epoch=job.lease_epoch,
-                    state=JobState.VERIFYING,
-                    lease_expires_at__gt=dj_timezone.now(),  # R3 REV-1711-01: sukses terminal wajib lease berlaku
-                ).update(**updates)
-                if not rows:
-                    raise OwnershipLost(f"job {job.id}: result commit")
+                if locked.items_total is not None and locked.items_done is None:
+                    updates["items_done"] = locked.items_total
+                Job.objects.filter(id=locked.id).update(**updates)
                 detail.result = result
                 detail.save(update_fields=["result"])
         job.refresh_from_db()
@@ -1215,23 +1276,48 @@ def _retry_no_effect(job: Job, exc: JobError) -> Job:
     executing→uncertain (klaim jujur sesaat: engine tidak tahu) lalu
     uncertain→retry_wait dengan "bukti belum diterapkan" = deklarasi
     no_effect handler. Backoff/attempt mengikuti kebijakan retry lama.
+
+    REV-1811-02 (R6): step-0 mengunci baris job (SELECT ... FOR UPDATE)
+    TERLEBIH DAHULU dan menilai expiry dengan waktu SEGAR PASCA-lock.
+    Step-1 UPDATE lama mengevaluasi parameter waktu yang diambil SEBELUM
+    menunggu lock baris job; nilai basi itu dipakai PostgreSQL ketika lock
+    diperoleh, sehingga lease yang kedaluwarsa SELAMA tunggu tetap lolos
+    dan settlement berjalan (FAILED/RETRY_WAIT palsu). Dengan kunci di
+    tangan: lease yang habis selama tunggu → OwnershipLost — row tetap
+    EXECUTING dengan token/epoch awal tanpa error sampai reconciler.
     """
-    now = dj_timezone.now()
     final_attempt = job.attempt >= job.max_attempts
     with transaction.atomic():
+        # Step-0: akuisisi kunci baris job — seluruh tunggu lock terjadi di
+        # sini, SEBELUM penilaian expiry. Filter identitas (token+epoch+state)
+        # dievaluasi ulang terhadap baris terbaru saat lock diperoleh.
+        locked = (
+            Job.objects.select_for_update()
+            .filter(
+                id=job.id,
+                lease_token=job.lease_token,
+                lease_epoch=job.lease_epoch,
+                state=JobState.EXECUTING,
+            )
+            .first()
+        )
+        if (
+            locked is None
+            or locked.lease_expires_at is None
+            or locked.lease_expires_at <= dj_timezone.now()
+        ):
+            raise OwnershipLost(
+                f"job {job.id}: no-effect step-0 (lease kedaluwarsa/kepemilikan berubah) — "
+                "settlement menunggu reconciler"
+            )
+        now = dj_timezone.now()
         # Step-1: EXECUTING → UNCERTAIN dengan bukti kepemilikan attempt ini
         # (CAS token+epoch) DAN lease MASIH BERLAKU. REV-1811-02 (R5): worker
         # yang kehilangan waktu lease (kedaluwarsa tanpa renewal efektif)
         # tidak boleh memulai settlement — row tetap executing dengan
         # token/epoch awal sampai reconciler memutuskan (OwnershipLost →
         # run_claimed mengembalikan job tanpa menulis apa pun).
-        rows = Job.objects.filter(
-            id=job.id,
-            lease_token=job.lease_token,
-            lease_epoch=job.lease_epoch,
-            state=JobState.EXECUTING,
-            lease_expires_at__gt=now,
-        ).update(
+        Job.objects.filter(id=locked.id).update(
             state=JobState.UNCERTAIN,
             error_code=exc.code,
             retryable=True,
@@ -1239,14 +1325,9 @@ def _retry_no_effect(job: Job, exc: JobError) -> Job:
             lease_expires_at=None,
             updated_at=now,
         )
-        if not rows:
-            raise OwnershipLost(
-                f"job {job.id}: no-effect step-1 (lease kedaluwarsa/kepemilikan berubah) — "
-                "settlement menunggu reconciler"
-            )
         # Step-2 dalam SATU transaksi dengan step-1, terikat EPOCH attempt yang
         # sama: bentuk uncertain+lease-NULL dari attempt lain (epoch berbeda)
-        # tidak dapat ditimpa; row lock UPDATE step-1 meng-serialisasi penulis
+        # tidak dapat ditimpa; row lock step-0 meng-serialisasi penulis
         # lain hingga commit unit ini — tidak ada jendela antar-step.
         if not final_attempt:
             backoff = min(BACKOFF_CAP_S, 2 ** job.attempt * 5)
@@ -1264,11 +1345,11 @@ def _retry_no_effect(job: Job, exc: JobError) -> Job:
             )
         else:
             # Attempt final (attempt == max_attempts): transisi terminal
-            # UNCERTAIN → FAILED. Step-1 di atas sudah membuktikan kepemilikan
-            # attempt ini (CAS token+epoch+lease valid) lalu melepas lease
-            # sesuai kontrak uncertain — CAS umum _fenced_update yang
-            # mensyaratkan lease masih berlaku mustahil dipenuhi di jalur ini
-            # (sandaran REV-1811-02 R4). CAS koheren jalur ini: expected
+            # UNCERTAIN → FAILED. Step-0 di atas sudah membuktikan kepemilikan
+            # attempt ini (token+epoch+lease valid di bawah kunci) lalu
+            # melepas lease sesuai kontrak uncertain — CAS umum _fenced_update
+            # yang mensyaratkan lease masih berlaku mustahil dipenuhi di jalur
+            # ini (sandaran REV-1811-02 R4). CAS koheren jalur ini: expected
             # UNCERTAIN + lease TELEPAS + EPOCH attempt yang sama; penulis lain
             # yang memindahkan row membuat filter kalah (0 baris) →
             # OwnershipLost, bukan menimpa state pihak lain.
@@ -1392,7 +1473,10 @@ def reconcile_expired_leases() -> int:
     return count
 
 
-def resolve_uncertain(job: Job, *, applied: bool | None, error_code: str | None = None) -> Job:
+def resolve_uncertain(
+    job: Job, *, applied: bool | None, error_code: str | None = None,
+    readback_observed_at=None,
+) -> Job:
     """Readback uncertain (ops): terbukti belum diterapkan → antrian ulang
     (dengan fence penulis lama); terbukti diterapkan → verify TANPA resend;
     tidak diketahui → recovery_required (tetap tertahan, bukan blind retry).
@@ -1407,6 +1491,23 @@ def resolve_uncertain(job: Job, *, applied: bool | None, error_code: str | None 
     router bebas (penulis hidup lintas sesi masih memegang router — jalur
     R1 tetap berlaku). Status yang tidak dapat diverifikasi → ditolak
     (unknown tetap tertahan).
+
+    REV-1711-04 (R6) — urutan bukti readback negatif: stop proof yang
+    diambil SAAT resolve tidak mengikat KAPAN observasi readback dibuat;
+    observasi PRA-STOP bisa diterima setelah receipt mendarat pada epoch
+    yang sama (kirim in-flight mendarat SETELAH observasi). Kontrak baru:
+    - ``readback_observed_at`` (timezone-aware) = attestasi waktu observasi
+      readback negatif dilakukan; wajib >= receipt ``writer_ended_at``
+      penulis attempt (epoch sama, dibaca segar). Observasi pra-stop
+      DITOLAK (``readback_before_stop``) — ulangi readback setelah penulis
+      terbukti berhenti.
+    - Attestasi eksplisit TANPA receipt (bukti liveness saja) DITOLAK
+      (``readback_unbound``): waktu berhenti tak terikat — gunakan receipt
+      valid atau tahan job.
+    - Tanpa attestasi, waktu observasi default = saat panggilan resolve,
+      SETELAH bukti stop diperiksa di dalam panggilan ini (urutan
+      proof→observasi tetap terjalin untuk pemanggil yang mengamati saat
+      itu juga; jalur lama suite tidak berubah makna).
 
     applied=True (REV-1711-04 R5): bukti penulis yang sama diberlakukan —
     readback positif membuktikan efek SUDAH terlihat, tetapi TIDAK
@@ -1443,6 +1544,38 @@ def resolve_uncertain(job: Job, *, applied: bool | None, error_code: str | None 
             raise ValueError(
                 f"{reason}: penulis attempt uncertain tidak terbukti berhenti "
                 "(receipt/liveness lintas proses; readback not-applied ditolak)"
+            )
+        # REV-1711-04 (R6): ikat urutan bukti stop → observasi readback
+        # negatif pada job/epoch yang sama. Receipt dibaca segar dari baris
+        # job (CAS step bawah tetap mengikat epoch snapshot).
+        observed_at = readback_observed_at
+        if observed_at is not None and timezone.is_naive(observed_at):
+            raise ValueError(
+                "readback_unordered: readback_observed_at wajib timezone-aware "
+                "(urutan stop→observasi tidak dapat dinilai)"
+            )
+        receipt_at = Job.objects.filter(id=job.id).values_list(
+            "writer_ended_at", flat=True
+        ).first()
+        if observed_at is None:
+            # Default kontrak: observasi diattestasi terjadi SAAT panggilan
+            # ini, setelah bukti stop di atas diperiksa (urutan terjalin).
+            observed_at = now
+        elif receipt_at is None:
+            # Attestasi eksplisit tanpa receipt: waktu berhenti penulis tidak
+            # terikat — urutan tidak dapat ditetapkan → tahan (fail-closed;
+            # "gunakan receipt yang valid atau tahan job").
+            raise ValueError(
+                "readback_unbound: receipt writer_ended_at absen — urutan "
+                "stop→observasi tidak dapat ditetapkan; gunakan receipt valid "
+                "atau tahan job"
+            )
+        if receipt_at is not None and observed_at < receipt_at:
+            raise ValueError(
+                "readback_before_stop: observasi readback negatif PRA-STOP "
+                "tidak dapat membuka antrian ulang (kirim in-flight dapat "
+                "mendarat setelah observasi) — ulangi readback SETELAH penulis "
+                "terbukti berhenti"
             )
         if job.router_id is not None and not acquire_router_sender(job.router_id):
             # Readback "belum diterapkan" tidak dapat dipercaya selama penulis
@@ -1555,21 +1688,31 @@ def _verify_only(job: Job) -> Job:
                             error_code="verification_error", retryable=True)
     with tenant_scope(job.tenant_id):
         with transaction.atomic():
-            rows = Job.objects.filter(
-                id=job.id,
-                lease_token=job.lease_token,
-                lease_epoch=job.lease_epoch,
-                state=JobState.VERIFYING,
-                lease_expires_at__gt=dj_timezone.now(),  # R3 REV-1711-01: lease berlaku saat commit
-            ).update(
+            # REV-1711-01 (R6): kunci baris job DULU + expiry dinilai SEGAR
+            # PASCA-lock (pola yang sama dengan result commit run_claimed).
+            locked = (
+                Job.objects.select_for_update()
+                .filter(
+                    id=job.id,
+                    lease_token=job.lease_token,
+                    lease_epoch=job.lease_epoch,
+                    state=JobState.VERIFYING,
+                )
+                .first()
+            )
+            if (
+                locked is None
+                or locked.lease_expires_at is None
+                or locked.lease_expires_at <= dj_timezone.now()
+            ):
+                raise OwnershipLost(f"job {job.id}: verify-only commit")
+            Job.objects.filter(id=locked.id).update(
                 state=JobState.SUCCEEDED,
                 effect_state=EffectState.CONFIRMED,
                 phase_label_code=None,
                 retryable=False,
                 updated_at=dj_timezone.now(),
             )
-            if not rows:
-                raise OwnershipLost(f"job {job.id}: verify-only commit")
             detail.result = result
             detail.save(update_fields=["result"])
     job.refresh_from_db()
