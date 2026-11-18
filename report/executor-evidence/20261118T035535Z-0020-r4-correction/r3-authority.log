@@ -1,0 +1,5 @@
+{"credential": "pending", "enrollment": "verifying", "error": "authority_denied", "membership_revoked": true, "postgres_observed_lock_wait": true, "probe": "enrollment-lock-wait-authority", "protocol": "wireguard", "routers_created": 0, "separate_connections": true, "state": "failed"}
+.{"credential": "pending", "enrollment": "verifying", "error": "authority_denied", "membership_revoked": true, "postgres_observed_lock_wait": true, "probe": "enrollment-lock-wait-authority", "protocol": "sstp", "routers_created": 0, "separate_connections": true, "state": "failed"}
+.{"outcomes": {"0": {"error": null, "state": "succeeded"}, "1": {"error": "enrollment_state", "state": "failed"}}, "probe": "duplicate-finalize", "routers_created": 1}
+.
+3 passed in 1.64s

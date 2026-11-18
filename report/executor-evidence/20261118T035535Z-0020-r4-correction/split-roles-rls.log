@@ -1,0 +1,5 @@
+                                                       version                                                       | current_user | rolsuper | rolbypassrls 
+---------------------------------------------------------------------------------------------------------------------+--------------+----------+--------------
+ PostgreSQL 17.12 (Debian 17.12-0+deb13u1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit | mtx_app      | f        | f
+(1 row)
+

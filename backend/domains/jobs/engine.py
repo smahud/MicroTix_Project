@@ -20,6 +20,8 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import os
+import socket
 import threading
 import uuid
 from contextlib import contextmanager
@@ -63,12 +65,10 @@ _SENDER_LOCK_NS = 0x6D745253  # 'mtRS'
 # adapter/penulis lama bisa masih hidup di luar DB dan mendaratkan kirimnya
 # SETELAH readback negatif diamati. Lock yang terlepas + epoch baru saja
 # TIDAK membedakan "penulis lama masih berjalan" dari "penulis sudah
-# selesai". Satu-satunya bukti yang tersedia bagi engine adalah attempt
-# run_claimed itu sendiri: selama masih berjalan di proses ini (handler
-# belum kembali/beres), resolve_uncertain(applied=False) menolak membuka
-# kirim ulang pada job ID yang sama. Bukti lintas proses tetap terbatas
-# (advisory lock sesi hidup menutup jalur itu); pembatasan dicatat jujur di
-# report — bukan klaim penulis lama aman lintas proses.
+# selesai". Registry ini menutup kasus attempt yang masih berjalan DI PROSES
+# INI. Bukti lintas proses (R4): kolom writer_* pada Job — identitas proses
+# ditulis saat attempt memasuki EXECUTING, receipt writer_ended_at ditulis
+# di finally run_claimed; resolve memakai receipt / liveness /proc.
 _INFLIGHT_ATTEMPTS: set[str] = set()
 _INFLIGHT_LOCK = threading.Lock()
 
@@ -77,6 +77,114 @@ def _attempt_inflight(job_id) -> bool:
     """Attempt run_claimed untuk job ini masih berjalan di proses ini."""
     with _INFLIGHT_LOCK:
         return str(job_id) in _INFLIGHT_ATTEMPTS
+
+
+def _proc_start_ticks(pid: int) -> tuple[int | None, bool | None]:
+    """(starttime /proc/<pid>/stat, alive) — identitas proses anti PID-reuse.
+
+    - (ticks, True): proses ada dan starttime terbaca.
+    - (None, False): /proc/<pid> TIDAK ADA → proses pasti sudah berhenti.
+    - (None, None): proses mungkin ada tapi stat tidak terbaca/diparse
+      (non-Linux, izin) → identitas tidak dapat ditentukan (unknown).
+    Field 22 stat (starttime, clock ticks sejak boot) — comm bisa berisi
+    spasi/kurung, jadi field diambil SETELAH karakter ')' terakhir.
+    """
+    try:
+        with open(f"/proc/{int(pid)}/stat", "rb") as fh:
+            data = fh.read()
+    except FileNotFoundError:
+        return None, False  # entri /proc hilang = proses mati (bukan unknown)
+    except Exception:
+        return None, None
+    try:
+        rest = data[data.rindex(b")") + 2:].split()
+        return int(rest[19]), True  # field 22 keseluruhan = pid+comm+19 → index 19
+    except Exception:
+        return None, None
+
+
+def _writer_identity() -> dict[str, Any]:
+    """Identitas penulis attempt ini (proses OS saat ini)."""
+    pid = os.getpid()
+    start_ticks, _alive = _proc_start_ticks(pid)
+    return {
+        "writer_pid": pid,
+        "writer_host": socket.gethostname(),
+        "writer_start_ticks": start_ticks,
+    }
+
+
+def _write_attempt_receipt(job_id, attempt_epoch: int) -> None:
+    """Receipt: attempt run_claimed selesai sepenuhnya (semua I/O handler
+    sudah kembali) — bukti penulis attempt ini berhenti menulis (R4).
+
+    CAS pada lease_epoch attempt: hanya receipt untuk attempt YANG SAMA;
+    attempt baru (epoch naik) tidak tertimpa receipt basi. Kegagalan tulis
+    (sesi DB mati) ditelan — bukti hilang berarti status penulis kembali
+    unknown dan resolve tetap fail-closed lewat cek liveness.
+    """
+    try:
+        with transaction.atomic():
+            Job.objects.filter(
+                id=job_id,
+                lease_epoch=attempt_epoch,
+                writer_ended_at=None,
+            ).update(writer_ended_at=timezone.now())
+    except Exception:
+        logger.debug("writer receipt job %s gagal ditulis (sesi DB mati?)", job_id, exc_info=True)
+
+
+def _writer_verifiably_stopped(job: Job) -> tuple[bool, str]:
+    """Bukti penulis attempt yang menghasilkan uncertain telah berhenti.
+
+    Urutan bukti (kuat → lemah):
+    1. attempt masih in-flight DI PROSES INI → pasti belum selesai (False).
+    2. receipt writer_ended_at untuk attempt terakhir → attempt selesai
+       sepenuhnya dan tidak menulis lagi (True).
+    3. penulis = proses INI (registry sudah tidak in-flight) → attempt
+       selesai di proses ini (True) — cadangan bila receipt gagal ditulis.
+    4. penulis proses LAIN pada host yang sama → liveness /proc + starttime:
+       proses mati / PID direuse → penulis terverifikasi berhenti (True);
+       proses masih hidup → (False, writer_active).
+    5. penulis host lain / identitas tidak terbaca / baris lama tanpa
+       identitas → status TIDAK DIKETAHUI → (False, writer_unverifiable)
+       — fail-closed, tetap ditahan (A04: "unknown tetap tertahan").
+    """
+    if _attempt_inflight(job.id):
+        return False, "writer_active"
+    fresh = Job.objects.filter(id=job.id).values_list(
+        "writer_pid", "writer_host", "writer_start_ticks", "writer_ended_at",
+    ).first()
+    if fresh is None:
+        return False, "writer_unverifiable"
+    writer_pid, writer_host, start_ticks, ended_at = fresh
+    if ended_at is not None:
+        return True, "attempt_completed"
+    if writer_pid is None:
+        # Tidak pernah ada identitas penulis attempt (baris pra-migrasi /
+        # uncertain sintetis tanpa EXECUTING) → unknown, ditahan.
+        return False, "writer_unverifiable"
+    my_host = socket.gethostname()
+    if writer_host != my_host:
+        return False, "writer_unverifiable"
+    if int(writer_pid) == os.getpid():
+        return True, "same_process_completed"
+    # Proses lain di host sama: bukti liveness nyata dari OS.
+    observed, alive = _proc_start_ticks(int(writer_pid))
+    if alive is False:
+        # /proc/<pid> tidak ada → proses penulis pasti sudah berhenti.
+        return True, "process_terminated"
+    if observed is None or start_ticks is None:
+        # Stat tidak terbaca/diparse atau identitas awal tidak terekam →
+        # tidak bisa membedakan hidup/mati (termasuk kemungkinan PID reuse)
+        # → unknown, ditahan (fail-closed).
+        return False, "writer_unverifiable"
+    if observed == start_ticks:
+        # /proc/<pid> masih ada DAN starttime cocok → proses yang sama masih hidup.
+        return False, "writer_active"
+    # starttime berbeda (PID direuse proses lain) → proses penulis asli
+    # sudah berhenti.
+    return True, "process_terminated"
 
 
 class JobError(Exception):
@@ -529,7 +637,9 @@ def _resolve_verify_actor(job: Job, payload: dict[str, Any]):
     return User.objects.filter(id=enrollment.created_by_id).first()
 
 
-def check_current_authority(job: Job, payload: dict[str, Any] | None = None) -> None:
+def check_current_authority(
+    job: Job, payload: dict[str, Any] | None = None, *, lock_membership: bool = False
+) -> None:
     """Periksa kewenangan AKTUAL dari DB segar sebelum efek (PA-003).
 
     - Aktor aktif + membership tenant tidak dicabut + izin operasi (metadata
@@ -541,6 +651,12 @@ def check_current_authority(job: Job, payload: dict[str, Any] | None = None) -> 
       (authority_unresolved) dengan jalur resume, bukan privilege diam-diam.
     - Worker TIDAK memeriksa sesi/reauth HTTP: menutup browser tidak
       membatalkan pekerjaan async yang sah (§5).
+    - ``lock_membership=True`` (REV-1711-05 R4): baca baris membership dengan
+      SELECT ... FOR UPDATE — HANYA untuk guard batas commit DI DALAM transaksi
+      unit efek: pencabutan yang berkompetisi ter-serialisasi terhadap commit
+      unit (kewenangan terbukti sah MELALUI commit), atau pencabutan sudah
+      ter-commit lebih dulu dan unit dibatalkan. Pemanggil di luar transaksi
+      tidak boleh memakai mode ini (Django menolak FOR UPDATE autocommit).
     """
     requirement = authority_requirement(job)
     with tenant_scope(job.tenant_id):
@@ -579,7 +695,12 @@ def check_current_authority(job: Job, payload: dict[str, Any] | None = None) -> 
                 message="Aktor tidak lagi aktif",
             )
 
-        membership = Membership.objects.filter(user=actor, tenant_id=job.tenant_id, revoked_at=None).first()
+        membership_qs = Membership.objects.filter(
+            user=actor, tenant_id=job.tenant_id, revoked_at=None
+        )
+        if lock_membership:
+            membership_qs = membership_qs.select_for_update()
+        membership = membership_qs.first()
         if membership is None:
             raise JobError(
                 code="authority_denied",
@@ -698,6 +819,9 @@ def run_claimed(job: Job, *, stop_check: Callable[[], bool] | None = None) -> Jo
     """
     handler = handler_for(job.kind)
     sender_router_id = None
+    # Identitas attempt ini untuk receipt penulis (REV-1711-04 R4): epoch
+    # attempt dipakai sebagai kunci CAS receipt di finally.
+    attempt_epoch = job.lease_epoch
     # REV-1711-04 (R3): attempt ini in-flight di proses ini dari awal sampai
     # finally — resolve_uncertain(applied=False) job yang sama ditolak
     # selama attempt masih berjalan (sesi DB mati ≠ penulis lama aman).
@@ -852,9 +976,13 @@ def run_claimed(job: Job, *, stop_check: Callable[[], bool] | None = None) -> Jo
 
         # --- execute: effect_state=maybe ATOMIK dengan entering executing ---
         # (mencegah false-cancel saat kirim outstanding; A03)
+        # REV-1711-04 (R4): identitas penulis attempt (OS pid/host/starttime)
+        # dipersist ATOMIK dengan entering executing — bukti lintas proses
+        # untuk resolve not-applied; receipt penyelesaian ditulis di finally.
         if not _fenced_update(
             job, [JobState.PREFLIGHT], state=JobState.EXECUTING,
             effect_state=EffectState.MAYBE, phase_label_code="executing", updated_at=dj_timezone.now(),
+            writer_ended_at=None, **_writer_identity(),
         ):
             raise OwnershipLost(f"job {job.id}: executing")
         job.refresh_from_db(fields=["state", "effect_state", "phase_label_code"])
@@ -960,6 +1088,11 @@ def run_claimed(job: Job, *, stop_check: Callable[[], bool] | None = None) -> Jo
         job.refresh_from_db()
         return job
     finally:
+        # REV-1711-04 (R4): receipt attempt selesai — attempt ini sudah tidak
+        # akan menulis/mengirim apa pun lagi (semua I/O handler kembali).
+        # Receipt gagal ditulis (sesi DB mati) = bukti hilang → resolve
+        # not-applied kembali fail-closed lewat cek liveness proses.
+        _write_attempt_receipt(job.id, attempt_epoch)
         # REV-1711-04 (R3): attempt ini selesai sepenuhnya (semua I/O handler
         # sudah kembali) — keluarkan dari registry in-flight proses INI.
         # Bukan bukti penulis aman lintas proses; registry hanya menahan
@@ -1091,9 +1224,33 @@ def _retry_no_effect(job: Job, exc: JobError) -> Job:
             except Exception:  # pragma: no cover - on_retry tidak boleh membalikkan state
                 logger.exception("job %s on_retry gagal (diabaikan)", job.id)
         return job
+    # Attempt final (attempt == max_attempts): transisi terminal UNCERTAIN →
+    # FAILED. Step-1 (di atas) sudah membuktikan kepemilikan attempt ini via
+    # CAS token+epoch SAAT MEMASUKI uncertain, lalu melepas lease sesuai
+    # kontrak uncertain (penulis tidak lagi memperbarui lease; reconciler /
+    # pemilik baru bergerak bebas). CAS terminal umum (_fenced_update) mensyaratkan
+    # lease MASIH berlaku — syarat itu mustahil dipenuhi pada jalur ini dan
+    # menyandarkan attempt no-effect terakhir di UNCERTAIN (REV-1811-02).
+    # CAS koheren untuk jalur ini: expected state UNCERTAIN + lease TELEPAS
+    # (lease_token NULL persis seperti yang ditulis step-1) — komponen fence:
+    # state machine (hanya jalur sah yang menulis UNCERTAIN+lease NULL),
+    # attempt sudah dikonsumsi (claim berikutnya menaikkan epoch), dan
+    # resolve/cancel/reconcile yang memindahkan job keluar UNCERTAIN membuat
+    # CAS ini kalah (0 baris) → OwnershipLost, bukan menimpa state pihak lain.
+    rows = Job.objects.filter(
+        id=job.id,
+        state=JobState.UNCERTAIN,
+        lease_token=None,
+    ).update(
+        state=JobState.FAILED,
+        error_code=exc.code,
+        retryable=True,
+        updated_at=dj_timezone.now(),
+    )
+    if not rows:
+        raise OwnershipLost(f"job {job.id}: no-effect terminal (state berubah) — attempt final tidak menimpa")
     job.refresh_from_db()
-    return _mark_fenced(job, [JobState.UNCERTAIN], JobState.FAILED,
-                        error_code=exc.code, retryable=True)
+    return job
 
 
 def _retry_or_fail(job: Job, exc: JobError, *, expected_states) -> Job:
@@ -1196,13 +1353,15 @@ def resolve_uncertain(job: Job, *, applied: bool | None, error_code: str | None 
     tidak diketahui → recovery_required (tetap tertahan, bukan blind retry).
 
     applied=False (bukti "belum diterapkan" hanya membuka antrian ulang bila
-    penulis lama terbukti aman): dua bukti dipakai — (1) attempt run_claimed
-    untuk job ID sama TIDAK masih berjalan di proses ini (REV-1711-04 R3:
-    sesi DB yang mati melepas advisory lock, tetapi adapter lama bisa masih
-    hidup dan mendaratkan kirimnya setelah readback negatif; reclaim job
-    sama dengan epoch baru tidak boleh membuka kirim kedua), dan (2) advisory
-    lock sesi pengirim router bebas (penulis hidup lintas sesi masih memegang
-    router — jalur R1 tetap berlaku).
+    penulis lama terbukti aman — REV-1711-04 R4, lintas proses):
+    (1) attempt run_claimed untuk job ID sama tidak masih berjalan di proses
+    ini; (2) penulis attempt yang menghasilkan uncertain TERBUKTI selesai
+    (receipt writer_ended_at) atau prosesnya TERBUKTI mati/berbeda-identitas
+    via /proc starttime — sesi DB mati melepas advisory lock tetapi TIDAK
+    membuktikan adapter lama berhenti; (3) advisory lock sesi pengirim
+    router bebas (penulis hidup lintas sesi masih memegang router — jalur
+    R1 tetap berlaku). Status yang tidak dapat diverifikasi → ditolak
+    (unknown tetap tertahan).
     """
     if job.state != JobState.UNCERTAIN:
         raise ValueError("Bukan uncertain")
@@ -1215,6 +1374,17 @@ def resolve_uncertain(job: Job, *, applied: bool | None, error_code: str | None 
             raise ValueError(
                 "writer_active: attempt job ini masih berjalan di proses "
                 "(sesi DB mati ≠ penulis lama aman; readback not-applied ditolak)"
+            )
+        # REV-1711-04 (R4): bukti lintas proses — registry proses ini saja
+        # dan advisory lock bebas TIDAK membedakan "penulis masih hidup di
+        # proses lain" dari "penulis selesai". Identitas penulis attempt
+        # dipersist saat EXECUTING + receipt penyelesaiannya; tanpa bukti
+        # (receipt/liveness/proses ini) resolve not-applied ditolak.
+        stopped, reason = _writer_verifiably_stopped(job)
+        if not stopped:
+            raise ValueError(
+                f"{reason}: penulis attempt uncertain tidak terbukti berhenti "
+                "(receipt/liveness lintas proses; readback not-applied ditolak)"
             )
         if job.router_id is not None and not acquire_router_sender(job.router_id):
             # Readback "belum diterapkan" tidak dapat dipercaya selama penulis

@@ -1,0 +1,5 @@
+{"case": "r2-guard-to-commit-race", "objects": 0, "snapshots": ["running"], "job": "uncertain", "outcomes": {"discovery": {"state": "uncertain"}}}
+.{"case": "r2-hold-to-sender-race", "sends": 1, "outcomes": {"predecessor": {"state": "uncertain"}, "successor": {"state": "retry_wait"}}, "first": "uncertain", "second": "retry_wait"}
+.{"case": "r2-db-session-loss-live-adapter", "sends": 1, "info": {"worker_pid": 8957, "lock_released": true, "old_adapter_still_live_at_successor_end": true}, "outcomes": {"successor-after-db-loss": {"state": "retry_wait"}, "live-adapter": {"exception": "OperationalError: terminating connection due to administrator command"}}, "first": "executing", "second": "retry_wait"}
+.
+3 passed in 1.47s

@@ -1,0 +1,5 @@
+{"credential": "pending", "enrollment": "verifying", "error": "authority_denied", "probe": "revoked-during-enrollment-io", "protocol": "wireguard", "routers_created": 0, "separate_connections": true, "state": "failed"}
+.{"credential": "pending", "enrollment": "verifying", "error": "authority_denied", "probe": "revoked-during-enrollment-io", "protocol": "sstp", "routers_created": 0, "separate_connections": true, "state": "failed"}
+.{"enforcement": "radius_authoritative", "error": "cutover_pending_lab", "job": "failed", "probe": "b6-selected-adapter", "readback": null, "run": "authoritative", "selected_adapter": "api_ssl", "selected_adapter_calls": ["api_ssl.rollback_radius"]}
+.
+3 passed in 1.16s

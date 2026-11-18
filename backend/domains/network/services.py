@@ -1181,6 +1181,7 @@ def complete_enrollment(token: str, wg_public_key: str = "", sstp_username: str 
 def finalize_verification(
     enrollment: RouterEnrollment, *, source: str = "simulator",
     ownership_guard=None, authority_guard=None, commit_guard=None,
+    final_authority_guard=None,
 ) -> Router:
     """Selesaikan verifikasi → buat Router read-only + pasang peer.
 
@@ -1207,6 +1208,13 @@ def finalize_verification(
     sesaat SEBELUM commit dengan lock baris job — update ownership-changing
     pihak lain ter-serialisasi terhadap commit unit (window check-to-commit
     tertutup), atau unit di-rollback.
+    ``final_authority_guard`` (REV-1711-05 R4): dipanggil DI DALAM transaksi
+    yang sama SETELAH seluruh tulisan sensitif unit (termasuk UPDATE
+    kredensial yang dapat MENUNGGU row lock pihak lain) dan SETELAH
+    ``commit_guard`` — kewenangan dibaca segar pada batas commit; pencabutan
+    yang ter-commit SELAMA worker menunggu lock kredensial membatalkan seluruh
+    unit (rollback) sebelum commit. Bila ``final_authority_guard`` None,
+    ``authority_guard`` dipakai pada batas yang sama (fallback kompatibel).
     """
     from adapters.routeros.base import RouterContext
 
@@ -1353,6 +1361,22 @@ def finalize_verification(
                 # seluruh efek router/enrollment/kredensial di atas di-rollback bila
                 # kepemilikan berpindah sebelum commit; transfer ter-serialisasi.
                 commit_guard()
+            # REV-1711-05 (R4): kewenangan dibaca segar pada BATAS COMMIT —
+            # SETELAH seluruh akuisisi/tulisan yang berpotensi memblokir dalam
+            # unit ini (lock enrollment, INSERT router, UPDATE enrollment,
+            # UPDATE kredensial WG/SSTP) dan SETELAH commit_guard (akuisisi
+            # lock baris job). Pencabutan membership yang ter-commit SELAMA
+            # worker menunggu lock kredensial terlihat statement SELECT segar
+            # ini (READ COMMITTED) → unit di-rollback: Router tidak dibuat,
+            # kredensial tetap PENDING, enrollment tidak COMPLETED. Guard
+            # terkunci (select_for_update membership) menyerialisasi
+            # pencabutan berkompetisi terhadap commit unit: kewenangan sah
+            # MELALUI commit, atau pencabutan menang dan unit batal.
+            boundary_guard = final_authority_guard
+            if boundary_guard is None and authority_guard is not None:
+                boundary_guard = authority_guard
+            if boundary_guard is not None:
+                boundary_guard()
     return router
 
 

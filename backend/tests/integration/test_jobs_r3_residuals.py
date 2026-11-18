@@ -125,30 +125,49 @@ def test_envelope_transition_requires_valid_lease():
 
 
 def test_resolve_uncertain_rejects_inflight_same_job():
-    """REV-1711-04 (R3): readback not-applied ditolak selama attempt hidup.
+    """REV-1711-04 (R3/R4): readback not-applied ditolak selama attempt hidup.
 
     Sesi DB mati melepas advisory lock, tetapi adapter lama bisa masih hidup;
     reclaim job yang sama tidak boleh membuka kirim kedua sampai attempt
-    run_claimed selesai di proses ini.
+    run_claimed selesai di proses ini. Job dibuat uncertain lewat jalur NYATA
+    (attempt eksekusi gagal uncertain) — uncertain sintetis tanpa identitas
+    penulis kini ditolak fail-closed (lihat tes R4: unverifiable).
     """
     tenant, actor = _tenant_actor("r3-inflight")
-    job = _claimed_job(tenant.id, actor)
-    Job.objects.filter(id=job.id).update(
-        state=JobState.UNCERTAIN, lease_token=None, error_code="lease_expired"
-    )
-    uncertain = Job.objects.get(id=job.id)
+    executions = []
+
+    class Handler(engine.JobHandler):
+        kind = "_test_r3_inflight_uncertain"
+
+        def execute(self, ctx):
+            executions.append("run")
+            raise JobError(code="simulated_uncertain", retryable=True, uncertain=True)
+
+        def verify(self, ctx):
+            raise AssertionError("uncertain tidak boleh masuk verifier")
+
+    engine._REGISTRY[Handler.kind] = Handler()
     try:
-        engine._INFLIGHT_ATTEMPTS.add(str(job.id))
-        with pytest.raises(ValueError, match="writer_active"):
-            engine.resolve_uncertain(uncertain, applied=False)
+        job = engine.create_job(tenant_id=tenant.id, kind=Handler.kind, actor=actor)
+        claimed = engine.claim_next()
+        assert claimed is not None and claimed.id == job.id
+        result = engine.run_claimed(claimed)
+        assert result.state == JobState.UNCERTAIN
+        uncertain = Job.objects.get(id=job.id)
+        try:
+            engine._INFLIGHT_ATTEMPTS.add(str(job.id))
+            with pytest.raises(ValueError, match="writer_active"):
+                engine.resolve_uncertain(uncertain, applied=False)
+        finally:
+            engine._INFLIGHT_ATTEMPTS.discard(str(job.id))
+        # Attempt selesai (receipt writer_ended_at tertulis di finally) +
+        # penulis lama terbukti aman (router_id None → tanpa advisory lock)
+        # → antrian ulang dibuka dengan fence epoch.
+        resolved = engine.resolve_uncertain(Job.objects.get(id=job.id), applied=False)
+        assert resolved.state == JobState.RETRY_WAIT
+        assert resolved.lease_epoch > uncertain.lease_epoch
     finally:
-        engine._INFLIGHT_ATTEMPTS.discard(str(job.id))
-    # Attempt selesai (tidak lagi in-flight) + penulis lama terbukti aman
-    # (router_id None → tanpa advisory lock) → antrian ulang dibuka dengan
-    # fence epoch.
-    resolved = engine.resolve_uncertain(Job.objects.get(id=job.id), applied=False)
-    assert resolved.state == JobState.RETRY_WAIT
-    assert resolved.lease_epoch > uncertain.lease_epoch
+        engine._REGISTRY.pop(Handler.kind, None)
 
 
 def test_duplicate_finalize_raises_typed_enrollment_state():
@@ -258,11 +277,13 @@ def test_finalize_revalidates_authority_under_enrollment_lock():
             time.sleep(0.3)  # jendela tunggu nyata di bawah kunci
             assert len(calls) == 1, "guard bawah kunci belum boleh terpanggil selama menunggu"
         # Kunci dilepas: worker mendapat kunci, guard kedua terpanggil di
-        # bawah kunci, Router dibuat.
+        # bawah kunci, Router dibuat, lalu guard ketiga pada BATAS COMMIT
+        # setelah seluruh tulisan sensitif unit (REV-1711-05 R4 — termasuk
+        # tunggu lock kredensial).
         assert router_done.wait(10), outcomes
         thread.join(10)
         assert "exception" not in outcomes, outcomes
-        assert len(calls) == 2, "guard wajib dipanggil ulang di bawah kunci"
+        assert len(calls) == 3, "guard wajib dipanggil ulang di bawah kunci + batas commit (R4)"
         with tenant_scope(tenant.id):
             assert Router.objects.filter(tenant=tenant).count() == 1
             enrollment.refresh_from_db()

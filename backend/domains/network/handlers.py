@@ -82,13 +82,18 @@ class VerifyApiSslHandler(JobHandler):
             # tenant tersendiri di dalam service — difence guard ownership
             # (REV-1711-01) + kewenangan AKTUAL dibaca segar SETELAH I/O pada
             # entry unit efek (REV-1711-05 R2) + guard terkunci sebelum commit
-            # (REV-1711-01 R2).
+            # (REV-1711-01 R2) + kewenangan final TERKUNCI pada batas commit
+            # setelah seluruh tulisan sensitif unit termasuk tunggu lock
+            # kredensial (REV-1711-05 R4).
             router = services.finalize_verification(
                 enrollment,
                 source=source,
                 ownership_guard=ctx.assert_owned,
                 authority_guard=lambda: check_current_authority(ctx.job, ctx.payload),
                 commit_guard=ctx.guard_commit,
+                final_authority_guard=lambda: check_current_authority(
+                    ctx.job, ctx.payload, lock_membership=True
+                ),
             )
         except RouterOsError as exc:
             # Probe API-SSL nyata gagal (router belum bootstrap penuh / tunnel

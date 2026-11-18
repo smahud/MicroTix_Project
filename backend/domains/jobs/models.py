@@ -142,6 +142,17 @@ class Job(models.Model):
     lease_epoch = models.IntegerField(default=0)
     lease_expires_at = models.DateTimeField(null=True, blank=True)
 
+    # Bukti penulis attempt terakhir (REV-1711-04 R4 — cross-process):
+    # ditulis saat attempt memasuki EXECUTING (identitas OS proses + starttime
+    # /proc agar PID reuse tidak false-positive), diselesaikan dengan receipt
+    # writer_ended_at di finally run_claimed. resolve_uncertain(applied=False)
+    # hanya membuka antrian ulang bila penulis attempt yang menghasilkan
+    # uncertain TERBUKTI selesai (receipt) atau prosesnya TERBUKTI mati.
+    writer_pid = models.BigIntegerField(null=True, blank=True)
+    writer_host = models.CharField(max_length=255, null=True, blank=True)
+    writer_start_ticks = models.BigIntegerField(null=True, blank=True)
+    writer_ended_at = models.DateTimeField(null=True, blank=True)
+
     available_at = models.DateTimeField(default=dj_timezone.now)
     deadline_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(default=dj_timezone.now)
